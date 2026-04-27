@@ -1,0 +1,58 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+  background-color: #141e1a;
+}
+
+body {
+  margin: 0;
+  background-color: #141e1a;
+  color: #ffffff;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::-webkit-scrollbar {
+  width: 2px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 1px;
+}
+
+::selection {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+@keyframes pulseOpacity {
+  0%, 100% { opacity: 0.15; }
+  50%       { opacity: 0.45; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes lineGrow {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+
+.animate-fade-up {
+  animation: fadeUp 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+.animate-line-grow {
+  animation: lineGrow 1.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.6s both;
+}
