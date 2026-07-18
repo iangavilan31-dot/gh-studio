@@ -1,53 +1,35 @@
-// Register @font-face for every family via fontsource CSS side-effects, then
-// block the render until the glyphs are actually rasterised. Importing this
-// module once (from Root) is enough.
-import "@fontsource/playfair-display/400.css";
-import "@fontsource/playfair-display/700.css";
-import "@fontsource/playfair-display/900.css";
-import "@fontsource/playfair-display/700-italic.css";
-import "@fontsource/libre-franklin/400.css";
-import "@fontsource/libre-franklin/600.css";
-import "@fontsource/libre-franklin/800.css";
-import "@fontsource/libre-caslon-text/400.css";
-import "@fontsource/libre-caslon-text/700.css";
-import "@fontsource/ibm-plex-mono/400.css";
-import "@fontsource/ibm-plex-mono/600.css";
-import "@fontsource/permanent-marker/400.css";
-import "@fontsource/special-elite/400.css";
-import { continueRender, delayRender } from "remotion";
+// Reliable font loading via @remotion/fonts against local woff2 files in
+// public/fonts. This uses the FontFace API + Remotion's own delay/continue
+// handling, which is robust under concurrent rendering (unlike awaiting
+// document.fonts, which could stall a render tab and trip the timeout).
+import { loadFont } from "@remotion/fonts";
+import { staticFile } from "remotion";
 
-const FAMILIES: Array<[string, string]> = [
-  ["700 84px", "Playfair Display"],
-  ["900 84px", "Playfair Display"],
-  ["italic 700 84px", "Playfair Display"],
-  ["600 40px", "Libre Franklin"],
-  ["800 40px", "Libre Franklin"],
-  ["700 40px", "Libre Caslon Text"],
-  ["600 40px", "IBM Plex Mono"],
-  ["400 40px", "Permanent Marker"],
-  ["400 40px", "Special Elite"],
+const F = (name: string) => staticFile(`fonts/${name}`);
+
+type Face = { family: string; file: string; weight?: string; style?: string };
+
+const FACES: Face[] = [
+  { family: "Playfair Display", file: "playfair-400.woff2", weight: "400" },
+  { family: "Playfair Display", file: "playfair-700.woff2", weight: "700" },
+  { family: "Playfair Display", file: "playfair-900.woff2", weight: "900" },
+  { family: "Playfair Display", file: "playfair-700i.woff2", weight: "700", style: "italic" },
+  { family: "Libre Franklin", file: "franklin-400.woff2", weight: "400" },
+  { family: "Libre Franklin", file: "franklin-600.woff2", weight: "600" },
+  { family: "Libre Franklin", file: "franklin-800.woff2", weight: "800" },
+  { family: "Libre Caslon Text", file: "caslon-400.woff2", weight: "400" },
+  { family: "Libre Caslon Text", file: "caslon-700.woff2", weight: "700" },
+  { family: "IBM Plex Mono", file: "plexmono-400.woff2", weight: "400" },
+  { family: "IBM Plex Mono", file: "plexmono-600.woff2", weight: "600" },
+  { family: "Permanent Marker", file: "marker-400.woff2", weight: "400" },
+  { family: "Special Elite", file: "elite-400.woff2", weight: "400" },
 ];
 
-const handle = delayRender("Loading newspaper fonts", {
-  timeoutInMilliseconds: 60000,
+FACES.forEach((f) => {
+  loadFont({
+    family: f.family,
+    url: F(f.file),
+    weight: f.weight,
+    style: f.style ?? "normal",
+  }).catch(() => undefined);
 });
-if (typeof document !== "undefined" && (document as Document).fonts) {
-  let cleared = false;
-  const done = () => {
-    if (cleared) return;
-    cleared = true;
-    continueRender(handle);
-  };
-  // race the specific font loads against a hard fallback so a slow/missing
-  // family can never stall the whole render (glyphs rasterise fast anyway)
-  Promise.all(
-    FAMILIES.map(([spec, fam]) =>
-      document.fonts.load(`${spec} "${fam}"`).catch(() => undefined)
-    )
-  )
-    .then(done)
-    .catch(done);
-  setTimeout(done, 6000);
-} else {
-  continueRender(handle);
-}
