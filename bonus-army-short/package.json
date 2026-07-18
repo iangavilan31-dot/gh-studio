@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@fontsource/libre-caslon-text": "^5.2.7",
     "@fontsource/libre-franklin": "^5.2.8",
     "@fontsource/permanent-marker": "^5.2.7",
     "@fontsource/playfair-display": "^5.2.8",
