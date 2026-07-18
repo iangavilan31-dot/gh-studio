@@ -1,0 +1,1170 @@
+{
+ "totalMs": 61694.8,
+ "beats": [
+  {
+   "id": "b1",
+   "startMs": 150.0,
+   "endMs": 6616.5,
+   "chunks": [
+    {
+     "id": "c1",
+     "startMs": 150.0,
+     "endMs": 4579.6,
+     "words": [
+      {
+       "text": "In",
+       "startMs": 150.0,
+       "endMs": 305.6
+      },
+      {
+       "text": "1932,",
+       "startMs": 305.6,
+       "endMs": 1120.1
+      },
+      {
+       "text": "America's",
+       "startMs": 1202.5,
+       "endMs": 1783.6
+      },
+      {
+       "text": "three",
+       "startMs": 1783.6,
+       "endMs": 1998.7
+      },
+      {
+       "text": "most",
+       "startMs": 1998.7,
+       "endMs": 2273.3
+      },
+      {
+       "text": "famous",
+       "startMs": 2273.3,
+       "endMs": 2653.1
+      },
+      {
+       "text": "generals",
+       "startMs": 2653.1,
+       "endMs": 3106.1
+      },
+      {
+       "text": "fought",
+       "startMs": 3106.1,
+       "endMs": 3307.5
+      },
+      {
+       "text": "their",
+       "startMs": 3307.5,
+       "endMs": 3522.5
+      },
+      {
+       "text": "first",
+       "startMs": 3522.5,
+       "endMs": 3742.2
+      },
+      {
+       "text": "battle",
+       "startMs": 3742.2,
+       "endMs": 4076.2
+      },
+      {
+       "text": "together.",
+       "startMs": 4076.2,
+       "endMs": 4579.6
+      }
+     ]
+    },
+    {
+     "id": "c2",
+     "startMs": 4759.6,
+     "endMs": 6356.5,
+     "words": [
+      {
+       "text": "Against",
+       "startMs": 4759.6,
+       "endMs": 5172.1
+      },
+      {
+       "text": "American",
+       "startMs": 5172.1,
+       "endMs": 5769.6
+      },
+      {
+       "text": "veterans.",
+       "startMs": 5769.6,
+       "endMs": 6356.5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "b2",
+   "startMs": 6616.5,
+   "endMs": 10846.0,
+   "chunks": [
+    {
+     "id": "c1",
+     "startMs": 6616.5,
+     "endMs": 9353.5,
+     "words": [
+      {
+       "text": "Forty-three",
+       "startMs": 6616.5,
+       "endMs": 7242.5
+      },
+      {
+       "text": "thousand",
+       "startMs": 7242.5,
+       "endMs": 7710.8
+      },
+      {
+       "text": "broke",
+       "startMs": 7710.8,
+       "endMs": 8006.0
+      },
+      {
+       "text": "World",
+       "startMs": 8006.0,
+       "endMs": 8250.3
+      },
+      {
+       "text": "War",
+       "startMs": 8250.3,
+       "endMs": 8489.5
+      },
+      {
+       "text": "One",
+       "startMs": 8489.5,
+       "endMs": 8723.7
+      },
+      {
+       "text": "veterans",
+       "startMs": 8723.7,
+       "endMs": 9353.5
+      }
+     ]
+    },
+    {
+     "id": "c2",
+     "startMs": 9493.5,
+     "endMs": 10586.0,
+     "words": [
+      {
+       "text": "marched",
+       "startMs": 9493.5,
+       "endMs": 9778.3
+      },
+      {
+       "text": "on",
+       "startMs": 9778.3,
+       "endMs": 9929.6
+      },
+      {
+       "text": "Washington.",
+       "startMs": 9929.6,
+       "endMs": 10586.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "b3",
+   "startMs": 10846.0,
+   "endMs": 16023.0,
+   "chunks": [
+    {
+     "id": "c1",
+     "startMs": 10846.0,
+     "endMs": 13032.3,
+     "words": [
+      {
+       "text": "The",
+       "startMs": 10846.0,
+       "endMs": 10997.6
+      },
+      {
+       "text": "government",
+       "startMs": 10997.6,
+       "endMs": 11521.7
+      },
+      {
+       "text": "owed",
+       "startMs": 11521.7,
+       "endMs": 11682.0
+      },
+      {
+       "text": "them",
+       "startMs": 11682.0,
+       "endMs": 11881.2
+      },
+      {
+       "text": "a",
+       "startMs": 11881.2,
+       "endMs": 11980.9
+      },
+      {
+       "text": "bonus",
+       "startMs": 11980.9,
+       "endMs": 12327.4
+      },
+      {
+       "text": "for",
+       "startMs": 12327.4,
+       "endMs": 12444.3
+      },
+      {
+       "text": "their",
+       "startMs": 12444.3,
+       "endMs": 12647.9
+      },
+      {
+       "text": "service.",
+       "startMs": 12647.9,
+       "endMs": 13032.3
+      }
+     ]
+    },
+    {
+     "id": "c2",
+     "startMs": 13252.3,
+     "endMs": 13820.1,
+     "words": [
+      {
+       "text": "Payable...",
+       "startMs": 13252.3,
+       "endMs": 13820.1
+      }
+     ]
+    },
+    {
+     "id": "c3",
+     "startMs": 14240.1,
+     "endMs": 15763.0,
+     "words": [
+      {
+       "text": "in",
+       "startMs": 14240.1,
+       "endMs": 14409.1
+      },
+      {
+       "text": "1945.",
+       "startMs": 14409.1,
+       "endMs": 15763.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "b4",
+   "startMs": 16023.0,
+   "endMs": 19872.2,
+   "chunks": [
+    {
+     "id": "c1",
+     "startMs": 16023.0,
+     "endMs": 17226.3,
+     "words": [
+      {
+       "text": "It",
+       "startMs": 16023.0,
+       "endMs": 16143.3
+      },
+      {
+       "text": "was",
+       "startMs": 16143.3,
+       "endMs": 16320.1
+      },
+      {
+       "text": "the",
+       "startMs": 16320.1,
+       "endMs": 16451.7
+      },
+      {
+       "text": "Great",
+       "startMs": 16451.7,
+       "endMs": 16681.1
+      },
+      {
+       "text": "Depression.",
+       "startMs": 16681.1,
+       "endMs": 17226.3
+      }
+     ]
+    },
+    {
+     "id": "c2",
+     "startMs": 17426.3,
+     "endMs": 19612.2,
+     "words": [
+      {
+       "text": "Men",
+       "startMs": 17426.3,
+       "endMs": 17642.2
+      },
+      {
+       "text": "who'd",
+       "startMs": 17642.2,
+       "endMs": 17853.2
+      },
+      {
+       "text": "survived",
+       "startMs": 17853.2,
+       "endMs": 18260.9
+      },
+      {
+       "text": "the",
+       "startMs": 18260.9,
+       "endMs": 18428.8
+      },
+      {
+       "text": "trenches",
+       "startMs": 18428.8,
+       "endMs": 18889.2
+      },
+      {
+       "text": "were",
+       "startMs": 18889.2,
+       "endMs": 19018.7
+      },
+      {
+       "text": "starving.",
+       "startMs": 19018.7,
+       "endMs": 19612.3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "b5",
+   "startMs": 19872.2,
+   "endMs": 24137.2,
+   "chunks": [
+    {
+     "id": "c1",
+     "startMs": 19872.2,
+     "endMs": 22140.6,
+     "words": [
+      {
+       "text": "So",
+       "startMs": 19872.2,
+       "endMs": 20043.0
+      },
+      {
+       "text": "they",
+       "startMs": 20043.0,
+       "endMs": 20213.7
+      },
+      {
+       "text": "camped",
+       "startMs": 20213.7,
+       "endMs": 20474.0
+      },
+      {
+       "text": "across",
+       "startMs": 20474.0,
+       "endMs": 20798.4
+      },
+      {
+       "text": "the",
+       "startMs": 20798.4,
+       "endMs": 20947.8
+      },
+      {
+       "text": "river",
+       "startMs": 20947.8,
+       "endMs": 21199.6
+      },
+      {
+       "text": "from",
+       "startMs": 21199.6,
+       "endMs": 21447.1
+      },
+      {
+       "text": "the",
+       "startMs": 21447.1,
+       "endMs": 21596.5
+      },
+      {
+       "text": "Capitol.",
+       "startMs": 21596.5,
+       "endMs": 22140.6
+      }
+     ]
+    },
+    {
+     "id": "c2",
+     "startMs": 22360.6,
+     "endMs": 23025.0,
+     "words": [
+      {
+       "text": "Peacefully.",
+       "startMs": 22360.6,
+       "endMs": 23025.0
+      }
+     ]
+    },
+    {
+     "id": "c3",
+     "startMs": 23215.0,
+     "endMs": 23877.2,
+     "words": [
+      {
+       "text": "For",
+       "startMs": 23215.0,
+       "endMs": 23372.9
+      },
+      {
+       "text": "months.",
+       "startMs": 23372.9,
+       "endMs": 23877.2
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "b6",
+   "startMs": 24137.2,
+   "endMs": 28963.8,
+   "chunks": [
+    {
+     "id": "c1",
+     "startMs": 24137.2,
+     "endMs": 25809.8,
+     "words": [
+      {
+       "text": "Congress",
+       "startMs": 24137.2,
+       "endMs": 24599.8
+      },
+      {
+       "text": "voted",
+       "startMs": 24599.8,
+       "endMs": 24964.2
+      },
+      {
+       "text": "on",
+       "startMs": 24964.2,
+       "endMs": 25123.0
+      },
+      {
+       "text": "their",
+       "startMs": 25123.0,
+       "endMs": 25342.6
+      },
+      {
+       "text": "bonus.",
+       "startMs": 25342.6,
+       "endMs": 25809.8
+      }
+     ]
+    },
+    {
+     "id": "c2",
+     "startMs": 26009.8,
+     "endMs": 27061.8,
+     "words": [
+      {
+       "text": "The",
+       "startMs": 26009.8,
+       "endMs": 26191.4
+      },
+      {
+       "text": "Senate",
+       "startMs": 26191.4,
+       "endMs": 26580.5
+      },
+      {
+       "text": "said",
+       "startMs": 26580.5,
+       "endMs": 26808.8
+      },
+      {
+       "text": "no.",
+       "startMs": 26808.8,
+       "endMs": 27061.8
+      }
+     ]
+    },
+    {
+     "id": "c3",
+     "startMs": 27301.8,
+     "endMs": 28563.8,
+     "words": [
+      {
+       "text": "62",
+       "startMs": 27301.8,
+       "endMs": 27932.8
+      },
+      {
+       "text": "to",
+       "startMs": 27932.8,
+       "endMs": 28105.4
+      },
+      {
+       "text": "18.",
+       "startMs": 28105.4,
+       "endMs": 28563.8
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "b7",
+   "startMs": 28963.8,
+   "endMs": 32691.5,
+   "chunks": [
+    {
+     "id": "c1",
+     "startMs": 28963.8,
+     "endMs": 32131.5,
+     "words": [
+      {
+       "text": "Then",
+       "startMs": 28963.8,
+       "endMs": 29169.5
+      },
+      {
+       "text": "President",
+       "startMs": 29169.5,
+       "endMs": 29728.4
+      },
+      {
+       "text": "Hoover",
+       "startMs": 29728.4,
+       "endMs": 29992.2
+      },
+      {
+       "text": "sent",
+       "startMs": 29992.2,
+       "endMs": 30238.1
+      },
+      {
+       "text": "in",
+       "startMs": 30238.1,
+       "endMs": 30390.1
+      },
+      {
+       "text": "the",
+       "startMs": 30390.1,
+       "endMs": 30546.5
+      },
+      {
+       "text": "actual",
+       "startMs": 30546.5,
+       "endMs": 30962.3
+      },
+      {
+       "text": "United",
+       "startMs": 30962.3,
+       "endMs": 31449.7
+      },
+      {
+       "text": "States",
+       "startMs": 31449.7,
+       "endMs": 31762.6
+      },
+      {
+       "text": "Army.",
+       "startMs": 31762.6,
+       "endMs": 32131.5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "b8",
+   "startMs": 32691.5,
+   "endMs": 38996.5,
+   "chunks": [
+    {
+     "id": "c1",
+     "startMs": 32691.5,
+     "endMs": 34197.6,
+     "words": [
+      {
+       "text": "Cavalry",
+       "startMs": 32691.5,
+       "endMs": 33231.4
+      },
+      {
+       "text": "with",
+       "startMs": 33231.4,
+       "endMs": 33466.4
+      },
+      {
+       "text": "drawn",
+       "startMs": 33466.4,
+       "endMs": 33741.4
+      },
+      {
+       "text": "sabers.",
+       "startMs": 33741.4,
+       "endMs": 34197.6
+      }
+     ]
+    },
+    {
+     "id": "c2",
+     "startMs": 34387.6,
+     "endMs": 36030.7,
+     "words": [
+      {
+       "text": "Infantry",
+       "startMs": 34387.6,
+       "endMs": 34917.0
+      },
+      {
+       "text": "with",
+       "startMs": 34917.0,
+       "endMs": 35127.8
+      },
+      {
+       "text": "fixed",
+       "startMs": 35127.8,
+       "endMs": 35419.4
+      },
+      {
+       "text": "bayonets.",
+       "startMs": 35419.4,
+       "endMs": 36030.7
+      }
+     ]
+    },
+    {
+     "id": "c3",
+     "startMs": 36220.7,
+     "endMs": 37009.5,
+     "words": [
+      {
+       "text": "Six",
+       "startMs": 36220.7,
+       "endMs": 36545.5
+      },
+      {
+       "text": "tanks.",
+       "startMs": 36545.5,
+       "endMs": 37009.5
+      }
+     ]
+    },
+    {
+     "id": "c4",
+     "startMs": 37199.5,
+     "endMs": 38616.5,
+     "words": [
+      {
+       "text": "Down",
+       "startMs": 37199.5,
+       "endMs": 37410.4
+      },
+      {
+       "text": "Pennsylvania",
+       "startMs": 37410.4,
+       "endMs": 38144.1
+      },
+      {
+       "text": "Avenue.",
+       "startMs": 38144.1,
+       "endMs": 38616.5
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "b9",
+   "startMs": 38996.5,
+   "endMs": 42672.3,
+   "chunks": [
+    {
+     "id": "c1",
+     "startMs": 38996.5,
+     "endMs": 40163.5,
+     "words": [
+      {
+       "text": "They",
+       "startMs": 38996.5,
+       "endMs": 39191.0
+      },
+      {
+       "text": "tear-gassed",
+       "startMs": 39191.0,
+       "endMs": 39677.2
+      },
+      {
+       "text": "the",
+       "startMs": 39677.2,
+       "endMs": 39847.4
+      },
+      {
+       "text": "camp.",
+       "startMs": 39847.4,
+       "endMs": 40163.5
+      }
+     ]
+    },
+    {
+     "id": "c2",
+     "startMs": 40463.5,
+     "endMs": 42252.3,
+     "words": [
+      {
+       "text": "Then",
+       "startMs": 40463.5,
+       "endMs": 40721.4
+      },
+      {
+       "text": "they",
+       "startMs": 40721.4,
+       "endMs": 40945.7
+      },
+      {
+       "text": "burned",
+       "startMs": 40945.7,
+       "endMs": 41192.5
+      },
+      {
+       "text": "it",
+       "startMs": 41192.5,
+       "endMs": 41371.9
+      },
+      {
+       "text": "to",
+       "startMs": 41371.9,
+       "endMs": 41551.4
+      },
+      {
+       "text": "the",
+       "startMs": 41551.4,
+       "endMs": 41747.6
+      },
+      {
+       "text": "ground.",
+       "startMs": 41747.6,
+       "endMs": 42252.3
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "b10",
+   "startMs": 42672.3,
+   "endMs": 47527.1,
+   "chunks": [
+    {
+     "id": "c1",
+     "startMs": 42672.3,
+     "endMs": 44030.1,
+     "words": [
+      {
+       "text": "Two",
+       "startMs": 42672.3,
+       "endMs": 42866.0
+      },
+      {
+       "text": "veterans",
+       "startMs": 42866.0,
+       "endMs": 43465.5
+      },
+      {
+       "text": "were",
+       "startMs": 43465.5,
+       "endMs": 43629.0
+      },
+      {
+       "text": "killed.",
+       "startMs": 43629.0,
+       "endMs": 44030.1
+      }
+     ]
+    },
+    {
+     "id": "c2",
+     "startMs": 44310.1,
+     "endMs": 47167.1,
+     "words": [
+      {
+       "text": "Reports",
+       "startMs": 44310.1,
+       "endMs": 44793.1
+      },
+      {
+       "text": "at",
+       "startMs": 44793.1,
+       "endMs": 44952.4
+      },
+      {
+       "text": "the",
+       "startMs": 44952.4,
+       "endMs": 45126.7
+      },
+      {
+       "text": "time",
+       "startMs": 45126.7,
+       "endMs": 45365.7
+      },
+      {
+       "text": "said",
+       "startMs": 45365.7,
+       "endMs": 45584.8
+      },
+      {
+       "text": "an",
+       "startMs": 45584.8,
+       "endMs": 45754.1
+      },
+      {
+       "text": "infant",
+       "startMs": 45754.1,
+       "endMs": 46182.4
+      },
+      {
+       "text": "died",
+       "startMs": 46182.4,
+       "endMs": 46411.4
+      },
+      {
+       "text": "from",
+       "startMs": 46411.4,
+       "endMs": 46700.3
+      },
+      {
+       "text": "the",
+       "startMs": 46700.3,
+       "endMs": 46874.5
+      },
+      {
+       "text": "gas.",
+       "startMs": 46874.5,
+       "endMs": 47167.1
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "b11",
+   "startMs": 47527.1,
+   "endMs": 53332.4,
+   "chunks": [
+    {
+     "id": "c1",
+     "startMs": 47527.1,
+     "endMs": 49512.6,
+     "words": [
+      {
+       "text": "One",
+       "startMs": 47527.1,
+       "endMs": 47744.3
+      },
+      {
+       "text": "newspaper",
+       "startMs": 47744.3,
+       "endMs": 48221.2
+      },
+      {
+       "text": "headline",
+       "startMs": 48221.2,
+       "endMs": 48655.6
+      },
+      {
+       "text": "said",
+       "startMs": 48655.6,
+       "endMs": 48863.4
+      },
+      {
+       "text": "everything:",
+       "startMs": 48863.4,
+       "endMs": 49512.6
+      }
+     ]
+    },
+    {
+     "id": "c2",
+     "startMs": 49812.6,
+     "endMs": 52992.4,
+     "words": [
+      {
+       "text": "\u201cCavalry",
+       "startMs": 49812.6,
+       "endMs": 50332.8
+      },
+      {
+       "text": "Major",
+       "startMs": 50332.8,
+       "endMs": 50621.7
+      },
+      {
+       "text": "Evicts",
+       "startMs": 50621.7,
+       "endMs": 51031.1
+      },
+      {
+       "text": "Veteran",
+       "startMs": 51031.1,
+       "endMs": 51450.1
+      },
+      {
+       "text": "Who",
+       "startMs": 51450.1,
+       "endMs": 51618.6
+      },
+      {
+       "text": "Saved",
+       "startMs": 51618.6,
+       "endMs": 51912.4
+      },
+      {
+       "text": "His",
+       "startMs": 51912.4,
+       "endMs": 52138.7
+      },
+      {
+       "text": "Life",
+       "startMs": 52138.7,
+       "endMs": 52389.2
+      },
+      {
+       "text": "in",
+       "startMs": 52389.2,
+       "endMs": 52552.9
+      },
+      {
+       "text": "Battle.\u201d",
+       "startMs": 52552.9,
+       "endMs": 52992.4
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "b12",
+   "startMs": 53332.4,
+   "endMs": 61694.8,
+   "chunks": [
+    {
+     "id": "c1",
+     "startMs": 53332.4,
+     "endMs": 55336.5,
+     "words": [
+      {
+       "text": "Newsreel",
+       "startMs": 53332.4,
+       "endMs": 53755.3
+      },
+      {
+       "text": "audiences",
+       "startMs": 53755.3,
+       "endMs": 54352.0
+      },
+      {
+       "text": "booed",
+       "startMs": 54352.0,
+       "endMs": 54544.7
+      },
+      {
+       "text": "their",
+       "startMs": 54544.7,
+       "endMs": 54765.5
+      },
+      {
+       "text": "own",
+       "startMs": 54765.5,
+       "endMs": 54948.8
+      },
+      {
+       "text": "army.",
+       "startMs": 54948.8,
+       "endMs": 55336.5
+      }
+     ]
+    },
+    {
+     "id": "c2",
+     "startMs": 55596.5,
+     "endMs": 58973.0,
+     "words": [
+      {
+       "text": "And",
+       "startMs": 55596.5,
+       "endMs": 55787.2
+      },
+      {
+       "text": "when",
+       "startMs": 55787.2,
+       "endMs": 55991.3
+      },
+      {
+       "text": "Franklin",
+       "startMs": 55991.3,
+       "endMs": 56479.4
+      },
+      {
+       "text": "Roosevelt",
+       "startMs": 56479.4,
+       "endMs": 57034.0
+      },
+      {
+       "text": "read",
+       "startMs": 57034.0,
+       "endMs": 57229.2
+      },
+      {
+       "text": "the",
+       "startMs": 57229.2,
+       "endMs": 57384.5
+      },
+      {
+       "text": "headlines,",
+       "startMs": 57384.5,
+       "endMs": 57846.0
+      },
+      {
+       "text": "he",
+       "startMs": 57925.8,
+       "endMs": 58081.1
+      },
+      {
+       "text": "reportedly",
+       "startMs": 58081.1,
+       "endMs": 58728.9
+      },
+      {
+       "text": "said:",
+       "startMs": 58728.9,
+       "endMs": 58973.0
+      }
+     ]
+    },
+    {
+     "id": "c3",
+     "startMs": 59233.0,
+     "endMs": 60894.8,
+     "words": [
+      {
+       "text": "\u201cI",
+       "startMs": 59233.0,
+       "endMs": 59352.0
+      },
+      {
+       "text": "think",
+       "startMs": 59352.0,
+       "endMs": 59586.0
+      },
+      {
+       "text": "I've",
+       "startMs": 59586.0,
+       "endMs": 59756.1
+      },
+      {
+       "text": "just",
+       "startMs": 59756.1,
+       "endMs": 59981.5
+      },
+      {
+       "text": "won",
+       "startMs": 59981.5,
+       "endMs": 60177.1
+      },
+      {
+       "text": "the",
+       "startMs": 60177.1,
+       "endMs": 60326.0
+      },
+      {
+       "text": "election.\u201d",
+       "startMs": 60326.0,
+       "endMs": 60894.8
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "events": {
+  "b1.c1": 150.0,
+  "b1.generals": 2653.1,
+  "b1.c2": 4759.6,
+  "b1.against": 4759.6,
+  "b1.start": 150.0,
+  "b2.c1": 6616.5,
+  "b2.number": 6616.5,
+  "b2.c2": 9493.5,
+  "b2.marched": 9493.5,
+  "b2.start": 6616.5,
+  "b3.c1": 10846.0,
+  "b3.owed": 11521.7,
+  "b3.c2": 13252.3,
+  "b3.payable": 13252.3,
+  "b3.c3": 14240.1,
+  "b3.date1945": 14240.1,
+  "b3.start": 10846.0,
+  "b4.c1": 16023.0,
+  "b4.depression": 16023.0,
+  "b4.c2": 17426.3,
+  "b4.trenches": 17426.3,
+  "b4.starving": 19018.7,
+  "b4.start": 16023.0,
+  "b5.c1": 19872.2,
+  "b5.camped": 19872.2,
+  "b5.c2": 22360.6,
+  "b5.peacefully": 22360.6,
+  "b5.c3": 23215.0,
+  "b5.months": 23215.0,
+  "b5.start": 19872.2,
+  "b6.c1": 24137.2,
+  "b6.voted": 24137.2,
+  "b6.c2": 26009.8,
+  "b6.senate": 26009.8,
+  "b6.saidNo": 26808.8,
+  "b6.c3": 27301.8,
+  "b6.voteCard": 27301.8,
+  "b6.start": 24137.2,
+  "b7.c1": 28963.8,
+  "b7.hoover": 29728.4,
+  "b7.armyCut": 31762.6,
+  "b7.start": 28963.8,
+  "b8.c1": 32691.5,
+  "b8.sabers": 32691.5,
+  "b8.c2": 34387.6,
+  "b8.bayonets": 34387.6,
+  "b8.c3": 36220.7,
+  "b8.tanks": 36220.7,
+  "b8.c4": 37199.5,
+  "b8.avenue": 37199.5,
+  "b8.start": 32691.5,
+  "b9.c1": 38996.5,
+  "b9.gas": 38996.5,
+  "b9.c2": 40463.5,
+  "b9.burned": 40945.7,
+  "b9.start": 38996.5,
+  "b10.c1": 42672.3,
+  "b10.killed": 42672.3,
+  "b10.c2": 44310.1,
+  "b10.infant": 45754.1,
+  "b10.start": 42672.3,
+  "b11.c1": 47527.1,
+  "b11.headline": 47527.1,
+  "b11.c2": 49812.6,
+  "b11.quoteStart": 49812.6,
+  "b11.start": 47527.1,
+  "b12.c1": 53332.4,
+  "b12.audience": 53332.4,
+  "b12.booed": 54352.0,
+  "b12.c2": 55596.5,
+  "b12.fdr": 56479.4,
+  "b12.headlines": 57384.5,
+  "b12.c3": 59233.0,
+  "b12.quote": 59233.0,
+  "b12.won": 59981.5,
+  "b12.start": 53332.4
+ }
+}
