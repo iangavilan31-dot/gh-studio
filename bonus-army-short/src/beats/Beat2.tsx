@@ -1,61 +1,43 @@
 import React from "react";
-import { useCurrentFrame } from "remotion";
-import { NewspaperScene, Shot } from "../NewspaperScene";
-import { Headline } from "../components/Type";
-import { BigStat, Label } from "../components/Graphics";
-import { PhotoCard } from "../components/PhotoCard";
+import { AbsoluteFill, useCurrentFrame } from "remotion";
+import { BigCard, MapShot } from "../components/Shots";
+import { FilmTexture } from "../layers/FilmTexture";
 import { ev } from "../timing";
-import { H, MARGIN, RED, W } from "../theme";
+import { RED } from "../theme";
 
-// "Forty-three thousand broke World War One veterans marched on Washington."
+// B2: BigCard "43,000" (allowed card use #1) -> whip into the 1932 DC map,
+// red routes draw in from three edges converging on DC, camp photos pin on.
 export const Beat2: React.FC = () => {
   const frame = useCurrentFrame();
   const fNum = ev("b2.number");
   const fMarch = ev("b2.marched");
-  const showMarch = frame >= fMarch - 3;
-
-  const shots: Shot[] = [
-    { at: ev("b2.start"), type: "cut", scale: 1.04, y: -30 },
-    { at: fNum, type: "punch", scale: 1.12, y: 20, dur: 5 },
-    { at: fMarch, type: "cut", scale: 1.0, y: 0 },
-  ];
-
+  const showMap = frame >= fMarch - 2;
   return (
-    <NewspaperScene shots={shots}>
-      {!showMarch ? (
-        <div style={{ position: "absolute", left: MARGIN, top: H * 0.2, width: W - MARGIN * 2 }}>
-          <Label at={ev("b2.start")} bar>
-            The Summer of 1932
-          </Label>
-          <BigStat
-            at={fNum}
-            value={
-              <>
-                43,<span style={{ color: RED }}>000</span>
-              </>
-            }
-            label="Broke World War I veterans"
-            size={300}
-            style={{ marginTop: 30 }}
-          />
-        </div>
+    <AbsoluteFill style={{ background: "#0b0a09" }}>
+      {!showMap ? (
+        <BigCard
+          from={fNum}
+          value={
+            <>
+              43,<span style={{ color: RED }}>000</span>
+            </>
+          }
+          sub="Broke World War I veterans"
+        />
       ) : (
-        <div style={{ position: "absolute", left: MARGIN, top: H * 0.1, width: W - MARGIN * 2 }}>
-          <Headline size={120} style={{ marginTop: 10 }}>
-            marched on <span style={{ color: RED }}>Washington.</span>
-          </Headline>
-          <PhotoCard
-            src="assets/treated/bonus_march.png"
-            at={fMarch}
-            x={MARGIN - 20}
-            y={H * 0.34}
-            width={W - MARGIN * 2 + 40}
-            height={H * 0.42}
-            rotate={-1.5}
-            objectPosition="center 30%"
-          />
-        </div>
+        <MapShot
+          src="assets/final/dc_map.png"
+          from={fMarch}
+          duration={70}
+          routes={[
+            { d: "M 40 120 C 400 260, 700 380, 940 520", at: fMarch },
+            { d: "M 1880 90 C 1500 300, 1150 400, 950 520", at: fMarch + 6 },
+            { d: "M 120 1040 C 500 780, 780 640, 950 540", at: fMarch + 12 },
+          ]}
+          pins={[{ x: 50, y: 50, label: "WASHINGTON, D.C.", at: fMarch + 18 }]}
+        />
       )}
-    </NewspaperScene>
+      <FilmTexture intensity={0.5} scratches seed={2} />
+    </AbsoluteFill>
   );
 };

@@ -1,89 +1,56 @@
 import React from "react";
-import { useCurrentFrame } from "remotion";
-import { NewspaperScene, Shot } from "../NewspaperScene";
-import { Headline, HiWord } from "../components/Type";
+import { AbsoluteFill, useCurrentFrame } from "remotion";
+import { ParallaxPhoto } from "../components/ParallaxPhoto";
+import { DetailInsert } from "../components/Shots";
 import { Label } from "../components/Graphics";
-import { beatWords, ev, wordReveal } from "../timing";
-import { FONT_BODY, FONT_MONO, H, INK, MARGIN, RED, W } from "../theme";
+import { FilmTexture } from "../layers/FilmTexture";
+import { ev } from "../timing";
+import { H, MARGIN, W } from "../theme";
 import { appear } from "../motion";
 
-// "So they camped across the river from the Capitol. Peacefully. For months."
-// Hosts the one slow glide (Anacostia): camera drifts from Capitol to the camp.
+// B5: THE glide — 2.5D parallax Anacostia camp wide drifting right->left across
+// the widescreen frame; stepped labels; two short detail inserts on "Peacefully".
 export const Beat5: React.FC = () => {
   const frame = useCurrentFrame();
-  const words = beatWords("b5");
-  const peace = words.find((w) => w.text.replace(/[^a-z]/gi, "") === "Peacefully");
+  const fStart = ev("b5.start");
+  const fPeace = ev("b5.peacefully");
   const fMonths = ev("b5.months");
+  const insertA = fPeace + 2;
+  const inInsertA = frame >= insertA && frame < insertA + 15;
+  const inInsertB = frame >= insertA + 15 && frame < insertA + 30;
 
-  // the one slow glide: a gentle push-in across the Anacostia map (no x-pan, so
-  // the fixed copy never leaves the frame)
-  const shots: Shot[] = [
-    { at: ev("b5.start"), type: "cut", scale: 1.0, y: 0 },
-    { at: ev("b5.camped") + 10, type: "glide", scale: 1.12, y: -30, dur: 92 },
-  ];
+  if (inInsertA) {
+    return (
+      <AbsoluteFill style={{ background: "#000" }}>
+        <DetailInsert src="assets/final/camp_life.png" from={insertA} duration={16} focus="50% 30%" zoom={2.6} />
+        <FilmTexture intensity={0.5} scratches seed={5} leakWindows={[[insertA, insertA + 15, "rgba(255,180,90,1)"]]} />
+      </AbsoluteFill>
+    );
+  }
+  if (inInsertB) {
+    return (
+      <AbsoluteFill style={{ background: "#000" }}>
+        <DetailInsert src="assets/final/anacostia_wide.png" from={insertA + 15} duration={16} focus="70% 60%" zoom={2.8} />
+        <FilmTexture intensity={0.5} scratches seed={6} />
+      </AbsoluteFill>
+    );
+  }
 
   return (
-    <NewspaperScene shots={shots}>
-      {/* ---- the map band (wide; the glide crosses it) ---- */}
-      <div style={{ position: "absolute", left: 0, top: H * 0.42, width: W, height: 360 }}>
-        {/* river */}
-        <svg width={W} height={360} style={{ position: "absolute", inset: 0 }}>
-          <path
-            d={`M ${W * 0.42} -20 C ${W * 0.5} 120, ${W * 0.36} 220, ${W * 0.52} 380`}
-            fill="none"
-            stroke={INK}
-            strokeWidth={10}
-            strokeOpacity={0.5}
-          />
-          <text x={W * 0.44} y={200} fontFamily={FONT_MONO} fontSize={22} fill={INK} opacity={0.55}>
-            ANACOSTIA R.
-          </text>
-        </svg>
-        {/* Capitol marker */}
-        <div style={{ position: "absolute", left: W * 0.12, top: 120, textAlign: "center" }}>
-          <svg width={70} height={54} style={{ display: "block", margin: "0 auto 6px" }}>
-            <polygon points="35,4 66,22 4,22" fill={INK} />
-            <rect x="10" y="22" width="50" height="4" fill={INK} />
-            {[14, 26, 38, 50].map((cx) => (
-              <rect key={cx} x={cx} y="28" width="6" height="20" fill={INK} />
-            ))}
-            <rect x="6" y="48" width="58" height="5" fill={INK} />
-          </svg>
-          <div style={{ fontFamily: FONT_BODY, fontWeight: 800, fontSize: 30, letterSpacing: "0.14em" }}>
-            U.S. CAPITOL
-          </div>
-        </div>
-        {/* Camp marker */}
-        <div style={{ position: "absolute", left: W * 0.66, top: 120, textAlign: "center" }}>
-          <div style={{ width: 26, height: 26, borderRadius: 13, background: RED, margin: "18px auto" }} />
-          <div style={{ fontFamily: FONT_BODY, fontWeight: 800, fontSize: 30, letterSpacing: "0.1em", color: RED }}>
-            B.E.F. CAMP
-          </div>
-          <div style={{ fontFamily: FONT_MONO, fontSize: 22, color: INK, opacity: 0.6 }}>
-            ANACOSTIA FLATS
-          </div>
+    <AbsoluteFill style={{ background: "#0b0a09" }}>
+      <ParallaxPhoto mode="strip" src="assets/final/anacostia_wide.png" from={fStart} duration={130} dir={-1} bgDrift={40} fgDrift={70} stripTop={0.52} objectPosition="center 55%" scaleTo={1.06} />
+      <div style={{ position: "absolute", left: MARGIN, top: H * 0.1 }}>
+        <Label at={fStart + 6} bar mono>ANACOSTIA FLATS</Label>
+        <div style={{ marginTop: 12 }}>
+          <Label at={fStart + 14} mono size={W * 0.014}>MAY &ndash; JULY 1932</Label>
         </div>
       </div>
-
-      {/* copy overlays (fixed to the frame, not the glide, so kept readable) */}
-      <div style={{ position: "absolute", left: MARGIN, top: H * 0.16, width: W - MARGIN * 2 }}>
-        <Label at={ev("b5.start")} bar>
-          Across the river
-        </Label>
-        <Headline size={92} style={{ marginTop: 24 }}>
-          They camped in sight of the Capitol.
-        </Headline>
-      </div>
-      <div style={{ position: "absolute", left: MARGIN, top: H * 0.72, opacity: appear(frame, ev("b5.peacefully"), 3) }}>
-        <Headline size={120} italic>
-          <HiWord reveal={peace ? wordReveal(frame, peace.start, 2, 6) : 0} seed={13}>
-            Peacefully.
-          </HiWord>
-        </Headline>
-        <Headline size={72} style={{ marginTop: 10, opacity: appear(frame, fMonths, 3) }}>
-          For <span style={{ color: RED }}>months.</span>
-        </Headline>
-      </div>
-    </NewspaperScene>
+      {frame >= fMonths && (
+        <div style={{ position: "absolute", right: MARGIN, bottom: H * 0.12, opacity: appear(frame, fMonths, 4) }}>
+          <Label at={fMonths} bar>FOR MONTHS</Label>
+        </div>
+      )}
+      <FilmTexture intensity={0.42} scratches seed={5} leakWindows={[[fStart, fStart + 60, "rgba(255,190,110,1)"]]} />
+    </AbsoluteFill>
   );
 };

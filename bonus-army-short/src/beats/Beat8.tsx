@@ -1,105 +1,58 @@
 import React from "react";
-import { useCurrentFrame } from "remotion";
-import { NewspaperScene, Shot } from "../NewspaperScene";
-import { Headline } from "../components/Type";
-import { Cutout } from "../components/Cutout";
-import { Stamp } from "../components/Stamp";
+import { AbsoluteFill, useCurrentFrame } from "remotion";
+import { FullBleed, MultiPanel } from "../components/Shots";
+import { FilmTexture } from "../layers/FilmTexture";
 import { ev } from "../timing";
-import { FONT_BODY, H, INK, MARGIN, RED, W } from "../theme";
+import { FONT_BODY, H, MARGIN, RED, W } from "../theme";
 import { appear } from "../motion";
 
-// "Cavalry with drawn sabers. Infantry with fixed bayonets. Six tanks.
-//  Down Pennsylvania Avenue." — rapid hard-cut escalation.
-const Card: React.FC<{
-  kicker: string;
-  big: React.ReactNode;
-  at: number;
-  children?: React.ReactNode;
-}> = ({ kicker, big, at, children }) => {
-  const frame = useCurrentFrame();
-  return (
-    <div style={{ position: "absolute", left: MARGIN, top: H * 0.2, width: W - MARGIN * 2 }}>
-      <div
-        style={{
-          fontFamily: FONT_BODY,
-          fontWeight: 800,
-          fontSize: 34,
-          letterSpacing: "0.2em",
-          color: RED,
-          opacity: appear(frame, at, 2),
-        }}
-      >
-        {kicker}
-      </div>
-      <Headline size={176} weight={900} style={{ marginTop: 16, lineHeight: 0.94 }}>
-        {big}
-      </Headline>
-      {children}
-    </div>
-  );
-};
-
+// B8 THE ATTACK: fastest cutting, one cut per phrase. cavalry full-bleed ->
+// multi-panel (sabers/bayonets/tank) side-by-side with red stamps -> tank
+// full-bleed -> Pennsylvania Avenue wide. Flash frames between cuts.
 export const Beat8: React.FC = () => {
   const frame = useCurrentFrame();
   const fSab = ev("b8.sabers");
   const fBay = ev("b8.bayonets");
   const fTank = ev("b8.tanks");
   const fAve = ev("b8.avenue");
+  const stage = frame >= fAve ? "avenue" : frame >= fTank ? "tanks" : frame >= fBay ? "bayonets" : "sabers";
 
-  const shots: Shot[] = [
-    { at: fSab, type: "punch", scale: 1.14, x: -20, dur: 4 },
-    { at: fBay, type: "punch", scale: 1.1, x: 20, dur: 4 },
-    { at: fTank, type: "cut", scale: 1.0 },
-    { at: fAve, type: "punch", scale: 1.08, y: -20, dur: 4 },
-  ];
-
-  const stage =
-    frame >= fAve ? "avenue" : frame >= fTank ? "tanks" : frame >= fBay ? "bayonets" : "sabers";
+  const kicker = (t: string, at: number) => (
+    <div style={{ position: "absolute", left: MARGIN, top: H * 0.08, fontFamily: FONT_BODY, fontWeight: 800, fontSize: W * 0.02, letterSpacing: "0.2em", color: RED, opacity: appear(frame, at, 2), textShadow: "0 2px 8px rgba(0,0,0,0.6)" }}>{t}</div>
+  );
 
   return (
-    <NewspaperScene shots={shots} grain={0.1}>
+    <AbsoluteFill style={{ background: "#000" }}>
       {stage === "sabers" && (
-        <Card kicker="CAVALRY" big={<>Drawn sabers.</>} at={fSab}>
-          <Stamp at={fSab + 3} rotate={-6} size={54} style={{ position: "absolute", left: W * 0.4, top: H * 0.36 }}>
-            CHARGE
-          </Stamp>
-        </Card>
+        <>
+          <FullBleed src="assets/final/bonus_march.png" from={fSab} duration={26} zoomFrom={1.08} zoomTo={1.14} objectPosition="center 35%" />
+          {kicker("CAVALRY · DRAWN SABERS", fSab)}
+        </>
       )}
-      {stage === "bayonets" && <Card kicker="INFANTRY" big={<>Fixed bayonets.</>} at={fBay} />}
+      {stage === "bayonets" && (
+        <MultiPanel
+          from={fBay}
+          stagger={6}
+          panels={[
+            { src: "assets/final/bonus_march.png", label: "SABERS", focus: "20% 40%" },
+            { src: "assets/final/patton.png", label: "BAYONETS", focus: "50% 40%" },
+            { src: "assets/final/bonus_burning.png", label: "TANKS", focus: "40% 60%" },
+          ]}
+        />
+      )}
       {stage === "tanks" && (
         <>
-          <Card kicker="ARMOR" big={<span style={{ color: RED }}>Six tanks.</span>} at={fTank} />
-          <Cutout
-            src="assets/treated/patton.png"
-            at={fTank}
-            x={W * 0.28}
-            y={H * 0.42}
-            width={W * 0.72}
-            offset={12}
-            seed={8}
-          />
+          <FullBleed src="assets/final/patton.png" from={fTank} duration={22} zoomFrom={1.06} zoomTo={1.12} objectPosition="center 55%" />
+          {kicker("SIX TANKS", fTank)}
         </>
       )}
       {stage === "avenue" && (
-        <div style={{ position: "absolute", left: MARGIN, top: H * 0.3, width: W - MARGIN * 2 }}>
-          <Headline size={132} style={{ lineHeight: 0.98 }}>
-            Down <span style={{ color: RED }}>Pennsylvania Avenue.</span>
-          </Headline>
-          <div
-            style={{
-              marginTop: 40,
-              fontFamily: FONT_BODY,
-              fontWeight: 800,
-              fontSize: 32,
-              letterSpacing: "0.16em",
-              color: INK,
-              opacity: appear(frame, fAve + 6, 5),
-            }}
-          >
-            JULY 28, 1932
-          </div>
-        </div>
+        <>
+          <FullBleed src="assets/final/veterans_crowd.png" from={fAve} duration={40} zoomFrom={1.05} zoomTo={1.12} objectPosition="center 70%" />
+          {kicker("DOWN PENNSYLVANIA AVENUE · JULY 28, 1932", fAve)}
+        </>
       )}
-    </NewspaperScene>
+      <FilmTexture intensity={0.9} scratches flicker flashFrames={[fSab, fBay, fTank, fAve]} seed={8} />
+    </AbsoluteFill>
   );
 };

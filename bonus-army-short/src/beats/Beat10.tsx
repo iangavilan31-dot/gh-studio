@@ -1,60 +1,40 @@
 import React from "react";
-import { useCurrentFrame } from "remotion";
-import { NewspaperScene, Shot } from "../NewspaperScene";
-import { Headline } from "../components/Type";
-import { Label } from "../components/Graphics";
+import { AbsoluteFill, useCurrentFrame } from "remotion";
+import { Spotlight } from "../components/Shots";
+import { Stamp } from "../components/Stamp";
+import { FilmTexture } from "../layers/FilmTexture";
 import { ev } from "../timing";
-import { FONT_HEAD, FONT_MONO, H, INK, MARGIN, RED, W } from "../theme";
+import { FONT_HEAD, H, INK, MARGIN, RED, W } from "../theme";
 import { appear } from "../motion";
 
-// "Two veterans were killed. Reports at the time said an infant died from the
-//  gas." — the near-still casualty beat. Restraint: barely any motion.
+// B10 THE COST: single near-still portrait, spotlight vignette, red torn tag.
+// Stillness is the point after the assault. Micro-life only.
 export const Beat10: React.FC = () => {
   const frame = useCurrentFrame();
-  const fKilled = ev("b10.killed");
+  const fStart = ev("b10.start");
   const fInfant = ev("b10.infant");
-
-  // deliberately calm camera — a single tiny settle, no punches
-  const shots: Shot[] = [{ at: ev("b10.start"), type: "cut", scale: 1.03 }];
-
-  const Name: React.FC<{ n: string; d: string; at: number }> = ({ n, d, at }) => (
-    <div style={{ opacity: appear(frame, at, 8), marginBottom: 26 }}>
-      <div style={{ fontFamily: FONT_HEAD, fontWeight: 700, fontSize: 62, color: INK }}>
-        <span style={{ color: RED, marginRight: 16 }}>&#8224;</span>
-        {n}
-      </div>
-      <div style={{ fontFamily: FONT_MONO, fontSize: 26, color: INK, opacity: 0.6, marginLeft: 54 }}>
-        {d}
-      </div>
-    </div>
-  );
-
   return (
-    <NewspaperScene shots={shots} grain={0.07}>
-      <div style={{ position: "absolute", left: MARGIN, top: H * 0.14, width: W - MARGIN * 2 }}>
-        <Label at={ev("b10.start")}>The dead</Label>
-        <Headline size={128} weight={900} style={{ marginTop: 18 }}>
-          Two veterans killed.
-        </Headline>
-        <div style={{ marginTop: 70 }}>
-          <Name n="William Hushka" d="B.E.F. — shot, July 28 1932" at={fKilled + 6} />
-          <Name n="Eric Carlson" d="B.E.F. — shot, July 28 1932" at={fKilled + 16} />
+    <AbsoluteFill style={{ background: "#000" }}>
+      <Spotlight src="assets/final/camp_life.png" from={fStart} duration={120} focus="50% 26%" spot={{ x: 48, y: 34 }} />
+      <div style={{ position: "absolute", left: MARGIN, top: H * 0.12, opacity: appear(frame, fStart + 8, 8) }}>
+        <Stamp at={fStart + 8} rotate={-4} size={W * 0.02} color={RED}>JULY 28, 1932</Stamp>
+      </div>
+      <div style={{ position: "absolute", left: MARGIN, bottom: H * 0.12, maxWidth: W * 0.42, opacity: appear(frame, fStart + 14, 10) }}>
+        <div style={{ fontFamily: FONT_HEAD, fontWeight: 700, fontSize: W * 0.028, color: "#efe7d6", textShadow: "0 2px 12px #000" }}>
+          <span style={{ color: RED, marginRight: 12 }}>&#8224;</span>William Hushka
         </div>
-        <div
-          style={{
-            marginTop: 60,
-            fontFamily: FONT_HEAD,
-            fontStyle: "italic",
-            fontSize: 58,
-            lineHeight: 1.25,
-            color: INK,
-            maxWidth: W * 0.8,
-            opacity: appear(frame, fInfant, 10),
-          }}
-        >
-          Reports at the time said an infant died from the gas.
+        <div style={{ fontFamily: FONT_HEAD, fontWeight: 700, fontSize: W * 0.028, color: "#efe7d6", textShadow: "0 2px 12px #000", marginTop: 6 }}>
+          <span style={{ color: RED, marginRight: 12 }}>&#8224;</span>Eric Carlson
         </div>
       </div>
-    </NewspaperScene>
+      {frame >= fInfant && (
+        <div style={{ position: "absolute", right: MARGIN, bottom: H * 0.14, maxWidth: W * 0.32, textAlign: "right", opacity: appear(frame, fInfant, 12) }}>
+          <div style={{ fontFamily: FONT_HEAD, fontStyle: "italic", fontSize: W * 0.02, lineHeight: 1.3, color: "#e6ddcb", textShadow: "0 2px 12px #000" }}>
+            &hellip;and an infant, reports said, died from the gas.
+          </div>
+        </div>
+      )}
+      <FilmTexture intensity={0.55} scratches seed={10} />
+    </AbsoluteFill>
   );
 };

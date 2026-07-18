@@ -1,98 +1,69 @@
 import React from "react";
-import { useCurrentFrame } from "remotion";
-import { NewspaperScene, Shot } from "../NewspaperScene";
-import { Masthead } from "../components/Masthead";
-import { Label, Scribble } from "../components/Graphics";
+import { AbsoluteFill, useCurrentFrame } from "remotion";
+import { NewspaperPage } from "../components/NewspaperPage";
+import { Scribble } from "../components/Graphics";
 import { Rough } from "../components/Rough";
-import { HiWord } from "../components/Type";
+import { FilmTexture } from "../layers/FilmTexture";
 import { beatWords, ev, wordReveal } from "../timing";
-import { FONT_HEAD, H, INK, MARGIN, W } from "../theme";
-import { appear } from "../motion";
+import { easeOutExpo, microLife } from "../motion";
+import { H, W } from "../theme";
 
-// "One newspaper headline said everything: 'Cavalry Major Evicts Veteran Who
-//  Saved His Life in Battle.'" — word-by-word marker highlight + Patton scribble.
+// B11 THE HEADLINE: the recreated page in reference motion, word-by-word marker
+// highlight tracking the VO exactly; red scribble "the major was Patton."
+const PAGE_W = W * 0.66;
+const PAGE_H = PAGE_W * 1.34;
+
 export const Beat11: React.FC = () => {
   const frame = useCurrentFrame();
   const quoteWords = beatWords("b11").filter((w) => w.chunk === "c2");
-  const fHeadline = ev("b11.headline");
+  const fStart = ev("b11.start");
   const fQuote = ev("b11.quoteStart");
-  const showQuote = frame >= fQuote - 6;
+  const ml = microLife(frame, 4);
 
-  const shots: Shot[] = [
-    { at: ev("b11.start"), type: "cut", scale: 1.04 },
-    { at: fQuote, type: "cut", scale: 1.0, y: 0 },
-    { at: fQuote + 70, type: "punch", scale: 1.12, x: -60, y: 120, dur: 5 },
-  ];
+  // map each headline word to its VO word time
+  const revealFor = (w: string, idx: number): number => {
+    const clean = w.replace(/[^A-Za-z]/g, "").toLowerCase();
+    const match = quoteWords.find((q) => q.text.replace(/[^A-Za-z]/g, "").toLowerCase() === clean);
+    return match ? wordReveal(frame, match.start, 2, 5) : 0;
+  };
+
+  // slow reference drift + a punch on "Saved His Life"
+  const punchT = easeOutExpo(Math.max(0, Math.min(1, (frame - (fQuote + 40)) / 6)));
+  const scale = 1.0 + 0.12 * punchT;
+  const ty = -H * 0.05 * punchT;
 
   return (
-    <NewspaperScene shots={shots}>
-      <div style={{ position: "absolute", left: MARGIN, top: H * 0.12, width: W - MARGIN * 2 }}>
-        <Label at={ev("b11.start")} bar>
-          The next morning&rsquo;s papers
-        </Label>
-
-        {!showQuote ? (
-          <div
-            style={{
-              fontFamily: FONT_HEAD,
-              fontWeight: 700,
-              fontStyle: "italic",
-              fontSize: 90,
-              lineHeight: 1.05,
-              color: INK,
-              marginTop: 40,
-            }}
-          >
-            One headline said everything&hellip;
-          </div>
-        ) : (
-          <div style={{ marginTop: 30 }}>
-            <div
-              style={{
-                fontFamily: FONT_HEAD,
-                fontWeight: 800,
-                fontSize: 78,
-                lineHeight: 1.12,
-                color: INK,
-              }}
-            >
-              {quoteWords.map((w, i) => (
-                <React.Fragment key={i}>
-                  <HiWord reveal={wordReveal(frame, w.start, 2, 5)} seed={20 + i}>
-                    {w.text.trim()}
-                  </HiWord>{" "}
-                </React.Fragment>
-              ))}
-            </div>
-            <Masthead style={{ marginTop: 50 }}>The Washington Daily News</Masthead>
-
-            {/* the reveal: the major was Patton */}
-            <div style={{ position: "absolute", left: W * 0.08, top: H * 0.46 }}>
-              <Rough
-                shape="arrow"
-                at={fQuote + 70}
-                x={40}
-                y={-150}
-                w={260}
-                h={150}
-                strokeWidth={7}
-              />
-              <Scribble at={fQuote + 78} x={0} y={0} width={560} size={64} rotate={-4} underline>
-                the major was Patton.
-              </Scribble>
-            </div>
-          </div>
-        )}
-      </div>
-      {/* subtle vignette pull as the scribble lands */}
+    <AbsoluteFill style={{ background: "#0b0a09", overflow: "hidden" }}>
       <div
         style={{
           position: "absolute",
-          inset: 0,
-          background: "radial-gradient(60% 50% at 40% 60%, transparent, rgba(20,16,12,0.12))",
-          opacity: appear(frame, fQuote + 70, 10),
+          left: (W - PAGE_W) / 2,
+          top: (H - PAGE_H) / 2 - H * 0.02,
+          transform: `translate(${ml.x}px, ${ty + ml.y}px) scale(${scale}) rotate(${ml.rot * 0.25}deg)`,
+          transformOrigin: "50% 35%",
         }}
-      />
-    </NewspaperScene>
+      >
+        <NewspaperPage
+          masthead="The Washington Daily News"
+          date="FRIDAY, JULY 29, 1932"
+          width={PAGE_W}
+          seed={29}
+          columns={4}
+          reveal={frame >= fQuote ? revealFor : undefined}
+          decks={[
+            { text: "Cavalry Major Evicts Veteran", size: PAGE_W * 0.062 },
+            { text: "Who Saved His Life in Battle", size: PAGE_W * 0.062 },
+          ]}
+        />
+        {/* the reveal: the major was Patton */}
+        <div style={{ position: "absolute", left: PAGE_W * 0.1, top: PAGE_H * 0.42 }}>
+          <Rough shape="arrow" at={fQuote + 60} x={PAGE_W * 0.04} y={-PAGE_W * 0.12} w={PAGE_W * 0.2} h={PAGE_W * 0.12} strokeWidth={6} />
+          <Scribble at={fQuote + 66} x={0} y={0} width={PAGE_W * 0.55} size={PAGE_W * 0.06} rotate={-4} underline>
+            the major was Patton.
+          </Scribble>
+        </div>
+      </div>
+      <FilmTexture intensity={0.5} scratches seed={11} />
+    </AbsoluteFill>
   );
 };
