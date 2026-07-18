@@ -22,7 +22,7 @@ export const Beat5: React.FC = () => {
   if (inInsertA) {
     return (
       <AbsoluteFill style={{ background: "#000" }}>
-        <DetailInsert src="assets/final/camp_life.png" from={insertA} duration={16} focus="50% 30%" zoom={2.6} />
+        <DetailInsert src="assets/final/camp_life.png" from={insertA} duration={16} focus="50% 40%" zoom={1.7} />
         <FilmTexture intensity={0.5} scratches seed={5} leakWindows={[[insertA, insertA + 15, "rgba(255,180,90,1)"]]} />
       </AbsoluteFill>
     );
@@ -30,7 +30,7 @@ export const Beat5: React.FC = () => {
   if (inInsertB) {
     return (
       <AbsoluteFill style={{ background: "#000" }}>
-        <DetailInsert src="assets/final/anacostia_wide.png" from={insertA + 15} duration={16} focus="70% 60%" zoom={2.8} />
+        <DetailInsert src="assets/final/anacostia_wide.png" from={insertA + 15} duration={16} focus="60% 50%" zoom={1.6} />
         <FilmTexture intensity={0.5} scratches seed={6} />
       </AbsoluteFill>
     );

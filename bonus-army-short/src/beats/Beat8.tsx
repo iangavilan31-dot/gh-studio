@@ -34,9 +34,9 @@ export const Beat8: React.FC = () => {
           from={fBay}
           stagger={6}
           panels={[
-            { src: "assets/final/bonus_march.png", label: "SABERS", focus: "20% 40%" },
-            { src: "assets/final/patton.png", label: "BAYONETS", focus: "50% 40%" },
-            { src: "assets/final/bonus_burning.png", label: "TANKS", focus: "40% 60%" },
+            { src: "assets/final/bonus_march.png", label: "INFANTRY", focus: "40% 40%" },
+            { src: "assets/final/patton.png", label: "TANKS", focus: "55% 55%" },
+            { src: "assets/final/bonus_burning.png", label: "THE CAMP", focus: "center" },
           ]}
         />
       )}

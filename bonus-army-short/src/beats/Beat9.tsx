@@ -29,7 +29,7 @@ export const Beat9: React.FC = () => {
   }
   return (
     <AbsoluteFill style={{ background: "#000" }}>
-      <FullBleed src="assets/final/bonus_burning.png" from={fBurn} duration={110} dir={1} zoomFrom={1.02} zoomTo={1.05} objectPosition="center 45%" />
+      <FullBleed src="assets/final/bonus_burning.png" from={fBurn} duration={110} dir={1} zoomFrom={1.04} zoomTo={1.08} objectPosition="center 45%" fit="cover" />
       {/* hand-tint: faint red-orange breathing on the flames */}
       <AbsoluteFill
         style={{

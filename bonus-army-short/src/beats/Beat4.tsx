@@ -29,7 +29,7 @@ export const Beat4: React.FC = () => {
           objectPosition="center 30%"
         />
       ) : (
-        <DetailInsert src="assets/final/breadline.png" from={fStarv} duration={44} focus="40% 60%" zoom={3.2} />
+        <DetailInsert src="assets/final/breadline.png" from={fStarv} duration={44} focus="40% 46%" zoom={1.8} bright={1.3} />
       )}
       <div style={{ position: "absolute", left: MARGIN, top: H * 0.08 }}>
         <Label at={fStart + 6} bar mono>THE GREAT DEPRESSION &middot; 1932</Label>

@@ -1,6 +1,6 @@
 import React from "react";
 import { AbsoluteFill, useCurrentFrame } from "remotion";
-import { ParallaxPhoto } from "../components/ParallaxPhoto";
+import { FullBleed } from "../components/Shots";
 import { NewspaperPage } from "../components/NewspaperPage";
 import { TextMatchCut } from "../components/TextMatchCut";
 import { Cutout } from "../components/Cutout";
@@ -65,7 +65,7 @@ export const Beat1: React.FC = () => {
           screen={{ sx: W / 2, sy: H * 0.46 }}
         />
       ) : (
-        <ParallaxPhoto mode="strip" src="assets/final/veterans_crowd.png" from={fAgainst} duration={70} dir={1} stripTop={0.5} objectPosition="center 30%" />
+        <FullBleed src="assets/final/veterans_crowd.png" from={fAgainst} duration={70} dir={1} zoomFrom={1.0} zoomTo={1.05} objectPosition="center 60%" />
       )}
 
       {/* generals cutouts stamp across the lower third (widescreen spread) */}

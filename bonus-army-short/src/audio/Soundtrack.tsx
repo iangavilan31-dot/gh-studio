@@ -19,50 +19,51 @@ export const Soundtrack: React.FC = () => {
     return ms === undefined ? null : Math.round((ms / 1000) * FPS);
   };
 
+  // global SFX trim so stacked events never turn to noise; the -14 LUFS
+  // loudnorm in finish.sh sets the final level.
+  const G = 0.5;
   return (
     <>
-      {/* bed: room tone + faint vinyl crackle for the whole run, never silence */}
-      <Audio src={sfx("room-tone")} volume={0.16} loop />
-      <Audio src={sfx("projector")} volume={0.05} loop />
+      {/* bed: soft room tone the whole run, never silence (no rattly crackle) */}
+      <Audio src={sfx("room-tone")} volume={0.12} loop />
 
       {/* VO — the anchor */}
       <Audio src={staticFile("audio/vo.wav")} volume={1} />
 
-      {/* drone bed, ducked under VO; sparse tension layered on top */}
+      {/* single drone bed, ducked under VO; cuts DEAD on "Army" */}
       <Sequence from={0} durationInFrames={armyCut}>
-        <Audio src={music("drone")} volume={0.3} loop />
-        <Audio src={music("tense")} volume={0.16} loop />
+        <Audio src={music("drone")} volume={0.26} loop />
       </Sequence>
-      <Sequence from={Math.max(0, armyCut - 40)} durationInFrames={40}>
-        <Audio src={music("riser")} volume={0.34} />
+      <Sequence from={Math.max(0, armyCut - 38)} durationInFrames={38}>
+        <Audio src={music("riser")} volume={0.26} />
       </Sequence>
       {/* --- dead cut: room tone only across the turn --- */}
       <Sequence from={b8} durationInFrames={Math.max(1, total - b8)}>
-        <Audio src={music("drone")} volume={0.34} loop />
+        <Audio src={music("drone")} volume={0.3} loop />
       </Sequence>
 
-      {/* event SFX from the manifest */}
+      {/* event SFX from the manifest (trimmed, max 2 layers each) */}
       {(manifest.events as EvHit[]).map((h, i) => {
         const base = evFrame(h.at);
         if (base === null) return null;
         const from = Math.max(0, base + (h.offset ?? 0));
         if (from >= total) return null;
         return (
-          <Sequence key={i} from={from} durationInFrames={Math.min(120, total - from)}>
-            {h.layers.map(([file, gain], j) => (
-              <Audio key={j} src={sfx(file)} volume={gain} />
+          <Sequence key={i} from={from} durationInFrames={Math.min(110, total - from)}>
+            {h.layers.slice(0, 2).map(([file, gain], j) => (
+              <Audio key={j} src={sfx(file)} volume={Math.min(0.7, gain * G)} />
             ))}
           </Sequence>
         );
       })}
 
-      {/* B8 hoof build: overlapping hooves from distant->close across the beat */}
-      {[0, 10, 20, 34, 50].map((off, i) => {
+      {/* B8 hoof build: 3 overlapping hooves distant->close (not a wall) */}
+      {[0, 16, 34].map((off, i) => {
         const from = ev("b8.sabers") + off;
         if (from >= total) return null;
         return (
-          <Sequence key={`hoof${i}`} from={from} durationInFrames={Math.min(60, total - from)}>
-            <Audio src={sfx("hooves")} volume={0.3 + i * 0.14} />
+          <Sequence key={`hoof${i}`} from={from} durationInFrames={Math.min(55, total - from)}>
+            <Audio src={sfx("hooves")} volume={0.22 + i * 0.1} />
           </Sequence>
         );
       })}
