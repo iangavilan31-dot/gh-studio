@@ -38,8 +38,8 @@ export const FullBleed: React.FC<{
 
 // Extreme close crop cutaway (detail insert) — reuses an existing photo.
 export const DetailInsert: React.FC<{
-  src: string; from: number; duration: number; focus?: string; zoom?: number;
-}> = ({ src, from, duration, focus = "50% 40%", zoom = 2.4 }) => {
+  src: string; from: number; duration: number; focus?: string; zoom?: number; bright?: number;
+}> = ({ src, from, duration, focus = "50% 40%", zoom = 2.4, bright = 1.12 }) => {
   const frame = useCurrentFrame();
   const p = interpolate(frame - from, [0, duration], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const ml = microLife(frame, 9);
@@ -51,7 +51,7 @@ export const DetailInsert: React.FC<{
           position: "absolute", width: "100%", height: "100%",
           objectFit: "cover", objectPosition: focus,
           transform: `scale(${zoom + p * 0.06}) translate(${ml.x}px, ${ml.y}px)`,
-          filter: "contrast(1.05) brightness(0.98)",
+          filter: `contrast(1.06) brightness(${bright})`,
         }}
       />
       <AbsoluteFill style={{ background: "radial-gradient(60% 60% at 50% 45%, transparent 40%, rgba(10,8,6,0.55))" }} />
@@ -96,16 +96,17 @@ export const MultiPanel: React.FC<{
 
 // Darkened photo, soft spotlight slides onto a face, red rough box scribbles.
 export const Spotlight: React.FC<{
-  src: string; from: number; duration: number; focus?: string; spot?: { x: number; y: number }; boxAt?: number; label?: string;
-}> = ({ src, from, duration, focus = "center", spot = { x: 42, y: 42 }, boxAt, label }) => {
+  src: string; from: number; duration: number; focus?: string; spot?: { x: number; y: number }; boxAt?: number; label?: string; bright?: number; push?: number;
+}> = ({ src, from, duration, focus = "center", spot = { x: 42, y: 42 }, boxAt, label, bright = 1.05, push = 0 }) => {
   const frame = useCurrentFrame();
   const rel = frame - from;
   const rev = easeOutExpo(Math.max(0, Math.min(1, rel / 20)));
   const ml = microLife(frame, 5);
   const sx = 20 + (spot.x - 20) * rev;
+  const pz = 1.05 + push * Math.max(0, Math.min(1, rel / Math.max(1, duration)));
   return (
     <AbsoluteFill style={{ overflow: "hidden", background: "#000" }}>
-      <img src={sf(src)} style={{ position: "absolute", width: "108%", height: "108%", left: "-4%", top: "-4%", objectFit: "cover", objectPosition: focus, transform: `scale(${1.05}) translate(${ml.x}px,${ml.y}px)`, filter: "contrast(1.05)" }} />
+      <img src={sf(src)} style={{ position: "absolute", width: "108%", height: "108%", left: "-4%", top: "-4%", objectFit: "cover", objectPosition: focus, transform: `scale(${pz}) translate(${ml.x}px,${ml.y}px)`, filter: `contrast(1.05) brightness(${bright})` }} />
       {/* darken everything except the spotlight */}
       <AbsoluteFill style={{ background: `radial-gradient(26% 34% at ${sx}% ${spot.y}%, rgba(0,0,0,0) 0%, rgba(6,5,4,${0.42 + 0.35 * rev}) 62%)` }} />
       {boxAt !== undefined && (

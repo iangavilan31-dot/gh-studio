@@ -87,7 +87,7 @@ export const ParallaxPhoto: React.FC<{
         >
           {img(s, {
             transform: `translateX(${fgX * 1.0}px) scale(${sc})`,
-            filter: "contrast(1.03)",
+            filter: "contrast(1.04) brightness(1.08)",
           })}
         </div>
       </AbsoluteFill>
