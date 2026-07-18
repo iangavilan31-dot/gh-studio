@@ -18,10 +18,10 @@ echo ">>> upload file (yuv420p, faststart)"
 ffmpeg -y -i "$OUT" -c:v libx264 -crf 18 -preset medium -pix_fmt yuv420p -movflags +faststart \
   -c:a aac -b:a 192k "$UPLOAD" 2>&1 | tail -2
 
-# --- isolated review clips (from the graded master) ---
-b1a=0; b1b=$(python3 -c "print(round((__import__('json').load(open('public/timing.json'))['events']['b1.against']+40)/30,2))")
-b8a=$(python3 -c "print(round((__import__('json').load(open('public/timing.json'))['events']['b8.sabers']-8)/30,2))")
-b8b=$(python3 -c "print(round((__import__('json').load(open('public/timing.json'))['events']['b9.gas']+6)/30,2))")
+# --- isolated review clips (from the graded master); events are in ms ---
+b1a=0; b1b=$(python3 -c "print(round(__import__('json').load(open('public/timing.json'))['events']['b1.against']/1000 + 1.5, 2))")
+b8a=$(python3 -c "print(round(__import__('json').load(open('public/timing.json'))['events']['b8.sabers']/1000 - 0.4, 2))")
+b8b=$(python3 -c "print(round(__import__('json').load(open('public/timing.json'))['events']['b9.gas']/1000 + 0.3, 2))")
 echo ">>> clip: B1 match cut ($b1a-$b1b s)"
 ffmpeg -y -ss $b1a -to $b1b -i "$OUT" -c:v libx264 -crf 16 -preset slow -pix_fmt yuv420p -c:a aac out/clip-b1-matchcut.mp4 2>&1 | tail -1
 echo ">>> clip: B8 attack ($b8a-$b8b s)"
