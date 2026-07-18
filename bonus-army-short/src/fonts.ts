@@ -28,12 +28,26 @@ const FAMILIES: Array<[string, string]> = [
   ["400 40px", "Special Elite"],
 ];
 
-const handle = delayRender("Loading newspaper fonts");
+const handle = delayRender("Loading newspaper fonts", {
+  timeoutInMilliseconds: 60000,
+});
 if (typeof document !== "undefined" && (document as Document).fonts) {
-  Promise.all(FAMILIES.map(([spec, fam]) => document.fonts.load(`${spec} "${fam}"`)))
-    .then(() => document.fonts.ready)
-    .then(() => continueRender(handle))
-    .catch(() => continueRender(handle));
+  let cleared = false;
+  const done = () => {
+    if (cleared) return;
+    cleared = true;
+    continueRender(handle);
+  };
+  // race the specific font loads against a hard fallback so a slow/missing
+  // family can never stall the whole render (glyphs rasterise fast anyway)
+  Promise.all(
+    FAMILIES.map(([spec, fam]) =>
+      document.fonts.load(`${spec} "${fam}"`).catch(() => undefined)
+    )
+  )
+    .then(done)
+    .catch(done);
+  setTimeout(done, 6000);
 } else {
   continueRender(handle);
 }
