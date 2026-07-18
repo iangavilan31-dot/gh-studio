@@ -15,7 +15,7 @@ export const Beat10: React.FC = () => {
   const fInfant = ev("b10.infant");
   return (
     <AbsoluteFill style={{ background: "#000" }}>
-      <Spotlight src="assets/final/camp_life.png" from={fStart} duration={130} focus="50% 26%" spot={{ x: 48, y: 34 }} bright={1.2} push={0.035} />
+      <Spotlight src="assets/final/camp_life.png" from={fStart} duration={130} focus="center" spot={{ x: 50, y: 44 }} bright={1.15} push={0.03} />
       <div style={{ position: "absolute", left: MARGIN, top: H * 0.12, opacity: appear(frame, fStart + 8, 8) }}>
         <Stamp at={fStart + 8} rotate={-4} size={W * 0.02} color={RED}>JULY 28, 1932</Stamp>
       </div>

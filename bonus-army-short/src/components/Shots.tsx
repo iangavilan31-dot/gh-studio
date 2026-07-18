@@ -7,7 +7,10 @@ import { Stamp } from "./Stamp";
 
 const sf = (s: string) => staticFile(s);
 
-// Full-bleed treated photo (newsreel-style): slow push/drift + micro-life.
+// Full-bleed treated photo. Portrait sources cover-crop to a confusing tight
+// band in a 16:9 frame, so the WHOLE photo is shown (objectFit contain) over a
+// blurred, darkened cover backdrop of the same image (fills the edges, no bars).
+// `fit="cover"` forces edge-to-edge for genuinely wide sources.
 export const FullBleed: React.FC<{
   src: string;
   from: number;
@@ -16,19 +19,32 @@ export const FullBleed: React.FC<{
   zoomFrom?: number;
   zoomTo?: number;
   objectPosition?: string;
-}> = ({ src, from, duration, dir = 1, zoomFrom = 1.04, zoomTo = 1.09, objectPosition = "center" }) => {
+  fit?: "contain" | "cover";
+}> = ({ src, from, duration, dir = 1, zoomFrom = 1.02, zoomTo = 1.06, objectPosition = "center", fit = "contain" }) => {
   const frame = useCurrentFrame();
   const p = interpolate(frame - from, [0, duration], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const ml = microLife(frame, 6);
   const z = zoomFrom + (zoomTo - zoomFrom) * p;
+  const drift = (p - 0.5) * 18 * dir + ml.x;
   return (
-    <AbsoluteFill style={{ overflow: "hidden", background: "#000" }}>
+    <AbsoluteFill style={{ overflow: "hidden", background: "#080706" }}>
+      {/* blurred cover backdrop of the same image so edges are filled */}
       <img
         src={sf(src)}
         style={{
-          position: "absolute", width: "112%", height: "112%", left: "-6%", top: "-6%",
+          position: "absolute", width: "120%", height: "120%", left: "-10%", top: "-10%",
           objectFit: "cover", objectPosition,
-          transform: `translateX(${(p - 0.5) * 22 * dir + ml.x}px) scale(${z})`,
+          filter: "blur(26px) brightness(0.5) saturate(0.9)",
+          transform: `scale(${1.1}) translateX(${drift * 0.4}px)`,
+        }}
+      />
+      {/* whole photo, centred */}
+      <img
+        src={sf(src)}
+        style={{
+          position: "absolute", inset: 0, width: "100%", height: "100%",
+          objectFit: fit, objectPosition,
+          transform: `translateX(${drift}px) scale(${z})`,
           filter: "contrast(1.03)",
         }}
       />
@@ -39,7 +55,7 @@ export const FullBleed: React.FC<{
 // Extreme close crop cutaway (detail insert) — reuses an existing photo.
 export const DetailInsert: React.FC<{
   src: string; from: number; duration: number; focus?: string; zoom?: number; bright?: number;
-}> = ({ src, from, duration, focus = "50% 40%", zoom = 2.4, bright = 1.12 }) => {
+}> = ({ src, from, duration, focus = "50% 40%", zoom = 1.7, bright = 1.12 }) => {
   const frame = useCurrentFrame();
   const p = interpolate(frame - from, [0, duration], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const ml = microLife(frame, 9);
@@ -103,12 +119,15 @@ export const Spotlight: React.FC<{
   const rev = easeOutExpo(Math.max(0, Math.min(1, rel / 20)));
   const ml = microLife(frame, 5);
   const sx = 20 + (spot.x - 20) * rev;
-  const pz = 1.05 + push * Math.max(0, Math.min(1, rel / Math.max(1, duration)));
+  const pz = 1.0 + push * Math.max(0, Math.min(1, rel / Math.max(1, duration)));
   return (
     <AbsoluteFill style={{ overflow: "hidden", background: "#000" }}>
-      <img src={sf(src)} style={{ position: "absolute", width: "108%", height: "108%", left: "-4%", top: "-4%", objectFit: "cover", objectPosition: focus, transform: `scale(${pz}) translate(${ml.x}px,${ml.y}px)`, filter: `contrast(1.05) brightness(${bright})` }} />
+      {/* blurred backdrop so the frame is filled behind the (contained) subject */}
+      <img src={sf(src)} style={{ position: "absolute", width: "120%", height: "120%", left: "-10%", top: "-10%", objectFit: "cover", objectPosition: focus, filter: "blur(30px) brightness(0.35)" }} />
+      {/* whole subject, centred */}
+      <img src={sf(src)} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "contain", objectPosition: focus, transform: `scale(${pz}) translate(${ml.x}px,${ml.y}px)`, filter: `contrast(1.05) brightness(${bright})` }} />
       {/* darken everything except the spotlight */}
-      <AbsoluteFill style={{ background: `radial-gradient(26% 34% at ${sx}% ${spot.y}%, rgba(0,0,0,0) 0%, rgba(6,5,4,${0.42 + 0.35 * rev}) 62%)` }} />
+      <AbsoluteFill style={{ background: `radial-gradient(34% 44% at ${sx}% ${spot.y}%, rgba(0,0,0,0) 0%, rgba(6,5,4,${0.42 + 0.35 * rev}) 66%)` }} />
       {boxAt !== undefined && (
         <Rough shape="circle" at={boxAt} x={W * (spot.x / 100) - W * 0.13} y={H * (spot.y / 100) - H * 0.18} w={W * 0.26} h={H * 0.34} color={RED} strokeWidth={7} drawFrames={10} />
       )}
