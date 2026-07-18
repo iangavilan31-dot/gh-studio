@@ -34,25 +34,50 @@ session continuing on branch `claude/bonus-army-youtube-short-yv6260`
 - TimingScope diagnostic comp (unstyled, shows anchors firing)
 - Bootstrap: `bash pipeline/setup.sh` rebuilds venv + voice models (~2 min)
 
-## Next steps in order (network now Full)
+## Progress (autonomous build session, 2026-07-18)
 
-1. `bash pipeline/setup.sh`
-2. Gate 1: reference rip + `reference-analysis.md` → STOP for approval
-3. Real assets (fetch + treat): NARA 24730 newsreel pulls, LOC Harris & Ewing
-   (hec.36872, hec.36889), Underwood Capitol-lawn camp, Horydczak Anacostia
-   wides, Chronicling America front pages (July 29 1932 WaPo "ONE SLAIN, 60
-   HURT AS TROOPS ROUT B.E.F."; June 18 Senate defeat), portraits (MacArthur/
-   Patton/Eisenhower/Hoover/FDR/Hushka), bonus certificate, 1932 DC map.
-   Headlines sharp, 1932 article body text blurred (copyright).
-4. Final VO: `pip install chatterbox-tts` → `python pipeline/vo_chatterbox.py`
-   → `python pipeline/assemble.py` → `node scripts/whisper-captions.mjs`
-   (deep measured read; -14 LUFS chain is already in assemble.py)
-5. CC0 SFX/music from Pixabay to replace procedural stand-ins (same filenames)
-6. Components per master brief section A + reference numbers; global stepped
-   12fps rule for decorative graphics (Math.floor(frame/2)*2), camera and
-   highlights smooth
-7. Gate 2 proof (beats 1-2) → approval → full build → self-QA (section F.6:
-   frames 0-90 stranger-swipe check, loop frame pixel-match end vs start)
+DONE — the video is complete end-to-end and renders to
+`out/bonus-army-short.mp4` (1080×1920, ~61.7s, scratch VO + procedural audio):
+
+- **Gate 1** `reference-analysis.md`: reference decoded from the extractable
+  pixels (1280×720 poster frame + L2 storyboard tiles in `reference/study/`).
+  Full media rip was blocked (googlevideo IP-lock via the proxy's ULA egress +
+  YouTube bot-wall across yt-dlp/cobalt/piped/invidious); analysis grounds the
+  design in the real frames + the brief's motion spec.
+- **Engine** `src/NewspaperScene.tsx` + `src/motion.ts`: paper+grid+fibre,
+  camera (hard-cut / punch-in w/ overshoot+blur+rot-kick / one glide), gate-weave
+  micro-life, grain. `src/theme.ts`, `src/fonts.ts` (delayRender-gated).
+- **Components**: Type (Playfair headline, dek, HiWord+TornMarker word-wipe),
+  DateTag, Masthead, Stamp, Cutout (rembg + red offset), PhotoCard (torn clip),
+  Rough (roughjs boil), Graphics (Label/BigStat/Scribble), VoteTally, DateCircle.
+- **All 12 beats** built + gated on `timing.json` events (`src/beats/BeatN.tsx`),
+  wired in `src/BonusArmyShort.tsx`.
+- **Real assets**: 7 public-domain images (Wikimedia) → `public/assets/treated/`
+  via `pipeline/treat_images.py` (B&W unify + rembg u2net cutouts).
+- **Audio**: `src/audio/Soundtrack.tsx` + `sfxMap.ts` — VO, ducked tense/drone
+  bed with the dead-cut on "Army", event-driven layered SFX (procedural kit).
+
+## Remaining polish (the "final finish" upgrades)
+
+1. Final VO: `pip install chatterbox-tts` → `python pipeline/vo_chatterbox.py`
+   → `python pipeline/assemble.py` → `node scripts/whisper-captions.mjs`.
+   Re-times everything automatically (aim ≤58s by tightening script.json gaps).
+2. More real assets (LOC/NARA/Chronicling America) for beats now carried by
+   type/graphics (b3 certificate, b4 trenches, b5 camp wide, b12 newsreel).
+   `treat_images.py` picks up any new file in `public/assets/src/`.
+3. CC0 SFX/music from Pixabay/Freesound to replace procedural stand-ins
+   (keep the `public/audio/sfx/*.wav` filenames — `sfxMap.ts` picks them up).
+4. Loop polish: land b12's final paper frame pixel-close on b1 frame 1.
+
+## Rebuild / render
+
+```bash
+bash pipeline/setup.sh                 # venv + scratch-voice models
+npm install                            # in bonus-army-short/
+npx remotion render BonusArmyShort out/bonus-army-short.mp4
+# reference frames (already extracted): reference/study/ + reference-analysis.md
+# assets: python pipeline/treat_images.py  (needs /root/.u2net/u2net.onnx)
+```
 
 ## Known notes
 
