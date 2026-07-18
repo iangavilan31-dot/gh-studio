@@ -1,13 +1,12 @@
-// Reliable font loading via @remotion/fonts against local woff2 files in
-// public/fonts. This uses the FontFace API + Remotion's own delay/continue
-// handling, which is robust under concurrent rendering (unlike awaiting
-// document.fonts, which could stall a render tab and trip the timeout).
+// Load fonts via @remotion/fonts (FontFace API) from local woff2 in public/fonts.
+// Reliable at low render concurrency; the earlier full-render stalls were fetch
+// contention across many concurrent tabs, so the render runs at --concurrency=1.
 import { loadFont } from "@remotion/fonts";
 import { staticFile } from "remotion";
 
 const F = (name: string) => staticFile(`fonts/${name}`);
 
-type Face = { family: string; file: string; weight?: string; style?: string };
+type Face = { family: string; file: string; weight: string; style?: string };
 
 const FACES: Face[] = [
   { family: "Playfair Display", file: "playfair-400.woff2", weight: "400" },
