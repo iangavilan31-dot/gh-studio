@@ -54,8 +54,8 @@ def main():
     if run_start is not None and keys[-1] - run_start >= 2.0:
         findings.append(f"STATIC span {run_start:.1f}-{keys[-1]:.1f}s (to end)")
 
-    # loop diff: frame 0 vs last
-    frame_at(0.03, f"{OUT}/_first.png")
+    # loop diff: first CONTENT frame (skip the ~0.1s black in-point) vs last
+    frame_at(0.15, f"{OUT}/_first.png")
     frame_at(total_s - 0.05, f"{OUT}/_last.png")
     try:
         a = np.asarray(Image.open(f"{OUT}/_first.png").convert("RGB"), dtype=np.float32)
