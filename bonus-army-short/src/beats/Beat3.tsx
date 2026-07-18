@@ -29,7 +29,7 @@ export const Beat3: React.FC = () => {
   if (showInsert) {
     return (
       <AbsoluteFill style={{ background: "#000" }}>
-        <DetailInsert src="assets/final/breadline.png" from={fHands} duration={40} focus="42% 72%" zoom={3.0} />
+        <DetailInsert src="assets/final/breadline.png" from={fHands} duration={40} focus="44% 80%" zoom={2.7} bright={1.4} />
         <FilmTexture intensity={0.6} scratches flicker seed={3} />
       </AbsoluteFill>
     );
