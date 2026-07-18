@@ -10,8 +10,9 @@ UPLOAD=out/bonus-army-short-upload.mp4
 
 GRADE="curves=all='0/0.04 0.25/0.23 0.5/0.51 0.75/0.79 1/0.985',eq=gamma_r=1.03:gamma_g=1.0:gamma_b=0.97:saturation=1.02,scale=iw*1.006:ih*1.006,crop=1920:1080"
 
-echo ">>> grade + zoom-crop + CRF 16"
-ffmpeg -y -i "$IN" -vf "$GRADE" -c:v libx264 -crf 16 -preset slow -pix_fmt yuv420p \
+echo ">>> grade + zoom-crop + CRF 16 + loudnorm -14 LUFS/-1.5 dBTP"
+ffmpeg -y -i "$IN" -vf "$GRADE" -af "loudnorm=I=-14:TP=-1.5:LRA=11" \
+  -c:v libx264 -crf 16 -preset slow -pix_fmt yuv420p \
   -c:a aac -b:a 256k "$OUT" 2>&1 | tail -2
 
 echo ">>> upload file (yuv420p, faststart)"
