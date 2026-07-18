@@ -20,9 +20,13 @@ export const FONT_MONO = "'IBM Plex Mono', ui-monospace, monospace"; // stamps/m
 export const FONT_MARKER = "'Permanent Marker', cursive"; // scribbles
 export const FONT_BLACK = "'Special Elite', 'Playfair Display', serif"; // masthead flavour
 
-// 9:16 canvas + copy margins (fractions of the reference, re-flowed vertical).
-export const W = 1080;
-export const H = 1920;
-export const MARGIN = Math.round(W * 0.09); // ≈97px, matches reference left-set copy
+// PRIMARY canvas is 16:9 widescreen (1920x1080). A 9:16 portrait comp is kept
+// in the repo but deprioritized. Beats compose for landscape: imagery fills the
+// frame, copy sits on one side / on the imagery.
+export const W = 1920;
+export const H = 1080;
+export const MARGIN = Math.round(W * 0.05); // ≈96px
+export const PORTRAIT_W = 1080;
+export const PORTRAIT_H = 1920;
 
 export const FPS = 30;
