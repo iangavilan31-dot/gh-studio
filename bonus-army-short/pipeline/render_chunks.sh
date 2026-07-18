@@ -10,7 +10,7 @@ OUT=out/chunks
 mkdir -p "$OUT"
 : > "$OUT/list.txt"
 
-CHUNKS=("0-400" "401-800" "801-1200" "1201-1600" "1601-1850")
+CHUNKS=("0-350" "351-700" "701-1050" "1051-1400" "1401-1715")
 i=0
 for range in "${CHUNKS[@]}"; do
   f="$OUT/chunk_$i.mp4"
