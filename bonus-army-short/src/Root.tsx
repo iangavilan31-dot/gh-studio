@@ -1,5 +1,6 @@
 import React from "react";
 import { Composition } from "remotion";
+import "./fonts";
 import { BonusArmyShort } from "./BonusArmyShort";
 import { TimingScope } from "./TimingScope";
 import { FPS, TOTAL_FRAMES } from "./timing";

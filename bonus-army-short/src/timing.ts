@@ -48,3 +48,35 @@ export const beatFrames = (id: string): { from: number; to: number } => {
 };
 
 export const TOTAL_FRAMES = msToFrame(TIMING.totalMs);
+
+export type FramedWord = {
+  text: string;
+  start: number; // frame
+  end: number; // frame
+  chunk: string;
+};
+
+/** Flat, frame-stamped word list for a beat (drives highlight wipes). */
+export const beatWords = (id: string): FramedWord[] =>
+  beat(id).chunks.flatMap((c) =>
+    c.words.map((w) => ({
+      text: w.text,
+      start: msToFrame(w.startMs),
+      end: msToFrame(w.endMs),
+      chunk: c.id,
+    }))
+  );
+
+/**
+ * Highlight reveal (0..1) for a marker that triggers `lead` frames BEFORE the
+ * word onset and wipes over `wipe` frames — the reference's word-locked marker.
+ */
+export const wordReveal = (
+  frame: number,
+  wordStartFrame: number,
+  lead = 2,
+  wipe = 4
+): number => {
+  const t = (frame - (wordStartFrame - lead)) / wipe;
+  return Math.max(0, Math.min(1, t));
+};
