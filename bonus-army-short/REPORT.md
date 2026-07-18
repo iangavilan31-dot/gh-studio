@@ -116,9 +116,19 @@ build from `sfx-manifest.json`, mastered to −14 LUFS / −1.5 dBTP.
 - B3 hands detail-insert and B10 portrait too dark → **fixed**: brightness +
   reframe. B1 crowd (night) strip brightened.
 
-**Cycle 2** (post-fix re-render): _pending final render; results appended below._
+**Cycle 2** (post-fix re-render + harness):
+- STATIC span **gone** (the B10 slow push resolved the near-frozen flag).
+- AUDIO mean −15.1 dB / peak −1.0 dB — no clipping, −14 LUFS master holds.
+- LOOP (harness fixed to sample the first *content* frame, not the 0.1 s black
+  in-point) = **3.3** → seamless. `out/qa_sheets/_fixes.png` confirms the B3
+  hands and B10 portrait now read clearly.
 
-**Cycle 3:** _pending._
+**Cycle 3** (final graded contact sweep, `out/qa_sheets/_contact3.png`):
+- Text-on-plain-background audit: only the **43,000** card qualifies (allowed).
+  Every other shot is imagery (recreated pages, photos, certificate, map).
+- No new static spans, no off-palette (grade: warm, blacks lifted ~4%), parallax
+  edges clean (strip-cheat on crowds, 3-layer only on the clean breadline).
+- Remaining soft spots are the asset-limited ones in §5; none are broken shots.
 
 ---
 
