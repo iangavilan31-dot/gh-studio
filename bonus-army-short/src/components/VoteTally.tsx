@@ -53,8 +53,8 @@ export const VoteTally: React.FC<{
           <div style={label}>YEA</div>
         </div>
       </div>
-      <div style={{ position: "absolute", left: 40, top: 250, opacity: appear(frame, stampAt, 2) }}>
-        <Stamp at={stampAt} rotate={-8} size={64}>
+      <div style={{ position: "absolute", left: 60, top: 470, opacity: appear(frame, stampAt, 2) }}>
+        <Stamp at={stampAt} rotate={-7} size={64}>
           DEFEATED
         </Stamp>
       </div>

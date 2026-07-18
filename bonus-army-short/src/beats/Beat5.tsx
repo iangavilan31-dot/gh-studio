@@ -15,9 +15,11 @@ export const Beat5: React.FC = () => {
   const peace = words.find((w) => w.text.replace(/[^a-z]/gi, "") === "Peacefully");
   const fMonths = ev("b5.months");
 
+  // the one slow glide: a gentle push-in across the Anacostia map (no x-pan, so
+  // the fixed copy never leaves the frame)
   const shots: Shot[] = [
-    { at: ev("b5.start"), type: "cut", scale: 1.18, x: 260, y: -120 },
-    { at: ev("b5.camped") + 12, type: "glide", scale: 1.18, x: -260, y: -120, dur: 78 },
+    { at: ev("b5.start"), type: "cut", scale: 1.0, y: 0 },
+    { at: ev("b5.camped") + 10, type: "glide", scale: 1.12, y: -30, dur: 92 },
   ];
 
   return (

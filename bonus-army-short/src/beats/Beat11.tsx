@@ -56,7 +56,6 @@ export const Beat11: React.FC = () => {
                 color: INK,
               }}
             >
-              &ldquo;
               {quoteWords.map((w, i) => (
                 <React.Fragment key={i}>
                   <HiWord reveal={wordReveal(frame, w.start, 2, 5)} seed={20 + i}>
@@ -64,24 +63,23 @@ export const Beat11: React.FC = () => {
                   </HiWord>{" "}
                 </React.Fragment>
               ))}
-              &rdquo;
             </div>
             <Masthead style={{ marginTop: 50 }}>The Washington Daily News</Masthead>
 
             {/* the reveal: the major was Patton */}
-            <div style={{ position: "absolute", left: W * 0.06, top: H * 0.5 }}>
-              <Scribble at={fQuote + 74} x={0} y={0} width={560} size={62} rotate={-4} underline>
-                the major was Patton.
-              </Scribble>
+            <div style={{ position: "absolute", left: W * 0.08, top: H * 0.46 }}>
               <Rough
                 shape="arrow"
-                at={fQuote + 82}
-                x={-40}
-                y={-90}
-                w={220}
-                h={90}
-                strokeWidth={6}
+                at={fQuote + 70}
+                x={40}
+                y={-150}
+                w={260}
+                h={150}
+                strokeWidth={7}
               />
+              <Scribble at={fQuote + 78} x={0} y={0} width={560} size={64} rotate={-4} underline>
+                the major was Patton.
+              </Scribble>
             </div>
           </div>
         )}
