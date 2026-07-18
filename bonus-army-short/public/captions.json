@@ -1,1122 +1,1122 @@
 [
  {
   "text": "In",
-  "startMs": 150.0,
-  "endMs": 305.6,
-  "timestampMs": 150.0,
+  "startMs": 100.0,
+  "endMs": 283.0,
+  "timestampMs": 100.0,
   "confidence": 1.0
  },
  {
   "text": " 1932,",
-  "startMs": 305.6,
-  "endMs": 1120.1,
-  "timestampMs": 305.6,
+  "startMs": 283.0,
+  "endMs": 1170.1,
+  "timestampMs": 283.0,
   "confidence": 1.0
  },
  {
   "text": " America's",
-  "startMs": 1202.5,
-  "endMs": 1783.6,
-  "timestampMs": 1202.5,
+  "startMs": 1296.8,
+  "endMs": 1902.2,
+  "timestampMs": 1296.8,
   "confidence": 1.0
  },
  {
   "text": " three",
-  "startMs": 1783.6,
-  "endMs": 1998.7,
-  "timestampMs": 1783.6,
+  "startMs": 1902.2,
+  "endMs": 2085.2,
+  "timestampMs": 1902.2,
   "confidence": 1.0
  },
  {
   "text": " most",
-  "startMs": 1998.7,
-  "endMs": 2273.3,
-  "timestampMs": 1998.7,
+  "startMs": 2085.2,
+  "endMs": 2268.3,
+  "timestampMs": 2085.2,
   "confidence": 1.0
  },
  {
   "text": " famous",
-  "startMs": 2273.3,
-  "endMs": 2653.1,
-  "timestampMs": 2273.3,
+  "startMs": 2268.3,
+  "endMs": 2592.1,
+  "timestampMs": 2268.3,
   "confidence": 1.0
  },
  {
   "text": " generals",
-  "startMs": 2653.1,
-  "endMs": 3106.1,
-  "timestampMs": 2653.1,
+  "startMs": 2592.1,
+  "endMs": 3056.7,
+  "timestampMs": 2592.1,
   "confidence": 1.0
  },
  {
   "text": " fought",
-  "startMs": 3106.1,
-  "endMs": 3307.5,
-  "timestampMs": 3106.1,
+  "startMs": 3056.7,
+  "endMs": 3239.8,
+  "timestampMs": 3056.7,
   "confidence": 1.0
  },
  {
   "text": " their",
-  "startMs": 3307.5,
-  "endMs": 3522.5,
-  "timestampMs": 3307.5,
+  "startMs": 3239.8,
+  "endMs": 3422.8,
+  "timestampMs": 3239.8,
   "confidence": 1.0
  },
  {
   "text": " first",
-  "startMs": 3522.5,
-  "endMs": 3742.2,
-  "timestampMs": 3522.5,
+  "startMs": 3422.8,
+  "endMs": 3605.8,
+  "timestampMs": 3422.8,
   "confidence": 1.0
  },
  {
   "text": " battle",
-  "startMs": 3742.2,
-  "endMs": 4076.2,
-  "timestampMs": 3742.2,
+  "startMs": 3605.8,
+  "endMs": 3929.7,
+  "timestampMs": 3605.8,
   "confidence": 1.0
  },
  {
   "text": " together.",
-  "startMs": 4076.2,
-  "endMs": 4579.6,
-  "timestampMs": 4076.2,
+  "startMs": 3929.7,
+  "endMs": 4510.5,
+  "timestampMs": 3929.7,
   "confidence": 1.0
  },
  {
   "text": " Against",
-  "startMs": 4759.6,
-  "endMs": 5172.1,
-  "timestampMs": 4759.6,
+  "startMs": 4630.5,
+  "endMs": 4928.8,
+  "timestampMs": 4630.5,
   "confidence": 1.0
  },
  {
   "text": " American",
-  "startMs": 5172.1,
-  "endMs": 5769.6,
-  "timestampMs": 5172.1,
+  "startMs": 4928.8,
+  "endMs": 5486.5,
+  "timestampMs": 4928.8,
   "confidence": 1.0
  },
  {
   "text": " veterans.",
-  "startMs": 5769.6,
-  "endMs": 6356.5,
-  "timestampMs": 5769.6,
+  "startMs": 5486.5,
+  "endMs": 6021.6,
+  "timestampMs": 5486.5,
   "confidence": 1.0
  },
  {
   "text": " Forty-three",
-  "startMs": 6616.5,
-  "endMs": 7242.5,
-  "timestampMs": 6616.5,
+  "startMs": 6231.6,
+  "endMs": 6657.6,
+  "timestampMs": 6231.6,
   "confidence": 1.0
  },
  {
   "text": " thousand",
-  "startMs": 7242.5,
-  "endMs": 7710.8,
-  "timestampMs": 7242.5,
+  "startMs": 6657.6,
+  "endMs": 6954.6,
+  "timestampMs": 6657.6,
   "confidence": 1.0
  },
  {
   "text": " broke",
-  "startMs": 7710.8,
-  "endMs": 8006.0,
-  "timestampMs": 7710.8,
+  "startMs": 6954.6,
+  "endMs": 7251.5,
+  "timestampMs": 6954.6,
   "confidence": 1.0
  },
  {
   "text": " World",
-  "startMs": 8006.0,
-  "endMs": 8250.3,
-  "timestampMs": 8006.0,
+  "startMs": 7251.5,
+  "endMs": 7419.4,
+  "timestampMs": 7251.5,
   "confidence": 1.0
  },
  {
   "text": " War",
-  "startMs": 8250.3,
-  "endMs": 8489.5,
-  "timestampMs": 8250.3,
+  "startMs": 7419.4,
+  "endMs": 7587.2,
+  "timestampMs": 7419.4,
   "confidence": 1.0
  },
  {
   "text": " One",
-  "startMs": 8489.5,
-  "endMs": 8723.7,
-  "timestampMs": 8489.5,
+  "startMs": 7587.2,
+  "endMs": 7884.1,
+  "timestampMs": 7587.2,
   "confidence": 1.0
  },
  {
   "text": " veterans",
-  "startMs": 8723.7,
-  "endMs": 9353.5,
-  "timestampMs": 8723.7,
+  "startMs": 7884.1,
+  "endMs": 8416.7,
+  "timestampMs": 7884.1,
   "confidence": 1.0
  },
  {
   "text": " marched",
-  "startMs": 9493.5,
-  "endMs": 9778.3,
-  "timestampMs": 9493.5,
+  "startMs": 8556.7,
+  "endMs": 8870.3,
+  "timestampMs": 8556.7,
   "confidence": 1.0
  },
  {
   "text": " on",
-  "startMs": 9778.3,
-  "endMs": 9929.6,
-  "timestampMs": 9778.3,
+  "startMs": 8870.3,
+  "endMs": 9047.5,
+  "timestampMs": 8870.3,
   "confidence": 1.0
  },
  {
   "text": " Washington.",
-  "startMs": 9929.6,
-  "endMs": 10586.0,
-  "timestampMs": 9929.6,
+  "startMs": 9047.5,
+  "endMs": 9610.0,
+  "timestampMs": 9047.5,
   "confidence": 1.0
  },
  {
   "text": " The",
-  "startMs": 10846.0,
-  "endMs": 10997.6,
-  "timestampMs": 10846.0,
+  "startMs": 9820.0,
+  "endMs": 9980.2,
+  "timestampMs": 9820.0,
   "confidence": 1.0
  },
  {
   "text": " government",
-  "startMs": 10997.6,
-  "endMs": 11521.7,
-  "timestampMs": 10997.6,
+  "startMs": 9980.2,
+  "endMs": 10387.0,
+  "timestampMs": 9980.2,
   "confidence": 1.0
  },
  {
   "text": " owed",
-  "startMs": 11521.7,
-  "endMs": 11682.0,
-  "timestampMs": 11521.7,
+  "startMs": 10387.0,
+  "endMs": 10670.4,
+  "timestampMs": 10387.0,
   "confidence": 1.0
  },
  {
   "text": " them",
-  "startMs": 11682.0,
-  "endMs": 11881.2,
-  "timestampMs": 11682.0,
+  "startMs": 10670.4,
+  "endMs": 10830.7,
+  "timestampMs": 10670.4,
   "confidence": 1.0
  },
  {
   "text": " a",
-  "startMs": 11881.2,
-  "endMs": 11980.9,
-  "timestampMs": 11881.2,
+  "startMs": 10830.7,
+  "endMs": 10990.9,
+  "timestampMs": 10830.7,
   "confidence": 1.0
  },
  {
   "text": " bonus",
-  "startMs": 11980.9,
-  "endMs": 12327.4,
-  "timestampMs": 11980.9,
+  "startMs": 10990.9,
+  "endMs": 11274.4,
+  "timestampMs": 10990.9,
   "confidence": 1.0
  },
  {
   "text": " for",
-  "startMs": 12327.4,
-  "endMs": 12444.3,
-  "timestampMs": 12327.4,
+  "startMs": 11274.4,
+  "endMs": 11434.7,
+  "timestampMs": 11274.4,
   "confidence": 1.0
  },
  {
   "text": " their",
-  "startMs": 12444.3,
-  "endMs": 12647.9,
-  "timestampMs": 12444.3,
+  "startMs": 11434.7,
+  "endMs": 11594.9,
+  "timestampMs": 11434.7,
   "confidence": 1.0
  },
  {
   "text": " service.",
-  "startMs": 12647.9,
-  "endMs": 13032.3,
-  "timestampMs": 12647.9,
+  "startMs": 11594.9,
+  "endMs": 12103.3,
+  "timestampMs": 11594.9,
   "confidence": 1.0
  },
  {
   "text": " Payable...",
-  "startMs": 13252.3,
-  "endMs": 13820.1,
-  "timestampMs": 13252.3,
+  "startMs": 12223.3,
+  "endMs": 12975.0,
+  "timestampMs": 12223.3,
   "confidence": 1.0
  },
  {
   "text": " in",
-  "startMs": 14240.1,
-  "endMs": 14409.1,
-  "timestampMs": 14240.1,
+  "startMs": 13095.0,
+  "endMs": 13239.2,
+  "timestampMs": 13095.0,
   "confidence": 1.0
  },
  {
   "text": " 1945.",
-  "startMs": 14409.1,
-  "endMs": 15763.0,
-  "timestampMs": 14409.1,
+  "startMs": 13239.2,
+  "endMs": 14251.4,
+  "timestampMs": 13239.2,
   "confidence": 1.0
  },
  {
   "text": " It",
-  "startMs": 16023.0,
-  "endMs": 16143.3,
-  "timestampMs": 16023.0,
+  "startMs": 14461.4,
+  "endMs": 14667.3,
+  "timestampMs": 14461.4,
   "confidence": 1.0
  },
  {
   "text": " was",
-  "startMs": 16143.3,
-  "endMs": 16320.1,
-  "timestampMs": 16143.3,
+  "startMs": 14667.3,
+  "endMs": 14873.2,
+  "timestampMs": 14667.3,
   "confidence": 1.0
  },
  {
   "text": " the",
-  "startMs": 16320.1,
-  "endMs": 16451.7,
-  "timestampMs": 16320.1,
+  "startMs": 14873.2,
+  "endMs": 15079.1,
+  "timestampMs": 14873.2,
   "confidence": 1.0
  },
  {
   "text": " Great",
-  "startMs": 16451.7,
-  "endMs": 16681.1,
-  "timestampMs": 16451.7,
+  "startMs": 15079.1,
+  "endMs": 15285.0,
+  "timestampMs": 15079.1,
   "confidence": 1.0
  },
  {
   "text": " Depression.",
-  "startMs": 16681.1,
-  "endMs": 17226.3,
-  "timestampMs": 16681.1,
+  "startMs": 15285.0,
+  "endMs": 15938.3,
+  "timestampMs": 15285.0,
   "confidence": 1.0
  },
  {
   "text": " Men",
-  "startMs": 17426.3,
-  "endMs": 17642.2,
-  "timestampMs": 17426.3,
+  "startMs": 16058.3,
+  "endMs": 16277.9,
+  "timestampMs": 16058.3,
   "confidence": 1.0
  },
  {
   "text": " who'd",
-  "startMs": 17642.2,
-  "endMs": 17853.2,
-  "timestampMs": 17642.2,
+  "startMs": 16277.9,
+  "endMs": 16497.6,
+  "timestampMs": 16277.9,
   "confidence": 1.0
  },
  {
   "text": " survived",
-  "startMs": 17853.2,
-  "endMs": 18260.9,
-  "timestampMs": 17853.2,
+  "startMs": 16497.6,
+  "endMs": 17055.1,
+  "timestampMs": 16497.6,
   "confidence": 1.0
  },
  {
   "text": " the",
-  "startMs": 18260.9,
-  "endMs": 18428.8,
-  "timestampMs": 18260.9,
+  "startMs": 17055.1,
+  "endMs": 17274.8,
+  "timestampMs": 17055.1,
   "confidence": 1.0
  },
  {
   "text": " trenches",
-  "startMs": 18428.8,
-  "endMs": 18889.2,
-  "timestampMs": 18428.8,
+  "startMs": 17274.8,
+  "endMs": 17663.4,
+  "timestampMs": 17274.8,
   "confidence": 1.0
  },
  {
   "text": " were",
-  "startMs": 18889.2,
-  "endMs": 19018.7,
-  "timestampMs": 18889.2,
+  "startMs": 17663.4,
+  "endMs": 18052.0,
+  "timestampMs": 17663.4,
   "confidence": 1.0
  },
  {
   "text": " starving.",
-  "startMs": 19018.7,
-  "endMs": 19612.3,
-  "timestampMs": 19018.7,
+  "startMs": 18052.0,
+  "endMs": 18537.8,
+  "timestampMs": 18052.0,
   "confidence": 1.0
  },
  {
   "text": " So",
-  "startMs": 19872.2,
-  "endMs": 20043.0,
-  "timestampMs": 19872.2,
+  "startMs": 18747.8,
+  "endMs": 18914.5,
+  "timestampMs": 18747.8,
   "confidence": 1.0
  },
  {
   "text": " they",
-  "startMs": 20043.0,
-  "endMs": 20213.7,
-  "timestampMs": 20043.0,
+  "startMs": 18914.5,
+  "endMs": 19081.3,
+  "timestampMs": 18914.5,
   "confidence": 1.0
  },
  {
   "text": " camped",
-  "startMs": 20213.7,
-  "endMs": 20474.0,
-  "timestampMs": 20213.7,
+  "startMs": 19081.3,
+  "endMs": 19376.3,
+  "timestampMs": 19081.3,
   "confidence": 1.0
  },
  {
   "text": " across",
-  "startMs": 20474.0,
-  "endMs": 20798.4,
-  "timestampMs": 20474.0,
+  "startMs": 19376.3,
+  "endMs": 19671.4,
+  "timestampMs": 19376.3,
   "confidence": 1.0
  },
  {
   "text": " the",
-  "startMs": 20798.4,
-  "endMs": 20947.8,
-  "timestampMs": 20798.4,
+  "startMs": 19671.4,
+  "endMs": 19838.2,
+  "timestampMs": 19671.4,
   "confidence": 1.0
  },
  {
   "text": " river",
-  "startMs": 20947.8,
-  "endMs": 21199.6,
-  "timestampMs": 20947.8,
+  "startMs": 19838.2,
+  "endMs": 20133.2,
+  "timestampMs": 19838.2,
   "confidence": 1.0
  },
  {
   "text": " from",
-  "startMs": 21199.6,
-  "endMs": 21447.1,
-  "timestampMs": 21199.6,
+  "startMs": 20133.2,
+  "endMs": 20300.0,
+  "timestampMs": 20133.2,
   "confidence": 1.0
  },
  {
   "text": " the",
-  "startMs": 21447.1,
-  "endMs": 21596.5,
-  "timestampMs": 21447.1,
+  "startMs": 20300.0,
+  "endMs": 20466.7,
+  "timestampMs": 20300.0,
   "confidence": 1.0
  },
  {
   "text": " Capitol.",
-  "startMs": 21596.5,
-  "endMs": 22140.6,
-  "timestampMs": 21596.5,
+  "startMs": 20466.7,
+  "endMs": 20995.9,
+  "timestampMs": 20466.7,
   "confidence": 1.0
  },
  {
   "text": " Peacefully.",
-  "startMs": 22360.6,
-  "endMs": 23025.0,
-  "timestampMs": 22360.6,
+  "startMs": 21115.9,
+  "endMs": 21882.2,
+  "timestampMs": 21115.9,
   "confidence": 1.0
  },
  {
   "text": " For",
-  "startMs": 23215.0,
-  "endMs": 23372.9,
-  "timestampMs": 23215.0,
+  "startMs": 22002.2,
+  "endMs": 22411.1,
+  "timestampMs": 22002.2,
   "confidence": 1.0
  },
  {
   "text": " months.",
-  "startMs": 23372.9,
-  "endMs": 23877.2,
-  "timestampMs": 23372.9,
+  "startMs": 22411.1,
+  "endMs": 22922.2,
+  "timestampMs": 22411.1,
   "confidence": 1.0
  },
  {
   "text": " Congress",
-  "startMs": 24137.2,
-  "endMs": 24599.8,
-  "timestampMs": 24137.2,
+  "startMs": 23132.2,
+  "endMs": 23505.2,
+  "timestampMs": 23132.2,
   "confidence": 1.0
  },
  {
   "text": " voted",
-  "startMs": 24599.8,
-  "endMs": 24964.2,
-  "timestampMs": 24599.8,
+  "startMs": 23505.2,
+  "endMs": 23878.3,
+  "timestampMs": 23505.2,
   "confidence": 1.0
  },
  {
   "text": " on",
-  "startMs": 24964.2,
-  "endMs": 25123.0,
-  "timestampMs": 24964.2,
+  "startMs": 23878.3,
+  "endMs": 24089.2,
+  "timestampMs": 23878.3,
   "confidence": 1.0
  },
  {
   "text": " their",
-  "startMs": 25123.0,
-  "endMs": 25342.6,
-  "timestampMs": 25123.0,
+  "startMs": 24089.2,
+  "endMs": 24300.1,
+  "timestampMs": 24089.2,
   "confidence": 1.0
  },
  {
   "text": " bonus.",
-  "startMs": 25342.6,
-  "endMs": 25809.8,
-  "timestampMs": 25342.6,
+  "startMs": 24300.1,
+  "endMs": 24766.4,
+  "timestampMs": 24300.1,
   "confidence": 1.0
  },
  {
   "text": " The",
-  "startMs": 26009.8,
-  "endMs": 26191.4,
-  "timestampMs": 26009.8,
+  "startMs": 24886.4,
+  "endMs": 25084.2,
+  "timestampMs": 24886.4,
   "confidence": 1.0
  },
  {
   "text": " Senate",
-  "startMs": 26191.4,
-  "endMs": 26580.5,
-  "timestampMs": 26191.4,
+  "startMs": 25084.2,
+  "endMs": 25586.2,
+  "timestampMs": 25084.2,
   "confidence": 1.0
  },
  {
   "text": " said",
-  "startMs": 26580.5,
-  "endMs": 26808.8,
-  "timestampMs": 26580.5,
+  "startMs": 25586.2,
+  "endMs": 25784.0,
+  "timestampMs": 25586.2,
   "confidence": 1.0
  },
  {
   "text": " no.",
-  "startMs": 26808.8,
-  "endMs": 27061.8,
-  "timestampMs": 26808.8,
+  "startMs": 25784.0,
+  "endMs": 26031.2,
+  "timestampMs": 25784.0,
   "confidence": 1.0
  },
  {
   "text": " 62",
-  "startMs": 27301.8,
-  "endMs": 27932.8,
-  "timestampMs": 27301.8,
+  "startMs": 26151.2,
+  "endMs": 26867.8,
+  "timestampMs": 26151.2,
   "confidence": 1.0
  },
  {
   "text": " to",
-  "startMs": 27932.8,
-  "endMs": 28105.4,
-  "timestampMs": 27932.8,
+  "startMs": 26867.8,
+  "endMs": 27150.1,
+  "timestampMs": 26867.8,
   "confidence": 1.0
  },
  {
   "text": " 18.",
-  "startMs": 28105.4,
-  "endMs": 28563.8,
-  "timestampMs": 28105.4,
+  "startMs": 27150.1,
+  "endMs": 27774.5,
+  "timestampMs": 27150.1,
   "confidence": 1.0
  },
  {
   "text": " Then",
-  "startMs": 28963.8,
-  "endMs": 29169.5,
-  "timestampMs": 28963.8,
+  "startMs": 27994.5,
+  "endMs": 28180.4,
+  "timestampMs": 27994.5,
   "confidence": 1.0
  },
  {
   "text": " President",
-  "startMs": 29169.5,
-  "endMs": 29728.4,
-  "timestampMs": 29169.5,
+  "startMs": 28180.4,
+  "endMs": 28652.6,
+  "timestampMs": 28180.4,
   "confidence": 1.0
  },
  {
   "text": " Hoover",
-  "startMs": 29728.4,
-  "endMs": 29992.2,
-  "timestampMs": 29728.4,
+  "startMs": 28652.6,
+  "endMs": 28981.6,
+  "timestampMs": 28652.6,
   "confidence": 1.0
  },
  {
   "text": " sent",
-  "startMs": 29992.2,
-  "endMs": 30238.1,
-  "timestampMs": 29992.2,
+  "startMs": 28981.6,
+  "endMs": 29167.6,
+  "timestampMs": 28981.6,
   "confidence": 1.0
  },
  {
   "text": " in",
-  "startMs": 30238.1,
-  "endMs": 30390.1,
-  "timestampMs": 30238.1,
+  "startMs": 29167.6,
+  "endMs": 29353.6,
+  "timestampMs": 29167.6,
   "confidence": 1.0
  },
  {
   "text": " the",
-  "startMs": 30390.1,
-  "endMs": 30546.5,
-  "timestampMs": 30390.1,
+  "startMs": 29353.6,
+  "endMs": 29539.6,
+  "timestampMs": 29353.6,
   "confidence": 1.0
  },
  {
   "text": " actual",
-  "startMs": 30546.5,
-  "endMs": 30962.3,
-  "timestampMs": 30546.5,
+  "startMs": 29539.6,
+  "endMs": 29868.7,
+  "timestampMs": 29539.6,
   "confidence": 1.0
  },
  {
   "text": " United",
-  "startMs": 30962.3,
-  "endMs": 31449.7,
-  "timestampMs": 30962.3,
+  "startMs": 29868.7,
+  "endMs": 30340.8,
+  "timestampMs": 29868.7,
   "confidence": 1.0
  },
  {
   "text": " States",
-  "startMs": 31449.7,
-  "endMs": 31762.6,
-  "timestampMs": 31449.7,
+  "startMs": 30340.8,
+  "endMs": 30669.8,
+  "timestampMs": 30340.8,
   "confidence": 1.0
  },
  {
   "text": " Army.",
-  "startMs": 31762.6,
-  "endMs": 32131.5,
-  "timestampMs": 31762.6,
+  "startMs": 30669.8,
+  "endMs": 31081.2,
+  "timestampMs": 30669.8,
   "confidence": 1.0
  },
  {
   "text": " Cavalry",
-  "startMs": 32691.5,
-  "endMs": 33231.4,
-  "timestampMs": 32691.5,
+  "startMs": 31301.2,
+  "endMs": 31822.6,
+  "timestampMs": 31301.2,
   "confidence": 1.0
  },
  {
   "text": " with",
-  "startMs": 33231.4,
-  "endMs": 33466.4,
-  "timestampMs": 33231.4,
+  "startMs": 31822.6,
+  "endMs": 32028.1,
+  "timestampMs": 31822.6,
   "confidence": 1.0
  },
  {
   "text": " drawn",
-  "startMs": 33466.4,
-  "endMs": 33741.4,
-  "timestampMs": 33466.4,
+  "startMs": 32028.1,
+  "endMs": 32233.5,
+  "timestampMs": 32028.1,
   "confidence": 1.0
  },
  {
   "text": " sabers.",
-  "startMs": 33741.4,
-  "endMs": 34197.6,
-  "timestampMs": 33741.4,
+  "startMs": 32233.5,
+  "endMs": 32687.8,
+  "timestampMs": 32233.5,
   "confidence": 1.0
  },
  {
   "text": " Infantry",
-  "startMs": 34387.6,
-  "endMs": 34917.0,
-  "timestampMs": 34387.6,
+  "startMs": 32807.8,
+  "endMs": 33377.7,
+  "timestampMs": 32807.8,
   "confidence": 1.0
  },
  {
   "text": " with",
-  "startMs": 34917.0,
-  "endMs": 35127.8,
-  "timestampMs": 34917.0,
+  "startMs": 33377.7,
+  "endMs": 33602.2,
+  "timestampMs": 33377.7,
   "confidence": 1.0
  },
  {
   "text": " fixed",
-  "startMs": 35127.8,
-  "endMs": 35419.4,
-  "timestampMs": 35127.8,
+  "startMs": 33602.2,
+  "endMs": 33999.4,
+  "timestampMs": 33602.2,
   "confidence": 1.0
  },
  {
   "text": " bayonets.",
-  "startMs": 35419.4,
-  "endMs": 36030.7,
-  "timestampMs": 35419.4,
+  "startMs": 33999.4,
+  "endMs": 34495.8,
+  "timestampMs": 33999.4,
   "confidence": 1.0
  },
  {
   "text": " Six",
-  "startMs": 36220.7,
-  "endMs": 36545.5,
-  "timestampMs": 36220.7,
+  "startMs": 34615.8,
+  "endMs": 35115.6,
+  "timestampMs": 34615.8,
   "confidence": 1.0
  },
  {
   "text": " tanks.",
-  "startMs": 36545.5,
-  "endMs": 37009.5,
-  "timestampMs": 36545.5,
+  "startMs": 35115.6,
+  "endMs": 35740.3,
+  "timestampMs": 35115.6,
   "confidence": 1.0
  },
  {
   "text": " Down",
-  "startMs": 37199.5,
-  "endMs": 37410.4,
-  "timestampMs": 37199.5,
+  "startMs": 35860.3,
+  "endMs": 36054.0,
+  "timestampMs": 35860.3,
   "confidence": 1.0
  },
  {
   "text": " Pennsylvania",
-  "startMs": 37410.4,
-  "endMs": 38144.1,
-  "timestampMs": 37410.4,
+  "startMs": 36054.0,
+  "endMs": 36694.7,
+  "timestampMs": 36054.0,
   "confidence": 1.0
  },
  {
   "text": " Avenue.",
-  "startMs": 38144.1,
-  "endMs": 38616.5,
-  "timestampMs": 38144.1,
+  "startMs": 36694.7,
+  "endMs": 37309.4,
+  "timestampMs": 36694.7,
   "confidence": 1.0
  },
  {
   "text": " They",
-  "startMs": 38996.5,
-  "endMs": 39191.0,
-  "timestampMs": 38996.5,
+  "startMs": 37529.4,
+  "endMs": 37752.9,
+  "timestampMs": 37529.4,
   "confidence": 1.0
  },
  {
   "text": " tear-gassed",
-  "startMs": 39191.0,
-  "endMs": 39677.2,
-  "timestampMs": 39191.0,
+  "startMs": 37752.9,
+  "endMs": 38320.3,
+  "timestampMs": 37752.9,
   "confidence": 1.0
  },
  {
   "text": " the",
-  "startMs": 39677.2,
-  "endMs": 39847.4,
-  "timestampMs": 39677.2,
+  "startMs": 38320.3,
+  "endMs": 38543.9,
+  "timestampMs": 38320.3,
   "confidence": 1.0
  },
  {
   "text": " camp.",
-  "startMs": 39847.4,
-  "endMs": 40163.5,
-  "timestampMs": 39847.4,
+  "startMs": 38543.9,
+  "endMs": 38823.3,
+  "timestampMs": 38543.9,
   "confidence": 1.0
  },
  {
   "text": " Then",
-  "startMs": 40463.5,
-  "endMs": 40721.4,
-  "timestampMs": 40463.5,
+  "startMs": 38943.3,
+  "endMs": 39146.0,
+  "timestampMs": 38943.3,
   "confidence": 1.0
  },
  {
   "text": " they",
-  "startMs": 40721.4,
-  "endMs": 40945.7,
-  "timestampMs": 40721.4,
+  "startMs": 39146.0,
+  "endMs": 39348.7,
+  "timestampMs": 39146.0,
   "confidence": 1.0
  },
  {
   "text": " burned",
-  "startMs": 40945.7,
-  "endMs": 41192.5,
-  "timestampMs": 40945.7,
+  "startMs": 39348.7,
+  "endMs": 39707.4,
+  "timestampMs": 39348.7,
   "confidence": 1.0
  },
  {
   "text": " it",
-  "startMs": 41192.5,
-  "endMs": 41371.9,
-  "timestampMs": 41192.5,
+  "startMs": 39707.4,
+  "endMs": 39910.1,
+  "timestampMs": 39707.4,
   "confidence": 1.0
  },
  {
   "text": " to",
-  "startMs": 41371.9,
-  "endMs": 41551.4,
-  "timestampMs": 41371.9,
+  "startMs": 39910.1,
+  "endMs": 40112.8,
+  "timestampMs": 39910.1,
   "confidence": 1.0
  },
  {
   "text": " the",
-  "startMs": 41551.4,
-  "endMs": 41747.6,
-  "timestampMs": 41551.4,
+  "startMs": 40112.8,
+  "endMs": 40315.5,
+  "timestampMs": 40112.8,
   "confidence": 1.0
  },
  {
   "text": " ground.",
-  "startMs": 41747.6,
-  "endMs": 42252.3,
-  "timestampMs": 41747.6,
+  "startMs": 40315.5,
+  "endMs": 40568.9,
+  "timestampMs": 40315.5,
   "confidence": 1.0
  },
  {
   "text": " Two",
-  "startMs": 42672.3,
-  "endMs": 42866.0,
-  "timestampMs": 42672.3,
+  "startMs": 40788.9,
+  "endMs": 40940.3,
+  "timestampMs": 40788.9,
   "confidence": 1.0
  },
  {
   "text": " veterans",
-  "startMs": 42866.0,
-  "endMs": 43465.5,
-  "timestampMs": 42866.0,
+  "startMs": 40940.3,
+  "endMs": 41324.8,
+  "timestampMs": 40940.3,
   "confidence": 1.0
  },
  {
   "text": " were",
-  "startMs": 43465.5,
-  "endMs": 43629.0,
-  "timestampMs": 43465.5,
+  "startMs": 41324.8,
+  "endMs": 41592.7,
+  "timestampMs": 41324.8,
   "confidence": 1.0
  },
  {
   "text": " killed.",
-  "startMs": 43629.0,
-  "endMs": 44030.1,
-  "timestampMs": 43629.0,
+  "startMs": 41592.7,
+  "endMs": 41927.7,
+  "timestampMs": 41592.7,
   "confidence": 1.0
  },
  {
   "text": " Reports",
-  "startMs": 44310.1,
-  "endMs": 44793.1,
-  "timestampMs": 44310.1,
+  "startMs": 42047.7,
+  "endMs": 42364.2,
+  "timestampMs": 42047.7,
   "confidence": 1.0
  },
  {
   "text": " at",
-  "startMs": 44793.1,
-  "endMs": 44952.4,
-  "timestampMs": 44793.1,
+  "startMs": 42364.2,
+  "endMs": 42543.2,
+  "timestampMs": 42364.2,
   "confidence": 1.0
  },
  {
   "text": " the",
-  "startMs": 44952.4,
-  "endMs": 45126.7,
-  "timestampMs": 44952.4,
+  "startMs": 42543.2,
+  "endMs": 42722.1,
+  "timestampMs": 42543.2,
   "confidence": 1.0
  },
  {
   "text": " time",
-  "startMs": 45126.7,
-  "endMs": 45365.7,
-  "timestampMs": 45126.7,
+  "startMs": 42722.1,
+  "endMs": 43038.7,
+  "timestampMs": 42722.1,
   "confidence": 1.0
  },
  {
   "text": " said",
-  "startMs": 45365.7,
-  "endMs": 45584.8,
-  "timestampMs": 45365.7,
+  "startMs": 43038.7,
+  "endMs": 43217.6,
+  "timestampMs": 43038.7,
   "confidence": 1.0
  },
  {
   "text": " an",
-  "startMs": 45584.8,
-  "endMs": 45754.1,
-  "timestampMs": 45584.8,
+  "startMs": 43217.6,
+  "endMs": 43396.6,
+  "timestampMs": 43217.6,
   "confidence": 1.0
  },
  {
   "text": " infant",
-  "startMs": 45754.1,
-  "endMs": 46182.4,
-  "timestampMs": 45754.1,
+  "startMs": 43396.6,
+  "endMs": 43713.1,
+  "timestampMs": 43396.6,
   "confidence": 1.0
  },
  {
   "text": " died",
-  "startMs": 46182.4,
-  "endMs": 46411.4,
-  "timestampMs": 46182.4,
+  "startMs": 43713.1,
+  "endMs": 43892.1,
+  "timestampMs": 43713.1,
   "confidence": 1.0
  },
  {
   "text": " from",
-  "startMs": 46411.4,
-  "endMs": 46700.3,
-  "timestampMs": 46411.4,
+  "startMs": 43892.1,
+  "endMs": 44071.0,
+  "timestampMs": 43892.1,
   "confidence": 1.0
  },
  {
   "text": " the",
-  "startMs": 46700.3,
-  "endMs": 46874.5,
-  "timestampMs": 46700.3,
+  "startMs": 44071.0,
+  "endMs": 44250.0,
+  "timestampMs": 44071.0,
   "confidence": 1.0
  },
  {
   "text": " gas.",
-  "startMs": 46874.5,
-  "endMs": 47167.1,
-  "timestampMs": 46874.5,
+  "startMs": 44250.0,
+  "endMs": 44473.6,
+  "timestampMs": 44250.0,
   "confidence": 1.0
  },
  {
   "text": " One",
-  "startMs": 47527.1,
-  "endMs": 47744.3,
-  "timestampMs": 47527.1,
+  "startMs": 44693.6,
+  "endMs": 44954.8,
+  "timestampMs": 44693.6,
   "confidence": 1.0
  },
  {
   "text": " newspaper",
-  "startMs": 47744.3,
-  "endMs": 48221.2,
-  "timestampMs": 47744.3,
+  "startMs": 44954.8,
+  "endMs": 45329.5,
+  "timestampMs": 44954.8,
   "confidence": 1.0
  },
  {
   "text": " headline",
-  "startMs": 48221.2,
-  "endMs": 48655.6,
-  "timestampMs": 48221.2,
+  "startMs": 45329.5,
+  "endMs": 45704.1,
+  "timestampMs": 45329.5,
   "confidence": 1.0
  },
  {
   "text": " said",
-  "startMs": 48655.6,
-  "endMs": 48863.4,
-  "timestampMs": 48655.6,
+  "startMs": 45704.1,
+  "endMs": 45851.8,
+  "timestampMs": 45704.1,
   "confidence": 1.0
  },
  {
   "text": " everything:",
-  "startMs": 48863.4,
-  "endMs": 49512.6,
-  "timestampMs": 48863.4,
+  "startMs": 45851.8,
+  "endMs": 46462.0,
+  "timestampMs": 45851.8,
   "confidence": 1.0
  },
  {
   "text": " \u201cCavalry",
-  "startMs": 49812.6,
-  "endMs": 50332.8,
-  "timestampMs": 49812.6,
+  "startMs": 46582.0,
+  "endMs": 46961.7,
+  "timestampMs": 46582.0,
   "confidence": 1.0
  },
  {
   "text": " Major",
-  "startMs": 50332.8,
-  "endMs": 50621.7,
-  "timestampMs": 50332.8,
+  "startMs": 46961.7,
+  "endMs": 47226.3,
+  "timestampMs": 46961.7,
   "confidence": 1.0
  },
  {
   "text": " Evicts",
-  "startMs": 50621.7,
-  "endMs": 51031.1,
-  "timestampMs": 50621.7,
+  "startMs": 47226.3,
+  "endMs": 47490.9,
+  "timestampMs": 47226.3,
   "confidence": 1.0
  },
  {
   "text": " Veteran",
-  "startMs": 51031.1,
-  "endMs": 51450.1,
-  "timestampMs": 51031.1,
+  "startMs": 47490.9,
+  "endMs": 47870.6,
+  "timestampMs": 47490.9,
   "confidence": 1.0
  },
  {
   "text": " Who",
-  "startMs": 51450.1,
-  "endMs": 51618.6,
-  "timestampMs": 51450.1,
+  "startMs": 47870.6,
+  "endMs": 48020.1,
+  "timestampMs": 47870.6,
   "confidence": 1.0
  },
  {
   "text": " Saved",
-  "startMs": 51618.6,
-  "endMs": 51912.4,
-  "timestampMs": 51618.6,
+  "startMs": 48020.1,
+  "endMs": 48284.7,
+  "timestampMs": 48020.1,
   "confidence": 1.0
  },
  {
   "text": " His",
-  "startMs": 51912.4,
-  "endMs": 52138.7,
-  "timestampMs": 51912.4,
+  "startMs": 48284.7,
+  "endMs": 48434.3,
+  "timestampMs": 48284.7,
   "confidence": 1.0
  },
  {
   "text": " Life",
-  "startMs": 52138.7,
-  "endMs": 52389.2,
-  "timestampMs": 52138.7,
+  "startMs": 48434.3,
+  "endMs": 48698.9,
+  "timestampMs": 48434.3,
   "confidence": 1.0
  },
  {
   "text": " in",
-  "startMs": 52389.2,
-  "endMs": 52552.9,
-  "timestampMs": 52389.2,
+  "startMs": 48698.9,
+  "endMs": 48848.5,
+  "timestampMs": 48698.9,
   "confidence": 1.0
  },
  {
   "text": " Battle.\u201d",
-  "startMs": 52552.9,
-  "endMs": 52992.4,
-  "timestampMs": 52552.9,
+  "startMs": 48848.5,
+  "endMs": 49179.2,
+  "timestampMs": 48848.5,
   "confidence": 1.0
  },
  {
   "text": " Newsreel",
-  "startMs": 53332.4,
-  "endMs": 53755.3,
-  "timestampMs": 53332.4,
+  "startMs": 49399.2,
+  "endMs": 49822.3,
+  "timestampMs": 49399.2,
   "confidence": 1.0
  },
  {
   "text": " audiences",
-  "startMs": 53755.3,
-  "endMs": 54352.0,
-  "timestampMs": 53755.3,
+  "startMs": 49822.3,
+  "endMs": 50429.4,
+  "timestampMs": 49822.3,
   "confidence": 1.0
  },
  {
   "text": " booed",
-  "startMs": 54352.0,
-  "endMs": 54544.7,
-  "timestampMs": 54352.0,
+  "startMs": 50429.4,
+  "endMs": 50668.5,
+  "timestampMs": 50429.4,
   "confidence": 1.0
  },
  {
   "text": " their",
-  "startMs": 54544.7,
-  "endMs": 54765.5,
-  "timestampMs": 54544.7,
+  "startMs": 50668.5,
+  "endMs": 50907.6,
+  "timestampMs": 50668.5,
   "confidence": 1.0
  },
  {
   "text": " own",
-  "startMs": 54765.5,
-  "endMs": 54948.8,
-  "timestampMs": 54765.5,
+  "startMs": 50907.6,
+  "endMs": 51146.8,
+  "timestampMs": 50907.6,
   "confidence": 1.0
  },
  {
   "text": " army.",
-  "startMs": 54948.8,
-  "endMs": 55336.5,
-  "timestampMs": 54948.8,
+  "startMs": 51146.8,
+  "endMs": 51675.7,
+  "timestampMs": 51146.8,
   "confidence": 1.0
  },
  {
   "text": " And",
-  "startMs": 55596.5,
-  "endMs": 55787.2,
-  "timestampMs": 55596.5,
+  "startMs": 51795.7,
+  "endMs": 51981.0,
+  "timestampMs": 51795.7,
   "confidence": 1.0
  },
  {
   "text": " when",
-  "startMs": 55787.2,
-  "endMs": 55991.3,
-  "timestampMs": 55787.2,
+  "startMs": 51981.0,
+  "endMs": 52166.3,
+  "timestampMs": 51981.0,
   "confidence": 1.0
  },
  {
   "text": " Franklin",
-  "startMs": 55991.3,
-  "endMs": 56479.4,
-  "timestampMs": 55991.3,
+  "startMs": 52166.3,
+  "endMs": 52494.2,
+  "timestampMs": 52166.3,
   "confidence": 1.0
  },
  {
   "text": " Roosevelt",
-  "startMs": 56479.4,
-  "endMs": 57034.0,
-  "timestampMs": 56479.4,
+  "startMs": 52494.2,
+  "endMs": 52964.7,
+  "timestampMs": 52494.2,
   "confidence": 1.0
  },
  {
   "text": " read",
-  "startMs": 57034.0,
-  "endMs": 57229.2,
-  "timestampMs": 57034.0,
+  "startMs": 52964.7,
+  "endMs": 53150.0,
+  "timestampMs": 52964.7,
   "confidence": 1.0
  },
  {
   "text": " the",
-  "startMs": 57229.2,
-  "endMs": 57384.5,
-  "timestampMs": 57229.2,
+  "startMs": 53150.0,
+  "endMs": 53335.3,
+  "timestampMs": 53150.0,
   "confidence": 1.0
  },
  {
   "text": " headlines,",
-  "startMs": 57384.5,
-  "endMs": 57846.0,
-  "timestampMs": 57384.5,
+  "startMs": 53335.3,
+  "endMs": 53805.7,
+  "timestampMs": 53335.3,
   "confidence": 1.0
  },
  {
   "text": " he",
-  "startMs": 57925.8,
-  "endMs": 58081.1,
-  "timestampMs": 57925.8,
+  "startMs": 53934.1,
+  "endMs": 54119.4,
+  "timestampMs": 53934.1,
   "confidence": 1.0
  },
  {
   "text": " reportedly",
-  "startMs": 58081.1,
-  "endMs": 58728.9,
-  "timestampMs": 58081.1,
+  "startMs": 54119.4,
+  "endMs": 54732.4,
+  "timestampMs": 54119.4,
   "confidence": 1.0
  },
  {
   "text": " said:",
-  "startMs": 58728.9,
-  "endMs": 58973.0,
-  "timestampMs": 58728.9,
+  "startMs": 54732.4,
+  "endMs": 54964.0,
+  "timestampMs": 54732.4,
   "confidence": 1.0
  },
  {
   "text": " \u201cI",
-  "startMs": 59233.0,
-  "endMs": 59352.0,
-  "timestampMs": 59233.0,
+  "startMs": 55084.0,
+  "endMs": 55248.0,
+  "timestampMs": 55084.0,
   "confidence": 1.0
  },
  {
   "text": " think",
-  "startMs": 59352.0,
-  "endMs": 59586.0,
-  "timestampMs": 59352.0,
+  "startMs": 55248.0,
+  "endMs": 55411.9,
+  "timestampMs": 55248.0,
   "confidence": 1.0
  },
  {
   "text": " I've",
-  "startMs": 59586.0,
-  "endMs": 59756.1,
-  "timestampMs": 59586.0,
+  "startMs": 55411.9,
+  "endMs": 55701.9,
+  "timestampMs": 55411.9,
   "confidence": 1.0
  },
  {
   "text": " just",
-  "startMs": 59756.1,
-  "endMs": 59981.5,
-  "timestampMs": 59756.1,
+  "startMs": 55701.9,
+  "endMs": 55865.9,
+  "timestampMs": 55701.9,
   "confidence": 1.0
  },
  {
   "text": " won",
-  "startMs": 59981.5,
-  "endMs": 60177.1,
-  "timestampMs": 59981.5,
+  "startMs": 55865.9,
+  "endMs": 56029.8,
+  "timestampMs": 55865.9,
   "confidence": 1.0
  },
  {
   "text": " the",
-  "startMs": 60177.1,
-  "endMs": 60326.0,
-  "timestampMs": 60177.1,
+  "startMs": 56029.8,
+  "endMs": 56193.7,
+  "timestampMs": 56029.8,
   "confidence": 1.0
  },
  {
   "text": " election.\u201d",
-  "startMs": 60326.0,
-  "endMs": 60894.8,
-  "timestampMs": 60326.0,
+  "startMs": 56193.7,
+  "endMs": 56713.9,
+  "timestampMs": 56193.7,
   "confidence": 1.0
  }
 ]

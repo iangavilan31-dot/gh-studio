@@ -3,10 +3,10 @@
   "voice": "hifi-tts_low",
   "speaker": 1,
   "defaultLengthScale": 0.9,
-  "defaultChunkGapMs": 120,
-  "defaultBeatGapMs": 260,
-  "leadInMs": 150,
-  "tailMs": 800,
+  "defaultChunkGapMs": 90,
+  "defaultBeatGapMs": 210,
+  "leadInMs": 100,
+  "tailMs": 500,
   "beats": [
     {
       "id": "b1",
@@ -64,7 +64,7 @@
         },
         {
           "id": "c2",
-          "gapBeforeMs": 180,
+          "gapBeforeMs": 120,
           "words": [
             {
               "d": "Against"
@@ -185,7 +185,7 @@
         },
         {
           "id": "c2",
-          "gapBeforeMs": 220,
+          "gapBeforeMs": 120,
           "words": [
             {
               "d": "Payable...",
@@ -200,7 +200,7 @@
         },
         {
           "id": "c3",
-          "gapBeforeMs": 420,
+          "gapBeforeMs": 120,
           "lengthScale": 1.02,
           "words": [
             {
@@ -250,7 +250,7 @@
         },
         {
           "id": "c2",
-          "gapBeforeMs": 200,
+          "gapBeforeMs": 120,
           "words": [
             {
               "d": "Men"
@@ -330,7 +330,7 @@
         },
         {
           "id": "c2",
-          "gapBeforeMs": 220,
+          "gapBeforeMs": 120,
           "words": [
             {
               "d": "Peacefully."
@@ -344,7 +344,7 @@
         },
         {
           "id": "c3",
-          "gapBeforeMs": 190,
+          "gapBeforeMs": 120,
           "words": [
             {
               "d": "For"
@@ -392,7 +392,7 @@
         },
         {
           "id": "c2",
-          "gapBeforeMs": 200,
+          "gapBeforeMs": 120,
           "words": [
             {
               "d": "The"
@@ -419,7 +419,7 @@
         },
         {
           "id": "c3",
-          "gapBeforeMs": 240,
+          "gapBeforeMs": 120,
           "words": [
             {
               "d": "62",
@@ -443,7 +443,7 @@
     },
     {
       "id": "b7",
-      "gapBeforeMs": 400,
+      "gapBeforeMs": 220,
       "chunks": [
         {
           "id": "c1",
@@ -496,7 +496,7 @@
     {
       "id": "b8",
       "lengthScale": 0.84,
-      "gapBeforeMs": 560,
+      "gapBeforeMs": 220,
       "chunks": [
         {
           "id": "c1",
@@ -522,7 +522,7 @@
         },
         {
           "id": "c2",
-          "gapBeforeMs": 190,
+          "gapBeforeMs": 120,
           "words": [
             {
               "d": "Infantry"
@@ -545,7 +545,7 @@
         },
         {
           "id": "c3",
-          "gapBeforeMs": 190,
+          "gapBeforeMs": 120,
           "words": [
             {
               "d": "Six"
@@ -562,7 +562,7 @@
         },
         {
           "id": "c4",
-          "gapBeforeMs": 190,
+          "gapBeforeMs": 120,
           "words": [
             {
               "d": "Down"
@@ -585,7 +585,7 @@
     {
       "id": "b9",
       "lengthScale": 0.92,
-      "gapBeforeMs": 380,
+      "gapBeforeMs": 220,
       "chunks": [
         {
           "id": "c1",
@@ -611,7 +611,7 @@
         },
         {
           "id": "c2",
-          "gapBeforeMs": 300,
+          "gapBeforeMs": 120,
           "words": [
             {
               "d": "Then"
@@ -647,7 +647,7 @@
     {
       "id": "b10",
       "lengthScale": 1.0,
-      "gapBeforeMs": 420,
+      "gapBeforeMs": 220,
       "chunks": [
         {
           "id": "c1",
@@ -673,7 +673,7 @@
         },
         {
           "id": "c2",
-          "gapBeforeMs": 280,
+          "gapBeforeMs": 120,
           "words": [
             {
               "d": "Reports"
@@ -720,7 +720,7 @@
     },
     {
       "id": "b11",
-      "gapBeforeMs": 360,
+      "gapBeforeMs": 220,
       "chunks": [
         {
           "id": "c1",
@@ -750,11 +750,11 @@
         },
         {
           "id": "c2",
-          "gapBeforeMs": 300,
+          "gapBeforeMs": 120,
           "lengthScale": 1.0,
           "words": [
             {
-              "d": "“Cavalry",
+              "d": "\u201cCavalry",
               "s": "Cavalry"
             },
             {
@@ -782,7 +782,7 @@
               "d": "in"
             },
             {
-              "d": "Battle.”",
+              "d": "Battle.\u201d",
               "s": "Battle."
             }
           ],
@@ -797,7 +797,7 @@
     },
     {
       "id": "b12",
-      "gapBeforeMs": 340,
+      "gapBeforeMs": 220,
       "chunks": [
         {
           "id": "c1",
@@ -833,7 +833,7 @@
         },
         {
           "id": "c2",
-          "gapBeforeMs": 260,
+          "gapBeforeMs": 120,
           "words": [
             {
               "d": "And"
@@ -880,11 +880,11 @@
         },
         {
           "id": "c3",
-          "gapBeforeMs": 260,
+          "gapBeforeMs": 120,
           "lengthScale": 0.98,
           "words": [
             {
-              "d": "“I",
+              "d": "\u201cI",
               "s": "I"
             },
             {
@@ -903,7 +903,7 @@
               "d": "the"
             },
             {
-              "d": "election.”",
+              "d": "election.\u201d",
               "s": "election."
             }
           ],
