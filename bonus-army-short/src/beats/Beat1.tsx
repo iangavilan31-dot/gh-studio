@@ -1,110 +1,106 @@
 import React from "react";
-import { useCurrentFrame } from "remotion";
-import { NewspaperScene, Shot } from "../NewspaperScene";
-import { Dek, Headline, HiWord } from "../components/Type";
-import { DateTag } from "../components/DateTag";
+import { AbsoluteFill, useCurrentFrame } from "remotion";
+import { ParallaxPhoto } from "../components/ParallaxPhoto";
+import { NewspaperPage } from "../components/NewspaperPage";
+import { TextMatchCut } from "../components/TextMatchCut";
+import { Cutout } from "../components/Cutout";
 import { Stamp } from "../components/Stamp";
-import { Masthead } from "../components/Masthead";
+import { FilmTexture } from "../layers/FilmTexture";
 import { beatWords, ev, wordReveal } from "../timing";
-import { H, MARGIN, RED, W } from "../theme";
+import { H, W } from "../theme";
 import { appear } from "../motion";
+
+// B1 HOOK + TEXT MATCH CUT. Two recreated 1932 front pages sharing the word
+// ARMY at the same anchor; hard cut on it, page B relaxes to reveal context;
+// generals cutouts stamp across the lower third; hard cut to a 2.5D parallax of
+// the veterans crowd on "Against".
+const PAGE_W = W * 0.62;
+const PAGE_H = PAGE_W * 1.34;
+const ANCHOR = { ax: 0.5, ay: 0.315 };
 
 export const Beat1: React.FC = () => {
   const frame = useCurrentFrame();
   const words = beatWords("b1");
-  const wf = (t: string) => words.find((w) => w.text.replace(/[^a-zA-Z]/g, "") === t);
-
+  const generalsW = words.find((w) => w.text.replace(/[^a-z]/gi, "") === "generals");
+  const fStart = ev("b1.start");
   const fGenerals = ev("b1.generals");
   const fAgainst = ev("b1.against");
-  const generalsWord = wf("generals");
-  const revealGenerals = generalsWord
-    ? wordReveal(frame, generalsWord.start, 2, 6)
-    : 0;
+  const cutFrame = fStart + 26; // the match cut, early in the beat
 
-  const shots: Shot[] = [
-    { at: ev("b1.start"), type: "cut", scale: 1.02, y: 0 },
-    { at: fGenerals, type: "punch", scale: 1.16, x: 20, y: 60, dur: 5 },
-    { at: fAgainst, type: "cut", scale: 1.1, x: 0, y: -40 },
-  ];
+  const pageA = (
+    <NewspaperPage
+      masthead="The Washington Post"
+      date="FRIDAY, JULY 29, 1932"
+      width={PAGE_W}
+      seed={11}
+      reveal={(w) =>
+        generalsW && frame < cutFrame
+          ? wordReveal(frame, fStart + 6, 2, 10) * (["TROOPS", "ROUT", "THE", "BONUS"].includes(w.replace(/[^A-Z]/g, "")) ? 1 : 0)
+          : 0
+      }
+      decks={[
+        { text: "ONE SLAIN, 60 HURT AS", size: PAGE_W * 0.052 },
+        { text: "TROOPS ROUT THE BONUS", size: PAGE_W * 0.066 },
+        { text: "ARMY", size: PAGE_W * 0.2, anchor: "ARMY" },
+      ]}
+    />
+  );
+  const pageB = (
+    <NewspaperPage
+      masthead="The Evening Star"
+      date="WASHINGTON — JULY 29, 1932"
+      width={PAGE_W}
+      seed={23}
+      decks={[
+        { text: "U.S. FORCES EVICT VETERANS;", size: PAGE_W * 0.05 },
+        { text: "CAPITAL CLEARED BY THE", size: PAGE_W * 0.062 },
+        { text: "ARMY", size: PAGE_W * 0.2, anchor: "ARMY" },
+      ]}
+    />
+  );
 
-  const showAgainst = frame >= fAgainst - 3;
+  const showCrowd = frame >= fAgainst - 2;
 
   return (
-    <NewspaperScene shots={shots}>
-      {/* ---- c1: the setup headline ---- */}
-      {!showAgainst && (
-        <div
-          style={{
-            position: "absolute",
-            left: MARGIN,
-            top: H * 0.16,
-            width: W - MARGIN * 2,
-          }}
-        >
-          <DateTag at={ev("b1.start") + 4} size={48}>
-            1932
-          </DateTag>
-          <Headline size={112} style={{ marginTop: 34 }}>
-            America&rsquo;s three most famous{" "}
-            <HiWord reveal={revealGenerals} seed={11}>
-              generals
-            </HiWord>{" "}
-            fought their first battle&nbsp;together.
-          </Headline>
-          <Dek
-            style={{
-              marginTop: 44,
-              maxWidth: W * 0.72,
-              opacity: 1 - appear(frame, fGenerals, 3),
-            }}
-          >
-            Washington, D.C. — the summer the Army was ordered against its own.
-          </Dek>
-
-          {/* three name stamps, 4 frames apart, as a tight overlapping cluster
-              slapped over the copy on "generals" — too fast to catch */}
-          <div
-            style={{
-              position: "absolute",
-              left: W * 0.1,
-              top: H * 0.435,
-              width: W * 0.8,
-              height: H * 0.14,
-            }}
-          >
-            <Stamp at={fGenerals} rotate={-6} size={58} style={{ position: "absolute", left: 0, top: 0 }}>
-              MACARTHUR
-            </Stamp>
-            <Stamp at={fGenerals + 4} rotate={4} size={58} style={{ position: "absolute", left: "42%", top: 40 }}>
-              PATTON
-            </Stamp>
-            <Stamp at={fGenerals + 8} rotate={-2} size={58} style={{ position: "absolute", left: "8%", top: 96 }}>
-              EISENHOWER
-            </Stamp>
-          </div>
-        </div>
+    <AbsoluteFill style={{ background: "#0b0a09" }}>
+      {!showCrowd ? (
+        <TextMatchCut
+          pageA={pageA}
+          pageB={pageB}
+          pageW={PAGE_W}
+          pageH={PAGE_H}
+          anchorA={ANCHOR}
+          anchorB={ANCHOR}
+          from={fStart}
+          cutFrame={cutFrame}
+          landFrames={8}
+          pullback={26}
+          anchorScale={2.4}
+          screen={{ sx: W / 2, sy: H * 0.46 }}
+        />
+      ) : (
+        <ParallaxPhoto mode="strip" src="assets/final/veterans_crowd.png" from={fAgainst} duration={70} dir={1} stripTop={0.5} objectPosition="center 30%" />
       )}
 
-      {/* ---- c2: the dark turn ---- */}
-      {showAgainst && (
-        <div
-          style={{
-            position: "absolute",
-            left: MARGIN,
-            top: H * 0.3,
-            width: W - MARGIN * 2,
-          }}
-        >
-          <Headline size={150} weight={900} style={{ lineHeight: 0.98 }}>
-            Against
-            <br />
-            American
-            <br />
-            <span style={{ color: RED }}>veterans.</span>
-          </Headline>
-          <Masthead style={{ marginTop: 80 }}>The Bonus Army · 1932</Masthead>
-        </div>
+      {/* generals cutouts stamp across the lower third (widescreen spread) */}
+      {frame >= fGenerals && frame < fAgainst && (
+        <AbsoluteFill>
+          {[
+            { src: "macarthur", label: "MACARTHUR", x: 0.03, off: 0 },
+            { src: "patton", label: "PATTON", x: 0.37, off: 4 },
+            { src: "eisenhower", label: "EISENHOWER", x: 0.7, off: 8 },
+          ].map((g) => (
+            <div key={g.src} style={{ opacity: appear(frame, fGenerals + g.off, 2) }}>
+              <Cutout src={`assets/final/${g.src}.png`} at={fGenerals + g.off} x={W * g.x} y={H * 0.42} width={W * 0.26} offset={11} seed={g.off + 2} fromBelow={70} />
+              <div style={{ position: "absolute", left: W * (g.x + 0.09), top: H * 0.9 }}>
+                <Stamp at={fGenerals + g.off + 1} rotate={g.off % 8 ? 3 : -4} size={W * 0.02}>{g.label}</Stamp>
+              </div>
+            </div>
+          ))}
+        </AbsoluteFill>
       )}
-    </NewspaperScene>
+
+      <FilmTexture intensity={0.5} scratches flicker={false} flashFrames={[cutFrame]} seed={1} />
+    </AbsoluteFill>
   );
 };
