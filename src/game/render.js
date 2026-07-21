@@ -693,35 +693,50 @@ export class Renderer {
       }
     }
 
-    // quantized banded falloff, dithered at the band seams.
-    // flicker steps between discrete radii so the bands breathe like the refs.
+    // ---- tile-quantized light: painted into the ground, not floated over it ----
+    // 8px cells; each cell gets a discrete light level with ordered dither at
+    // band boundaries. The ambient is then multiplied, and lit cells are
+    // warm-tinted per level, so light lives on the surfaces themselves.
+    const CELL = 8
+    const cx0 = Math.floor(camX / CELL)
+    const cy0 = Math.floor(camY / CELL)
+    const cols = Math.ceil(VIEW_W / CELL) + 1
+    const rowsN = Math.ceil(VIEW_H / CELL) + 1
     lg.globalCompositeOperation = 'destination-out'
-    const bands = [
-      [1.0, 0.34],
-      [0.76, 0.44],
-      [0.54, 0.6],
-      [0.34, 0.78],
-      [0.2, 0.95],
-    ]
-    for (const l of lights) {
-      const fl = l.flicker ? 1 + Math.round(Math.sin(this.time * 8 + l.x * 0.7) + Math.sin(this.time * 13 + l.y)) * 0.035 : 1
-      const r = l.r * fl
-      const x = Math.round(l.x - camX)
-      const y = Math.round(l.y - camY)
-      if (x < -r || y < -r || x > VIEW_W + r || y > VIEW_H + r) continue
-      for (const [frac, a] of bands) {
-        lg.globalAlpha = a
-        lg.fillStyle = '#000'
-        lg.beginPath()
-        lg.arc(x, y, r * frac, 0, Math.PI * 2)
-        lg.fill()
-        // ordered-dither ring ONLY at the band seam (6px transition)
-        lg.globalAlpha = a * 0.7
-        lg.strokeStyle = this.patt50
-        lg.lineWidth = 6
-        lg.beginPath()
-        lg.arc(x, y, r * frac + 3, 0, Math.PI * 2)
-        lg.stroke()
+    lg.fillStyle = '#000'
+    const eraseA = [0, 0.3, 0.55, 0.75, 0.93]
+    const cellLevels = new Float32Array(cols * rowsN)
+    const cellWarm = new Uint8Array(cols * rowsN)
+    for (let cy = 0; cy < rowsN; cy++) {
+      for (let cx = 0; cx < cols; cx++) {
+        const wx = (cx0 + cx) * CELL + CELL / 2
+        const wy = (cy0 + cy) * CELL + CELL / 2
+        let best = 0
+        let warm = 1
+        for (const l of lights) {
+          const fl = l.flicker ? 1 + Math.round(Math.sin(this.time * 8 + l.x * 0.7) + Math.sin(this.time * 13 + l.y)) * 0.035 : 1
+          const dx = wx - l.x
+          const dy = wy - l.y
+          const d2 = dx * dx + dy * dy
+          const r = l.r * fl
+          if (d2 > r * r) continue
+          const sIn = 1 - Math.sqrt(d2) / r
+          if (sIn > best) {
+            best = sIn
+            warm = l.warm ? 1 : 0
+          }
+        }
+        const idx = cy * cols + cx
+        cellLevels[idx] = best
+        cellWarm[idx] = warm
+        if (best <= 0.02) continue
+        // ordered dither: alternating cells round up/down at band boundaries
+        const dOff = ((cx0 + cx + cy0 + cy) & 1) * 0.5 - 0.25
+        let lv = Math.floor(best * 4 + 0.5 + dOff * 0.9)
+        lv = Math.max(0, Math.min(4, lv))
+        if (lv === 0) continue
+        lg.globalAlpha = eraseA[lv]
+        lg.fillRect((cx0 + cx) * CELL - camX, (cy0 + cy) * CELL - camY, CELL, CELL)
       }
     }
     lg.globalAlpha = 1
@@ -733,40 +748,27 @@ export class Renderer {
     g.drawImage(this.light, 0, 0)
     g.globalAlpha = 1
 
-    // warm/cold overlay bands: light "stains" the surfaces it touches
+    // warm/cold tint painted per lit cell (overlay), same quantization
     g.globalCompositeOperation = 'overlay'
-    const warmSeq = [
-      [0.8, 0.12, '#7a4a2c'],
-      [0.5, 0.2, '#e8973f'],
-      [0.26, 0.28, '#ffe9b0'],
-    ]
-    const coldSeq = [
-      [0.8, 0.1, '#3a4a7a'],
-      [0.5, 0.16, '#78a8e8'],
-      [0.26, 0.22, '#cfe4ff'],
-    ]
-    for (const l of lights) {
-      const x = Math.round(l.x - camX)
-      const y = Math.round(l.y - camY)
-      const r = l.r
-      if (x < -r || y < -r || x > VIEW_W + r || y > VIEW_H + r) continue
-      const seq = l.warm ? warmSeq : coldSeq
-      for (const [frac, a, col] of seq) {
-        g.globalAlpha = a
-        g.fillStyle = col
-        g.beginPath()
-        g.arc(x, y, r * frac, 0, Math.PI * 2)
-        g.fill()
-        // dither ring at the tint seam
-        g.globalAlpha = a * 0.6
-        g.strokeStyle = l.warm ? this.wpatt50 : this.cpatt50
-        g.lineWidth = 5
-        g.beginPath()
-        g.arc(x, y, r * frac + 2, 0, Math.PI * 2)
-        g.stroke()
+    const warmCols = ['', '#7a4a2c', '#e8973f', '#ffc45e', '#ffe9b0']
+    const coldCols = ['', '#3a4a7a', '#78a8e8', '#a8ccf5', '#cfe4ff']
+    const tintA = [0, 0.12, 0.17, 0.22, 0.28]
+    for (let cy = 0; cy < rowsN; cy++) {
+      for (let cx = 0; cx < cols; cx++) {
+        const idx = cy * cols + cx
+        const sIn = cellLevels[idx]
+        if (sIn <= 0.06) continue
+        const dOff = ((cx0 + cx + cy0 + cy) & 1) * 0.5 - 0.25
+        let lv = Math.floor(sIn * 4 + 0.5 + dOff * 0.9)
+        lv = Math.max(0, Math.min(4, lv))
+        if (lv === 0) continue
+        g.globalAlpha = tintA[lv]
+        g.fillStyle = cellWarm[idx] ? warmCols[lv] : coldCols[lv]
+        g.fillRect((cx0 + cx) * CELL - camX, (cy0 + cy) * CELL - camY, CELL, CELL)
       }
     }
     g.globalAlpha = 1
+    g.globalCompositeOperation = 'source-over'
 
     // quantized additive core: two stepped rings + dither seam, no smooth gradient
     g.globalCompositeOperation = 'lighter'
