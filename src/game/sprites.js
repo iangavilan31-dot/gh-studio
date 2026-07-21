@@ -646,7 +646,7 @@ function paintGrass(g, X, Y, tx, ty, S, getCh) {
   const nearPath = getCh && (getCh(tx + 1, ty) === '=' || getCh(tx - 1, ty) === '=' || getCh(tx, ty + 1) === '=' || getCh(tx, ty - 1) === '=')
   const rd = hash2(tx * 41 + 7, ty * 53 + 11)
   const dense = S.treeStyle === 'conifer'
-  if (rd > (nearPath ? 0.35 : dense ? 0.55 : 0.68)) {
+  if (rd > (nearPath ? 0.35 : dense ? 0.62 : 0.68)) {
     DECALS[(hash2(tx * 13, ty * 29) * DECALS.length) | 0](g, X, Y, hash2(tx, ty), S)
   }
   // painterly grass clusters: fewer, chunkier 2-3px masses (no lone-pixel noise)
@@ -663,7 +663,7 @@ function paintGrass(g, X, Y, tx, ty, S, getCh) {
         g.fillStyle = S.grassLit
         g.fillRect(fx + 1, fy - 1, Math.max(2, cw >> 1), 1)
       }
-    } else if (rr < 0.2) {
+    } else if (rr < 0.12) {
       g.fillStyle = 'rgba(12,16,26,0.28)'
       g.fillRect(fx, fy, cw, 2)
       g.fillRect(fx + 1, fy + 2, cw - 1, 1)
