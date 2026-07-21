@@ -26,6 +26,13 @@ export default function Navbar() {
             {label.toUpperCase()}
           </button>
         ))}
+        <a
+          href="/game.html"
+          className="text-amber-200/40 hover:text-amber-200/80 transition-colors duration-300 text-[10px] font-light no-underline"
+          style={{ letterSpacing: '0.32em', fontFamily: 'Inter, sans-serif' }}
+        >
+          EMBERVALE ◆
+        </a>
       </div>
     </nav>
   )
