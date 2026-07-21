@@ -375,17 +375,35 @@ export class UI {
     if (this.zoneCard) {
       this.zoneCard.t -= dt
       const a = Math.min(1, this.zoneCard.t, (3.4 - this.zoneCard.t) * 2)
-      g.textAlign = 'center'
-      g.font = '16px monospace'
-      g.fillStyle = `rgba(10,6,16,${a * 0.9})`
-      g.fillText(this.zoneCard.title.toUpperCase(), VIEW_W / 2 + 1, 65)
-      g.fillStyle = `rgba(240,224,186,${a})`
-      g.fillText(this.zoneCard.title.toUpperCase(), VIEW_W / 2, 64)
-      g.font = '8px monospace'
-      g.fillStyle = `rgba(10,6,16,${a * 0.9})`
-      g.fillText(this.zoneCard.sub, VIEW_W / 2 + 1, 77)
-      g.fillStyle = `rgba(196,184,210,${a})`
-      g.fillText(this.zoneCard.sub, VIEW_W / 2, 76)
+      // bespoke display treatment: letterspaced gold serif with rules + diamond
+      const title = this.zoneCard.title.toUpperCase()
+      g.font = '15px Georgia, "Times New Roman", serif'
+      const gap = 4
+      let tw = 0
+      for (const ch of title) tw += g.measureText(ch).width + gap
+      let cx = VIEW_W / 2 - tw / 2
+      for (const ch of title) {
+        const cw = g.measureText(ch).width
+        g.fillStyle = `rgba(12,7,18,${a * 0.95})`
+        g.fillText(ch, cx + cw / 2 + 1, 63)
+        g.fillStyle = `rgba(232,200,122,${a})`
+        g.fillText(ch, cx + cw / 2, 62)
+        cx += cw + gap
+      }
+      // flanking rules with a center diamond under the title
+      g.fillStyle = `rgba(232,200,122,${a * 0.7})`
+      g.fillRect(VIEW_W / 2 - 58, 69, 44, 1)
+      g.fillRect(VIEW_W / 2 + 14, 69, 44, 1)
+      g.save()
+      g.translate(VIEW_W / 2, 69.5)
+      g.rotate(Math.PI / 4)
+      g.fillRect(-2.5, -2.5, 5, 5)
+      g.restore()
+      g.font = 'italic 9px Georgia, "Times New Roman", serif'
+      g.fillStyle = `rgba(12,7,18,${a * 0.9})`
+      g.fillText(this.zoneCard.sub, VIEW_W / 2 + 1, 81)
+      g.fillStyle = `rgba(206,192,222,${a})`
+      g.fillText(this.zoneCard.sub, VIEW_W / 2, 80)
       if (this.zoneCard.t <= 0) this.zoneCard = null
     }
 

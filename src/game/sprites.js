@@ -48,88 +48,88 @@ const P_KNIGHT = {
   f: '#ffd23d', F: '#ff9a3d',
 }
 const KNIGHT_IDLE = [
-  '......pp......',
-  '.....oppо.....',
-  '.....ossSо....',
-  '....osSSSSо...',
-  '....oeeeeSо...',
-  '.....oSSSо....',
-  '..oo.gggg.oo..',
-  '.osSogccgoSzo.',
-  '.oSzoccccoSzo.',
-  '.oz.occccо.zo.',
-  '.of.oCccCо.lo.',
-  '.oF.occccо.lo.',
-  '.of.oCCCCо.zo.',
-  '..o.odCCdо.o..',
-  '....oCooCо....',
-  '....oCо.oCо...',
-  '....ozо.ozо...',
-  '...ozzо.ozzо..',
+  '.......pp.......',
+  '......oppо......',
+  '......ossSо.....',
+  '.....osSSSSо....',
+  '.....oeeeeSо....',
+  '......oSSSо.....',
+  '..oto..gggо.....',
+  '.otо.ogccgоo...',
+  '.otо.occccоsSо..',
+  '.ohо.occccоSzо..',
+  '..oо.oCccCо.zо..',
+  '.....occccо.о...',
+  '.....oCCCCо.....',
+  '.....odCCdо.....',
+  '.....oCооCо.....',
+  '....oCCо.oCCо...',
+  '....ozо...ozо...',
+  '...ozzо...ozzо..',
 ]
 const KNIGHT_WALK1 = [
-  '......pp......',
-  '.....oppо.....',
-  '.....ossSо....',
-  '....osSSSSо...',
-  '....oeeeeSо...',
-  '.....oSSSо....',
-  '..oo.gggg.oo..',
-  '.osSogccgoSzo.',
-  '.oSzoccccoSzo.',
-  '.oz.occccо.zo.',
-  '.of.oCccCо.lo.',
-  '.oF.occccо.lo.',
-  '.of.oCCCCо.zo.',
-  '..o.odCCdо.o..',
-  '...oCCо.CCо...',
-  '...oCо...Cо...',
-  '..ozо.....zо..',
-  '..ozzо...ozzо.',
+  '.......pp.......',
+  '......oppо......',
+  '......ossSо.....',
+  '.....osSSSSо....',
+  '.....oeeeeSо....',
+  '......oSSSо.....',
+  '..oto..gggо.....',
+  '.otо.ogccgоo...',
+  '.otо.occccоsSо..',
+  '.ohо.occccоSzо..',
+  '..oо.oCccCо.zо..',
+  '.....occccо.о...',
+  '.....oCCCCо.....',
+  '.....odCCdо.....',
+  '....oCCооCCо....',
+  '....oCо...оCо...',
+  '...ozо.....ozо..',
+  '...ozzо...ozzо..',
 ]
 const KNIGHT_WALK2 = [
-  '......pp......',
-  '.....oppо.....',
-  '.....ossSо....',
-  '....osSSSSо...',
-  '....oeeeeSо...',
-  '.....oSSSо....',
-  '..oo.gggg.oo..',
-  '.osSogccgoSzo.',
-  '.oSzoccccoSzo.',
-  '.oz.occccо.zo.',
-  '.of.oCccCо.lo.',
-  '.oF.occccо.lo.',
-  '.of.oCCCCо.zo.',
-  '..o.odCCdо.o..',
-  '....oCCCCо....',
-  '.....oCCо.....',
-  '....ozzzо.....',
-  '....ozzzzо....',
+  '.......pp.......',
+  '......oppо......',
+  '......ossSо.....',
+  '.....osSSSSо....',
+  '.....oeeeeSо....',
+  '......oSSSо.....',
+  '..oto..gggо.....',
+  '.otо.ogccgоo...',
+  '.otо.occccоsSо..',
+  '.ohо.occccоSzо..',
+  '..oо.oCccCо.zо..',
+  '.....occccо.о...',
+  '.....oCCCCо.....',
+  '.....odCCdо.....',
+  '.....oCCCCо.....',
+  '......oCCо......',
+  '.....ozzzо......',
+  '.....ozzzzо.....',
 ]
 const KNIGHT_DOWN = [
-  '..............',
-  '..............',
-  '..............',
-  '..............',
-  '..............',
-  '..............',
-  '..............',
-  '..............',
-  '..............',
-  '.....oooo.....',
-  '..ooossssoo...',
-  '.ossSsssssso..',
-  'osshheessscco.',
-  'oszsssccccCCo.',
-  '.ozzoCCCCdCo..',
-  '..oo.oCoCо.o..',
-  '....ozо.ozо...',
-  '..............',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '.......oooо.....',
+  '...ooosssSoo....',
+  '..ossSssssssо...',
+  '.osshheessSccо..',
+  '.oszsssccccCCо..',
+  '..ozzoCCCCdCо...',
+  '...oо.oCоCо.о...',
+  '.....ozо.ozо....',
 ]
-
 const P_PYRO = {
   o: '#1c1018',
+  t: '#5c4028',
   s: '#a63c48', S: '#802a38', z: '#571d28', // robe light/mid/dark
   c: '#a63c48', C: '#802a38', d: '#571d28',
   h: '#e0aa74', e: '#1c1018',
@@ -139,66 +139,65 @@ const P_PYRO = {
   f: '#ffd23d', F: '#ff9a3d',
 }
 const PYRO_IDLE = [
-  '.....oooo.....',
-  '....ozsssо....',
-  '...ozsssssо...',
-  '...ozhhhhsо...',
-  '...ozhеehsо...',
-  '....ohhhhо....',
-  '..oo.wwww.oo..',
-  '.ossowccwosso.',
-  '.oSsoccccoSso.',
-  '.oz.occccо.to.',
-  '.oz.oCccCо.to.',
-  '.oz.occccо.to.',
-  '..o.oCCCCо.to.',
-  '....oCCCCо.to.',
-  '....oCCCCо.to.',
-  '...ozCCCCzо...',
-  '...ozzCCzzо...',
-  '..ozzzzzzzzо..',
+  '......oooо......',
+  '.....ozsssо.....',
+  '.....ossssо.....',
+  '....ozhhhhо.....',
+  '....ozheehо..t..',
+  '.....ohhhо..otо.',
+  '...oo.wwwwо.otо.',
+  '..oso.gccgо.otо.',
+  '..osо.ccccоohtо.',
+  '..ozо.ccccо.otо.',
+  '...oо.CccCо.oо..',
+  '.....occccо.....',
+  '.....occccо.....',
+  '.....oCCCCо.....',
+  '.....oCCCCо.....',
+  '....ozCCCCzо....',
+  '....ozzCCzzо....',
+  '...ozzzzzzzzо...',
 ]
 const PYRO_WALK1 = [
-  '.....oooo.....',
-  '....ozsssо....',
-  '...ozsssssо...',
-  '...ozhhhhsо...',
-  '...ozhеehsо...',
-  '....ohhhhо....',
-  '..oo.wwww.oo..',
-  '.ossowccwosso.',
-  '.oSsoccccoSso.',
-  '.oz.occccо.to.',
-  '.oz.oCccCо.to.',
-  '.oz.occccо.to.',
-  '..o.oCCCCо.to.',
-  '....oCCCCо.to.',
-  '...ozCC.CCzо..',
-  '...ozC...Czо..',
-  '..ozz.....zzо.',
-  '..ozzо...ozzо.',
+  '......oooо......',
+  '.....ozsssо.....',
+  '.....ossssо.....',
+  '....ozhhhhо.....',
+  '....ozheehо..t..',
+  '.....ohhhо..otо.',
+  '...oo.wwwwо.otо.',
+  '..oso.gccgо.otо.',
+  '..osо.ccccоohtо.',
+  '..ozо.ccccо.otо.',
+  '...oо.CccCо.oо..',
+  '.....occccо.....',
+  '.....occccо.....',
+  '.....oCCCCо.....',
+  '....ozCC.CCzо...',
+  '....ozC...Czо...',
+  '...ozz.....zzо..',
+  '...ozzо...ozzо..',
 ]
 const PYRO_DOWN = [
-  '..............',
-  '..............',
-  '..............',
-  '..............',
-  '..............',
-  '..............',
-  '..............',
-  '..............',
-  '..............',
-  '.....oooo.....',
-  '..ooozsssoo...',
-  '.ozsssssssso..',
-  'ozshheesscco..',
-  'ozzsssccccCCo.',
-  '.ozzoCCCCdCo..',
-  '..oo.zCCCzо...',
-  '....ozzzzzо...',
-  '..............',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '................',
+  '.......oooо.....',
+  '...ooozsssoo....',
+  '..ozssssssssо...',
+  '.ozshheessccо...',
+  '.ozzsssccccCCо..',
+  '..ozzoCCCCdCо...',
+  '...oо.zCCCzо....',
+  '.....ozzzzzо....',
 ]
-
 // ============================================================
 // ENEMIES — outlined, shaded
 // ============================================================
@@ -541,18 +540,22 @@ function makeWisp() {
 // ============================================================
 const STYLES = {
   village: {
-    grass: ['#41682f', '#3a5c29', '#4d7838', '#345224'],
-    grassLit: '#74a04b',
-    deco: '#2b3c23',
+    grass: ['#26323e', '#26323e', '#26323e', '#26323e'],
+    grassMid: '#2f4a3c',
+    grassLit: '#48684a',
+    grassHi: '#74a04b',
+    deco: '#1e2833',
     cobble: ['#a08a64', '#8f7a58', '#b39a70'],
     cobbleHi: '#c9b184',
     cobbleGap: '#4b4034',
     treeStyle: 'broadleaf',
   },
   forest: {
-    grass: ['#2d4a33', '#27412c', '#35573b', '#213826'],
-    grassLit: '#548a54',
-    deco: '#1b271e',
+    grass: ['#222c3a', '#222c3a', '#222c3a', '#222c3a'],
+    grassMid: '#2e483f',
+    grassLit: '#42654f',
+    grassHi: '#548a54',
+    deco: '#1a2230',
     cobble: ['#5e5344', '#52483a', '#6b5e4c'],
     cobbleHi: '#7d6f58',
     cobbleGap: '#2e281f',
@@ -628,35 +631,40 @@ function paintGrass(g, X, Y, tx, ty, S) {
     paintFlagstones(g, X, Y, tx, ty, S, false)
     return
   }
-  const r = hash2(tx, ty)
-  // 2x2 supertile base tone so open ground doesn't read as a per-tile quilt
-  const rb2 = hash2((tx / 2) | 0, (ty / 2) | 0)
-  g.fillStyle = S.grass[(rb2 * 4) | 0]
+  // indigo shadow base — green lives only in the painted mid/lit clusters
+  g.fillStyle = S.grass[0]
   g.fillRect(X, Y, 16, 16)
-  // painterly mottling: a few soft flecks light + dark
-  for (let i = 0; i < 5; i++) {
-    const rr = hash2(tx * 17 + i, ty * 31 + i * 7)
-    const fx = X + ((rr * 14) | 0)
-    const fy = Y + ((hash2(ty * 13 + i, tx * 7 + i) * 14) | 0)
-    if (rr > 0.86) {
-      g.fillStyle = 'rgba(196,120,62,0.22)'
-      g.fillRect(fx, fy, 2, 2)
-    } else if (rr > 0.72) {
-      g.fillStyle = 'rgba(190,220,140,0.14)'
-      g.fillRect(fx, fy, 2, 1)
-    } else if (rr < 0.2) {
-      g.fillStyle = 'rgba(10,18,8,0.18)'
-      g.fillRect(fx, fy, 2, 2)
+  // painterly 3-value grass clusters, organic placement across tile seams
+  for (let i = 0; i < 7; i++) {
+    const rr = hash2(tx * 17 + i * 3, ty * 31 + i * 7)
+    const fx = X + ((rr * 15) | 0) - 1
+    const fy = Y + ((hash2(ty * 13 + i, tx * 7 + i) * 15) | 0) - 1
+    const cw = 3 + ((rr * 4) | 0)
+    if (rr > 0.55) {
+      g.fillStyle = S.grassMid
+      g.fillRect(fx, fy, cw, 2)
+      g.fillRect(fx + 1, fy - 1, cw - 2, 1)
+      if (rr > 0.78) {
+        g.fillStyle = S.grassLit
+        g.fillRect(fx + 1, fy - 1, Math.max(1, cw >> 1), 1)
+      }
+    } else if (rr < 0.22) {
+      g.fillStyle = 'rgba(12,16,26,0.3)'
+      g.fillRect(fx, fy, cw, 2)
     }
   }
-  // grass blades
+  // sparse lit blades + rare terracotta / bright accents
   const rb = hash2(tx * 5 + 2, ty * 11 + 3)
-  if (rb > 0.55) {
-    g.fillStyle = S.grassLit
+  if (rb > 0.62) {
+    g.fillStyle = S.grassHi
     const bx = X + ((rb * 12) | 0)
     const by = Y + ((hash2(tx, ty * 3) * 12) | 0)
     g.fillRect(bx, by, 1, 2)
-    g.fillRect(bx + 2, by + 1, 1, 2)
+    g.fillRect(bx + 2, by + 1, 1, 1)
+  }
+  if (rb < 0.06) {
+    g.fillStyle = 'rgba(196,120,62,0.35)'
+    g.fillRect(X + ((rb * 200) | 0) % 13, Y + 5 + ((rb * 130) | 0) % 9, 2, 2)
   }
 }
 
@@ -790,11 +798,11 @@ function paintFlagstones(g, X, Y, tx, ty, S, worn) {
   if (worn && S.treeStyle === 'stonedark') {
     // the Pale King's processional carpet, moth-eaten
     paintFlagstonesBase(g, X, Y, tx, ty, S, false)
-    g.fillStyle = '#5e1f2a'
+    g.fillStyle = '#4a1220'
     g.fillRect(X + 2, Y, 12, 16)
-    g.fillStyle = '#802a38'
+    g.fillStyle = '#641a2c'
     g.fillRect(X + 4, Y, 8, 16)
-    g.fillStyle = '#43151f'
+    g.fillStyle = '#330f1a'
     g.fillRect(X + 2, Y, 1, 16)
     g.fillRect(X + 13, Y, 1, 16)
     g.fillStyle = 'rgba(216,168,79,0.5)'
@@ -861,7 +869,17 @@ function paintWater(g, X, Y, tx, ty, getCh) {
     return nc !== '~' && nc !== '#'
   }
   const shore = isShore(0, -1) || isShore(0, 1) || isShore(-1, 0) || isShore(1, 0)
-  g.fillStyle = shore ? '#28535c' : r > 0.5 ? '#1d4049' : '#193a43'
+  // depth banding: tiles fully surrounded by water go darker toward the middle
+  let deep = !shore
+  if (deep) {
+    for (const [dx, dy] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) {
+      if (isShore(dx, dy)) {
+        deep = false
+        break
+      }
+    }
+  }
+  g.fillStyle = shore ? '#28535c' : deep ? '#132e38' : r > 0.5 ? '#1d4049' : '#193a43'
   g.fillRect(X, Y, 16, 16)
   // ripple highlights (horizontal painterly strokes)
   g.fillStyle = 'rgba(120,200,205,0.16)'
@@ -871,10 +889,28 @@ function paintWater(g, X, Y, tx, ty, getCh) {
     g.fillStyle = 'rgba(200,240,240,0.20)'
     g.fillRect(X + 3 + ((r * 8) | 0), Y + 6, 3, 1)
   }
-  // shore: dark wet bank then a foam line (kills raw tile seams)
+  // shore: dark wet bank, foam line, and grass nibbles biting into the water
   if (shore) {
     const bank = 'rgba(8,20,24,0.85)'
     const foam = 'rgba(168,224,210,0.5)'
+    const nib = '#26323e'
+    if (isShore(0, -1)) {
+      g.fillStyle = nib
+      g.fillRect(X + ((r * 11) | 0), Y, 3 + ((r * 3) | 0), 2)
+      g.fillRect(X + 12 - ((r * 9) | 0), Y, 2, 1)
+    }
+    if (isShore(0, 1)) {
+      g.fillStyle = nib
+      g.fillRect(X + 3 + ((r * 9) | 0), Y + 14, 3 + ((r * 3) | 0), 2)
+    }
+    if (isShore(-1, 0)) {
+      g.fillStyle = nib
+      g.fillRect(X, Y + ((r * 11) | 0), 2, 3 + ((r * 3) | 0))
+    }
+    if (isShore(1, 0)) {
+      g.fillStyle = nib
+      g.fillRect(X + 14, Y + 2 + ((r * 10) | 0), 2, 3 + ((r * 3) | 0))
+    }
     if (isShore(0, -1)) {
       g.fillStyle = bank
       g.fillRect(X, Y, 16, 2)
@@ -915,27 +951,28 @@ function paintTreeTile(g, X, Y, tx, ty, S, getCh) {
     const base = ['#182b21', '#15271d', '#1b2f24'][(r * 3) | 0]
     g.fillStyle = base
     g.fillRect(X, Y, 16, 16)
-    // dense frond bands: rows every 3px, jagged, brighter every other row
-    for (let row = 0; row < 6; row++) {
-      const rr = hash2(tx * 5 + (row % 2), ty * 6 + row)
-      if (rr < 0.14) continue // ragged gaps break the banding
-      const lit = (row + tx) % 2 === 0
-      const bx = X - 2 + ((rr * 9) | 0)
-      const bw = 7 + ((rr * 9) | 0)
-      const by = Y + row * 3 + ((hash2(tx * 3 + row, ty) * 2) | 0)
-      g.fillStyle = lit ? 'rgba(92,146,106,0.36)' : 'rgba(30,58,42,0.5)'
-      g.fillRect(bx, by, bw, 2)
-      // second offset segment
-      const rr2 = hash2(tx * 11 + row, ty * 13)
-      if (rr2 > 0.4) {
-        g.fillStyle = lit ? 'rgba(70,118,84,0.3)' : 'rgba(22,44,32,0.5)'
-        g.fillRect(X + 8 + ((rr2 * 6) | 0), by + 1, 5 + ((rr2 * 4) | 0), 2)
-      }
-      g.fillStyle = 'rgba(6,12,9,0.4)'
-      g.fillRect(bx + 2, by + 2, bw - 3, 1)
-      if (rr > 0.75 && lit) {
-        g.fillStyle = 'rgba(160,210,170,0.5)'
-        g.fillRect(X + ((rr * 13) | 0), by, 2, 1)
+    // scalloped canopy clusters on a 3-value ramp (dark base under, lit crowns above)
+    for (let i = 0; i < 7; i++) {
+      const rr = hash2(tx * 7 + i * 3, ty * 11 + i * 5)
+      const cxp = X + ((rr * 14) | 0) - 2
+      const cyp = Y + ((hash2(ty * 5 + i, tx * 3 + i) * 13) | 0)
+      const cw = 5 + ((rr * 5) | 0)
+      // under-shadow scallop
+      g.fillStyle = 'rgba(8,14,12,0.55)'
+      g.fillRect(cxp, cyp + 2, cw, 2)
+      g.fillRect(cxp + 1, cyp + 4, cw - 2, 1)
+      // cluster body
+      g.fillStyle = rr > 0.6 ? '#244430' : '#1d3627'
+      g.fillRect(cxp, cyp, cw, 3)
+      g.fillRect(cxp + 1, cyp - 1, cw - 2, 1)
+      // lit crown (upper-left)
+      if (rr > 0.45) {
+        g.fillStyle = '#3a5f40'
+        g.fillRect(cxp, cyp - 1, Math.max(2, cw >> 1), 1)
+        if (rr > 0.8) {
+          g.fillStyle = '#4f7a4e'
+          g.fillRect(cxp + 1, cyp - 2, Math.max(1, cw >> 2), 1)
+        }
       }
     }
     // moonlit rim on canopy top
@@ -1001,10 +1038,10 @@ function paintWallTile(g, X, Y, tx, ty, S, getCh, style) {
   const edgeN = !isWall(0, -1)
   const r = hash2(tx * 3 + 1, ty * 7 + 2)
   const dark = style === 'castle'
-  const face = dark ? '#2e2a3d' : '#34323f'
-  const top = dark ? '#443e57' : '#4a4757'
-  const topHi = dark ? '#5a5273' : '#615d72'
-  const mortar = 'rgba(10,8,16,0.5)'
+  const face = dark ? '#4c4460' : '#565064'
+  const top = dark ? '#6e625e' : '#7d7062'
+  const topHi = dark ? '#8a7666' : '#95866f'
+  const mortar = 'rgba(42,34,62,0.7)'
 
   if (edgeS) {
     // wall face with brick courses

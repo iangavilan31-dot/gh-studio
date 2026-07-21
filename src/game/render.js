@@ -356,10 +356,10 @@ export class Renderer {
     const x = Math.round(p.x - camX)
     const y = Math.round(p.y - camY)
     const set = SPR[p.cls === 'knight' ? 'knight' : 'pyro']
-    this.drawShadow(g, x, y + 7, 6)
+    this.drawShadow(g, x, y + 4, 6)
 
     if (p.st === 'down' || p.state === 'down') {
-      g.drawImage(set.down, x - 7, y - 11)
+      g.drawImage(set.down, x - 8, y - 14)
       // revive ring
       const rt = p.rT ?? p.reviveT ?? 0
       if (rt > 0) {
@@ -379,7 +379,7 @@ export class Renderer {
     }
     if (p.st === 'dead' || p.state === 'dead') {
       g.globalAlpha = 0.4
-      g.drawImage(set.down, x - 7, y - 11)
+      g.drawImage(set.down, x - 8, y - 14)
       g.globalAlpha = 1
       return
     }
@@ -397,17 +397,24 @@ export class Renderer {
     const dodging = (p.dg ?? (p.dodgeT > 0 ? 1 : 0)) === 1
     const dashing = (p.ds ?? (p.dashT > 0 ? 1 : 0)) === 1
     if (dodging) g.rotate(Math.sin(this.time * 30) * 0.4)
-    g.drawImage(spr, -7, -14)
+    g.drawImage(spr, -8, -16)
     // knight carries a living flame on his torch hand; pyro's staff tip glows
     const flick = Math.floor(this.time * 12) % 3
     if (p.cls === 'knight') {
-      g.fillStyle = ['#ffd23d', '#ff9a3d', '#ffe89a'][flick]
-      g.fillRect(-6, -5 - (flick === 1 ? 1 : 0), 2, 2)
-      g.fillStyle = 'rgba(255,154,61,0.5)'
-      g.fillRect(-7, -3, 4, 1)
+      // torch flame: red tip / orange body / yellow core
+      g.fillStyle = '#e04b2d'
+      g.fillRect(-6, -14 - (flick === 1 ? 1 : 0), 1, 1)
+      g.fillStyle = '#ff9a3d'
+      g.fillRect(-7, -13 - (flick === 2 ? 1 : 0), 3, 2)
+      g.fillStyle = '#ffe9b0'
+      g.fillRect(-6, -11, 2, 2)
     } else {
-      g.fillStyle = ['#ffd23d', '#ff9a3d', '#ffe89a'][flick]
-      g.fillRect(5, -6 - (flick === 1 ? 1 : 0), 2, 2)
+      g.fillStyle = '#e04b2d'
+      g.fillRect(5, -14 - (flick === 1 ? 1 : 0), 1, 1)
+      g.fillStyle = '#ff9a3d'
+      g.fillRect(4, -13 - (flick === 2 ? 1 : 0), 3, 2)
+      g.fillStyle = '#ffe9b0'
+      g.fillRect(5, -11, 2, 2)
     }
     g.restore()
     g.globalAlpha = 1
@@ -703,12 +710,13 @@ export class Renderer {
         lg.beginPath()
         lg.arc(x, y, r * frac, 0, Math.PI * 2)
         lg.fill()
-        // dithered seam just outside the band edge
-        lg.globalAlpha = a * 0.65
-        lg.fillStyle = this.patt50
+        // ordered-dither ring ONLY at the band seam (6px transition)
+        lg.globalAlpha = a * 0.7
+        lg.strokeStyle = this.patt50
+        lg.lineWidth = 6
         lg.beginPath()
-        lg.arc(x, y, r * frac + 4, 0, Math.PI * 2)
-        lg.fill()
+        lg.arc(x, y, r * frac + 3, 0, Math.PI * 2)
+        lg.stroke()
       }
     }
     lg.globalAlpha = 1
@@ -722,33 +730,36 @@ export class Renderer {
 
     // warm/cold overlay bands: light "stains" the surfaces it touches
     g.globalCompositeOperation = 'overlay'
-    const tintBands = [
-      [0.55, 0.22],
-      [0.34, 0.17],
-      [0.18, 0.13],
+    const warmSeq = [
+      [0.8, 0.12, '#7a4a2c'],
+      [0.5, 0.2, '#e8973f'],
+      [0.26, 0.28, '#ffe9b0'],
+    ]
+    const coldSeq = [
+      [0.8, 0.1, '#3a4a7a'],
+      [0.5, 0.16, '#78a8e8'],
+      [0.26, 0.22, '#cfe4ff'],
     ]
     for (const l of lights) {
       const x = Math.round(l.x - camX)
       const y = Math.round(l.y - camY)
       const r = l.r
       if (x < -r || y < -r || x > VIEW_W + r || y > VIEW_H + r) continue
-      for (const [frac, a] of tintBands) {
+      const seq = l.warm ? warmSeq : coldSeq
+      for (const [frac, a, col] of seq) {
         g.globalAlpha = a
-        g.fillStyle = l.warm ? '#ffaa50' : '#78beff'
+        g.fillStyle = col
         g.beginPath()
         g.arc(x, y, r * frac, 0, Math.PI * 2)
         g.fill()
+        // dither ring at the tint seam
+        g.globalAlpha = a * 0.6
+        g.strokeStyle = l.warm ? this.wpatt50 : this.cpatt50
+        g.lineWidth = 5
+        g.beginPath()
+        g.arc(x, y, r * frac + 2, 0, Math.PI * 2)
+        g.stroke()
       }
-      g.globalAlpha = 0.16
-      g.fillStyle = l.warm ? this.wpatt50 : this.cpatt50
-      g.beginPath()
-      g.arc(x, y, r * 0.68, 0, Math.PI * 2)
-      g.fill()
-      g.globalAlpha = 0.1
-      g.fillStyle = l.warm ? this.wpatt50 : this.cpatt50
-      g.beginPath()
-      g.arc(x, y, r * 0.44, 0, Math.PI * 2)
-      g.fill()
     }
     g.globalAlpha = 1
 
@@ -820,6 +831,22 @@ export class Renderer {
         if (r > 0.6) {
           g.fillStyle = 'rgba(120,200,205,0.10)'
           g.fillRect(tx * TILE - camX, ty * TILE - camY + ph, 16, 1)
+        }
+        // breathing foam on shore edges (2-frame wave)
+        const north = w.charAt(tx, ty - 1)
+        const south = w.charAt(tx, ty + 1)
+        const east = w.charAt(tx + 1, ty)
+        const west = w.charAt(tx - 1, ty)
+        const pulse = Math.sin(this.time * 1.8 + (tx + ty) * 1.3) > 0.1
+        if (pulse) {
+          g.fillStyle = `rgba(178,230,216,${0.28 + 0.14 * Math.sin(this.time * 3 + tx)})`
+          const px0 = tx * TILE - camX
+          const py0 = ty * TILE - camY
+          const off = Math.sin(this.time * 2 + tx * 2) > 0 ? 2 : 3
+          if (north !== '~' && north !== '#') g.fillRect(px0 + ((r * 4) | 0), py0 + off, 10, 1)
+          if (south !== '~' && south !== '#') g.fillRect(px0 + 2 + ((r * 3) | 0), py0 + 15 - off, 10, 1)
+          if (west !== '~' && west !== '#') g.fillRect(px0 + off, py0 + ((r * 4) | 0), 1, 10)
+          if (east !== '~' && east !== '#') g.fillRect(px0 + 15 - off, py0 + 2 + ((r * 3) | 0), 1, 10)
         }
       }
     }
