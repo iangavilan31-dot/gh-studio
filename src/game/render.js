@@ -498,6 +498,10 @@ export class Renderer {
     } else {
       const ox = -fr.width / 2
       const oy = -fr.height + (big ? 8 : 5)
+      // lifted rim so silhouettes read against dark ground
+      g.globalAlpha = 0.16
+      g.drawImage(this.white(fr), ox, oy - 1)
+      g.globalAlpha = 1
       g.drawImage(fr, ox, oy)
       if ((e.hf ?? (e.hitFlash > 0 ? 1 : 0)) === 1) {
         g.globalAlpha = 0.75
@@ -704,7 +708,7 @@ export class Renderer {
     const rowsN = Math.ceil(VIEW_H / CELL) + 1
     lg.globalCompositeOperation = 'destination-out'
     lg.fillStyle = '#000'
-    const eraseA = [0, 0.3, 0.55, 0.75, 0.93]
+    const eraseA = [0, 0.32, 0.58, 0.8, 0.97]
     const cellLevels = new Float32Array(cols * rowsN)
     const cellWarm = new Uint8Array(cols * rowsN)
     for (let cy = 0; cy < rowsN; cy++) {
@@ -769,6 +773,24 @@ export class Renderer {
     }
     g.globalAlpha = 1
     g.globalCompositeOperation = 'source-over'
+
+    // amber glaze: a direct translucent wash over lit cells so every
+    // flame pool reads warm even on cool stone (refs: all fire is amber)
+    const glazeWarm = ['', 'rgba(122,74,44,0.10)', 'rgba(176,106,44,0.14)', 'rgba(232,154,63,0.16)', 'rgba(255,201,94,0.18)']
+    const glazeCold = ['', 'rgba(58,74,122,0.08)', 'rgba(90,130,200,0.1)', 'rgba(140,180,235,0.12)', 'rgba(190,220,255,0.13)']
+    for (let cy = 0; cy < rowsN; cy++) {
+      for (let cx = 0; cx < cols; cx++) {
+        const idx = cy * cols + cx
+        const sIn = cellLevels[idx]
+        if (sIn <= 0.06) continue
+        const dOff = ((cx0 + cx + cy0 + cy) & 1) * 0.5 - 0.25
+        let lv = Math.floor(sIn * 4 + 0.5 + dOff * 0.9)
+        lv = Math.max(0, Math.min(4, lv))
+        if (lv === 0) continue
+        g.fillStyle = cellWarm[idx] ? glazeWarm[lv] : glazeCold[lv]
+        g.fillRect((cx0 + cx) * CELL - camX, (cy0 + cy) * CELL - camY, CELL, CELL)
+      }
+    }
 
     // quantized additive core: two stepped rings + dither seam, no smooth gradient
     g.globalCompositeOperation = 'lighter'

@@ -39,26 +39,6 @@ export function buildTitleScene() {
   g.fillStyle = sky
   g.fillRect(0, 0, W, H * 0.56)
 
-  // big swirling cloud masses (reference: heavy purple storm clouds)
-  for (let m = 0; m < 5; m++) {
-    const mx = R() * W
-    const my = R() * H * 0.34
-    const mw = 50 + R() * 110
-    const mh = 12 + R() * 22
-    for (let i = 0; i < 22; i++) {
-      const t2 = R()
-      const px2 = mx + (R() - 0.5) * mw
-      const py2 = my + (R() - 0.5) * mh * (1 - Math.abs(px2 - mx) / mw)
-      const a = 0.06 + R() * 0.12
-      g.fillStyle = t2 > 0.65 ? `rgba(130,95,140,${a})` : `rgba(32,22,52,${a + 0.08})`
-      g.fillRect(px2, py2, 6 + R() * 22, 2 + R() * 3)
-    }
-    // lit underbelly
-    for (let i = 0; i < 16; i++) {
-      g.fillStyle = `rgba(205,160,200,${0.05 + R() * 0.09})`
-      g.fillRect(mx + (R() - 0.5) * mw * 0.9, my + mh * 0.35 + R() * 3, 5 + R() * 16, 1)
-    }
-  }
   // deliberate horizontal cloud bands with dithered undersides
   for (let b = 0; b < 4; b++) {
     const by = 14 + b * 22 + (b % 2) * 8
@@ -649,6 +629,19 @@ export function drawTitle(g, t, dt) {
     g.fillRect(bx2, topY + 3, 3, Math.max(3, ((hgt * 0.4) | 0) - (((hgt * 0.4) | 0) % 3)))
     g.fillStyle = '#ffd23d'
     g.fillRect(bx2, topY + 3 + Math.max(3, ((hgt * 0.4) | 0) - (((hgt * 0.4) | 0) % 3)), 3, 6)
+  }
+  // quantized amber spill on the ground around the torch
+  for (let gy2 = 0; gy2 < 8; gy2++) {
+    for (let gx2 = 0; gx2 < 12; gx2++) {
+      const cxp = (((lx - 48) / 8) | 0) * 8 + gx2 * 8
+      const cyp = (((fy + 40) / 8) | 0) * 8 + gy2 * 8
+      const d = Math.hypot(cxp + 4 - lx, cyp + 4 - (fy + 58))
+      if (d > 52) continue
+      const lv2 = d < 22 ? 3 : d < 38 ? 2 : 1
+      if (((cxp + cyp) / 8) % 2 === 0 && d > 40) continue
+      g.fillStyle = ['', 'rgba(150,90,40,0.10)', 'rgba(216,140,60,0.14)', 'rgba(255,190,90,0.16)'][lv2]
+      g.fillRect(cxp, cyp, 8, 8)
+    }
   }
   // white-hot heart of the fire
   g.fillStyle = '#fff3cd'
