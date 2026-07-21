@@ -540,11 +540,11 @@ function makeWisp() {
 // ============================================================
 const STYLES = {
   village: {
-    grass: ['#26323e', '#26323e', '#26323e', '#26323e'],
-    grassMid: '#2f4a3c',
-    grassLit: '#48684a',
-    grassHi: '#74a04b',
-    deco: '#1e2833',
+    grass: ['#243430', '#243430', '#243430', '#243430'],
+    grassMid: '#2e4a38',
+    grassLit: '#4a6b46',
+    grassHi: '#7aa04e',
+    deco: '#1c2a24',
     cobble: ['#a08a64', '#8f7a58', '#b39a70'],
     cobbleHi: '#c9b184',
     cobbleGap: '#4b4034',
@@ -565,8 +565,8 @@ const STYLES = {
     grass: ['#41414e', '#3b3b47', '#474756', '#36363f'],
     grassLit: '#54546a',
     deco: '#31313c',
-    cobble: ['#4f4f61', '#454555', '#59596e'],
-    cobbleHi: '#6e6e86',
+    cobble: ['#434353', '#3a3a49', '#4c4c5f'],
+    cobbleHi: '#5f5f75',
     cobbleGap: '#2a2a34',
     treeStyle: 'stone',
   },
@@ -646,40 +646,42 @@ function paintGrass(g, X, Y, tx, ty, S, getCh) {
   // deliberate decal clusters, denser beside roads where the eye travels
   const nearPath = getCh && (getCh(tx + 1, ty) === '=' || getCh(tx - 1, ty) === '=' || getCh(tx, ty + 1) === '=' || getCh(tx, ty - 1) === '=')
   const rd = hash2(tx * 41 + 7, ty * 53 + 11)
-  if (rd > (nearPath ? 0.42 : 0.8)) {
+  const dense = S.treeStyle === 'conifer'
+  if (rd > (nearPath ? 0.35 : dense ? 0.55 : 0.68)) {
     DECALS[(hash2(tx * 13, ty * 29) * DECALS.length) | 0](g, X, Y, hash2(tx, ty), S)
   }
-  // painterly 3-value grass clusters, organic placement across tile seams
-  for (let i = 0; i < 7; i++) {
+  // painterly grass clusters: fewer, chunkier 2-3px masses (no lone-pixel noise)
+  for (let i = 0; i < 4; i++) {
     const rr = hash2(tx * 17 + i * 3, ty * 31 + i * 7)
-    const fx = X + ((rr * 15) | 0) - 1
-    const fy = Y + ((hash2(ty * 13 + i, tx * 7 + i) * 15) | 0) - 1
+    const fx = X + ((rr * 14) | 0) - 1
+    const fy = Y + ((hash2(ty * 13 + i, tx * 7 + i) * 14) | 0) - 1
     const cw = 3 + ((rr * 4) | 0)
-    if (rr > 0.55) {
+    if (rr > 0.58) {
       g.fillStyle = S.grassMid
       g.fillRect(fx, fy, cw, 2)
-      g.fillRect(fx + 1, fy - 1, cw - 2, 1)
+      g.fillRect(fx + 1, fy - 1, cw - 2, 2)
       if (rr > 0.78) {
         g.fillStyle = S.grassLit
-        g.fillRect(fx + 1, fy - 1, Math.max(1, cw >> 1), 1)
+        g.fillRect(fx + 1, fy - 1, Math.max(2, cw >> 1), 1)
       }
-    } else if (rr < 0.22) {
-      g.fillStyle = 'rgba(12,16,26,0.3)'
+    } else if (rr < 0.2) {
+      g.fillStyle = 'rgba(12,16,26,0.28)'
       g.fillRect(fx, fy, cw, 2)
+      g.fillRect(fx + 1, fy + 2, cw - 1, 1)
     }
   }
-  // sparse lit blades + rare terracotta / bright accents
+  // occasional lit tuft or terracotta patch (2x2 minimum, never lone pixels)
   const rb = hash2(tx * 5 + 2, ty * 11 + 3)
-  if (rb > 0.62) {
+  if (rb > 0.7) {
     g.fillStyle = S.grassHi
-    const bx = X + ((rb * 12) | 0)
-    const by = Y + ((hash2(tx, ty * 3) * 12) | 0)
-    g.fillRect(bx, by, 1, 2)
-    g.fillRect(bx + 2, by + 1, 1, 1)
+    const bx = X + ((rb * 11) | 0)
+    const by = Y + ((hash2(tx, ty * 3) * 11) | 0)
+    g.fillRect(bx, by, 2, 2)
+    g.fillRect(bx + 1, by - 1, 1, 1)
   }
-  if (rb < 0.06) {
+  if (rb < 0.05) {
     g.fillStyle = 'rgba(196,120,62,0.35)'
-    g.fillRect(X + ((rb * 200) | 0) % 13, Y + 5 + ((rb * 130) | 0) % 9, 2, 2)
+    g.fillRect(X + 3 + (((rb * 200) | 0) % 10), Y + 5 + (((rb * 130) | 0) % 8), 3, 2)
   }
 }
 
@@ -1102,11 +1104,13 @@ function paintTreeTile(g, X, Y, tx, ty, S, getCh) {
         }
       }
     }
-    // moonlit rim on canopy top
+    // moonlit rim + notched bites on the canopy top edge
     if (edgeN) {
       g.fillStyle = 'rgba(158,208,168,0.5)'
       g.fillRect(X + 1 + ((r * 4) | 0), Y, 10, 1)
       g.fillRect(X + ((r * 3) | 0), Y + 1, 5, 1)
+      g.fillStyle = S.grass ? S.grass[0] : '#222c3a'
+      g.fillRect(X + ((r * 11) | 0), Y, 3, 2)
     }
     if (edgeW) {
       g.fillStyle = 'rgba(126,178,138,0.3)'
@@ -1124,36 +1128,48 @@ function paintTreeTile(g, X, Y, tx, ty, S, getCh) {
       g.fillRect(X, Y + 12, 16, 1)
     }
   } else {
-    // broadleaf: rounded clustered blobs like the reference village trees
+    // broadleaf: three cluster styles so canopies don't read as one stamp
     const base = ['#22391f', '#1e331c', '#274023'][(r * 3) | 0]
     g.fillStyle = base
     g.fillRect(X, Y, 16, 16)
-    for (let i = 0; i < 4; i++) {
+    const styleN = (hash2(tx * 5, ty * 9) * 3) | 0
+    const blobN = styleN === 0 ? 5 : styleN === 1 ? 3 : 4
+    for (let i = 0; i < blobN; i++) {
       const rr = hash2(tx * 13 + i * 7, ty * 19 + i * 11)
-      const bx = X + ((rr * 12) | 0)
-      const by = Y + ((hash2(ty + i, tx * 2 + i) * 12) | 0)
-      const bw = 5 + ((rr * 4) | 0)
-      // shadow under-blob then lit top
-      g.fillStyle = 'rgba(8,16,7,0.4)'
-      g.beginPath()
-      g.ellipse(bx + bw / 2, by + 3, bw / 2 + 1, 3, 0, 0, Math.PI * 2)
-      g.fill()
+      const bx = X + ((rr * 13) | 0) - 1
+      const by = Y + ((hash2(ty + i, tx * 2 + i) * 13) | 0) - 1
+      const bw = (styleN === 1 ? 7 : 4) + ((rr * 4) | 0)
+      // stepped rect blobs — shadow, body, lit crown
+      g.fillStyle = 'rgba(8,16,7,0.45)'
+      g.fillRect(bx, by + 2, bw, 3)
       g.fillStyle = i % 2 ? 'rgba(96,140,66,0.5)' : 'rgba(70,110,52,0.5)'
-      g.beginPath()
-      g.ellipse(bx + bw / 2, by + 1.5, bw / 2, 2.5, 0, 0, Math.PI * 2)
-      g.fill()
-      g.fillStyle = 'rgba(150,190,90,0.35)'
-      g.fillRect(bx + 1, by, ((bw / 2) | 0), 1)
+      g.fillRect(bx, by, bw, 3)
+      g.fillRect(bx + 1, by - 1, bw - 2, 1)
+      g.fillStyle = 'rgba(150,190,90,0.4)'
+      g.fillRect(bx + 1, by - 1, Math.max(2, (bw / 2) | 0), 1)
     }
+    // notched edges: bite the staircase corners so the mass reads organic
     if (edgeN) {
-      g.fillStyle = 'rgba(170,210,110,0.30)'
+      g.fillStyle = 'rgba(170,210,110,0.35)'
       g.fillRect(X + 2 + ((r * 5) | 0), Y, 8, 1)
+      const nb = getCh ? getCh(tx, ty - 1) : '.'
+      if (nb !== '#') {
+        g.fillStyle = S.grass ? S.grass[0] : '#243430'
+        g.fillRect(X + ((r * 10) | 0), Y, 3, 2)
+        g.fillRect(X + 12 - ((r * 8) | 0), Y, 2, 1)
+      }
+    }
+    if (edgeW) {
+      g.fillStyle = S.grass ? S.grass[0] : '#243430'
+      g.fillRect(X, Y + 3 + ((r * 9) | 0), 2, 3)
     }
     if (edgeS) {
       g.fillStyle = 'rgba(8,14,7,0.55)'
       g.fillRect(X, Y + 13, 16, 3)
       g.fillStyle = '#3a2c20'
       g.fillRect(X + 4 + ((r * 7) | 0), Y + 11, 3, 5)
+      g.fillStyle = S.grass ? S.grass[0] : '#243430'
+      g.fillRect(X + 10 + ((r * 4) | 0), Y + 14, 3, 2)
     }
   }
 }
