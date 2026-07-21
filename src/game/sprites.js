@@ -55,7 +55,7 @@ const KNIGHT_IDLE = [
   '.....oeeeeSо....',
   '......oSSSо.....',
   '..oto..gggо.....',
-  '.otо.ogccgоo...',
+  '.otоhogccgо.....',
   '.otо.occccоzо...',
   '.ohо.occccоzо...',
   '..oо.oCccCо.zо..',
@@ -75,7 +75,7 @@ const KNIGHT_WALK1 = [
   '.....oeeeeSо....',
   '......oSSSо.....',
   '..oto..gggо.....',
-  '.otо.ogccgоo...',
+  '.otоhogccgо.....',
   '.otо.occccоzо...',
   '.ohо.occccоzо...',
   '..oо.oCccCо.zо..',
@@ -95,7 +95,7 @@ const KNIGHT_WALK2 = [
   '.....oeeeeSо....',
   '......oSSSо.....',
   '..oto..gggо.....',
-  '.otо.ogccgоo...',
+  '.otоhogccgо.....',
   '.otо.occccоzо...',
   '.ohо.occccоzо...',
   '..oо.oCccCо.zо..',
@@ -565,8 +565,8 @@ const STYLES = {
     grass: ['#41414e', '#3b3b47', '#474756', '#36363f'],
     grassLit: '#54546a',
     deco: '#31313c',
-    cobble: ['#5a5a6c', '#4f4f5f', '#65657a'],
-    cobbleHi: '#7b7b93',
+    cobble: ['#4f4f61', '#454555', '#59596e'],
+    cobbleHi: '#6e6e86',
     cobbleGap: '#2a2a34',
     treeStyle: 'stone',
   },
@@ -924,24 +924,19 @@ function paintFlagstones(g, X, Y, tx, ty, S, worn, getCh) {
 
 function paintFlagstonesBase(g, X, Y, tx, ty, S, worn, getCh) {
   const r = hash2(tx, ty)
-  // big 16x32 slabs in an offset bond, one tone per slab
-  const slabY = (ty / 2) | 0
-  const slabR = hash2(tx * 3 + (slabY % 2), slabY * 7)
+  // square 16x16 slabs in a half-offset bond, gentle per-slab tones
+  const slabR = hash2(tx * 3 + (ty % 2), ty * 7)
   const base = worn ? S.cobbleHi : S.cobble[(slabR * 3) | 0]
   g.fillStyle = base
   g.fillRect(X, Y, 16, 16)
-  const topRow = ty % 2 === 0
-  g.fillStyle = 'rgba(8,6,14,0.45)'
-  if (topRow) g.fillRect(X, Y, 16, 1) // joint at slab top
-  const vx = (slabY % 2 ? 4 : 11) + ((slabR * 3) | 0)
+  g.fillStyle = 'rgba(8,6,14,0.3)'
+  g.fillRect(X, Y, 16, 1)
+  const vx = (ty % 2 ? 3 : 10) + ((slabR * 4) | 0)
   g.fillRect(X + vx, Y, 1, 16)
-  // slab shading: light catch on top edge, wear in the middle
-  if (topRow) {
-    g.fillStyle = 'rgba(255,255,255,0.07)'
-    g.fillRect(X, Y + 1, 16, 1)
-  }
-  g.fillStyle = 'rgba(8,6,14,0.16)'
-  g.fillRect(X + ((r * 10) | 0), Y + 4 + ((r * 6) | 0), 4, 1)
+  g.fillStyle = 'rgba(255,255,255,0.05)'
+  g.fillRect(X, Y + 1, 16, 1)
+  g.fillStyle = 'rgba(8,6,14,0.12)'
+  g.fillRect(X + ((r * 10) | 0), Y + 5 + ((r * 6) | 0), 4, 1)
   g.fillRect(X + 12 - ((r * 8) | 0), Y + 10, 2, 2)
   // per-slab tonal variation so open floors don't go flat
   if (slabR > 0.72) {
@@ -953,27 +948,29 @@ function paintFlagstonesBase(g, X, Y, tx, ty, S, worn, getCh) {
   }
   // cracks & moss
   const rc = hash2(tx * 7, ty * 3)
-  if (rc > 0.75) {
-    g.fillStyle = 'rgba(8,6,14,0.4)'
+  if (rc > 0.78) {
+    g.fillStyle = 'rgba(8,6,14,0.35)'
     let cx2 = X + ((rc * 12) | 0)
-    let cy2 = Y + 2
-    for (let i = 0; i < 5; i++) {
+    let cy2 = Y + 3
+    for (let i = 0; i < 4; i++) {
       g.fillRect(cx2, cy2, 1, 2)
-      cx2 += rc > 0.85 ? 1 : -1
-      cy2 += 2
+      cx2 += rc > 0.88 ? 1 : -1
+      cy2 += 3
     }
   }
   if (rc < 0.18) {
-    g.fillStyle = 'rgba(85,110,80,0.35)'
+    g.fillStyle = 'rgba(85,110,80,0.32)'
     g.fillRect(X + ((r * 11) | 0), Y + 10 + ((rc * 30) | 0), 4, 2)
     g.fillRect(X + 2 + ((r * 8) | 0), Y + 12, 2, 1)
   }
-  // baseboard shadow where the floor meets a wall face above
+    // baseboard drop shadow where the floor meets a wall face above
   if (getCh && getCh(tx, ty - 1) === '#') {
-    g.fillStyle = 'rgba(8,6,16,0.55)'
-    g.fillRect(X, Y, 16, 3)
-    g.fillStyle = 'rgba(8,6,16,0.3)'
-    g.fillRect(X, Y + 3, 16, 2)
+    g.fillStyle = 'rgba(6,4,14,0.7)'
+    g.fillRect(X, Y, 16, 2)
+    g.fillStyle = 'rgba(6,4,14,0.45)'
+    g.fillRect(X, Y + 2, 16, 2)
+    g.fillStyle = 'rgba(6,4,14,0.2)'
+    g.fillRect(X, Y + 4, 16, 2)
   }
 }
 

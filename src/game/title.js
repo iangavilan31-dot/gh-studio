@@ -40,12 +40,12 @@ export function buildTitleScene() {
   g.fillRect(0, 0, W, H * 0.56)
 
   // big swirling cloud masses (reference: heavy purple storm clouds)
-  for (let m = 0; m < 9; m++) {
+  for (let m = 0; m < 5; m++) {
     const mx = R() * W
     const my = R() * H * 0.34
     const mw = 50 + R() * 110
     const mh = 12 + R() * 22
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 22; i++) {
       const t2 = R()
       const px2 = mx + (R() - 0.5) * mw
       const py2 = my + (R() - 0.5) * mh * (1 - Math.abs(px2 - mx) / mw)
@@ -75,7 +75,7 @@ export function buildTitleScene() {
     }
   }
   // moonlit cloud rims
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 26; i++) {
     const cy = 8 + R() * H * 0.3
     g.fillStyle = `rgba(210,180,220,${0.05 + R() * 0.09})`
     g.fillRect(R() * W, cy, 6 + R() * 22, 1)
@@ -243,10 +243,10 @@ export function buildTitleScene() {
   const horizonY = H * 0.55
   // rolling hill bands, brighter (moon/dusk-lit) then darker toward camera
   const hillBands = [
-    { y: horizonY, h: 26, base: '#2c4030', hi: '#4d6a44', lit: 0.9 },
-    { y: horizonY + 20, h: 34, base: '#243626', hi: '#40593a', lit: 0.7 },
-    { y: horizonY + 48, h: 46, base: '#1c2b1e', hi: '#33472f', lit: 0.5 },
-    { y: horizonY + 88, h: 70, base: '#141f16', hi: '#263624', lit: 0.35 },
+    { y: horizonY, h: 26, base: '#273a2b', hi: '#47613e', lit: 0.85 },
+    { y: horizonY + 20, h: 34, base: '#203023', hi: '#3a5234', lit: 0.65 },
+    { y: horizonY + 48, h: 46, base: '#19271b', hi: '#2e412a', lit: 0.48 },
+    { y: horizonY + 88, h: 70, base: '#121c13', hi: '#223020', lit: 0.34 },
   ]
   for (const band of hillBands) {
     g.fillStyle = band.base
@@ -569,8 +569,9 @@ function buildPilgrim() {
     }
     // amber torch-side rim, fading as the robe falls
     if (row < 20) {
-      g.fillStyle = `rgba(232,151,95,${0.7 - (row - 10) * 0.06})`
+      g.fillStyle = `rgba(240,166,104,${0.85 - (row - 10) * 0.06})`
       g.fillRect(x0 + wdt - 1, row, 1, 1)
+      if (row < 16) g.fillRect(x0 + wdt - 2, row, 1, 1)
     }
   }
   // hem shadow on the ground
