@@ -34,6 +34,31 @@ export class Renderer {
     this.flash = 0 // lightning / nova flash 0..1
     this.beamWarns = []
     this.whiteCache = new Map()
+    // ordered-dither pattern brushes (screen-anchored 50% checker)
+    const d1 = document.createElement('canvas')
+    d1.width = 2
+    d1.height = 2
+    const dg = d1.getContext('2d')
+    dg.fillStyle = '#000'
+    dg.fillRect(0, 0, 1, 1)
+    dg.fillRect(1, 1, 1, 1)
+    this.patt50 = this.lightG.createPattern(d1, 'repeat')
+    const d2 = document.createElement('canvas')
+    d2.width = 2
+    d2.height = 2
+    const dg2 = d2.getContext('2d')
+    dg2.fillStyle = '#ffaa50'
+    dg2.fillRect(0, 0, 1, 1)
+    dg2.fillRect(1, 1, 1, 1)
+    this.wpatt50 = this.ctx.createPattern(d2, 'repeat')
+    const d3 = document.createElement('canvas')
+    d3.width = 2
+    d3.height = 2
+    const dg3 = d3.getContext('2d')
+    dg3.fillStyle = '#78beff'
+    dg3.fillRect(0, 0, 1, 1)
+    dg3.fillRect(1, 1, 1, 1)
+    this.cpatt50 = this.ctx.createPattern(d3, 'repeat')
     this.time = 0
     this.world = null
     this.fadeT = 0 // 1 = fully black
@@ -83,7 +108,7 @@ export class Renderer {
 
   initWeather() {
     const kind = this.world.zone.weather
-    const n = kind === 'rain' ? 90 : kind === 'ash' ? 46 : 34
+    const n = kind === 'rain' ? 90 : kind === 'ash' ? 46 : kind === 'fireflies' ? 64 : 40
     for (let i = 0; i < n; i++) {
       this.weatherP.push({
         x: Math.random() * VIEW_W,
@@ -287,9 +312,6 @@ export class Renderer {
     // lighting overlay
     this.drawLighting(state, camX, camY)
 
-    // volumetric light shafts through the canopy (forest) / dusk rays (village)
-    if (zone.style === 'forest' || zone.style === 'village') this.drawLightShafts(g, camX, camY, zone)
-
     // weather (over lighting: rain/ash visible in dark)
     this.drawWeather(dt, g, zone)
 
@@ -322,10 +344,11 @@ export class Renderer {
 
   // ---------- entity draws ----------
   drawShadow(g, x, y, w) {
-    g.fillStyle = 'rgba(0,0,0,0.32)'
-    g.beginPath()
-    g.ellipse(x, y, w, w * 0.42, 0, 0, Math.PI * 2)
-    g.fill()
+    // stepped pixel shadow (no anti-aliased ellipse)
+    g.fillStyle = 'rgba(8,6,16,0.40)'
+    g.fillRect(x - w + 1, y - 2, w * 2 - 2, 1)
+    g.fillRect(x - w, y - 1, w * 2, 2)
+    g.fillRect(x - w + 2, y + 1, w * 2 - 4, 1)
   }
 
   drawPlayer(p, camX, camY) {
@@ -623,7 +646,9 @@ export class Renderer {
     const lg = this.lightG
     const [ar, ag, ab] = zone.ambient
     lg.globalCompositeOperation = 'source-over'
-    lg.fillStyle = `rgba(${ar},${ag},${ab},${zone.darkness})`
+    lg.globalAlpha = 1
+    lg.clearRect(0, 0, VIEW_W, VIEW_H)
+    lg.fillStyle = `rgb(${ar},${ag},${ab})`
     lg.fillRect(0, 0, VIEW_W, VIEW_H)
 
     const lights = []
@@ -636,9 +661,9 @@ export class Renderer {
       lights.push({ x: p.x, y: p.y, r: base, warm: true, flicker: true })
     }
     for (const pr of state.props) {
-      if (pr.kind === 'torch') lights.push({ x: pr.x, y: pr.y - 8, r: 52, warm: true, flicker: true })
-      else if (pr.kind === 'bonfire') lights.push({ x: pr.x, y: pr.y, r: 70, warm: true, flicker: true })
-      else if (pr.kind === 'brazier' && pr.lit) lights.push({ x: pr.x, y: pr.y - 4, r: 64, warm: true, flicker: true })
+      if (pr.kind === 'torch') lights.push({ x: pr.x, y: pr.y - 8, r: 54, warm: true, flicker: true })
+      else if (pr.kind === 'bonfire') lights.push({ x: pr.x, y: pr.y, r: 72, warm: true, flicker: true })
+      else if (pr.kind === 'brazier' && pr.lit) lights.push({ x: pr.x, y: pr.y - 4, r: 66, warm: true, flicker: true })
       else if (pr.kind === 'beacon' && pr.lit) lights.push({ x: pr.x, y: pr.y - 20, r: 160, warm: true })
       else if (pr.kind === 'keyitem' && !pr.taken) lights.push({ x: pr.x, y: pr.y, r: 26, cold: true })
     }
@@ -650,46 +675,96 @@ export class Renderer {
       if ((e.k || e.kind) === 'wisp') lights.push({ x: e.x, y: e.y, r: 22, cold: true })
       if ((e.k || e.kind) === 'paleking') lights.push({ x: e.x, y: e.y - 10, r: 40, cold: true })
     }
-    // house windows glow
     if (zone.style === 'village') {
       for (const hs of this.world.houses) {
-        lights.push({ x: hs.tx * TILE + 8, y: hs.ty * TILE + hs.th * 10, r: 30, warm: true })
+        lights.push({ x: hs.tx * TILE + 8, y: hs.ty * TILE + hs.th * 10, r: 34, warm: true, window: true })
       }
     }
 
+    // quantized banded falloff, dithered at the band seams.
+    // flicker steps between discrete radii so the bands breathe like the refs.
     lg.globalCompositeOperation = 'destination-out'
+    const bands = [
+      [1.0, 0.34],
+      [0.76, 0.44],
+      [0.54, 0.6],
+      [0.34, 0.78],
+      [0.2, 0.95],
+    ]
     for (const l of lights) {
-      const x = l.x - camX
-      const y = l.y - camY
-      const fl = l.flicker ? 1 + Math.sin(this.time * 11 + l.x * 0.7) * 0.06 + Math.sin(this.time * 23 + l.y) * 0.04 : 1
+      const fl = l.flicker ? 1 + Math.round(Math.sin(this.time * 8 + l.x * 0.7) + Math.sin(this.time * 13 + l.y)) * 0.035 : 1
       const r = l.r * fl
+      const x = Math.round(l.x - camX)
+      const y = Math.round(l.y - camY)
       if (x < -r || y < -r || x > VIEW_W + r || y > VIEW_H + r) continue
-      const grd = lg.createRadialGradient(x, y, r * 0.15, x, y, r)
-      grd.addColorStop(0, 'rgba(0,0,0,0.95)')
-      grd.addColorStop(0.6, 'rgba(0,0,0,0.5)')
-      grd.addColorStop(1, 'rgba(0,0,0,0)')
-      lg.fillStyle = grd
-      lg.beginPath()
-      lg.arc(x, y, r, 0, Math.PI * 2)
-      lg.fill()
+      for (const [frac, a] of bands) {
+        lg.globalAlpha = a
+        lg.fillStyle = '#000'
+        lg.beginPath()
+        lg.arc(x, y, r * frac, 0, Math.PI * 2)
+        lg.fill()
+        // dithered seam just outside the band edge
+        lg.globalAlpha = a * 0.65
+        lg.fillStyle = this.patt50
+        lg.beginPath()
+        lg.arc(x, y, r * frac + 4, 0, Math.PI * 2)
+        lg.fill()
+      }
     }
+    lg.globalAlpha = 1
 
-    this.ctx.drawImage(this.light, 0, 0)
-
-    // warm additive glow pass
+    // multiply the ambient over the scene: rich saturated darkness, not a grey veil
     const g = this.ctx
+    g.globalCompositeOperation = 'multiply'
+    g.globalAlpha = zone.darkness
+    g.drawImage(this.light, 0, 0)
+    g.globalAlpha = 1
+
+    // warm/cold overlay bands: light "stains" the surfaces it touches
+    g.globalCompositeOperation = 'overlay'
+    const tintBands = [
+      [0.55, 0.22],
+      [0.34, 0.17],
+      [0.18, 0.13],
+    ]
+    for (const l of lights) {
+      const x = Math.round(l.x - camX)
+      const y = Math.round(l.y - camY)
+      const r = l.r
+      if (x < -r || y < -r || x > VIEW_W + r || y > VIEW_H + r) continue
+      for (const [frac, a] of tintBands) {
+        g.globalAlpha = a
+        g.fillStyle = l.warm ? '#ffaa50' : '#78beff'
+        g.beginPath()
+        g.arc(x, y, r * frac, 0, Math.PI * 2)
+        g.fill()
+      }
+      g.globalAlpha = 0.16
+      g.fillStyle = l.warm ? this.wpatt50 : this.cpatt50
+      g.beginPath()
+      g.arc(x, y, r * 0.68, 0, Math.PI * 2)
+      g.fill()
+      g.globalAlpha = 0.1
+      g.fillStyle = l.warm ? this.wpatt50 : this.cpatt50
+      g.beginPath()
+      g.arc(x, y, r * 0.44, 0, Math.PI * 2)
+      g.fill()
+    }
+    g.globalAlpha = 1
+
+    // small additive core so flames and sources still bloom
     g.globalCompositeOperation = 'lighter'
     for (const l of lights) {
-      const x = l.x - camX
-      const y = l.y - camY
-      const r = l.r * 0.55
+      const x = Math.round(l.x - camX)
+      const y = Math.round(l.y - camY)
+      const r = Math.max(6, l.r * 0.2)
       if (x < -r || y < -r || x > VIEW_W + r || y > VIEW_H + r) continue
       const grd = g.createRadialGradient(x, y, 1, x, y, r)
       if (l.warm) {
-        grd.addColorStop(0, 'rgba(255,160,60,0.20)')
-        grd.addColorStop(1, 'rgba(255,120,40,0)')
+        grd.addColorStop(0, 'rgba(255,180,90,0.22)')
+        grd.addColorStop(1, 'rgba(255,130,50,0)')
       } else {
-        grd.addColorStop(0, 'rgba(120,190,255,0.16)')
+        grd.addColorStop(0, 'rgba(140,200,255,0.18)')
         grd.addColorStop(1, 'rgba(90,140,255,0)')
       }
       g.fillStyle = grd
@@ -698,6 +773,31 @@ export class Renderer {
       g.fill()
     }
     g.globalCompositeOperation = 'source-over'
+
+    // lamplight mirrored on water: broken vertical streaks under warm lights
+    for (const l of lights) {
+      if (!l.warm) continue
+      const ltx = (l.x / TILE) | 0
+      const lty = (l.y / TILE) | 0
+      for (let dy = 0; dy <= 5; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const tx = ltx + dx
+          const ty = lty + dy
+          if (this.world.charAt(tx, ty) !== '~') continue
+          const sx = Math.round(l.x - camX) + dx * 3 - 1
+          const py0 = ty * TILE - camY
+          if (sx < -4 || sx > VIEW_W + 4 || py0 < -20 || py0 > VIEW_H + 20) continue
+          const fade = Math.max(0, 0.34 - dy * 0.055)
+          if (fade <= 0) continue
+          g.fillStyle = `rgba(255,186,94,${fade})`
+          const wob = Math.round(Math.sin(this.time * 3 + ty * 2) * 1)
+          for (let seg = 0; seg < 3; seg++) {
+            const syy = py0 + seg * 6 + ((hash2(tx, ty * 3 + seg) * 3) | 0)
+            g.fillRect(sx + wob, syy, 2, 3)
+          }
+        }
+      }
+    }
   }
 
   drawWaterShimmer(g, camX, camY) {
@@ -746,39 +846,6 @@ export class Renderer {
         })
       }
     }
-  }
-
-  drawLightShafts(g, camX, camY, zone) {
-    // long diagonal beams anchored to world space, drifting very slowly
-    g.save()
-    g.globalCompositeOperation = 'lighter'
-    const warm = zone.style === 'village'
-    for (let i = 0; i < 4; i++) {
-      const r = hash2(i * 31 + 7, i * 17 + 3)
-      const wx = ((r * 900 + this.time * 2.5 + i * 210) % (VIEW_W + 260)) - 130
-      const topX = wx - ((camX * 0.2) % 60)
-      const grd = g.createLinearGradient(topX, 0, topX - 90, VIEW_H)
-      const a = 0.045 + r * 0.03
-      if (warm) {
-        grd.addColorStop(0, `rgba(255,190,120,${a * 1.2})`)
-        grd.addColorStop(0.7, `rgba(255,160,90,${a * 0.4})`)
-        grd.addColorStop(1, 'rgba(255,150,80,0)')
-      } else {
-        grd.addColorStop(0, `rgba(210,235,190,${a})`)
-        grd.addColorStop(0.7, `rgba(180,220,170,${a * 0.35})`)
-        grd.addColorStop(1, 'rgba(160,210,160,0)')
-      }
-      g.fillStyle = grd
-      const wTop = 14 + r * 22
-      g.beginPath()
-      g.moveTo(topX, -10)
-      g.lineTo(topX + wTop, -10)
-      g.lineTo(topX + wTop - 90, VIEW_H + 10)
-      g.lineTo(topX - 90 - wTop * 0.4, VIEW_H + 10)
-      g.closePath()
-      g.fill()
-    }
-    g.restore()
   }
 
   drawWeather(dt, g, zone) {

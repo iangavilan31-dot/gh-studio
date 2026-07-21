@@ -376,11 +376,15 @@ export class UI {
       this.zoneCard.t -= dt
       const a = Math.min(1, this.zoneCard.t, (3.4 - this.zoneCard.t) * 2)
       g.textAlign = 'center'
-      g.fillStyle = `rgba(232,216,176,${a})`
       g.font = '16px monospace'
+      g.fillStyle = `rgba(10,6,16,${a * 0.9})`
+      g.fillText(this.zoneCard.title.toUpperCase(), VIEW_W / 2 + 1, 65)
+      g.fillStyle = `rgba(240,224,186,${a})`
       g.fillText(this.zoneCard.title.toUpperCase(), VIEW_W / 2, 64)
-      g.fillStyle = `rgba(138,127,150,${a})`
       g.font = '8px monospace'
+      g.fillStyle = `rgba(10,6,16,${a * 0.9})`
+      g.fillText(this.zoneCard.sub, VIEW_W / 2 + 1, 77)
+      g.fillStyle = `rgba(196,184,210,${a})`
       g.fillText(this.zoneCard.sub, VIEW_W / 2, 76)
       if (this.zoneCard.t <= 0) this.zoneCard = null
     }

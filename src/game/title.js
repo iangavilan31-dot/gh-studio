@@ -141,8 +141,8 @@ export function buildTitleScene() {
   g.fillRect(cx - 5, baseY - 74, 1, 32)
   g.fillStyle = 'rgba(165,130,195,0.18)'
   g.fillRect(cx + 12, baseY - 56, 1, 30)
-  // lit windows — cold blue (the hollow king's vigil)
-  g.fillStyle = '#8fdcff'
+  // lit windows — warm ember light like the reference
+  g.fillStyle = '#ffc45e'
   const winSpots = [
     [-18, -26], [-10, -34], [-2, -20], [8, -30], [16, -24],
     [-1, -66], [-17, -54], [17, -48], [-40, -22], [37, -26], [0, -52],
@@ -150,9 +150,9 @@ export function buildTitleScene() {
   for (const [wx, wy] of winSpots) {
     if (R() > 0.25) {
       g.fillRect(cx + wx, baseY + wy, 1, 2)
-      g.fillStyle = 'rgba(143,220,255,0.18)'
+      g.fillStyle = 'rgba(255,196,94,0.2)'
       g.fillRect(cx + wx - 1, baseY + wy - 1, 3, 4)
-      g.fillStyle = '#8fdcff'
+      g.fillStyle = '#ffc45e'
     }
   }
 
@@ -167,6 +167,12 @@ export function buildTitleScene() {
   g.fillRect(cx + 18, baseY - 36, 1, 40)
   g.fillStyle = 'rgba(60,45,90,0.35)'
   g.fillRect(cx - 44, baseY - 12, 88, 1) // curtain wall cornice
+  // fog clinging to the castle base
+  for (let i = 0; i < 46; i++) {
+    const fy = baseY + 6 + R() * 16
+    g.fillStyle = `rgba(150,128,170,${0.06 + R() * 0.1})`
+    g.fillRect(cx - 70 + R() * 140, fy, 8 + R() * 26, 2)
+  }
 
   // striations on the lower ridge band so it reads as slopes, not a wall
   for (let i = 0; i < 160; i++) {
@@ -229,29 +235,28 @@ export function buildTitleScene() {
       const my = band.y + 4 + R() * band.h * 0.8
       const mw = 26 + R() * 70
       const dabs = (mw / 1.5) | 0
-      // dark mass first
+      // dark mass first — stepped rect blobs, no anti-aliased ellipses
       for (let i = 0; i < dabs; i++) {
-        const bx = mx + (R() - 0.5) * mw
-        const by = my + (R() - 0.5) * band.h * 0.5
-        const bw = 4 + R() * 7
-        g.fillStyle = `rgba(8,16,9,0.55)`
-        g.beginPath()
-        g.ellipse(bx, by + 1, bw / 2 + 1.5, 3, 0, 0, Math.PI * 2)
-        g.fill()
+        const bx = Math.round(mx + (R() - 0.5) * mw)
+        const by = Math.round(my + (R() - 0.5) * band.h * 0.5)
+        const bw = 4 + ((R() * 7) | 0)
+        g.fillStyle = `rgba(8,16,9,0.6)`
+        g.fillRect(bx - (bw >> 1), by, bw, 3)
+        g.fillRect(bx - (bw >> 1) + 1, by - 1, bw - 2, 1)
+        g.fillRect(bx - (bw >> 1) + 1, by + 3, bw - 2, 1)
       }
-      // lit crowns on the upper-left of the mass
+      // lit crowns on the upper-left of the mass (3-value ramp)
       for (let i = 0; i < dabs * 0.8; i++) {
-        const bx = mx + (R() - 0.5) * mw * 0.9
-        const by = my + (R() - 0.5) * band.h * 0.42
-        const bw = 3 + R() * 6
-        const litA = band.lit * (0.22 + R() * 0.3)
+        const bx = Math.round(mx + (R() - 0.5) * mw * 0.9)
+        const by = Math.round(my + (R() - 0.5) * band.h * 0.42)
+        const bw = 3 + ((R() * 6) | 0)
+        const litA = band.lit * (0.38 + R() * 0.34)
         g.fillStyle = R() > 0.5 ? `rgba(105,150,78,${litA})` : `rgba(76,118,62,${litA})`
-        g.beginPath()
-        g.ellipse(bx - 1, by - 1, bw / 2, 2.2, 0, 0, Math.PI * 2)
-        g.fill()
-        if (R() > 0.62) {
-          g.fillStyle = `rgba(170,210,115,${litA * 0.75})`
-          g.fillRect(bx - bw / 3, by - 3, Math.max(1, bw / 2), 1)
+        g.fillRect(bx - (bw >> 1) - 1, by - 1, bw, 2)
+        g.fillRect(bx - (bw >> 1), by - 2, bw - 2, 1)
+        if (R() > 0.55) {
+          g.fillStyle = `rgba(170,210,115,${litA * 0.8})`
+          g.fillRect(bx - (bw >> 1), by - 3, Math.max(1, bw >> 1), 1)
         }
       }
     }
@@ -409,179 +414,215 @@ function paintRidge(g, R, top, bottom, colA, colB, jag) {
 }
 
 function fgTree(g, R, x, y, w, H) {
-  // dark conifer silhouette with faint rim
-  g.fillStyle = '#0c1410'
-  for (let yy = y; yy < H; yy += 5) {
+  // dark conifer silhouette built from stepped frond rows
+  const cx2 = Math.round(x + w / 2)
+  for (let yy = y; yy < H; yy += 3) {
     const t = (yy - y) / (H - y)
-    const half = 6 + t * w * 0.5
-    const cx2 = x + w / 2
-    g.beginPath()
-    g.moveTo(cx2 - half, yy + 5)
-    g.lineTo(cx2 + half, yy + 5)
-    g.lineTo(cx2 + (R() - 0.5) * 4, yy - 3)
-    g.closePath()
-    g.fill()
+    const half = Math.round(4 + t * w * 0.5 + (R() - 0.5) * 3)
+    g.fillStyle = '#0c1410'
+    g.fillRect(cx2 - half, yy, half * 2, 3)
+    // ragged frond tips
+    if (R() > 0.4) g.fillRect(cx2 - half - 2, yy + 1, 2, 2)
+    if (R() > 0.4) g.fillRect(cx2 + half, yy + 1, 2, 2)
   }
-  for (let i = 0; i < 30; i++) {
-    g.fillStyle = `rgba(90,140,100,${0.04 + R() * 0.08})`
-    g.fillRect(x + R() * w, y + R() * (H - y) * 0.8, 2 + R() * 4, 1)
+  for (let i = 0; i < 26; i++) {
+    g.fillStyle = `rgba(90,140,100,${0.06 + R() * 0.09})`
+    const ty2 = y + R() * (H - y) * 0.85
+    const t = (ty2 - y) / (H - y)
+    g.fillRect(cx2 - (4 + t * w * 0.5) + R() * (8 + t * w), ty2, 2 + R() * 4, 1)
   }
 }
 
-// ---------- the POV hands ----------
+// ---------- the POV hands (pure rect pixel art, stair-stepped) ----------
 function paintHands(g, R) {
   const W = VIEW_W
   const H = VIEW_H
   const o = '#151020'
-  const steel = ['#d3dbe6', '#9aa8ba', '#5c6a7c', '#3b4654']
-  const leather = ['#8a6a42', '#6b4a2b', '#4a3220']
+  const sL = '#d3dbe6' // steel light
+  const sM = '#9aa8ba' // steel mid
+  const sD = '#5c6a7c' // steel dark
+  const sX = '#3b4654' // steel deepest
+  const wood = ['#8a6a42', '#6b4a2b', '#4a3220']
 
   // ===== LEFT: gauntlet gripping a torch =====
-  const lx = W * 0.13
-  const ty = H * 0.62
-  // torch shaft
-  g.fillStyle = leather[1]
+  const lx = Math.round(W * 0.13)
+  const ty = Math.round(H * 0.62)
+  // torch shaft (3-band wood)
+  g.fillStyle = o
+  g.fillRect(lx + 4, ty - 57, 11, 84)
+  g.fillStyle = wood[1]
   g.fillRect(lx + 6, ty - 52, 7, 78)
-  g.fillStyle = leather[0]
+  g.fillStyle = wood[0]
   g.fillRect(lx + 6, ty - 52, 2, 78)
-  g.fillStyle = leather[2]
+  g.fillStyle = wood[2]
   g.fillRect(lx + 11, ty - 52, 2, 78)
-  // iron banding + wrapped head
-  g.fillStyle = '#3b4654'
+  // iron bands
+  g.fillStyle = sX
   g.fillRect(lx + 4, ty - 56, 11, 5)
   g.fillRect(lx + 5, ty - 40, 9, 3)
+  g.fillStyle = sD
+  g.fillRect(lx + 4, ty - 56, 11, 1)
   g.fillStyle = '#232c3a'
   g.fillRect(lx + 4, ty - 53, 11, 1)
-  // charred head
+  // charred wrapped head
   g.fillStyle = '#1c1410'
   g.fillRect(lx + 3, ty - 66, 13, 11)
   g.fillStyle = '#3a2a1a'
   g.fillRect(lx + 4, ty - 66, 4, 10)
+  g.fillStyle = '#0f0a08'
+  g.fillRect(lx + 13, ty - 65, 2, 9)
 
-  // gauntlet fist around shaft (plate fingers)
+  // fist: four plate fingers wrapped around the shaft
   const fy = ty + 4
   g.fillStyle = o
-  g.fillRect(lx - 4, fy - 2, 27, 22)
+  g.fillRect(lx - 4, fy - 3, 27, 24)
   for (let i = 0; i < 4; i++) {
-    const yy = fy + i * 5
-    g.fillStyle = steel[1]
+    const yy = fy - 1 + i * 5
+    g.fillStyle = sM
     g.fillRect(lx - 2, yy, 22, 4)
-    g.fillStyle = steel[0]
+    g.fillStyle = sL
     g.fillRect(lx - 2, yy, 22, 1)
-    g.fillStyle = steel[2]
+    g.fillStyle = sD
     g.fillRect(lx - 2, yy + 3, 22, 1)
     g.fillStyle = o
     g.fillRect(lx - 2, yy + 4, 22, 1)
+    // knuckle glints
+    g.fillStyle = '#eef4fa'
+    g.fillRect(lx + 1, yy, 2, 1)
+    g.fillRect(lx + 9, yy, 1, 1)
   }
-  // thumb plate
-  g.fillStyle = steel[1]
-  g.fillRect(lx + 14, fy + 1, 7, 9)
-  g.fillStyle = steel[0]
-  g.fillRect(lx + 14, fy + 1, 7, 1)
+  // thumb plate over the shaft
   g.fillStyle = o
-  g.fillRect(lx + 20, fy + 1, 1, 9)
-  // vambrace coming from bottom-left
-  g.fillStyle = steel[2]
-  g.beginPath()
-  g.moveTo(lx - 26, H)
-  g.lineTo(lx - 6, fy + 16)
-  g.lineTo(lx + 16, fy + 20)
-  g.lineTo(lx + 8, H)
-  g.closePath()
-  g.fill()
-  g.fillStyle = steel[1]
-  g.beginPath()
-  g.moveTo(lx - 20, H)
-  g.lineTo(lx - 4, fy + 18)
-  g.lineTo(lx + 6, fy + 20)
-  g.lineTo(lx, H)
-  g.closePath()
-  g.fill()
-  g.fillStyle = steel[0]
-  g.fillRect(lx - 4, fy + 18, 2, H - fy - 18)
-  // rivets
-  g.fillStyle = '#e8f0f8'
-  g.fillRect(lx - 1, fy + 24, 1, 1)
-  g.fillRect(lx - 3, fy + 34, 1, 1)
+  g.fillRect(lx + 13, fy - 1, 9, 12)
+  g.fillStyle = sM
+  g.fillRect(lx + 14, fy, 7, 10)
+  g.fillStyle = sL
+  g.fillRect(lx + 14, fy, 7, 1)
+  g.fillStyle = sD
+  g.fillRect(lx + 19, fy + 1, 2, 9)
+
+  // vambrace: stair-stepped armored forearm running off bottom-left
+  for (let row = 0; row < 30; row++) {
+    const yy = fy + 20 + row * 3
+    if (yy > H) break
+    const shift = Math.round(row * 2.0)
+    const bx = lx - 4 - shift
+    const bw = 26 + Math.round(row * 1.1)
+    g.fillStyle = o
+    g.fillRect(bx - 1, yy, bw + 2, 3)
+    g.fillStyle = sM
+    g.fillRect(bx, yy, bw, 3)
+    g.fillStyle = sL
+    g.fillRect(bx, yy, 3, 3)
+    g.fillStyle = sD
+    g.fillRect(bx + bw - 4, yy, 4, 3)
+    // plate seams every 4th row
+    if (row % 4 === 3) {
+      g.fillStyle = sX
+      g.fillRect(bx, yy + 2, bw, 1)
+    }
+    // rivets
+    if (row % 6 === 2) {
+      g.fillStyle = '#eef4fa'
+      g.fillRect(bx + 4, yy + 1, 1, 1)
+    }
+  }
 
   // ===== RIGHT: gauntlet gripping a raised sword =====
-  const rx = W * 0.84
-  const ry = H * 0.66
-  // blade: long, angled up-left, with edge highlight and fuller
-  g.save()
-  g.translate(rx + 4, ry - 6)
-  g.rotate(-1.15)
-  const bladeL = 150
-  g.fillStyle = o
-  g.fillRect(-5, -bladeL, 10, bladeL)
-  g.fillStyle = steel[1]
-  g.fillRect(-4, -bladeL, 8, bladeL)
-  g.fillStyle = steel[0]
-  g.fillRect(-4, -bladeL, 2, bladeL) // lit edge
-  g.fillStyle = steel[3]
-  g.fillRect(2, -bladeL, 2, bladeL) // shadow edge
-  g.fillStyle = steel[2]
-  g.fillRect(-1, -bladeL + 4, 2, bladeL - 10) // fuller
-  // tip
-  g.fillStyle = steel[0]
-  g.beginPath()
-  g.moveTo(-4, -bladeL)
-  g.lineTo(4, -bladeL)
-  g.lineTo(0, -bladeL - 9)
-  g.closePath()
-  g.fill()
+  const rx = Math.round(W * 0.84)
+  const ry = Math.round(H * 0.66)
+  // blade: stair-stepped diagonal, banded cross-section
+  const rows = 54
+  for (let rr = 0; rr < rows; rr++) {
+    const yy = ry - 6 - rr * 2
+    const bx = Math.round(rx - 1 - rr * 1.5)
+    // taper near the tip
+    const wScale = rr > rows - 7 ? (rows - rr) / 7 : 1
+    const wl = Math.max(1, Math.round(2 * wScale))
+    const wm = Math.max(1, Math.round(3 * wScale))
+    const wd = Math.max(0, Math.round(2 * wScale))
+    let xx = bx
+    g.fillStyle = o
+    g.fillRect(xx - 1, yy, wl + wm + wd + 2 + 2, 2)
+    g.fillStyle = sL
+    g.fillRect(xx, yy, wl, 2) // lit edge
+    xx += wl
+    g.fillStyle = sM
+    g.fillRect(xx, yy, wm, 2)
+    xx += wm
+    g.fillStyle = sX
+    g.fillRect(xx, yy, 1, 2) // fuller shadow line
+    xx += 1
+    g.fillStyle = sD
+    g.fillRect(xx, yy, wd, 2)
+  }
+  // tip cap
+  g.fillStyle = sL
+  g.fillRect(Math.round(rx - 1 - rows * 1.5), ry - 6 - rows * 2, 2, 2)
   // crossguard
+  const gy0 = ry - 8
+  g.fillStyle = o
+  g.fillRect(rx - 16, gy0, 32, 8)
   g.fillStyle = '#232c3a'
-  g.fillRect(-14, -3, 28, 6)
-  g.fillStyle = steel[1]
-  g.fillRect(-14, -3, 28, 2)
+  g.fillRect(rx - 15, gy0 + 1, 30, 6)
+  g.fillStyle = sM
+  g.fillRect(rx - 15, gy0 + 1, 30, 2)
   g.fillStyle = '#d8a84f'
-  g.fillRect(-2, -3, 4, 6)
-  g.restore()
+  g.fillRect(rx - 3, gy0, 6, 8)
+  g.fillStyle = '#f0c46a'
+  g.fillRect(rx - 3, gy0, 6, 2)
 
-  // fist on grip
+  // fist on the grip
   const gy = ry + 2
   g.fillStyle = o
-  g.fillRect(rx - 12, gy - 4, 26, 24)
+  g.fillRect(rx - 13, gy - 3, 28, 25)
   for (let i = 0; i < 4; i++) {
-    const yy = gy - 2 + i * 5
-    g.fillStyle = steel[1]
-    g.fillRect(rx - 10, yy, 22, 4)
-    g.fillStyle = steel[0]
-    g.fillRect(rx - 10, yy, 22, 1)
-    g.fillStyle = steel[2]
-    g.fillRect(rx - 10, yy + 3, 22, 1)
+    const yy = gy - 1 + i * 5
+    g.fillStyle = sM
+    g.fillRect(rx - 11, yy, 24, 4)
+    g.fillStyle = sL
+    g.fillRect(rx - 11, yy, 24, 1)
+    g.fillStyle = sD
+    g.fillRect(rx + 9, yy + 1, 4, 3)
     g.fillStyle = o
-    g.fillRect(rx - 10, yy + 4, 22, 1)
+    g.fillRect(rx - 11, yy + 4, 24, 1)
+    g.fillStyle = '#eef4fa'
+    g.fillRect(rx - 8, yy, 2, 1)
   }
-  g.fillStyle = steel[1]
-  g.fillRect(rx - 12, gy, 6, 10)
-  g.fillStyle = steel[0]
-  g.fillRect(rx - 12, gy, 6, 1)
-  // pommel below fist
+  // pommel
+  g.fillStyle = o
+  g.fillRect(rx - 3, gy + 21, 10, 8)
   g.fillStyle = '#d8a84f'
-  g.fillRect(rx - 2, gy + 20, 8, 6)
+  g.fillRect(rx - 2, gy + 22, 8, 6)
+  g.fillStyle = '#f0c46a'
+  g.fillRect(rx - 2, gy + 22, 8, 2)
   g.fillStyle = '#a87c34'
-  g.fillRect(rx - 2, gy + 24, 8, 2)
-  // vambrace from bottom-right
-  g.fillStyle = steel[2]
-  g.beginPath()
-  g.moveTo(rx + 34, H)
-  g.lineTo(rx + 10, gy + 18)
-  g.lineTo(rx - 10, gy + 22)
-  g.lineTo(rx - 2, H)
-  g.closePath()
-  g.fill()
-  g.fillStyle = steel[1]
-  g.beginPath()
-  g.moveTo(rx + 24, H)
-  g.lineTo(rx + 8, gy + 20)
-  g.lineTo(rx + 0, gy + 22)
-  g.lineTo(rx + 8, H)
-  g.closePath()
-  g.fill()
-  g.fillStyle = steel[0]
-  g.fillRect(rx + 6, gy + 22, 2, H - gy - 22)
+  g.fillRect(rx - 2, gy + 26, 8, 2)
+
+  // vambrace: stair-stepped forearm to bottom-right
+  for (let row = 0; row < 30; row++) {
+    const yy = gy + 22 + row * 3
+    if (yy > H) break
+    const shift = Math.round(row * 1.9)
+    const bx = rx - 9 + shift - Math.round(row * 0.4)
+    const bw = 26 + Math.round(row * 1.1)
+    g.fillStyle = o
+    g.fillRect(bx - 1, yy, bw + 2, 3)
+    g.fillStyle = sM
+    g.fillRect(bx, yy, bw, 3)
+    g.fillStyle = sL
+    g.fillRect(bx, yy, 3, 3)
+    g.fillStyle = sD
+    g.fillRect(bx + bw - 4, yy, 4, 3)
+    if (row % 4 === 3) {
+      g.fillStyle = sX
+      g.fillRect(bx, yy + 2, bw, 1)
+    }
+    if (row % 6 === 2) {
+      g.fillStyle = '#eef4fa'
+      g.fillRect(bx + bw - 7, yy + 1, 1, 1)
+    }
+  }
 }
 
 // ---------- per-frame draw ----------
@@ -638,15 +679,14 @@ export function drawTitle(g, t, dt) {
   g.fillStyle = '#ff6a2d'
   g.fillRect(lx - 5, fy + 2, 12, 4)
 
-  // sword blade catches the firelight (subtle warm sheen pulsing)
-  const shx = VIEW_W * 0.84 + 4
-  const shy = VIEW_H * 0.66 - 6
-  g.save()
-  g.translate(shx, shy)
-  g.rotate(-1.15)
-  g.fillStyle = `rgba(255,180,100,${0.10 + Math.sin(t * 6) * 0.05})`
-  g.fillRect(-4, -150, 3, 150)
-  g.restore()
+  // firelight sheen pulsing up the blade's lit edge (stepped)
+  const bx0 = Math.round(VIEW_W * 0.84) - 1
+  const by0 = Math.round(VIEW_H * 0.66) - 6
+  const sheenA = 0.12 + Math.sin(t * 6) * 0.07
+  g.fillStyle = `rgba(255,180,100,${Math.max(0, sheenA)})`
+  for (let rr = 0; rr < 54; rr += 2) {
+    g.fillRect(Math.round(bx0 - rr * 1.5), by0 - rr * 2, 2, 4)
+  }
 
   // drifting embers
   for (const e of embers) {
