@@ -59,6 +59,21 @@ export function buildTitleScene() {
       g.fillRect(mx + (R() - 0.5) * mw * 0.9, my + mh * 0.35 + R() * 3, 5 + R() * 16, 1)
     }
   }
+  // deliberate horizontal cloud bands with dithered undersides
+  for (let b = 0; b < 4; b++) {
+    const by = 14 + b * 22 + (b % 2) * 8
+    const bh = 7 + (b % 3) * 3
+    g.fillStyle = `rgba(58,42,86,${0.35 - b * 0.05})`
+    g.fillRect(0, by, W, bh)
+    g.fillStyle = `rgba(140,105,150,${0.16 - b * 0.02})`
+    g.fillRect(0, by, W, 2)
+    // dithered underside
+    g.fillStyle = `rgba(30,20,50,${0.4 - b * 0.06})`
+    for (let xx = 0; xx < W; xx += 2) {
+      g.fillRect(xx + (b % 2), by + bh, 1, 1)
+      if (xx % 4 === 0) g.fillRect(xx, by + bh + 1, 1, 1)
+    }
+  }
   // moonlit cloud rims
   for (let i = 0; i < 80; i++) {
     const cy = 8 + R() * H * 0.3
@@ -153,12 +168,25 @@ export function buildTitleScene() {
   for (const [wx, wy] of winSpots) {
     if (R() > 0.25) {
       g.fillRect(cx + wx, baseY + wy, 1, 2)
-      g.fillStyle = 'rgba(255,196,94,0.2)'
+      g.fillStyle = 'rgba(255,196,94,0.22)'
       g.fillRect(cx + wx - 1, baseY + wy - 1, 3, 4)
+      g.fillStyle = 'rgba(255,196,94,0.1)'
+      g.fillRect(cx + wx - 2, baseY + wy - 2, 5, 6)
       g.fillStyle = '#ffc45e'
     }
   }
 
+  // stone courses across every face so the castle reads as masonry
+  g.fillStyle = 'rgba(96,74,128,0.14)'
+  for (let yy = baseY - 86; yy < baseY + 10; yy += 3) {
+    g.fillRect(cx - 44, yy, 88, 1)
+  }
+  g.fillStyle = 'rgba(10,6,20,0.35)'
+  for (let yy = baseY - 84; yy < baseY + 10; yy += 6) {
+    for (let xx = cx - 42 + ((yy / 3) % 2) * 3; xx < cx + 42; xx += 7) {
+      g.fillRect(xx, yy, 1, 2)
+    }
+  }
   // subtle stone facets & buttresses so the castle reads as mass, not blob
   g.fillStyle = 'rgba(84,64,116,0.16)'
   g.fillRect(cx - 24, baseY - 42, 19, 46) // moon-lit west face of keep

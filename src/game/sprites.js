@@ -56,8 +56,8 @@ const KNIGHT_IDLE = [
   '......oSSSо.....',
   '..oto..gggо.....',
   '.otо.ogccgоo...',
-  '.otо.occccоsSо..',
-  '.ohо.occccоSzо..',
+  '.otо.occccоzо...',
+  '.ohо.occccоzо...',
   '..oо.oCccCо.zо..',
   '.....occccо.о...',
   '.....oCCCCо.....',
@@ -76,8 +76,8 @@ const KNIGHT_WALK1 = [
   '......oSSSо.....',
   '..oto..gggо.....',
   '.otо.ogccgоo...',
-  '.otо.occccоsSо..',
-  '.ohо.occccоSzо..',
+  '.otо.occccоzо...',
+  '.ohо.occccоzо...',
   '..oо.oCccCо.zо..',
   '.....occccо.о...',
   '.....oCCCCо.....',
@@ -96,8 +96,8 @@ const KNIGHT_WALK2 = [
   '......oSSSо.....',
   '..oto..gggо.....',
   '.otо.ogccgоo...',
-  '.otо.occccоsSо..',
-  '.ohо.occccоSzо..',
+  '.otо.occccоzо...',
+  '.ohо.occccоzо...',
   '..oо.oCccCо.zо..',
   '.....occccо.о...',
   '.....oCCCCо.....',
@@ -209,8 +209,8 @@ const HUSK_A = [
   '...oKkkKо...',
   '..oorrRоо...',
   '.orоrrrrо...',
-  '.orо.rrRо...',
-  '.oRо.orrо...',
+  '.orо.rrrо...',
+  '.orо.orrо...',
   '..o..oRrо...',
   '.....oRо.о..',
   '....oRо.Rо..',
@@ -223,8 +223,8 @@ const HUSK_B = [
   '...oKkkKо...',
   '..oorrRоо...',
   '.orоrrrrо...',
-  '.orо.rrRо...',
-  '.oRо.orrо...',
+  '.orо.rrrо...',
+  '.orо.orrо...',
   '..o..oRrо...',
   '....oRrо....',
   '...oRо.оRо..',
@@ -556,9 +556,9 @@ const STYLES = {
     grassLit: '#42654f',
     grassHi: '#548a54',
     deco: '#1a2230',
-    cobble: ['#5e5344', '#52483a', '#6b5e4c'],
-    cobbleHi: '#7d6f58',
-    cobbleGap: '#2e281f',
+    cobble: ['#4c4238', '#41382e', '#584d3f'],
+    cobbleHi: '#6b5d4a',
+    cobbleGap: '#262019',
     treeStyle: 'conifer',
   },
   tower: {
@@ -605,15 +605,15 @@ export function paintTile(g, ch, tx, ty, style, getCh) {
       paintWater(g, X, Y, tx, ty, getCh)
       break
     case 'R':
-      paintGrass(g, X, Y, tx, ty, S)
+      paintGrass(g, X, Y, tx, ty, S, getCh)
       paintRock(g, X, Y, r)
       break
     case '+':
-      paintGrass(g, X, Y, tx, ty, S)
+      paintGrass(g, X, Y, tx, ty, S, getCh)
       paintFlowers(g, X, Y, r)
       break
     case ',':
-      paintGrass(g, X, Y, tx, ty, S)
+      paintGrass(g, X, Y, tx, ty, S, getCh)
       paintTuft(g, X, Y, r, S)
       break
     case '#':
@@ -621,19 +621,34 @@ export function paintTile(g, ch, tx, ty, style, getCh) {
       else paintWallTile(g, X, Y, tx, ty, S, getCh, style)
       break
     default:
-      paintGrass(g, X, Y, tx, ty, S)
+      paintGrass(g, X, Y, tx, ty, S, getCh)
       break
   }
 }
 
-function paintGrass(g, X, Y, tx, ty, S) {
+const DECALS = [
+  paintDecalFlowerBank,
+  paintDecalStoneGroup,
+  paintDecalTuftClump,
+  paintDecalStump,
+  paintDecalFern,
+  paintDecalMushrooms,
+]
+
+function paintGrass(g, X, Y, tx, ty, S, getCh) {
   if (S.treeStyle === 'stone' || S.treeStyle === 'stonedark') {
-    paintFlagstones(g, X, Y, tx, ty, S, false)
+    paintFlagstones(g, X, Y, tx, ty, S, false, getCh)
     return
   }
   // indigo shadow base — green lives only in the painted mid/lit clusters
   g.fillStyle = S.grass[0]
   g.fillRect(X, Y, 16, 16)
+  // deliberate decal clusters, denser beside roads where the eye travels
+  const nearPath = getCh && (getCh(tx + 1, ty) === '=' || getCh(tx - 1, ty) === '=' || getCh(tx, ty + 1) === '=' || getCh(tx, ty - 1) === '=')
+  const rd = hash2(tx * 41 + 7, ty * 53 + 11)
+  if (rd > (nearPath ? 0.42 : 0.8)) {
+    DECALS[(hash2(tx * 13, ty * 29) * DECALS.length) | 0](g, X, Y, hash2(tx, ty), S)
+  }
   // painterly 3-value grass clusters, organic placement across tile seams
   for (let i = 0; i < 7; i++) {
     const rr = hash2(tx * 17 + i * 3, ty * 31 + i * 7)
@@ -666,6 +681,88 @@ function paintGrass(g, X, Y, tx, ty, S) {
     g.fillStyle = 'rgba(196,120,62,0.35)'
     g.fillRect(X + ((rb * 200) | 0) % 13, Y + 5 + ((rb * 130) | 0) % 9, 2, 2)
   }
+}
+
+function paintDecalFlowerBank(g, X, Y, r, S) {
+  const cols = [['#c94f5e', '#e88a94'], ['#d8b44f', '#efd28a'], ['#b06ad0', '#d0a2e8']]
+  for (let i = 0; i < 4; i++) {
+    const rr = hash2(X + i * 7, Y + i * 13)
+    const [c1, c2] = cols[((r + i * 0.31) * 3 | 0) % 3]
+    const fx = X + 1 + ((rr * 12) | 0)
+    const fy = Y + 3 + ((hash2(Y + i, X) * 10) | 0)
+    g.fillStyle = S.grassMid
+    g.fillRect(fx - 1, fy + 1, 4, 2)
+    g.fillStyle = c1
+    g.fillRect(fx, fy, 2, 2)
+    g.fillStyle = c2
+    g.fillRect(fx, fy, 1, 1)
+  }
+}
+function paintDecalStoneGroup(g, X, Y, r, S) {
+  const sx = X + 3 + ((r * 6) | 0)
+  const sy = Y + 5 + ((r * 5) | 0)
+  g.fillStyle = 'rgba(10,12,20,0.5)'
+  g.fillRect(sx - 1, sy + 2, 8, 2)
+  g.fillStyle = '#5a6070'
+  g.fillRect(sx, sy, 4, 3)
+  g.fillRect(sx + 5, sy + 1, 3, 2)
+  g.fillStyle = '#7a8296'
+  g.fillRect(sx, sy, 3, 1)
+  g.fillStyle = '#3c4252'
+  g.fillRect(sx, sy + 2, 4, 1)
+}
+function paintDecalTuftClump(g, X, Y, r, S) {
+  for (let i = 0; i < 3; i++) {
+    const rr = hash2(X + i * 11, Y + i * 5)
+    const fx = X + 2 + ((rr * 11) | 0)
+    const fy = Y + 4 + ((hash2(Y + i * 3, X) * 9) | 0)
+    g.fillStyle = S.grassMid
+    g.fillRect(fx, fy + 1, 3, 2)
+    g.fillStyle = S.grassLit
+    g.fillRect(fx, fy, 1, 2)
+    g.fillRect(fx + 2, fy, 1, 1)
+    g.fillStyle = S.grassHi
+    g.fillRect(fx + 1, fy - 1, 1, 1)
+  }
+}
+function paintDecalStump(g, X, Y, r, S) {
+  const sx = X + 4 + ((r * 5) | 0)
+  const sy = Y + 5 + ((r * 4) | 0)
+  g.fillStyle = 'rgba(10,12,20,0.5)'
+  g.fillRect(sx - 1, sy + 4, 8, 2)
+  g.fillStyle = '#4a3626'
+  g.fillRect(sx, sy + 1, 6, 4)
+  g.fillStyle = '#6b5138'
+  g.fillRect(sx, sy, 6, 2)
+  g.fillStyle = '#8a6a48'
+  g.fillRect(sx + 1, sy, 4, 1)
+  g.fillStyle = '#38281c'
+  g.fillRect(sx + 2, sy + 1, 2, 1)
+}
+function paintDecalFern(g, X, Y, r, S) {
+  const fx = X + 3 + ((r * 8) | 0)
+  const fy = Y + 6 + ((r * 5) | 0)
+  g.fillStyle = S.grassMid
+  g.fillRect(fx - 2, fy, 2, 1)
+  g.fillRect(fx + 2, fy, 2, 1)
+  g.fillRect(fx, fy - 2, 1, 4)
+  g.fillStyle = S.grassLit
+  g.fillRect(fx - 3, fy - 1, 2, 1)
+  g.fillRect(fx + 3, fy - 1, 2, 1)
+  g.fillRect(fx, fy - 3, 1, 2)
+}
+function paintDecalMushrooms(g, X, Y, r, S) {
+  const fx = X + 4 + ((r * 8) | 0)
+  const fy = Y + 8 + ((r * 4) | 0)
+  g.fillStyle = '#d8cbb8'
+  g.fillRect(fx, fy, 1, 2)
+  g.fillRect(fx + 3, fy + 1, 1, 1)
+  g.fillStyle = '#c96a4a'
+  g.fillRect(fx - 1, fy - 1, 3, 1)
+  g.fillStyle = '#e8927a'
+  g.fillRect(fx - 1, fy - 1, 1, 1)
+  g.fillStyle = '#a85438'
+  g.fillRect(fx + 2, fy, 3, 1)
 }
 
 function paintTuft(g, X, Y, r, S) {
@@ -716,7 +813,7 @@ function paintFlowers(g, X, Y, r) {
 
 function paintCobbles(g, X, Y, tx, ty, S, getCh) {
   if (S.treeStyle === 'stone' || S.treeStyle === 'stonedark') {
-    paintFlagstones(g, X, Y, tx, ty, S, true)
+    paintFlagstones(g, X, Y, tx, ty, S, true, getCh)
     return
   }
   if (S.treeStyle === 'conifer') {
@@ -793,11 +890,11 @@ function paintDirtPath(g, X, Y, tx, ty, S, getCh) {
   }
 }
 
-function paintFlagstones(g, X, Y, tx, ty, S, worn) {
+function paintFlagstones(g, X, Y, tx, ty, S, worn, getCh) {
   const r = hash2(tx, ty)
   if (worn && S.treeStyle === 'stonedark') {
     // the Pale King's processional carpet, moth-eaten
-    paintFlagstonesBase(g, X, Y, tx, ty, S, false)
+    paintFlagstonesBase(g, X, Y, tx, ty, S, false, getCh)
     g.fillStyle = '#4a1220'
     g.fillRect(X + 2, Y, 12, 16)
     g.fillStyle = '#641a2c'
@@ -805,11 +902,14 @@ function paintFlagstones(g, X, Y, tx, ty, S, worn) {
     g.fillStyle = '#330f1a'
     g.fillRect(X + 2, Y, 1, 16)
     g.fillRect(X + 13, Y, 1, 16)
-    g.fillStyle = 'rgba(216,168,79,0.5)'
-    if (ty % 2 === 0) {
-      g.fillRect(X + 3, Y + 2, 1, 2)
-      g.fillRect(X + 12, Y + 9, 1, 2)
-    }
+    // gold edge trim + woven fabric shading
+    g.fillStyle = 'rgba(216,168,79,0.55)'
+    g.fillRect(X + 3, Y, 1, 16)
+    g.fillRect(X + 12, Y, 1, 16)
+    g.fillStyle = 'rgba(120,40,56,0.5)'
+    for (let fy2 = (ty % 2) * 2; fy2 < 16; fy2 += 4) g.fillRect(X + 4, Y + fy2, 8, 1)
+    g.fillStyle = 'rgba(30,8,16,0.4)'
+    g.fillRect(X + 4, Y + 15, 8, 1)
     const rh = hash2(tx * 13, ty * 17)
     if (rh > 0.6) {
       g.fillStyle = S.cobble[1]
@@ -819,10 +919,10 @@ function paintFlagstones(g, X, Y, tx, ty, S, worn) {
     }
     return
   }
-  paintFlagstonesBase(g, X, Y, tx, ty, S, worn)
+  paintFlagstonesBase(g, X, Y, tx, ty, S, worn, getCh)
 }
 
-function paintFlagstonesBase(g, X, Y, tx, ty, S, worn) {
+function paintFlagstonesBase(g, X, Y, tx, ty, S, worn, getCh) {
   const r = hash2(tx, ty)
   // big 16x32 slabs in an offset bond, one tone per slab
   const slabY = (ty / 2) | 0
@@ -843,6 +943,14 @@ function paintFlagstonesBase(g, X, Y, tx, ty, S, worn) {
   g.fillStyle = 'rgba(8,6,14,0.16)'
   g.fillRect(X + ((r * 10) | 0), Y + 4 + ((r * 6) | 0), 4, 1)
   g.fillRect(X + 12 - ((r * 8) | 0), Y + 10, 2, 2)
+  // per-slab tonal variation so open floors don't go flat
+  if (slabR > 0.72) {
+    g.fillStyle = 'rgba(255,255,255,0.04)'
+    g.fillRect(X, Y, 16, 16)
+  } else if (slabR < 0.2) {
+    g.fillStyle = 'rgba(8,6,16,0.1)'
+    g.fillRect(X, Y, 16, 16)
+  }
   // cracks & moss
   const rc = hash2(tx * 7, ty * 3)
   if (rc > 0.75) {
@@ -855,9 +963,17 @@ function paintFlagstonesBase(g, X, Y, tx, ty, S, worn) {
       cy2 += 2
     }
   }
-  if (rc < 0.12) {
+  if (rc < 0.18) {
     g.fillStyle = 'rgba(85,110,80,0.35)'
-    g.fillRect(X + ((r * 11) | 0), Y + 10 + ((rc * 40) | 0), 4, 2)
+    g.fillRect(X + ((r * 11) | 0), Y + 10 + ((rc * 30) | 0), 4, 2)
+    g.fillRect(X + 2 + ((r * 8) | 0), Y + 12, 2, 1)
+  }
+  // baseboard shadow where the floor meets a wall face above
+  if (getCh && getCh(tx, ty - 1) === '#') {
+    g.fillStyle = 'rgba(8,6,16,0.55)'
+    g.fillRect(X, Y, 16, 3)
+    g.fillStyle = 'rgba(8,6,16,0.3)'
+    g.fillRect(X, Y + 3, 16, 2)
   }
 }
 
@@ -889,51 +1005,65 @@ function paintWater(g, X, Y, tx, ty, getCh) {
     g.fillStyle = 'rgba(200,240,240,0.20)'
     g.fillRect(X + 3 + ((r * 8) | 0), Y + 6, 3, 1)
   }
-  // shore: dark wet bank, foam line, and grass nibbles biting into the water
+  // shore: wet-sand rim + subdued foam, grass nibbles — no hard outline
   if (shore) {
-    const bank = 'rgba(8,20,24,0.85)'
-    const foam = 'rgba(168,224,210,0.5)'
+    const wet = '#2c3a42'
+    const sand = '#3f4a4a'
+    const foam = 'rgba(150,196,190,0.35)'
     const nib = '#26323e'
     if (isShore(0, -1)) {
-      g.fillStyle = nib
-      g.fillRect(X + ((r * 11) | 0), Y, 3 + ((r * 3) | 0), 2)
-      g.fillRect(X + 12 - ((r * 9) | 0), Y, 2, 1)
-    }
-    if (isShore(0, 1)) {
-      g.fillStyle = nib
-      g.fillRect(X + 3 + ((r * 9) | 0), Y + 14, 3 + ((r * 3) | 0), 2)
-    }
-    if (isShore(-1, 0)) {
-      g.fillStyle = nib
-      g.fillRect(X, Y + ((r * 11) | 0), 2, 3 + ((r * 3) | 0))
-    }
-    if (isShore(1, 0)) {
-      g.fillStyle = nib
-      g.fillRect(X + 14, Y + 2 + ((r * 10) | 0), 2, 3 + ((r * 3) | 0))
-    }
-    if (isShore(0, -1)) {
-      g.fillStyle = bank
+      g.fillStyle = sand
       g.fillRect(X, Y, 16, 2)
+      g.fillStyle = wet
+      g.fillRect(X, Y + 2, 16, 1)
       g.fillStyle = foam
-      g.fillRect(X + ((r * 3) | 0), Y + 2, 16 - ((r * 5) | 0), 1)
+      g.fillRect(X + ((r * 5) | 0), Y + 2, 9 - ((r * 4) | 0), 1)
+      g.fillStyle = nib
+      g.fillRect(X + ((r * 11) | 0), Y, 3 + ((r * 3) | 0), 1)
     }
     if (isShore(0, 1)) {
-      g.fillStyle = bank
+      g.fillStyle = sand
       g.fillRect(X, Y + 14, 16, 2)
+      g.fillStyle = wet
+      g.fillRect(X, Y + 13, 16, 1)
       g.fillStyle = foam
-      g.fillRect(X + ((r * 4) | 0), Y + 13, 16 - ((r * 6) | 0), 1)
+      g.fillRect(X + 2 + ((r * 5) | 0), Y + 13, 8 - ((r * 4) | 0), 1)
+      g.fillStyle = nib
+      g.fillRect(X + 3 + ((r * 9) | 0), Y + 15, 3 + ((r * 3) | 0), 1)
     }
     if (isShore(-1, 0)) {
-      g.fillStyle = bank
+      g.fillStyle = sand
       g.fillRect(X, Y, 2, 16)
+      g.fillStyle = wet
+      g.fillRect(X + 2, Y, 1, 16)
       g.fillStyle = foam
-      g.fillRect(X + 2, Y + ((r * 4) | 0), 1, 16 - ((r * 7) | 0))
+      g.fillRect(X + 2, Y + ((r * 6) | 0), 1, 8 - ((r * 4) | 0))
+      g.fillStyle = nib
+      g.fillRect(X, Y + ((r * 11) | 0), 1, 3 + ((r * 3) | 0))
     }
     if (isShore(1, 0)) {
-      g.fillStyle = bank
+      g.fillStyle = sand
       g.fillRect(X + 14, Y, 2, 16)
+      g.fillStyle = wet
+      g.fillRect(X + 13, Y, 1, 16)
       g.fillStyle = foam
-      g.fillRect(X + 13, Y + ((r * 3) | 0), 1, 16 - ((r * 5) | 0))
+      g.fillRect(X + 13, Y + 2 + ((r * 5) | 0), 1, 8 - ((r * 4) | 0))
+      g.fillStyle = nib
+      g.fillRect(X + 15, Y + 2 + ((r * 10) | 0), 1, 3 + ((r * 3) | 0))
+    }
+  } else if (!deep) {
+    // dithered transition from mid band to the deep center
+    let deepBelow = true
+    for (const [dx, dy] of [[0, 1], [-1, 1], [1, 1]]) {
+      const nc = getCh ? getCh(tx + dx, ty + dy) : '~'
+      if (nc !== '~') deepBelow = false
+    }
+    if (deepBelow) {
+      g.fillStyle = '#132e38'
+      for (let px2 = 0; px2 < 16; px2 += 2) {
+        g.fillRect(X + px2 + (ty % 2), Y + 13, 1, 3)
+        g.fillRect(X + px2 + ((ty + 1) % 2), Y + 15, 1, 1)
+      }
     }
   }
 }

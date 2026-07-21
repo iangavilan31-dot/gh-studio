@@ -364,7 +364,7 @@ export class UI {
   }
 
   showZoneCard(title, sub) {
-    this.zoneCard = { title, sub, t: 3.4 }
+    this.zoneCard = { title, sub, t: 4.6 }
   }
 
   // ---------------- canvas HUD ----------------
@@ -374,7 +374,7 @@ export class UI {
     // zone card
     if (this.zoneCard) {
       this.zoneCard.t -= dt
-      const a = Math.min(1, this.zoneCard.t, (3.4 - this.zoneCard.t) * 2)
+      const a = Math.min(1, this.zoneCard.t * 1.4, (4.6 - this.zoneCard.t) * 2.4)
       // bespoke display treatment: letterspaced gold serif with rules + diamond
       const title = this.zoneCard.title.toUpperCase()
       g.font = '15px Georgia, "Times New Roman", serif'
@@ -386,7 +386,7 @@ export class UI {
         const cw = g.measureText(ch).width
         g.fillStyle = `rgba(12,7,18,${a * 0.95})`
         g.fillText(ch, cx + cw / 2 + 1, 63)
-        g.fillStyle = `rgba(232,200,122,${a})`
+        g.fillStyle = `rgba(244,216,142,${a})`
         g.fillText(ch, cx + cw / 2, 62)
         cx += cw + gap
       }

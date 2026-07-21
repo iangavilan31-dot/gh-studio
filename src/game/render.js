@@ -329,12 +329,17 @@ export class Renderer {
       g.fillRect(0, 0, VIEW_W, VIEW_H)
     }
 
-    // vignette
-    const vg = g.createRadialGradient(VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.45, VIEW_W / 2, VIEW_H / 2, VIEW_H * 0.85)
-    vg.addColorStop(0, 'rgba(0,0,0,0)')
-    vg.addColorStop(1, 'rgba(0,0,0,0.42)')
-    g.fillStyle = vg
-    g.fillRect(0, 0, VIEW_W, VIEW_H)
+    // corner vignette: two stepped bands, kept subtle
+    g.fillStyle = 'rgba(4,2,10,0.16)'
+    g.beginPath()
+    g.rect(0, 0, VIEW_W, VIEW_H)
+    g.ellipse(VIEW_W / 2, VIEW_H / 2, VIEW_W * 0.62, VIEW_H * 0.72, 0, 0, Math.PI * 2)
+    g.fill('evenodd')
+    g.fillStyle = 'rgba(4,2,10,0.2)'
+    g.beginPath()
+    g.rect(0, 0, VIEW_W, VIEW_H)
+    g.ellipse(VIEW_W / 2, VIEW_H / 2, VIEW_W * 0.74, VIEW_H * 0.88, 0, 0, Math.PI * 2)
+    g.fill('evenodd')
 
     if (this.fadeT > 0) {
       g.fillStyle = `rgba(4,2,8,${this.fadeT})`
@@ -763,26 +768,31 @@ export class Renderer {
     }
     g.globalAlpha = 1
 
-    // small additive core so flames and sources still bloom
+    // quantized additive core: two stepped rings + dither seam, no smooth gradient
     g.globalCompositeOperation = 'lighter'
     for (const l of lights) {
       const x = Math.round(l.x - camX)
       const y = Math.round(l.y - camY)
       const r = Math.max(6, l.r * 0.2)
       if (x < -r || y < -r || x > VIEW_W + r || y > VIEW_H + r) continue
-      const grd = g.createRadialGradient(x, y, 1, x, y, r)
-      if (l.warm) {
-        grd.addColorStop(0, 'rgba(255,180,90,0.22)')
-        grd.addColorStop(1, 'rgba(255,130,50,0)')
-      } else {
-        grd.addColorStop(0, 'rgba(140,200,255,0.18)')
-        grd.addColorStop(1, 'rgba(90,140,255,0)')
-      }
-      g.fillStyle = grd
+      g.globalAlpha = l.warm ? 0.1 : 0.08
+      g.fillStyle = l.warm ? '#ff9a3d' : '#78beff'
       g.beginPath()
       g.arc(x, y, r, 0, Math.PI * 2)
       g.fill()
+      g.globalAlpha = l.warm ? 0.14 : 0.1
+      g.fillStyle = l.warm ? '#ffd9a0' : '#cfe4ff'
+      g.beginPath()
+      g.arc(x, y, r * 0.55, 0, Math.PI * 2)
+      g.fill()
+      g.globalAlpha = 0.1
+      g.strokeStyle = l.warm ? this.wpatt50 : this.cpatt50
+      g.lineWidth = 3
+      g.beginPath()
+      g.arc(x, y, r * 0.8, 0, Math.PI * 2)
+      g.stroke()
     }
+    g.globalAlpha = 1
     g.globalCompositeOperation = 'source-over'
 
     // lamplight mirrored on water: broken vertical streaks under warm lights
@@ -886,11 +896,11 @@ export class Renderer {
           w.y = -4
           w.x = Math.random() * (VIEW_W + 40)
         }
-        g.strokeStyle = 'rgba(160,180,220,0.35)'
-        g.beginPath()
-        g.moveTo(w.x, w.y)
-        g.lineTo(w.x + 1.5, w.y + 7)
-        g.stroke()
+        g.fillStyle = 'rgba(160,180,220,0.35)'
+        const rx2 = Math.round(w.x)
+        const ry2 = Math.round(w.y)
+        g.fillRect(rx2, ry2, 1, 3)
+        g.fillRect(rx2 + 1, ry2 + 3, 1, 3)
       } else if (kind === 'ash') {
         w.y += 18 * dt * w.v
         w.x += Math.sin(this.time + w.ph) * 8 * dt
@@ -899,7 +909,7 @@ export class Renderer {
           w.x = Math.random() * VIEW_W
         }
         g.fillStyle = 'rgba(160,150,160,0.4)'
-        g.fillRect(w.x, w.y, 1, 1)
+        g.fillRect(Math.round(w.x), Math.round(w.y), 1, 1)
       } else if (kind === 'embers') {
         w.y -= 9 * dt * w.v
         w.x += Math.sin(this.time * 1.5 + w.ph) * 10 * dt
@@ -909,7 +919,7 @@ export class Renderer {
         }
         const a = 0.25 + 0.25 * Math.sin(this.time * 3 + w.ph)
         g.fillStyle = `rgba(255,154,61,${a})`
-        g.fillRect(w.x, w.y, 1, 1)
+        g.fillRect(Math.round(w.x), Math.round(w.y), 1, 1)
       } else if (kind === 'fireflies') {
         w.x += Math.sin(this.time * 0.8 + w.ph) * 14 * dt
         w.y += Math.cos(this.time * 0.6 + w.ph * 2) * 10 * dt
