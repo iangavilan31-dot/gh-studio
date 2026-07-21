@@ -82,18 +82,17 @@ export function buildTitleScene() {
   g.closePath()
   g.fill()
   // rocky facets: sharp diagonal strokes, lit from upper-left
-  for (let i = 0; i < 220; i++) {
+  for (let i = 0; i < 90; i++) {
     const t = R()
     const yy = mountTop + 26 + t * (H * 0.58 - mountTop - 26)
     const spread = 22 + t * 165
     const xx = cx + (R() - 0.5) * spread
     if (R() > 0.55) {
-      g.fillStyle = `rgba(96,74,120,${0.10 + R() * 0.12})`
-      g.fillRect(xx, yy, 1 + R() * 4, 1)
-      g.fillRect(xx - 1, yy + 1, 1 + R() * 2, 1)
+      g.fillStyle = `rgba(96,74,120,${0.12 + R() * 0.1})`
+      g.fillRect(xx, yy, 2 + R() * 3, 2)
     } else {
-      g.fillStyle = `rgba(6,4,12,${0.25 + R() * 0.2})`
-      g.fillRect(xx, yy, 2 + R() * 5, 1 + R() * 2)
+      g.fillStyle = `rgba(6,4,12,${0.28 + R() * 0.16})`
+      g.fillRect(xx, yy, 3 + R() * 4, 2)
     }
   }
   // snow dusting near the top
@@ -105,6 +104,11 @@ export function buildTitleScene() {
 
   // castle silhouette — tall gothic cluster like the reference
   const baseY = mountTop + 28
+  // atmospheric back-plane: rear towers one value lighter
+  g.fillStyle = '#1c142e'
+  g.fillRect(cx - 34, baseY - 52, 12, 44)
+  g.fillRect(cx + 22, baseY - 46, 12, 38)
+  g.fillRect(cx - 8, baseY - 80, 14, 30)
   g.fillStyle = '#100b1a'
   // curtain wall
   g.fillRect(cx - 44, baseY - 12, 88, 24)
@@ -185,12 +189,6 @@ export function buildTitleScene() {
     g.fillRect(cx - 70 + R() * 140, fy, 8 + R() * 26, 2)
   }
 
-  // striations on the lower ridge band so it reads as slopes, not a wall
-  for (let i = 0; i < 160; i++) {
-    const sy = H * 0.44 + R() * H * 0.12
-    g.fillStyle = R() > 0.5 ? `rgba(70,52,96,${0.05 + R() * 0.08})` : `rgba(8,5,16,${0.08 + R() * 0.1})`
-    g.fillRect(R() * W, sy, 8 + R() * 30, 1)
-  }
   // distant conifer treeline against the mountain base
   for (let i = 0; i < 210; i++) {
     const txx = R() * W
@@ -213,10 +211,10 @@ export function buildTitleScene() {
   g.fillStyle = haze
   g.fillRect(0, H * 0.47, W, H * 0.12)
   // mist band under the castle
-  for (let i = 0; i < 240; i++) {
+  for (let i = 0; i < 110; i++) {
     const my = H * 0.47 + R() * H * 0.1
-    g.fillStyle = `rgba(172,148,190,${0.08 + R() * 0.1})`
-    g.fillRect(R() * W, my, 14 + R() * 46, 2)
+    g.fillStyle = `rgba(172,148,190,${0.09 + R() * 0.1})`
+    g.fillRect(R() * W, my, 20 + R() * 40, 3)
   }
 
   // ---------- valley: forested hills ----------
@@ -422,15 +420,9 @@ function paintRidge(g, R, top, bottom, colA, colB, jag) {
   g.lineTo(VIEW_W, bottom)
   g.closePath()
   g.fill()
-  // snow/rock streaks
-  for (let i = 0; i < 40; i++) {
-    g.fillStyle = `rgba(170,150,200,${0.04 + R() * 0.07})`
-    g.fillRect(R() * VIEW_W, top + R() * (bottom - top) * 0.5, 2 + R() * 5, 1)
-  }
+  // one clean tonal step below the crest, no scatter streaks
   g.fillStyle = colB
-  for (let i = 0; i < 30; i++) {
-    g.fillRect(R() * VIEW_W, top + R() * (bottom - top) * 0.6, 1 + R() * 3, 1)
-  }
+  g.fillRect(0, top + (bottom - top) * 0.4, VIEW_W, 2)
 }
 
 function fgTree(g, R, x, y, w, H) {

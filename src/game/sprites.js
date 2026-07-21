@@ -39,8 +39,8 @@ export function hash2(x, y) {
 const P_KNIGHT = {
   o: '#191322', // outline
   p: '#a63c48', // plume
-  s: '#d3dbe6', S: '#9aa8ba', z: '#5c6a7c', // steel light/mid/dark
-  c: '#4a5878', C: '#333f5c', d: '#232c44', // tabard
+  s: '#c8d2e0', S: '#8c9aad', z: '#525f70', // steel light/mid/dark
+  c: '#3d4c6b', C: '#293552', d: '#1d2740', // tabard
   h: '#e0aa74', e: '#191322',
   l: '#6b4a2b', L: '#4a3220', // leather
   g: '#d8a84f', // gold trim
@@ -521,17 +521,16 @@ export function initSprites() {
 }
 
 function makeWisp() {
-  const c = document.createElement('canvas')
-  c.width = 10
-  c.height = 10
-  const g = c.getContext('2d')
-  const grad = g.createRadialGradient(5, 5, 0.5, 5, 5, 5)
-  grad.addColorStop(0, '#e8fff0')
-  grad.addColorStop(0.35, '#8fe8b0')
-  grad.addColorStop(1, 'rgba(70,140,100,0)')
-  g.fillStyle = grad
-  g.fillRect(0, 0, 10, 10)
-  return c
+  // drawn pixel spirit: diamond core, stepped halo, trailing motes
+  return px([
+    '....a....',
+    '...aba...',
+    '..abcba..',
+    '...aba...',
+    '....a....',
+    '..d...d..',
+    '.....d...',
+  ], { a: 'rgba(112,204,150,0.55)', b: '#a8f0c2', c: '#eafff2', d: 'rgba(112,204,150,0.4)' })
 }
 
 // ============================================================
@@ -556,9 +555,9 @@ const STYLES = {
     grassLit: '#42654f',
     grassHi: '#548a54',
     deco: '#1a2230',
-    cobble: ['#4c4238', '#41382e', '#584d3f'],
-    cobbleHi: '#6b5d4a',
-    cobbleGap: '#262019',
+    cobble: ['#5f5344', '#544938', '#6d5f4c'],
+    cobbleHi: '#82715a',
+    cobbleGap: '#2e271d',
     treeStyle: 'conifer',
   },
   tower: {
@@ -1080,27 +1079,27 @@ function paintTreeTile(g, X, Y, tx, ty, S, getCh) {
     const base = ['#182b21', '#15271d', '#1b2f24'][(r * 3) | 0]
     g.fillStyle = base
     g.fillRect(X, Y, 16, 16)
-    // scalloped canopy clusters on a 3-value ramp (dark base under, lit crowns above)
-    for (let i = 0; i < 7; i++) {
+    // dense scalloped canopy: solid 3-tone cluster masses filling the tile
+    for (let i = 0; i < 9; i++) {
       const rr = hash2(tx * 7 + i * 3, ty * 11 + i * 5)
-      const cxp = X + ((rr * 14) | 0) - 2
-      const cyp = Y + ((hash2(ty * 5 + i, tx * 3 + i) * 13) | 0)
-      const cw = 5 + ((rr * 5) | 0)
-      // under-shadow scallop
-      g.fillStyle = 'rgba(8,14,12,0.55)'
-      g.fillRect(cxp, cyp + 2, cw, 2)
-      g.fillRect(cxp + 1, cyp + 4, cw - 2, 1)
-      // cluster body
-      g.fillStyle = rr > 0.6 ? '#244430' : '#1d3627'
-      g.fillRect(cxp, cyp, cw, 3)
+      const cxp = X + ((rr * 15) | 0) - 3
+      const cyp = Y + ((hash2(ty * 5 + i, tx * 3 + i) * 15) | 0) - 2
+      const cw = 6 + ((rr * 6) | 0)
+      // deep shadow under-scallop
+      g.fillStyle = '#101d15'
+      g.fillRect(cxp, cyp + 3, cw, 3)
+      g.fillRect(cxp + 1, cyp + 6, cw - 2, 1)
+      // solid cluster body
+      g.fillStyle = rr > 0.55 ? '#26492f' : '#1e3a26'
+      g.fillRect(cxp, cyp, cw, 4)
       g.fillRect(cxp + 1, cyp - 1, cw - 2, 1)
-      // lit crown (upper-left)
-      if (rr > 0.45) {
-        g.fillStyle = '#3a5f40'
-        g.fillRect(cxp, cyp - 1, Math.max(2, cw >> 1), 1)
-        if (rr > 0.8) {
+      // lit crown, upper-left biased
+      if (rr > 0.4) {
+        g.fillStyle = '#39603c'
+        g.fillRect(cxp, cyp - 1, Math.max(3, (cw * 0.6) | 0), 2)
+        if (rr > 0.72) {
           g.fillStyle = '#4f7a4e'
-          g.fillRect(cxp + 1, cyp - 2, Math.max(1, cw >> 2), 1)
+          g.fillRect(cxp + 1, cyp - 2, Math.max(2, cw >> 2), 1)
         }
       }
     }

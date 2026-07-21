@@ -246,8 +246,26 @@ export class Renderer {
     const camX = Math.round(this.cam.x + shx)
     const camY = Math.round(this.cam.y + shy)
 
-    g.fillStyle = '#06040b'
-    g.fillRect(0, 0, VIEW_W, VIEW_H)
+    // out-of-bounds void: textured abyss instead of flat black
+    if (!this.voidPatt) {
+      const vc = document.createElement('canvas')
+      vc.width = 32
+      vc.height = 32
+      const vg2 = vc.getContext('2d')
+      vg2.fillStyle = '#0a0714'
+      vg2.fillRect(0, 0, 32, 32)
+      for (let i = 0; i < 14; i++) {
+        const rr = hash2(i * 13, i * 7)
+        vg2.fillStyle = rr > 0.5 ? '#110c1e' : '#060410'
+        vg2.fillRect((rr * 30) | 0, (hash2(i * 3, i * 17) * 30) | 0, 2 + ((rr * 4) | 0), 2)
+      }
+      this.voidPatt = g.createPattern(vc, 'repeat')
+    }
+    g.save()
+    g.translate(-camX % 32, -camY % 32)
+    g.fillStyle = this.voidPatt
+    g.fillRect(-32, -32, VIEW_W + 64, VIEW_H + 64)
+    g.restore()
     g.drawImage(this.static, camX, camY, VIEW_W, VIEW_H, 0, 0, VIEW_W, VIEW_H)
     this.drawWaterShimmer(g, camX, camY)
     this.emitChimneySmoke(dt, camX, camY)
