@@ -192,8 +192,25 @@ Tested with Playwright against real Chromium:
 
 ## 11. Design references
 
-Grounded in a fan-out research pass (co-op ARPG design, WebRTC netcode practice, canvas
-lighting technique, short-campaign pacing) — see `docs/RESEARCH.md` for the sourced report.
+Grounded in a fan-out deep-research pass — 22 sources, 25 claims adversarially verified
+(3 skeptic votes each), 12 surviving findings — see `docs/RESEARCH.md` for the full sourced
+report. The verified findings the build leans on directly:
+
+* **Shared midpoint camera** over split-screen for local co-op (Demons with Shotguns
+  playtesting; Bionic Commando Rearmed's hybrid as fallback).
+* **Proximity revives with risk** as the teamwork driver, with bleed-out + bonfire respawn
+  capping the known traversal-tedium failure mode.
+* **Netcode architected from day one** — Children of Morta's postmortem documents a
+  ~2.5-year delay from retrofitting online co-op; Embervale's sim was serializable before
+  it had a menu.
+* **Host-authoritative + client prediction** (Gambetta's canonical model) — inputs up,
+  state down, guest predicts own movement.
+* **PeerJS over NetplayJS/Trystero** after a maintained-vs-serverless trade-off survey;
+  the symmetric-NAT/TURN ceiling (~10–20% of pairs) is documented as a known limitation.
+* **Pixel art + dynamic lighting** as the dark-fantasy look (Children of Morta's stated
+  approach), proven here in pure canvas 2D.
+* **Boss = test of learned skills, structured in Stout's eight beats**; the campaign
+  alternates intensity with hub rest beats and ends in falling action after the climax.
 
 ## 12. Cut / future
 
