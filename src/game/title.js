@@ -39,19 +39,30 @@ export function buildTitleScene() {
   g.fillStyle = sky
   g.fillRect(0, 0, W, H * 0.56)
 
-  // deliberate horizontal cloud bands with dithered undersides
-  for (let b = 0; b < 4; b++) {
-    const by = 14 + b * 22 + (b % 2) * 8
-    const bh = 7 + (b % 3) * 3
-    g.fillStyle = `rgba(58,42,86,${0.35 - b * 0.05})`
-    g.fillRect(0, by, W, bh)
-    g.fillStyle = `rgba(140,105,150,${0.16 - b * 0.02})`
-    g.fillRect(0, by, W, 2)
-    // dithered underside
-    g.fillStyle = `rgba(30,20,50,${0.4 - b * 0.06})`
-    for (let xx = 0; xx < W; xx += 2) {
-      g.fillRect(xx + (b % 2), by + bh, 1, 1)
-      if (xx % 4 === 0) g.fillRect(xx, by + bh + 1, 1, 1)
+  // deliberate cloud masses: staggered partial bands with stepped edges
+  const bandDefs = [
+    [0.02, 0.55, 16, 9],
+    [0.4, 0.58, 34, 12],
+    [0.68, 0.34, 24, 8],
+    [0.15, 0.4, 52, 10],
+    [0.55, 0.42, 64, 7],
+  ]
+  for (const [fx0, fw, by, bh] of bandDefs) {
+    const bx = fx0 * W
+    const bw = fw * W
+    g.fillStyle = 'rgba(52,38,80,0.4)'
+    g.fillRect(bx, by, bw, bh)
+    // stepped ends
+    g.fillRect(bx - 14, by + 2, 14, bh - 4)
+    g.fillRect(bx + bw, by + 3, 12, bh - 5)
+    // lit top edge
+    g.fillStyle = 'rgba(150,115,160,0.18)'
+    g.fillRect(bx - 8, by, bw + 16, 2)
+    // dithered underside, only under the mass
+    g.fillStyle = 'rgba(28,18,48,0.4)'
+    for (let xx = bx - 10; xx < bx + bw + 8; xx += 2) {
+      g.fillRect(xx, by + bh, 1, 1)
+      if (((xx / 2) | 0) % 2 === 0) g.fillRect(xx + 1, by + bh + 1, 1, 1)
     }
   }
   // moonlit cloud rims

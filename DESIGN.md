@@ -219,3 +219,26 @@ report. The verified findings the build leans on directly:
 * A second weapon per class + charged attacks
 * NG+ with remixed enemy placements
 * An unreliable datachannel for snapshots (currently reliable-ordered is fine at 12 Hz)
+
+## 13. Art direction — validated by blind judge panels
+
+The art was iterated against the reference stills through **six rounds of blind
+judging** (three independent senior-reviewer agents per round — an art director,
+a veteran pixel artist, and a storefront creative director — none told which
+studio made what). Style scores climbed 4/4/4 → 8/8/7 across rounds as their
+critiques were implemented:
+
+- **Tile-quantized lighting**: light falls off in discrete 8px-cell bands with
+  ordered dither at the seams, multiplied saturated-indigo ambient, and per-cell
+  amber glazing — "painted into the pixels", per the reference's technique.
+- **Dark-with-pooled-light value structure**: darkness dominates; warm amber
+  pools structure every frame; all flame light reads amber on any material.
+- **Authored ground detail**: flower banks, stone groups, tuft clumps, stumps,
+  ferns, mushrooms — placed deliberately and denser along roads; clustered
+  texture, never single-pixel noise.
+- **Title vista**: a faithful restaging of the reference's robed-pilgrim
+  overlook (3x-scale foreground figure, as near objects carry larger pixels in
+  the reference itself).
+
+Final panel verdict: **unanimous SHIP = YES** ("faithful and shippable;
+remaining items are polish, not blockers").

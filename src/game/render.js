@@ -754,7 +754,7 @@ export class Renderer {
         if (best <= 0.02) continue
         // ordered dither: alternating cells round up/down at band boundaries
         const dOff = ((cx0 + cx + cy0 + cy) & 1) * 0.5 - 0.25
-        let lv = Math.floor(best * 4 + 0.5 + dOff * 0.9)
+        let lv = Math.floor(best * 4 + 0.5 + dOff * 0.55)
         lv = Math.max(0, Math.min(4, lv))
         if (lv === 0) continue
         lg.globalAlpha = eraseA[lv]
@@ -781,7 +781,7 @@ export class Renderer {
         const sIn = cellLevels[idx]
         if (sIn <= 0.06) continue
         const dOff = ((cx0 + cx + cy0 + cy) & 1) * 0.5 - 0.25
-        let lv = Math.floor(sIn * 4 + 0.5 + dOff * 0.9)
+        let lv = Math.floor(sIn * 4 + 0.5 + dOff * 0.55)
         lv = Math.max(0, Math.min(4, lv))
         if (lv === 0) continue
         g.globalAlpha = tintA[lv]
@@ -802,7 +802,7 @@ export class Renderer {
         const sIn = cellLevels[idx]
         if (sIn <= 0.06) continue
         const dOff = ((cx0 + cx + cy0 + cy) & 1) * 0.5 - 0.25
-        let lv = Math.floor(sIn * 4 + 0.5 + dOff * 0.9)
+        let lv = Math.floor(sIn * 4 + 0.5 + dOff * 0.55)
         lv = Math.max(0, Math.min(4, lv))
         if (lv === 0) continue
         g.fillStyle = cellWarm[idx] ? glazeWarm[lv] : glazeCold[lv]
