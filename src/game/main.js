@@ -9,6 +9,7 @@ import { Renderer } from './render.js'
 import { AudioSys } from './audio.js'
 import { UI } from './ui.js'
 import { Net } from './net.js'
+import { drawTitle } from './title.js'
 
 const SAVE_KEY = 'embervale_save_v1'
 
@@ -576,11 +577,8 @@ function frame(now) {
   ui.tickDialogue(dt)
 
   if (app.state !== 'play' && app.state !== 'victory') {
-    // menu backdrop: soft dark canvas
-    const g = renderer.ctx
-    g.fillStyle = '#08060f'
-    g.fillRect(0, 0, VIEW_W, VIEW_H)
-    drawMenuBackdrop(g, now / 1000)
+    // menu backdrop: the reference vista, painted in code
+    drawTitle(renderer.ctx, now / 1000, dt)
     return
   }
 
@@ -787,43 +785,6 @@ function guestFrame(dt) {
     wipeT: !anyAlive && players.filter(Boolean).length ? 1 : 0,
     wipeTip: app.wipeTip,
   }, dt)
-}
-
-// ---------- menu backdrop ----------
-const menuEmbers = Array.from({ length: 40 }, () => ({
-  x: Math.random() * VIEW_W,
-  y: Math.random() * VIEW_H,
-  v: 4 + Math.random() * 10,
-  ph: Math.random() * Math.PI * 2,
-}))
-function drawMenuBackdrop(g, t) {
-  // distant castle silhouette
-  g.fillStyle = '#0d0a18'
-  g.fillRect(0, VIEW_H * 0.55, VIEW_W, VIEW_H * 0.45)
-  g.fillStyle = '#120e20'
-  // mountain
-  g.beginPath()
-  g.moveTo(VIEW_W * 0.2, VIEW_H * 0.62)
-  g.lineTo(VIEW_W * 0.5, VIEW_H * 0.18)
-  g.lineTo(VIEW_W * 0.8, VIEW_H * 0.62)
-  g.fill()
-  // keep
-  g.fillStyle = '#0a0714'
-  g.fillRect(VIEW_W * 0.44, VIEW_H * 0.16, VIEW_W * 0.12, VIEW_H * 0.3)
-  g.fillRect(VIEW_W * 0.47, VIEW_H * 0.08, VIEW_W * 0.06, VIEW_H * 0.12)
-  // one lit window
-  g.fillStyle = `rgba(255,170,80,${0.5 + 0.3 * Math.sin(t * 2.3)})`
-  g.fillRect(VIEW_W * 0.492, VIEW_H * 0.12, 3, 4)
-  for (const e of menuEmbers) {
-    e.y -= e.v * 0.016
-    e.x += Math.sin(t + e.ph) * 0.3
-    if (e.y < 0) {
-      e.y = VIEW_H
-      e.x = Math.random() * VIEW_W
-    }
-    g.fillStyle = `rgba(255,154,61,${0.15 + 0.2 * Math.sin(t * 3 + e.ph)})`
-    g.fillRect(e.x, e.y, 1, 1)
-  }
 }
 
 // ---------- debug hook (only with #debug in URL) ----------
