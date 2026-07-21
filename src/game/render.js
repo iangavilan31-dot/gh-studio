@@ -53,11 +53,13 @@ export class Renderer {
     this.static.height = H
     const g = this.staticG
     g.imageSmoothingEnabled = false
+    const getCh = (tx, ty) => {
+      const c = world.charAt(tx, ty)
+      return c === 'H' || c === 'h' ? '.' : c
+    }
     for (let y = 0; y < world.h; y++) {
       for (let x = 0; x < world.w; x++) {
-        let ch = world.grid[y][x]
-        if (ch === 'H' || ch === 'h') ch = '.'
-        paintTile(g, ch, x, y, world.zone.style)
+        paintTile(g, getCh(x, y), x, y, world.zone.style, getCh)
       }
     }
     for (const hs of world.houses) paintHouse(g, hs.tx, hs.ty, hs.tw, hs.th, hs.seed)
@@ -222,6 +224,8 @@ export class Renderer {
     g.fillStyle = '#06040b'
     g.fillRect(0, 0, VIEW_W, VIEW_H)
     g.drawImage(this.static, camX, camY, VIEW_W, VIEW_H, 0, 0, VIEW_W, VIEW_H)
+    this.drawWaterShimmer(g, camX, camY)
+    this.emitChimneySmoke(dt, camX, camY)
 
     // gates (closed = bars)
     for (const gate of state.gates) {
@@ -283,6 +287,9 @@ export class Renderer {
     // lighting overlay
     this.drawLighting(state, camX, camY)
 
+    // volumetric light shafts through the canopy (forest) / dusk rays (village)
+    if (zone.style === 'forest' || zone.style === 'village') this.drawLightShafts(g, camX, camY, zone)
+
     // weather (over lighting: rain/ash visible in dark)
     this.drawWeather(dt, g, zone)
 
@@ -326,10 +333,10 @@ export class Renderer {
     const x = Math.round(p.x - camX)
     const y = Math.round(p.y - camY)
     const set = SPR[p.cls === 'knight' ? 'knight' : 'pyro']
-    this.drawShadow(g, x, y + 6, 5)
+    this.drawShadow(g, x, y + 7, 6)
 
     if (p.st === 'down' || p.state === 'down') {
-      g.drawImage(set.down, x - 6, y - 8)
+      g.drawImage(set.down, x - 7, y - 11)
       // revive ring
       const rt = p.rT ?? p.reviveT ?? 0
       if (rt > 0) {
@@ -349,14 +356,15 @@ export class Renderer {
     }
     if (p.st === 'dead' || p.state === 'dead') {
       g.globalAlpha = 0.4
-      g.drawImage(set.down, x - 6, y - 8)
+      g.drawImage(set.down, x - 7, y - 11)
       g.globalAlpha = 1
       return
     }
 
     const moving = p.mv ?? p.moving
-    const walk = moving && Math.floor((p.walkT ?? this.time * 9) % 2) === 0
-    const spr = walk ? set.walk : set.idle
+    const phase = Math.floor((p.walkT ?? this.time * 9) % 4)
+    const cycle = [set.walk, set.idle, set.walk2, set.idle]
+    const spr = moving ? cycle[phase] : set.idle
     const iT = p.iT ?? 0
     if (iT > 0 && Math.floor(this.time * 18) % 2 === 0) g.globalAlpha = 0.45
     const flipX = (p.fx ?? 0) < -0.05
@@ -366,7 +374,18 @@ export class Renderer {
     const dodging = (p.dg ?? (p.dodgeT > 0 ? 1 : 0)) === 1
     const dashing = (p.ds ?? (p.dashT > 0 ? 1 : 0)) === 1
     if (dodging) g.rotate(Math.sin(this.time * 30) * 0.4)
-    g.drawImage(spr, -6, -11)
+    g.drawImage(spr, -7, -14)
+    // knight carries a living flame on his torch hand; pyro's staff tip glows
+    const flick = Math.floor(this.time * 12) % 3
+    if (p.cls === 'knight') {
+      g.fillStyle = ['#ffd23d', '#ff9a3d', '#ffe89a'][flick]
+      g.fillRect(-6, -5 - (flick === 1 ? 1 : 0), 2, 2)
+      g.fillStyle = 'rgba(255,154,61,0.5)'
+      g.fillRect(-7, -3, 4, 1)
+    } else {
+      g.fillStyle = ['#ffd23d', '#ff9a3d', '#ffe89a'][flick]
+      g.fillRect(5, -6 - (flick === 1 ? 1 : 0), 2, 2)
+    }
     g.restore()
     g.globalAlpha = 1
 
@@ -589,7 +608,8 @@ export class Renderer {
       }
       p.x += p.vx * dt
       p.y += p.vy * dt
-      p.vy += 60 * dt
+      if (p.rise) p.vy -= 4 * dt
+      else p.vy += 60 * dt
       g.globalAlpha = Math.min(1, p.ttl / (p.max * 0.5))
       g.fillStyle = p.color
       g.fillRect(Math.round(p.x - camX), Math.round(p.y - camY), p.sz || 1, p.sz || 1)
@@ -678,6 +698,87 @@ export class Renderer {
       g.fill()
     }
     g.globalCompositeOperation = 'source-over'
+  }
+
+  drawWaterShimmer(g, camX, camY) {
+    const w = this.world
+    const tx0 = Math.max(0, (camX / TILE) | 0)
+    const ty0 = Math.max(0, (camY / TILE) | 0)
+    const tx1 = Math.min(w.w - 1, ((camX + VIEW_W) / TILE) | 0)
+    const ty1 = Math.min(w.h - 1, ((camY + VIEW_H) / TILE) | 0)
+    for (let ty = ty0; ty <= ty1; ty++) {
+      for (let tx = tx0; tx <= tx1; tx++) {
+        if (w.charAt(tx, ty) !== '~') continue
+        const r = hash2(tx * 7, ty * 13)
+        const tw = Math.sin(this.time * (1.2 + r) + r * 40)
+        if (tw > 0.82) {
+          g.fillStyle = `rgba(190,235,235,${(tw - 0.82) * 2.2})`
+          g.fillRect(tx * TILE - camX + ((r * 12) | 0), ty * TILE - camY + (((r * 7919) % 1) * 13 | 0), 3, 1)
+        }
+        // drifting ripple line
+        const ph = ((this.time * 4 + r * 16) % 16) | 0
+        if (r > 0.6) {
+          g.fillStyle = 'rgba(120,200,205,0.10)'
+          g.fillRect(tx * TILE - camX, ty * TILE - camY + ph, 16, 1)
+        }
+      }
+    }
+  }
+
+  emitChimneySmoke(dt, camX, camY) {
+    for (const hs of this.world.houses || []) {
+      const r = hash2(hs.seed, hs.seed * 7 + 3)
+      if (r <= 0.4) continue // no chimney
+      const cx = hs.tx * TILE + hs.tw * TILE - 6
+      const cy = hs.ty * TILE - 5
+      if (cx < camX - 20 || cx > camX + VIEW_W + 20 || cy < camY - 20 || cy > camY + VIEW_H + 20) continue
+      if (Math.random() < dt * 2.2) {
+        this.particles.push({
+          x: cx + Math.random() * 2,
+          y: cy,
+          vx: 3 + Math.random() * 4,
+          vy: -7 - Math.random() * 5,
+          ttl: 1.8 + Math.random() * 1.4,
+          max: 3,
+          color: `rgba(170,165,175,${0.16 + Math.random() * 0.12})`,
+          sz: Math.random() < 0.5 ? 2 : 1,
+          rise: true,
+        })
+      }
+    }
+  }
+
+  drawLightShafts(g, camX, camY, zone) {
+    // long diagonal beams anchored to world space, drifting very slowly
+    g.save()
+    g.globalCompositeOperation = 'lighter'
+    const warm = zone.style === 'village'
+    for (let i = 0; i < 4; i++) {
+      const r = hash2(i * 31 + 7, i * 17 + 3)
+      const wx = ((r * 900 + this.time * 2.5 + i * 210) % (VIEW_W + 260)) - 130
+      const topX = wx - ((camX * 0.2) % 60)
+      const grd = g.createLinearGradient(topX, 0, topX - 90, VIEW_H)
+      const a = 0.045 + r * 0.03
+      if (warm) {
+        grd.addColorStop(0, `rgba(255,190,120,${a * 1.2})`)
+        grd.addColorStop(0.7, `rgba(255,160,90,${a * 0.4})`)
+        grd.addColorStop(1, 'rgba(255,150,80,0)')
+      } else {
+        grd.addColorStop(0, `rgba(210,235,190,${a})`)
+        grd.addColorStop(0.7, `rgba(180,220,170,${a * 0.35})`)
+        grd.addColorStop(1, 'rgba(160,210,160,0)')
+      }
+      g.fillStyle = grd
+      const wTop = 14 + r * 22
+      g.beginPath()
+      g.moveTo(topX, -10)
+      g.lineTo(topX + wTop, -10)
+      g.lineTo(topX + wTop - 90, VIEW_H + 10)
+      g.lineTo(topX - 90 - wTop * 0.4, VIEW_H + 10)
+      g.closePath()
+      g.fill()
+    }
+    g.restore()
   }
 
   drawWeather(dt, g, zone) {
