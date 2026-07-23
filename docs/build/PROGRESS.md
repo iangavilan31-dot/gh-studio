@@ -68,3 +68,26 @@ docs/build/PLAN.md, then the tail of this file. Never re-derive the plan from me
 - Emissive glass boxes read as glowing rectangles — keep lantern glass translucent (opacity<0.5) and let the flame sprite + halo carry the glow.
 - Robe atlas must be painted near-white (#e2dcee) for dark tints (#4B3B6E) to survive the hemi light; character hemi = mix(fog*1.7, skyUp*2.1, wn.y).
 - Actions verified numerically via __MOONREST__.boneDebug() — keep it; cheap bone-state assertions beat squinting at dark pixels.
+
+---
+
+## 2026-07-24 ~00:20 UTC — M2 COMPLETE: kindling + audio core
+
+**Done:**
+- `audio/engine.js`: master→music/ambience/sfx buses→tanh soft-clip limiter; procedural convolver impulses (2.5s + 4s Hall); tape hiss -42dB; tab-blur 1s fade; per-bus AnalyserNodes for RMS evidence; ctx.resume guard.
+- `audio/score.js`: generative engine — per-zone key/mode/BPM table (all 8 zones), 4-bar seeded random-walk ostinati over i–VI–III–VII chord tones, 8-bar variation regen, layer gains faded by kindle count (≈4s). Instrument recipes: pad/harp/celesta/kalimba/musicbox/flute/choir(formant stack)/bass/bell(inharmonic)/organ(additive)/pizz/horn.
+- `audio/sfx.js`: footsteps ×6 surfaces (filtered noise + knock body, pitch jitter), kindle channel shimmer (3 rising sines) + chime (zone-key root+fifth+octave, bell partials), UI tick/confirm, brew "hmm!" formant blip.
+- `systems/interact.js`: 2m prompt w/ LOS sampling, hold-E 1.2s channel (staff-raise pose), interrupt handling, event log for rigs.
+- `ui/hud.js` + index.html #ui: rune-ring prompt w/ conic progress (SVG stroke), subtitle line (a11y), zero persistent HUD.
+- `world/particles.js`: instanced-quad billboard system (shader camera-basis billboarding — NOT gl_PointSize, which is unreliable across drivers), per-system update fns, ember burst effect.
+- `world/night.js`: 40-min moon clock; painted moon face (maria + sleeping face + limb shade) + additive cross-flare; arc zenith→western horizon; follows camera (noFog — Rule 6); skipTo debug.
+- Cold-light registry in world: 4 Park lights (bench lamp, 2 lanterns, firefly jar) with per-light bloom ramp (2s ease-out), forever-flicker, per-instance materials (NEVER clone retro materials — severs shared fog uniforms).
+
+**Evidence read:** `scripts/kindlecheck.mjs` 13/13 PASS (prompt at 1.4m yes/4.7m no, interrupt logged, kindle registered+persists, layers 0→2→4 tracking kindles, music RMS 0.038, nightT skipTo, console clean). Footstep one-off: sfx RMS 0.0032 while walking. Shots reviewed: during-channel.png (ring + verb), moon-early/late.png (moon high→low on arc, painted face + cross-flare, kindled lamp glowing with visible candle flames).
+
+**Next action:** M3 — world blockout: all 8 zones + Foglands, ZoneLight blending, all shoot poses.
+
+**Learnings:**
+- Headless swiftshader runs ~11fps → hold-to-channel needs generous test timings (2.4s hold for a 1.2s channel).
+- AudioContext in headless works with --autoplay-policy=no-user-gesture-required + ctx.resume(); AnalyserNode RMS is the listen-proxy for "is it audible".
+- Bloom/flicker per light needs per-instance materials from retroMaterial() — ShaderMaterial.clone() would break shared global uniform references (fog/ambient lerps would stop reaching clones).

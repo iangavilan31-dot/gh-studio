@@ -10,6 +10,14 @@ import { buildWizard, PLAYER_TINTS } from './art/characters.js'
 import { Input } from './systems/input.js'
 import { PlayerController } from './systems/player.js'
 import { OrbitCamera } from './systems/camera.js'
+import { InteractSystem } from './systems/interact.js'
+import { HUD } from './ui/hud.js'
+import { Night } from './world/night.js'
+import { ParticleSystem, emberBurst } from './world/particles.js'
+import { audio } from './audio/engine.js'
+import { score } from './audio/score.js'
+import { footstep, kindleChime } from './audio/sfx.js'
+import * as TEX from './art/textures.js'
 import { worldRNG } from './core/rng.js'
 
 const canvas = document.getElementById('game')
@@ -18,6 +26,11 @@ const scene = new THREE.Scene()
 const camera = new THREE.PerspectiveCamera(55, 16 / 9, 0.1, 220)
 const zoneLight = new ZoneLightState(scene)
 const world = new World(scene, camera)
+const night = new Night(scene)
+const hud = new HUD()
+
+// particle systems (global cap 2000 across all — Part 8.7)
+const embers = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#ffb45e' }), max: 220, additive: true })
 
 // player
 const rig = buildWizard({ tint: PLAYER_TINTS[0] })
@@ -33,6 +46,27 @@ player.yaw = player.targetYaw = 0
 
 const orbit = new OrbitCamera(camera, world)
 orbit.yaw = orbit.smoothYaw = Math.PI // camera behind, facing the park
+const interact = new InteractSystem(world, player, hud)
+
+// footsteps synced to stride (Part 4.2)
+player.onFootstep = (surface, vol) => footstep(surface, vol)
+
+// kindle consequences: chime in zone key, ember burst, next music layer (6.1)
+world.onKindle = (light) => {
+  kindleChime(light.zone)
+  emberBurst(embers, light.x, light.y, light.z, worldRNG.fork('embers' + light.id))
+  score.setLayers(world.kindledCount)
+}
+
+// audio boots on first real gesture (autoplay policy)
+function bootAudio() {
+  if (audio.started) return
+  audio.start()
+  audio.state.zoneKey = 'D'
+  score.start()
+}
+window.addEventListener('keydown', bootAudio, { once: false })
+window.addEventListener('mousedown', bootAudio, { once: false })
 
 // ——— Shoot-rig camera poses (Part 3 per-zone; grows in M3) ———
 const POSES = {
@@ -71,11 +105,14 @@ function tick() {
     const jogging = input.down('ShiftLeft', 'ShiftRight') && player.anim.speed > 2
     player.update(input, orbit.smoothYaw, dt, elapsed)
     orbit.update(player.pos, player.yaw, jogging, input.consumeLook(), dt, world.interactables)
+    interact.update(input, dt)
   } else {
     // world keeps breathing behind fixed cameras; player idles in place
     player.update({ moveAxis: () => [0, 0], pressed: () => false, down: () => false, endFrame: () => {} }, orbit.smoothYaw, dt, elapsed)
   }
   world.update(dt, elapsed)
+  night.update(dt, camera)
+  embers.update(dt, camera)
   input.endFrame()
   pipeline.render(scene, camera, elapsed)
 }
@@ -102,9 +139,12 @@ window.__MOONREST__ = {
       legLx: +rig.bones.legL.rotation.x.toFixed(2),
     }
   },
-  kindle: () => false,   // M2
-  skipTo: () => false,   // M2
+  kindle(id) { return world.kindle(id) },
+  skipTo(min) { night.skipTo(min); return true },
   autopilot: () => false, // M6
+  bootAudio() { bootAudio(); return audio.started },
+  get lights() { return world.lights.map((l) => ({ id: l.id, kindled: l.kindled, x: l.x, z: l.z })) },
+  get interactLog() { return interact.log },
   setPost(patch) {
     for (const [k, v] of Object.entries(patch)) {
       if (pipeline.postUniforms[k] !== undefined) pipeline.postUniforms[k].value = v
@@ -123,9 +163,15 @@ window.__MOONREST__ = {
       speed: +player.anim.speed.toFixed(2),
       surface: player.surface,
       zone: 'park',
-      nightT: 0,
-      kindled: [],
+      nightT: +night.minutes.toFixed(2),
+      kindled: world.kindledIds,
       peers: 0,
+      audio: {
+        started: audio.started,
+        layers: audio.state.layers,
+        muted: audio.state.muted,
+        rms: audio.started ? { music: +audio.rms('music').toFixed(4), sfx: +audio.rms('sfx').toFixed(4), ambience: +audio.rms('ambience').toFixed(4) } : null,
+      },
       fps: Math.round(fps),
       fov: +camera.fov.toFixed(1),
       latency: player.latencyLog.slice(-5),
