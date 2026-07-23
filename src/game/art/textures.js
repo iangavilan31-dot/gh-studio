@@ -1,0 +1,288 @@
+// Texture factory (MASTER_PROMPT 7.1): offscreen-canvas painter producing
+// hand-painted-style tiles, 64–128px, NearestFilter, generated at boot, cached.
+// Core: paint() = flat base → low-freq value-noise splotches (brush feel) →
+// sparse darker edge strokes → chunky highlight dabs on the light side.
+
+import * as THREE from 'three'
+import { worldRNG } from '../core/rng.js'
+
+const cache = new Map()
+
+export function canvasOf(size, fn) {
+  const c = document.createElement('canvas')
+  c.width = c.height = size
+  const ctx = c.getContext('2d')
+  fn(ctx, size)
+  return c
+}
+
+export function toTexture(canvas, { repeat = 1 } = {}) {
+  const t = new THREE.CanvasTexture(canvas)
+  t.magFilter = THREE.NearestFilter
+  t.minFilter = THREE.NearestFilter
+  t.generateMipmaps = false
+  t.wrapS = t.wrapT = THREE.RepeatWrapping
+  t.colorSpace = THREE.NoColorSpace
+  if (repeat !== 1) t.repeat.set(repeat, repeat)
+  return t
+}
+
+export function hex(h) {
+  const n = parseInt(h.slice(1), 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+export function rgb(arr) { return `rgb(${arr[0] | 0},${arr[1] | 0},${arr[2] | 0})` }
+export function lighten(arr, f) { return arr.map((v) => Math.min(255, v + 255 * f)) }
+export function darken(arr, f) { return arr.map((v) => Math.max(0, v - 255 * f)) }
+export function mix(a, b, t) { return [0, 1, 2].map((i) => a[i] + (b[i] - a[i]) * t) }
+
+// Low-frequency value noise splotches — the "brush" core. Painted, not photographic.
+export function splotch(ctx, size, rng, { color, count = 60, rmin = 3, rmax = 10, alpha = 0.16 } = {}) {
+  for (let i = 0; i < count; i++) {
+    const r = rng.range(rmin, rmax)
+    ctx.fillStyle = rgb(color)
+    ctx.globalAlpha = alpha * rng.range(0.6, 1)
+    ctx.beginPath()
+    ctx.ellipse(rng.range(0, size), rng.range(0, size), r, r * rng.range(0.6, 1), rng.range(0, Math.PI), 0, Math.PI * 2)
+    ctx.fill()
+  }
+  ctx.globalAlpha = 1
+}
+
+// paint(): base fill + light/dark splotch octaves + highlight dabs from the light side (top).
+export function paint(ctx, size, rng, base, { rough = 1, highlight = 0.12, shadow = 0.14 } = {}) {
+  ctx.fillStyle = rgb(base)
+  ctx.fillRect(0, 0, size, size)
+  splotch(ctx, size, rng, { color: lighten(base, 0.08), count: 24 * rough, rmin: size / 10, rmax: size / 4, alpha: 0.22 })
+  splotch(ctx, size, rng, { color: darken(base, 0.08), count: 24 * rough, rmin: size / 12, rmax: size / 5, alpha: 0.22 })
+  splotch(ctx, size, rng, { color: lighten(base, 0.05), count: 40 * rough, rmin: 2, rmax: size / 10, alpha: 0.3 })
+  // chunky 2px highlight dabs, biased to upper half (painted light from the sky)
+  ctx.fillStyle = rgb(lighten(base, 0.35))
+  for (let i = 0; i < 30 * rough * highlight * 8; i++) {
+    ctx.globalAlpha = rng.range(0.2, 0.5)
+    ctx.fillRect(rng.range(0, size), rng.range(0, size * 0.6), rng.range(1, 3), rng.range(1, 2))
+  }
+  ctx.fillStyle = rgb(darken(base, 0.45))
+  for (let i = 0; i < 30 * rough * shadow * 8; i++) {
+    ctx.globalAlpha = rng.range(0.15, 0.4)
+    ctx.fillRect(rng.range(0, size), rng.range(size * 0.4, size), rng.range(1, 3), rng.range(1, 2))
+  }
+  ctx.globalAlpha = 1
+}
+
+function make(name, builder) {
+  if (cache.has(name)) return cache.get(name)
+  const rng = worldRNG.fork('tex/' + name)
+  const t = builder(rng)
+  cache.set(name, t)
+  return t
+}
+
+// ——— Recipes ———
+
+export function cobblestone({ moss = 0, name = 'cobble' } = {}) {
+  return make(name + moss, (rng) => {
+    const size = 128
+    const grout = hex('#10181a')
+    const stoneBase = hex('#39464a')
+    const c = canvasOf(size, (ctx) => {
+      ctx.fillStyle = rgb(grout)
+      ctx.fillRect(0, 0, size, size)
+      // stones as jittered-grid rounded blobs (voronoi-ish), painted individually
+      const cols = 6, rows = 6
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const cw = size / cols, ch = size / rows
+          const cx = x * cw + cw / 2 + rng.range(-2, 2)
+          const cy = y * ch + ch / 2 + rng.range(-2, 2)
+          const w = cw * rng.range(0.72, 0.9), h = ch * rng.range(0.68, 0.88)
+          let col = mix(stoneBase, hex(rng.pick(['#41504f', '#33403f', '#3d4a44', '#36444a'])), 0.7)
+          if (moss > 0 && rng.chance(moss)) col = mix(col, hex('#31493a'), 0.5)
+          ctx.fillStyle = rgb(col)
+          ctx.beginPath()
+          ctx.roundRect(cx - w / 2, cy - h / 2, w, h, rng.range(3, 7))
+          ctx.fill()
+          // per-stone painted light: subtle top sliver, bottom shadow
+          ctx.fillStyle = rgb(lighten(col, 0.09))
+          ctx.globalAlpha = 0.7
+          ctx.fillRect(cx - w / 2 + 1, cy - h / 2 + 1, w - 4, 2)
+          ctx.fillStyle = rgb(darken(col, 0.14))
+          ctx.fillRect(cx - w / 2 + 1, cy + h / 2 - 3, w - 3, 2)
+          ctx.globalAlpha = 1
+        }
+      }
+      splotch(ctx, size, rng, { color: darken(stoneBase, 0.25), count: 26, rmin: 4, rmax: 14, alpha: 0.14 })
+      if (moss > 0) splotch(ctx, size, rng, { color: hex('#3d5c46'), count: 30 * moss, rmin: 2, rmax: 6, alpha: 0.4 })
+    })
+    return toTexture(c)
+  })
+}
+
+export function grass({ name = 'grass', a = '#2c4a3c', b = '#3a5e48' } = {}) {
+  return make(name, (rng) => {
+    const size = 96
+    const c = canvasOf(size, (ctx) => {
+      paint(ctx, size, rng, hex(a), { rough: 1.2, highlight: 0.05, shadow: 0.1 })
+      // grass flecks: short vertical dabs of the second green
+      ctx.fillStyle = rgb(hex(b))
+      for (let i = 0; i < 300; i++) {
+        ctx.globalAlpha = rng.range(0.25, 0.7)
+        ctx.fillRect(rng.range(0, size), rng.range(0, size), 1, rng.range(2, 4))
+      }
+      ctx.globalAlpha = 1
+    })
+    return toTexture(c)
+  })
+}
+
+export function dirt({ name = 'dirt' } = {}) {
+  return make(name, (rng) => {
+    const size = 96
+    const c = canvasOf(size, (ctx) => {
+      paint(ctx, size, rng, hex('#33302a'), { rough: 1.3 })
+      splotch(ctx, size, rng, { color: hex('#403c30'), count: 40, rmin: 2, rmax: 8, alpha: 0.3 })
+      // pebbles
+      for (let i = 0; i < 26; i++) {
+        const col = lighten(hex('#3a3a36'), rng.range(0, 0.12))
+        ctx.fillStyle = rgb(col)
+        ctx.beginPath()
+        ctx.ellipse(rng.range(0, size), rng.range(0, size), rng.range(1, 3), rng.range(1, 2), 0, 0, Math.PI * 2)
+        ctx.fill()
+      }
+    })
+    return toTexture(c)
+  })
+}
+
+export function bark({ name = 'bark' } = {}) {
+  return make(name, (rng) => {
+    const size = 64
+    const c = canvasOf(size, (ctx) => {
+      const base = hex('#221b1a')
+      ctx.fillStyle = rgb(base)
+      ctx.fillRect(0, 0, size, size)
+      // vertical streaks
+      for (let i = 0; i < 26; i++) {
+        const x = rng.range(0, size)
+        ctx.strokeStyle = rgb(rng.chance(0.5) ? lighten(base, 0.1) : darken(base, 0.35))
+        ctx.globalAlpha = rng.range(0.4, 0.9)
+        ctx.lineWidth = rng.range(1, 3)
+        ctx.beginPath()
+        ctx.moveTo(x, -4)
+        ctx.bezierCurveTo(x + rng.range(-4, 4), size * 0.33, x + rng.range(-4, 4), size * 0.66, x + rng.range(-5, 5), size + 4)
+        ctx.stroke()
+      }
+      ctx.globalAlpha = 1
+      splotch(ctx, size, rng, { color: hex('#3d5040'), count: 8, rmin: 2, rmax: 5, alpha: 0.35 }) // moss flecks
+    })
+    return toTexture(c)
+  })
+}
+
+// Foliage canopy — clustered leaf dabs on transparency, for alpha-tested cards.
+export function canopy({ name = 'canopy', base = '#1a2f2b', light = '#3f5f53' } = {}) {
+  return make(name, (rng) => {
+    const size = 128
+    const c = canvasOf(size, (ctx) => {
+      ctx.clearRect(0, 0, size, size)
+      const cx = size / 2, cy = size / 2
+      const b = hex(base), l = hex(light)
+      // blob mass
+      for (let i = 0; i < 90; i++) {
+        const a = rng.range(0, Math.PI * 2)
+        const d = rng.range(0, size * 0.36) * Math.sqrt(rng.next())
+        const x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d * 0.8
+        ctx.fillStyle = rgb(mix(b, l, rng.range(0, 0.35)))
+        ctx.beginPath()
+        ctx.ellipse(x, y, rng.range(7, 16), rng.range(6, 13), rng.range(0, 3), 0, Math.PI * 2)
+        ctx.fill()
+      }
+      // leaf-cluster dabs, lit from above
+      for (let i = 0; i < 240; i++) {
+        const a = rng.range(0, Math.PI * 2)
+        const d = rng.range(0, size * 0.42) * Math.sqrt(rng.next())
+        const x = cx + Math.cos(a) * d, y = cy + Math.sin(a) * d * 0.8
+        const up = (cy - y) / size + 0.5
+        ctx.fillStyle = rgb(mix(b, l, Math.max(0, up) * rng.range(0.3, 1)))
+        ctx.globalAlpha = rng.range(0.5, 1)
+        ctx.fillRect(x, y, rng.range(2, 4), rng.range(2, 3))
+      }
+      ctx.globalAlpha = 1
+    })
+    const t = toTexture(c)
+    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
+    return t
+  })
+}
+
+// 4-frame flame sprite sheet (horizontal strip).
+export function flameSheet({ name = 'flame' } = {}) {
+  return make(name, (rng) => {
+    const fw = 32, fh = 32
+    const c = document.createElement('canvas')
+    c.width = fw * 4; c.height = fh
+    const ctx = c.getContext('2d')
+    for (let f = 0; f < 4; f++) {
+      const ox = f * fw
+      const flick = rng.range(-2, 2)
+      const layers = [
+        { col: '#7a2d10', r: 9 },
+        { col: '#e08a30', r: 7 },
+        { col: '#f0b848', r: 5 },
+        { col: '#ffe9b0', r: 2.6 },
+      ]
+      for (const L of layers) {
+        ctx.fillStyle = L.col
+        ctx.beginPath()
+        const sway = Math.sin((f / 4) * Math.PI * 2) * 2 + flick * 0.4
+        ctx.ellipse(ox + fw / 2 + sway * (L.r / 9), fh * 0.62 - (9 - L.r) * 1.4, L.r * 0.62, L.r, 0, 0, Math.PI * 2)
+        ctx.fill()
+        // teardrop tip
+        ctx.beginPath()
+        ctx.moveTo(ox + fw / 2 - L.r * 0.5 + sway * (L.r / 9), fh * 0.55)
+        ctx.quadraticCurveTo(ox + fw / 2 + sway, fh * 0.55 - L.r * 2.1, ox + fw / 2 + L.r * 0.5 + sway * (L.r / 9), fh * 0.55)
+        ctx.fill()
+      }
+    }
+    const t = toTexture(c)
+    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
+    return t
+  })
+}
+
+// Painted iron for lamp posts and fittings.
+export function iron({ name = 'iron' } = {}) {
+  return make(name, (rng) => {
+    const size = 64
+    const c = canvasOf(size, (ctx) => {
+      paint(ctx, size, rng, hex('#23262b'), { rough: 0.8, highlight: 0.18, shadow: 0.2 })
+    })
+    return toTexture(c)
+  })
+}
+
+// Radial warm glow sprite (lamp halos, kindle blooms).
+export function glowDot({ name = 'glow', color = '#e8c26a' } = {}) {
+  return make(name + color, () => {
+    const size = 64
+    const c = canvasOf(size, (ctx) => {
+      const g = ctx.createRadialGradient(size / 2, size / 2, 1, size / 2, size / 2, size / 2)
+      const [r, gg, b] = hex(color)
+      g.addColorStop(0, `rgba(${r},${gg},${b},0.85)`)
+      g.addColorStop(0.35, `rgba(${r},${gg},${b},0.32)`)
+      g.addColorStop(1, `rgba(${r},${gg},${b},0)`)
+      ctx.fillStyle = g
+      ctx.fillRect(0, 0, size, size)
+    })
+    const t = toTexture(c)
+    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
+    return t
+  })
+}
+
+export function white() {
+  return make('white1px', () => {
+    const c = canvasOf(4, (ctx) => { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, 4, 4) })
+    return toTexture(c)
+  })
+}

@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo 'REMINDER: you are mid-way through building MOONREST. Re-read docs/MASTER_PROMPT.md Part 0 and docs/build/PLAN.md, then continue from the tail of docs/build/PROGRESS.md.'"
+          }
+        ]
+      }
+    ]
+  }
+}
