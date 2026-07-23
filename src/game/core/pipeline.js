@@ -96,7 +96,7 @@ export class Pipeline {
       uVignette: { value: 0.25 },
       uVignetteTint: { value: new THREE.Color('#3b2a18') },
       uWarm: { value: 0 },
-      uGamma: { value: 1.06 },
+      uGamma: { value: 1.12 },
       uSoftBlur: { value: 0.6 },   // N64 default: stable but soft
       uScanline: { value: 0 },
       uChroma: { value: 0 },

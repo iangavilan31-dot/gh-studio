@@ -11,7 +11,7 @@ export const ZONES = {
     name: 'The Gloaming Park',
     skyStops: ['#0b1626', '#101f2b', '#16303a', '#1f3d48', '#274550'],
     fog: '#274550', fogNear: 8, fogFar: 45,
-    ambient: '#93a8a9', skyUp: '#3d5865',
+    ambient: '#a7bcb9', skyUp: '#3d5865',
     accent: '#e8c26a',
     audioKey: 'D', audioMode: 'dorian',
   },
