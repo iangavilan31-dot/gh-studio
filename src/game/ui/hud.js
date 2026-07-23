@@ -46,6 +46,11 @@ export class HUD {
     this.ringFill.style.strokeDashoffset = `${this.circumference * (1 - t)}`
   }
 
+  clearSubtitle() {
+    this.subtitle.classList.remove('on')
+    clearTimeout(this.subtitleTimer)
+  }
+
   say(text, seconds = 4) {
     this.subtitle.textContent = text
     this.subtitle.classList.add('on')

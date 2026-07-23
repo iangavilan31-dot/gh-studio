@@ -112,3 +112,25 @@ docs/build/PLAN.md, then the tail of this file. Never re-derive the plan from me
 - Steep intentional climbs (ladders) must be exempted from the slope-slide rule via a world query, or the feel spec fights traversal.
 - Shot atmosphere: gate elevated zones by CAMERA height, probe XZ at the look target.
 - Playwright walk tests: budget ~1.6m/s real seconds; jog with Shift in tests to keep them fast.
+
+---
+
+## 2026-07-24 ~03:10 UTC — M4 COMPLETE: art pass I (Park, Village, Rooftops)
+
+**Done:**
+- `world/stars.js`: 650 instanced star quads w/ seeded twinkle + per-zone density (rooftops 1.0 densest → hall 0), occasional slow meteor (25–60s gaps, Rule 11 gentle).
+- `world/ambience.js`: rain streaks + splash rings (Park, eased, ground-aware), drifting canopy leaves, chimney smoke (2 anchors), moths orbiting kindled lamps (village/rooftops), snore-z spawner; `snapZone()` for leak-free cinematic shots.
+- `systems/npc.js`: Beldam (bearded variant, sit pose, head-loll, snore-z + snore SFX, bench-lamp stir → subtitled mumble), 5 chickens (~200 tris; idle/peck/walk/flee-2m-then-forget; strut bob; clucks incl. alarmed), sleeping windowsill cat (breathing loaf), Nib (red-hat gnome, spread-eagle, hat-rise snore; hat gets non-hemi material + ember emissive so cobalt light can't crush the red).
+- Village: pre-lit amber windows (Rule 5/2) w/ hearth breathing, crates/barrels/hanging signs (sway)/flower boxes/handcart/rain barrels; rooftops: shepherd-hook posts for lanterns, garden bed + pine; park: stumps/mushroom clusters/birdbath (w/ water)/low fences.
+- Vertex-color bake (8.4): ground AO (under-canopy via treePads, under-eaves via AABBs) + per-light ground-vertex warm lists lerped during kindle bloom (WoW MOCV style); zone ambient stays a runtime uniform so cross-zone blending keeps working (documented deviation).
+- `scripts/huecheck.mjs` hard gate + `__MOONREST__.samplePalette()` (RT pixel stats: weighted hue, median lum, warm/red fractions). Boot 257ms total, texture gen 31ms (<300ms budget).
+
+**Evidence read:** HUE GATE PASS 3/3 (numbers in JUDGE.md). Shots REVIEWED: park.png kindled (lamp + warm ground pool + rain + stars + Beldam + fences), village close-up (glowing amber crossbar windows), village.png (street + lamps + windows + spire), rooftops.png (kindled lantern on hook + moths + pine + cobalt sky), nib.png (red hat + spread-eagle + chimney smoke puff). NPC probe: chickens idle/peck/walk seen, flee verified (1.9m), all NPCs positioned. kindlecheck 13/13, traversecheck 11/11, feelcheck 12/12 (hop assert flaky once — noted in JUDGE.md).
+
+**Next action:** M5 — art pass II (Ruins, Gloomspire, Hall vertex-light showcase, Mosswood, Isle): Curator ghost, gargoyle, Pale King + ghost cat visual, Mote, water shader w/ moon streak, nebula, ground fog cards, hue gate for all 8.
+
+**Learnings:**
+- Saturated warm/red accents DIE under a cool hemisphere term — accent props need plain-ambient materials (+ touch of emissive), not hemi.
+- Windows must be on street-facing walls to serve Rule 2; face selection by house side matters.
+- The corrupted-hex-literal glitch (0x + garbage) struck 4×: use '#rrggbb' STRING color literals everywhere; THREE.Color accepts them.
+- Cinematic rigs need zone-weather snapping AND subtitle clearing or shots inherit the player's zone state.

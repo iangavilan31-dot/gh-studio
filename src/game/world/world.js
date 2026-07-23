@@ -26,6 +26,7 @@ export class World {
     this.onKindle = null
     this.poses = {}
 
+    this.treePads = []       // { x, z, r } canopy shadows for the AO bake
     this.buildGround()
     this.buildWater()
     this.buildPark()
@@ -37,11 +38,49 @@ export class World {
     this.buildMosswood()
     this.buildIsle()
     this.buildFoglands()
+    this.bakeVertexColors()
+  }
+
+  // Build-time vertex bake (MASTER_PROMPT 8.4): painted-AO heuristics into the
+  // ground (under-canopy, under-eaves) + per-light warm-pool weight lists that
+  // lerp in over the kindle bloom (WoW MOCV glow — zero per-frame cost after).
+  bakeVertexColors() {
+    const geo = this.ground.geometry
+    const pos = geo.getAttribute('position')
+    const col = geo.getAttribute('color')
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i), z = pos.getZ(i)
+      let v = 1
+      for (const t of this.treePads) {
+        const d = Math.hypot(x - t.x, z - t.z)
+        if (d < t.r) v = Math.min(v, 0.62 + 0.38 * (d / t.r))
+      }
+      for (const b of this.aabbs) {
+        if (x > b.minX - 1.3 && x < b.maxX + 1.3 && z > b.minZ - 1.3 && z < b.maxZ + 1.3) v = Math.min(v, 0.8)
+      }
+      col.setXYZ(i, v, v, v)
+    }
+    col.needsUpdate = true
+    // store base for warm-pool lerps
+    this.groundBase = new Float32Array(col.array)
+    // per-light ground vertex weight lists
+    for (const l of this.lights) {
+      const gy = heightAt(l.x, l.z)
+      if (Math.abs(l.y - gy) > 4.5) { l.groundWarm = []; continue } // rooftop lights don't warm the street
+      const list = []
+      for (let i = 0; i < pos.count; i++) {
+        const d = Math.hypot(pos.getX(i) - l.x, pos.getZ(i) - l.z)
+        if (d < 8) list.push({ i, w: Math.pow(1 - d / 8, 2) })
+      }
+      l.groundWarm = list
+      l.warmApplied = -1
+    }
   }
 
   heightAt(x, z) { return heightAt(x, z) }
   surfaceAt(x, z) { return surfaceAt(x, z) }
   onLadder(x, z) { return roofInfo(x, z).inRamp } // the bakery ladder is a deliberate steep climb
+  streetZAt(x) { return streetZ(x) }
 
   collide(pos, radius) {
     pos.x = THREE.MathUtils.clamp(pos.x, BOUNDS.minX, BOUNDS.maxX)
@@ -233,11 +272,15 @@ export class World {
     for (let i = 0; i < 14; i++) {
       const a = (i / 14) * Math.PI * 2 + rng.range(-0.12, 0.12)
       const r = rng.range(23, 28)
-      const t = tree({ rng, height: rng.range(5, 7), trunkR: rng.range(0.45, 0.7), canopyR: rng.range(3.6, 5) })
-      this.place(t, Math.cos(a) * r, Math.sin(a) * r, rng.range(0, Math.PI * 2))
+      const cr = rng.range(3.6, 5)
+      const t = tree({ rng, height: rng.range(5, 7), trunkR: rng.range(0.45, 0.7), canopyR: cr })
+      const x = Math.cos(a) * r, z = Math.sin(a) * r
+      this.place(t, x, z, rng.range(0, Math.PI * 2))
+      this.treePads.push({ x, z, r: cr })
     }
     const bigTree = tree({ rng, height: 8.5, trunkR: 1.0, canopyR: 6.5, cards: 5 })
     this.place(bigTree, 2, -22.5, 0.4)
+    this.treePads.push({ x: 2, z: -22.5, r: 6.5 })
     const longBench = bench({ length: 2.6 })
     this.place(longBench, 2, -19.6, 0)
     this.benchPos = new THREE.Vector3(2, heightAt(2, -19.6), -19.6)
@@ -260,6 +303,72 @@ export class World {
     const jar = fireflyJar()
     this.place(jar.group, -9, -11, 0.6)
     this.registerLight('park-firefly-jar', 'park', jar, -9, -11)
+
+    // — park props (Part 3.2.1): stumps, mushrooms, birdbath, low fences —
+    const mats = sharedMats()
+    for (let i = 0; i < 4; i++) {
+      const a = rng.range(0, Math.PI * 2), r = rng.range(8, 14)
+      const stump = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, 0.45, 8), mats.bark)
+      ensureVertexColors(stump.geometry)
+      this.place((() => { const g = new THREE.Group(); g.add(stump); stump.position.y = 0.22; g.userData.collider = { r: 0.42, h: 0.5 }; return g })(), Math.cos(a) * r, Math.sin(a) * r)
+    }
+    const shroomMat = retroMaterial({ map: TEX.white(), hemi: true })
+    for (let i = 0; i < 7; i++) {
+      const a = rng.range(0, Math.PI * 2), r = rng.range(6, 24)
+      const x = Math.cos(a) * r, z = Math.sin(a) * r
+      const cluster = new THREE.Group()
+      for (let k = 0; k < rng.int(2, 4); k++) {
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.12, 5), shroomMat)
+        ensureVertexColors(stem.geometry, [0.85, 0.82, 0.72])
+        stem.position.set(rng.range(-0.2, 0.2), 0.06, rng.range(-0.2, 0.2))
+        cluster.add(stem)
+        const cap = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 4, 0, Math.PI * 2, 0, Math.PI / 2), shroomMat)
+        ensureVertexColors(cap.geometry, rng.chance(0.5) ? [0.6, 0.28, 0.2] : [0.66, 0.6, 0.48])
+        cap.position.set(stem.position.x, 0.12, stem.position.z)
+        cluster.add(cap)
+      }
+      this.place(cluster, x, z)
+    }
+    // stone birdbath
+    const bath = new THREE.Group()
+    const bathMat = retroMaterial({ map: TEX.stoneBlock({ name: 'bath', base: '#5a625f' }) })
+    const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.16, 0.7, 7), bathMat)
+    ensureVertexColors(pedestal.geometry)
+    pedestal.position.y = 0.35
+    bath.add(pedestal)
+    const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.3, 0.14, 9), bathMat)
+    ensureVertexColors(bowl.geometry)
+    bowl.position.y = 0.76
+    bath.add(bowl)
+    const bathWater = new THREE.Mesh(new THREE.CircleGeometry(0.36, 9), retroMaterial({ map: TEX.water({ name: 'bathwater' }) }))
+    ensureVertexColors(bathWater.geometry)
+    bathWater.rotation.x = -Math.PI / 2
+    bathWater.position.y = 0.84
+    bath.add(bathWater)
+    bath.userData.collider = { r: 0.5, h: 0.9 }
+    this.place(bath, -12, 6)
+    // low fences by the north entrance
+    const fence = (x1, z1, x2, z2) => {
+      const g = new THREE.Group()
+      const len = Math.hypot(x2 - x1, z2 - z1)
+      const n = Math.max(2, Math.round(len / 1.4))
+      for (let i = 0; i <= n; i++) {
+        const t = i / n
+        const px = x1 + (x2 - x1) * t, pz = z1 + (z2 - z1) * t
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.65, 0.09), mats.plank)
+        ensureVertexColors(post.geometry)
+        post.position.set(px - x1, this.heightAt(px, pz) - this.heightAt(x1, z1) + 0.32, pz - z1)
+        g.add(post)
+      }
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(len, 0.07, 0.05), mats.plank)
+      ensureVertexColors(rail.geometry)
+      rail.position.set((x2 - x1) / 2, 0.5, (z2 - z1) / 2)
+      rail.rotation.y = -Math.atan2(z2 - z1, x2 - x1)
+      g.add(rail)
+      this.place(g, x1, z1)
+    }
+    fence(-6, -27, -13, -23)
+    fence(8, -28, 14, -24)
 
     this.poses.park = { pos: [7.5, 1.3, -13.5], look: [1.5, 1.1, -20.2] }
     this.poses.player = { pos: [4.8, 1.1, -16.2], look: [2.6, 0.9, -18.4] }
@@ -291,16 +400,34 @@ export class World {
       ensureVertexColors(roof.geometry)
       roof.position.set(hd.x, baseH + wallH + 0.55, z)
       this.scene.add(roof)
-      // chimney
+      // chimney (the first two become smoke anchors — Part 3.2.2)
       if (rng.chance(0.7)) {
         const ch = new THREE.Mesh(new THREE.BoxGeometry(0.9, 2.2, 0.9), stoneMat)
         ensureVertexColors(ch.geometry)
-        ch.position.set(hd.x + rng.range(-hd.w / 3, hd.w / 3), baseH + wallH + 2, z + rng.range(-1, 1))
+        const chx = hd.x + rng.range(-hd.w / 3, hd.w / 3), chz = z + rng.range(-1, 1)
+        ch.position.set(chx, baseH + wallH + 2, chz)
         this.scene.add(ch)
+        if (!this.smokeAnchors) this.smokeAnchors = []
+        if (this.smokeAnchors.length < 2) this.smokeAnchors.push(new THREE.Vector3(chx, baseH + wallH + 3.2, chz))
       }
       // collider height = wallH only, so roof-walkers (y ≈ wallH+1) pass over
       this.addAABB(hd.x - hd.w / 2, hd.x + hd.w / 2, z - hd.d / 2, z + hd.d / 2, wallH, baseH)
       if (hd.bakery) this.bakeryPos = { x: hd.x, z, baseH }
+      // pre-lit amber windows on the street face (Rule 5: lit windows imply
+      // life; Rule 2: window amber IS this zone's warm accent)
+      if (!this.warmWindows) this.warmWindows = []
+      const faceZ = hd.side === -1 ? z + hd.d / 2 + 0.03 : z - hd.d / 2 - 0.03
+      const nWin = rng.int(1, 2)
+      for (let wi = 0; wi < nWin; wi++) {
+        const wx2 = hd.x + (nWin === 1 ? rng.range(-1, 1) : (wi === 0 ? -hd.w / 4 : hd.w / 4))
+        const winMat = retroMaterial({ map: TEX.window(), transparent: true, opacity: 0.95, depthWrite: false, emissive: '#5a3c14' })
+        const pane = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 1.05), winMat)
+        ensureVertexColors(pane.geometry)
+        pane.position.set(wx2, baseH + rng.range(1.6, 2.6), faceZ)
+        if (hd.side === 1) pane.rotation.y = Math.PI
+        this.scene.add(pane)
+        this.warmWindows.push({ mesh: pane, seed: rng.range(0, 10), base: 0.95 })
+      }
     }
 
     // the spire tower with a handless clock face (landmark), east end
@@ -357,6 +484,89 @@ export class World {
       this.registerLight(`village-post-${i + 1}`, 'village', lamp, lx, lz)
     })
 
+    // — village props: crates, barrels, hanging signs, flower boxes, handcart, rain barrels —
+    const propRng = worldRNG.fork('villageProps')
+    for (const [px, side] of [[100, 1], [109, -1], [117, 1], [126, -1], [131, 1]]) {
+      const pz = streetZ(px) + side * 4.6
+      const py = heightAt(px, pz)
+      if (propRng.chance(0.6)) {
+        const crate = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.7), mats.plank)
+        ensureVertexColors(crate.geometry)
+        crate.position.set(px, py + 0.35, pz)
+        crate.rotation.y = propRng.range(0, 1)
+        this.scene.add(crate)
+        this.colliders.push({ x: px, z: pz, r: 0.55, h: 0.8 })
+      } else {
+        const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.36, 0.8, 9), mats.plank)
+        ensureVertexColors(barrel.geometry)
+        barrel.position.set(px, py + 0.4, pz)
+        this.scene.add(barrel)
+        this.colliders.push({ x: px, z: pz, r: 0.45, h: 0.9 })
+      }
+    }
+    // hanging shop signs (sway) on two houses
+    for (const sx of [103, 128]) {
+      const sz2 = streetZ(sx) + (sx === 103 ? -5.4 : 4.4)
+      const sy = heightAt(sx, sz2) + 3.2
+      const bracket = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.06, 0.06), sharedMats().iron)
+      ensureVertexColors(bracket.geometry)
+      bracket.position.set(sx, sy + 0.4, sz2)
+      this.scene.add(bracket)
+      const signG = new THREE.Group()
+      const board = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 0.05), mats.plank)
+      ensureVertexColors(board.geometry)
+      board.position.y = -0.35
+      signG.add(board)
+      signG.position.set(sx + 0.35, sy + 0.38, sz2)
+      this.scene.add(signG)
+      this.sways.push(signG)
+    }
+    // flower boxes under two windows + a handcart + rain barrels
+    for (const fx of [106, 122]) {
+      const fz = streetZ(fx) - 5.4
+      const box = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.22, 0.3), mats.plank)
+      ensureVertexColors(box.geometry)
+      box.position.set(fx, heightAt(fx, fz) + 1.2, fz)
+      this.scene.add(box)
+      const bloomMat = retroMaterial({ map: TEX.white(), hemi: true })
+      for (let i = 0; i < 4; i++) {
+        const bloom = new THREE.Mesh(new THREE.SphereGeometry(0.05, 5, 4), bloomMat)
+        ensureVertexColors(bloom.geometry, propRng.chance(0.5) ? [0.75, 0.45, 0.55] : [0.7, 0.65, 0.35])
+        bloom.position.set(fx - 0.4 + i * 0.26, heightAt(fx, fz) + 1.36, fz)
+        this.scene.add(bloom)
+      }
+    }
+    {
+      const cart = new THREE.Group()
+      const bed = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.16, 0.9), mats.plank)
+      ensureVertexColors(bed.geometry)
+      bed.position.y = 0.55
+      bed.rotation.z = -0.12
+      cart.add(bed)
+      for (const s of [-1, 1]) {
+        const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.08, 10), mats.plank)
+        ensureVertexColors(wheel.geometry)
+        wheel.rotation.x = Math.PI / 2
+        wheel.position.set(0.1, 0.34, s * 0.5)
+        cart.add(wheel)
+        const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1.0, 5), mats.plank)
+        ensureVertexColors(handle.geometry)
+        handle.rotation.z = 1.25
+        handle.position.set(-0.85, 0.42, s * 0.3)
+        cart.add(handle)
+      }
+      cart.userData.collider = { r: 0.9, h: 0.8 }
+      this.place(cart, 113.5, streetZ(113.5) - 4.9, 0.5)
+    }
+    for (const bx of [104.5, 130.5]) {
+      const bz = streetZ(bx) - 5.2
+      const rb = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.4, 0.9, 9), mats.plank)
+      ensureVertexColors(rb.geometry)
+      rb.position.set(bx, heightAt(bx, bz) + 0.45, bz)
+      this.scene.add(rb)
+      this.colliders.push({ x: bx, z: bz, r: 0.5, h: 1 })
+    }
+
     // bakery window: warm glass pane, kindling lights it from inside (cold light)
     if (this.bakeryPos) {
       const bp = this.bakeryPos
@@ -375,7 +585,7 @@ export class World {
       this.registerLight('village-bakery-window', 'village', { glass: pane, halo, flame: null, pool: null, flameH: 1.6 }, bp.x - 1.5, bp.z + 4.1, bp.baseH)
     }
 
-    this.poses.village = { pos: [76, streetH(76) + 1.4, streetZ(76) + 1], look: [126, streetH(126) + 4, streetZ(126)] }
+    this.poses.village = { pos: [90, streetH(90) + 1.5, streetZ(90) + 1.4], look: [132, streetH(132) + 3.5, streetZ(132)] }
   }
 
   buildRooftops() {
@@ -402,17 +612,30 @@ export class World {
     pine.position.set(118.5, roofH(118.5), streetZ(118.5) - 8.5)
     this.scene.add(pine)
 
-    // 2 chimney-side lanterns + telescope brazier (cold lights)
-    const l1 = hangingLantern({ accent: '#e8a84a' })
-    l1.group.position.set(108, roofH(108) + 1.6, streetZ(108) - 9)
-    this.scene.add(l1.group)
-    this.sways.push(l1.group)
-    this.registerLight('rooftops-lantern-1', 'rooftops', l1, 108, streetZ(108) - 9, roofH(108) + 1.6)
-    const l2 = hangingLantern({ accent: '#e8a84a' })
-    l2.group.position.set(128, roofH(128) + 1.6, streetZ(128) - 8)
-    this.scene.add(l2.group)
-    this.sways.push(l2.group)
-    this.registerLight('rooftops-lantern-2', 'rooftops', l2, 128, streetZ(128) - 8, roofH(128) + 1.6)
+    // 2 chimney-side lanterns on shepherd-hook posts (cold lights)
+    const hookPost = (x, z) => {
+      const g = new THREE.Group()
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.9, 6), mats.iron)
+      ensureVertexColors(pole.geometry)
+      pole.position.y = 0.95
+      g.add(pole)
+      const curve = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.03, 5, 8, Math.PI * 0.9), mats.iron)
+      ensureVertexColors(curve.geometry)
+      curve.position.set(0.1, 1.88, 0)
+      curve.rotation.z = -0.5
+      g.add(curve)
+      g.position.set(x, roofH(x), z)
+      this.scene.add(g)
+      return g
+    }
+    for (const [i, lx, lz] of [[1, 119.5, streetZ(119.5) - 10.3], [2, 127, streetZ(127) - 7.6]]) {
+      hookPost(lx, lz)
+      const l = hangingLantern({ accent: '#e8a84a' })
+      l.group.position.set(lx + 0.28, roofH(lx) + 1.85, lz)
+      this.scene.add(l.group)
+      this.sways.push(l.group)
+      this.registerLight(`rooftops-lantern-${i}`, 'rooftops', l, lx + 0.28, lz, roofH(lx) + 1.85)
+    }
     // stargazer's telescope + brazier
     const scope = new THREE.Group()
     const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 1.2, 7), stoneMat)
@@ -437,8 +660,10 @@ export class World {
     this.scene.add(scopeBrazier.group)
     this.registerLight('rooftops-telescope-brazier', 'rooftops', scopeBrazier, 134.5, streetZ(134.5) - 9, roofH(134.5))
 
-    // low over the moss, cobalt sky filling the frame (Part 3.2.3)
-    this.poses.rooftops = { pos: [110, roofH(110) + 1.1, streetZ(110) - 7], look: [122, roofH(122) + 3.6, streetZ(122) - 10] }
+    // low over the moss at Nib, cobalt sky filling the frame (Part 3.2.3)
+    this.poses.rooftops = { pos: [121.6, roofH(121.6) + 0.9, streetZ(121.6) - 11.4], look: [117.6, roofH(117.6) + 0.7, streetZ(117.6) - 8.4] }
+    // close on Nib for the sleeper evidence shots
+    this.poses.nib = { pos: [119.6, roofH(119.6) + 0.55, streetZ(119.6) - 11.1], look: [118.2, roofH(118.2) + 0.2, streetZ(118.2) - 10.0] }
   }
 
   buildRuins() {
@@ -745,8 +970,10 @@ export class World {
     // 6 colossal mossy trunks flanking the path
     const positions = [[46, 103], [54, 118], [64, 102], [72, 117], [58, 96], [76, 104]]
     for (const [tx, tz] of positions) {
-      const t = tree({ rng, height: rng.range(10, 13), trunkR: rng.range(1.6, 2.2), canopyR: rng.range(6, 8), cards: 5 })
+      const cr = rng.range(6, 8)
+      const t = tree({ rng, height: rng.range(10, 13), trunkR: rng.range(1.6, 2.2), canopyR: cr, cards: 5 })
       this.place(t, tx, tz, rng.range(0, Math.PI * 2))
+      this.treePads.push({ x: tx, z: tz, r: cr })
     }
     // the arch gate (world's edge)
     const ax = MOSSWOOD_ARCH.x, az = MOSSWOOD_ARCH.z
@@ -931,6 +1158,12 @@ export class World {
         gw.mesh.material.uniforms.uOpacity.value = 0.7 + Math.sin(time * 2.2 + gw.seed * 7) * 0.12 + Math.sin(time * 5.7 + gw.seed * 3) * 0.06
       }
     }
+    if (this.warmWindows) {
+      for (const ww of this.warmWindows) {
+        // hearth-light breathing — slow and gentle, never a strobe (Rule 11)
+        ww.mesh.material.uniforms.uOpacity.value = ww.base * (0.9 + Math.sin(time * 1.1 + ww.seed * 5) * 0.07)
+      }
+    }
     for (const l of this.lights) {
       if (!l.kindled) continue
       if (l.bloom < 1) l.bloom = Math.min(1, l.bloom + dt / 2)
@@ -943,6 +1176,20 @@ export class World {
       }
       if (p.pool) p.pool.material.uniforms.uOpacity.value = l.poolBase * ease * flicker
       if (p.glass) p.glass.material.uniforms.uOpacity.value = l.glassBase * ease
+      // baked warm pool: lerp ground verts toward warm while the bloom ramps
+      if (l.groundWarm?.length && l.warmApplied !== l.bloom) {
+        l.warmApplied = l.bloom
+        const col = this.ground.geometry.getAttribute('color')
+        const base = this.groundBase
+        for (const { i, w } of l.groundWarm) {
+          const f = w * ease * 1.6
+          col.setXYZ(i,
+            base[i * 3] * (1 + 1.0 * f),
+            base[i * 3 + 1] * (1 + 0.68 * f),
+            base[i * 3 + 2] * (1 + 0.28 * f))
+        }
+        col.needsUpdate = true
+      }
     }
   }
 }
