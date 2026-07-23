@@ -91,3 +91,24 @@ docs/build/PLAN.md, then the tail of this file. Never re-derive the plan from me
 - Headless swiftshader runs ~11fps → hold-to-channel needs generous test timings (2.4s hold for a 1.2s channel).
 - AudioContext in headless works with --autoplay-policy=no-user-gesture-required + ctx.resume(); AnalyserNode RMS is the listen-proxy for "is it audible".
 - Bloom/flicker per light needs per-instance materials from retroMaterial() — ShaderMaterial.clone() would break shared global uniform references (fog/ambient lerps would stop reaching clones).
+
+---
+
+## 2026-07-24 ~01:40 UTC — M3 COMPLETE: world blockout
+
+**Done:**
+- `world/layout.js`: global heightfield (park bumps, village 8m street climb w/ S-curve, elevated rooftop strip + ladder ramp, sea basin + isle rise + causeway, ruins plateau, gloomspire moat ring + approach causeway, hall interior floor, mosswood floor), surfaceAt (grass/dirt/cobble/shingle/sand), BOUNDS, MOSSWOOD_ARCH.
+- `world/zonelight.js`: all 8 zone records + 6 fogland corridor records (Part 2.1 palettes verbatim; fog==stops[4] asserted at boot AND post-blend), nearest-2 signed-distance blending w/ ~4s lerps, elevation-gated zones (rooftops minY 7 dominates its parent volume when up).
+- `world/world.js` full rewrite: ribbon road system draped on terrain, sea+moat water (scrolling), village (7 houses, spire tower w/ handless clock, covered well, 4+2 cold lights incl. bakery window + well lantern), rooftops (garden, pine, 2 hanging lanterns + telescope brazier), ruins (colonnade w/ 2 intact blue-capital columns, façade, domed shrine, rune monolith w/ cyan glyph, dry moonwell, CYAN sconces ×4), gloomspire (castle + 3 green-coned towers, open gatehouse, toxic-green flickering windows, red door, moat, 4 causeway lanterns + brazier), hall interior (walls/ceiling/columns/stone floor/red carpet/emerald runner/dais+throne/3 pre-lit chandeliers/6 cold sconces), mosswood (6 colossal trunks, torus arch + 2 hanging lanterns + 2 trail lamps, world-edge loop), isle (keep + crenellations, palms, 2 causeway lamps + cove beacon + keep brazier), foglands (6 fingerposts, 20 pre-kindled breadcrumb lanterns). 37 cold lights registered total.
+- AABB colliders + door corridors; mosswood arch mirror-loop; hanging-lantern sway; green-window flicker; score zone-switching wired to blended zone.
+
+**Evidence read:** `traversecheck.mjs` 11/11 PASS (fog lerp 11 distinct values through corridor, fogland traversal, ladder→rooftops y=11.84 zone+surface flip, red door→hall z=150, causeway minY=0.70 + isle arrival, arch loop x-mirror, console clean). All 10 poses shot non-blank console-clean; screenshots REVIEWED: village (indigo, street leading line), rooftops (cobalt sky, handless clock), ruins (violet colonnade), gloomspire (castle+green windows+moat), hall (red carpet to throne, stone floor, chandelier glow), mosswood (trunk vignette + arch), isle (moon w/ cross-flare + keep + palm + causeway lamp), park, foglands. kindlecheck 13/13 + feelcheck 12/12 still PASS.
+
+**Next action:** M4 — art pass I (Park/Village/Rooftops full art), texture factory recipes, vertex-color bake + warm pools, Beldam/chickens/Nib, hue-match gate.
+
+**Learnings:**
+- Emissive over white texture washes out to ambient beige — dark surfaces need dark VERTEX colors (or painted textures), never emissive-only tinting.
+- Elevation-nested zones need a minY gate + dominance bonus or the larger parent volume always wins nearest-2.
+- Steep intentional climbs (ladders) must be exempted from the slope-slide rule via a world query, or the feel spec fights traversal.
+- Shot atmosphere: gate elevated zones by CAMERA height, probe XZ at the look target.
+- Playwright walk tests: budget ~1.6m/s real seconds; jog with Shift in tests to keep them fast.

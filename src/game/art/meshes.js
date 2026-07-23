@@ -84,6 +84,92 @@ export function lampPost({ height = 3.0, lit = true } = {}) {
   return { group: g, flame, halo, glass, pool, flameH: height + 0.25 }
 }
 
+// Shared kindle-state parts builder: glass + flame sprite + halo + pool,
+// tinted by the zone accent (Ruins kindles CYAN — the one cold accent).
+function lightParts({ accent = '#e8a84a', cool = false, flameScale = 1, poolR = 3.4 } = {}) {
+  const glassMat = retroMaterial({ map: TEX.white(), emissive: new THREE.Color(accent).multiplyScalar(0.55).getHex(), transparent: true, opacity: 0.45, depthWrite: false })
+  const flameTex = TEX.flameSheet({ cool }).clone()
+  flameTex.repeat.set(0.25, 1)
+  const flame = M(new THREE.PlaneGeometry(0.34 * flameScale, 0.34 * flameScale), retroMaterial({ map: flameTex, emissive: 0xffffff, alphaTest: 0.4 }))
+  const haloMat = retroMaterial({ map: TEX.glowDot({ color: accent }), transparent: true, depthWrite: false, opacity: 0.55 })
+  haloMat.blending = THREE.AdditiveBlending
+  const halo = M(new THREE.PlaneGeometry(1.35 * flameScale, 1.35 * flameScale), haloMat)
+  const poolMat = retroMaterial({ map: TEX.glowDot({ color: accent }), transparent: true, depthWrite: false, opacity: 0.4 })
+  poolMat.blending = THREE.AdditiveBlending
+  const pool = M(new THREE.CircleGeometry(poolR, 20), poolMat)
+  pool.rotation.x = -Math.PI / 2
+  return { glassMat, flame, halo, pool }
+}
+
+// Brazier: iron bowl on legs, big flame (gatehouse, telescope, keep-top).
+export function brazier({ accent = '#e8a84a', cool = false, scale = 1 } = {}) {
+  const mats = sharedMats()
+  const g = new THREE.Group()
+  const bowl = M(new THREE.CylinderGeometry(0.42 * scale, 0.2 * scale, 0.3 * scale, 8), mats.iron)
+  bowl.position.y = 0.75 * scale
+  g.add(bowl)
+  for (let i = 0; i < 3; i++) {
+    const a = (i / 3) * Math.PI * 2
+    const leg = M(new THREE.CylinderGeometry(0.035 * scale, 0.045 * scale, 0.8 * scale, 5), mats.iron)
+    leg.position.set(Math.cos(a) * 0.22 * scale, 0.4 * scale, Math.sin(a) * 0.22 * scale)
+    leg.rotation.z = Math.cos(a) * 0.2
+    leg.rotation.x = -Math.sin(a) * 0.2
+    g.add(leg)
+  }
+  const p = lightParts({ accent, cool, flameScale: 1.8 * scale, poolR: 3 * scale })
+  p.flame.position.y = 1.08 * scale
+  g.add(p.flame)
+  p.halo.position.y = 1.1 * scale
+  g.add(p.halo)
+  p.pool.position.y = 0.02
+  g.add(p.pool)
+  p.flame.visible = p.halo.visible = p.pool.visible = false
+  g.userData.collider = { r: 0.5 * scale, h: 1 * scale }
+  return { group: g, flame: p.flame, halo: p.halo, glass: null, pool: p.pool, flameH: 1.08 * scale }
+}
+
+// Wall sconce: bracket + small flame (Hall walls, Ruins columns).
+export function sconce({ accent = '#e8a84a', cool = false } = {}) {
+  const mats = sharedMats()
+  const g = new THREE.Group()
+  const bracket = M(new THREE.BoxGeometry(0.08, 0.3, 0.08), mats.iron)
+  bracket.position.y = -0.15
+  g.add(bracket)
+  const cup = M(new THREE.CylinderGeometry(0.11, 0.05, 0.14, 6), mats.iron)
+  g.add(cup)
+  const p = lightParts({ accent, cool, flameScale: 0.85, poolR: 1.8 })
+  p.flame.position.y = 0.18
+  g.add(p.flame)
+  p.halo.position.y = 0.2
+  g.add(p.halo)
+  p.flame.visible = p.halo.visible = false
+  // pool not attached (sconces sit on walls/columns); world may add separately
+  return { group: g, flame: p.flame, halo: p.halo, glass: null, pool: null, flameH: 0.2 }
+}
+
+// Hanging lantern (Mosswood arch, house eaves) — sways gently.
+export function hangingLantern({ accent = '#e8a84a' } = {}) {
+  const mats = sharedMats()
+  const g = new THREE.Group() // pivot at the hook
+  const chain = M(new THREE.CylinderGeometry(0.015, 0.015, 0.3, 4), mats.iron)
+  chain.position.y = -0.15
+  g.add(chain)
+  const cap = M(new THREE.ConeGeometry(0.16, 0.12, 6), mats.iron)
+  cap.position.y = -0.34
+  g.add(cap)
+  const p = lightParts({ accent, flameScale: 0.8, poolR: 2 })
+  const glass = M(new THREE.BoxGeometry(0.18, 0.24, 0.18), p.glassMat)
+  glass.position.y = -0.5
+  g.add(glass)
+  p.flame.position.y = -0.5
+  g.add(p.flame)
+  p.halo.position.y = -0.48
+  g.add(p.halo)
+  glass.visible = p.flame.visible = p.halo.visible = false
+  g.userData.sway = true
+  return { group: g, flame: p.flame, halo: p.halo, glass, pool: null, flameH: -0.5 }
+}
+
 // Firefly jar on a stump (Park's 4th cold light; release behavior lands in M6).
 export function fireflyJar() {
   const mats = sharedMats()

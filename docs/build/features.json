@@ -197,7 +197,7 @@
         "capture crossing Park->Village: sky+fog crossfade smoothly, no pop",
         "assert stays silent during crossing"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m3-blockout-park",
@@ -206,7 +206,7 @@
       "steps": [
         "park.png obeys Rules 1/3/9 at blockout fidelity"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m3-blockout-village",
@@ -215,7 +215,7 @@
       "steps": [
         "village.png: street leads eye uphill to spire (Rule 9)"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m3-blockout-rooftops",
@@ -225,7 +225,7 @@
         "climb ladder and walk roofs in capture without falling through",
         "rooftops.png cobalt sky dominant"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m3-blockout-ruins",
@@ -234,7 +234,7 @@
       "steps": [
         "ruins.png: colonnade leading line to facade"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m3-blockout-gloomspire",
@@ -243,7 +243,7 @@
       "steps": [
         "gloomspire.png: causeway centerline to castle silhouette"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m3-blockout-hall",
@@ -253,7 +253,7 @@
         "walk through red door into hall in capture",
         "hall.png centerline framing"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m3-blockout-mosswood",
@@ -263,7 +263,7 @@
         "loop-through verified in capture (position log wraps)",
         "mosswood.png deepest fog"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m3-blockout-isle",
@@ -273,7 +273,7 @@
         "walk causeway to keep top in capture",
         "isle.png water + tower framing"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m3-foglands",
@@ -283,7 +283,7 @@
         "corridor capture: fog closes then reveals next zone",
         "fingerpost text readable on approach"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m3-shoot-poses",
@@ -292,7 +292,7 @@
       "steps": [
         "node scripts/shoot.mjs writes 8 zone PNGs + foglands, all non-blank, console clean"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m4-texture-factory",

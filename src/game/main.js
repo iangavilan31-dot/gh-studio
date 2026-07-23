@@ -51,11 +51,13 @@ const interact = new InteractSystem(world, player, hud)
 // footsteps synced to stride (Part 4.2)
 player.onFootstep = (surface, vol) => footstep(surface, vol)
 
+const zoneKindles = (zone) => world.lights.filter((l) => l.zone === zone && l.kindled).length
+
 // kindle consequences: chime in zone key, ember burst, next music layer (6.1)
 world.onKindle = (light) => {
   kindleChime(light.zone)
   emberBurst(embers, light.x, light.y, light.z, worldRNG.fork('embers' + light.id))
-  score.setLayers(world.kindledCount)
+  if (light.zone === score.zone) score.setLayers(zoneKindles(light.zone))
 }
 
 // audio boots on first real gesture (autoplay policy)
@@ -68,21 +70,21 @@ function bootAudio() {
 window.addEventListener('keydown', bootAudio, { once: false })
 window.addEventListener('mousedown', bootAudio, { once: false })
 
-// ——— Shoot-rig camera poses (Part 3 per-zone; grows in M3) ———
-const POSES = {
-  // low 3/4 angle framing bench + lamp + path receding into fog
-  park: { pos: [7.5, 1.3, -13.5], look: [1.5, 1.1, -20.2] },
-  // close on the Lamplighter at spawn (M1 silhouette check)
-  player: { pos: [4.8, 1.1, -16.2], look: [2.6, 0.9, -18.4] },
-}
+// ——— Shoot-rig camera poses (Part 3 per-zone, defined by the world) ———
+const POSES = world.poses
 
 let cinematic = false
 function teleport(poseName) {
   const p = POSES[poseName]
   if (!p) return false
   cinematic = true
+  hud.hidePrompt() // no HUD in cinematic frames (12.5)
   camera.position.set(...p.pos)
   camera.lookAt(...p.look)
+  // atmosphere follows the viewed zone, not the parked player
+  // (XZ from the look target; Y from the camera, so elevation-gated zones
+  //  like the rooftops only claim shots taken from up there)
+  zoneLight.update(p.look[0], p.look[2], 10, p.pos[1])
   return true
 }
 
@@ -110,6 +112,17 @@ function tick() {
     // world keeps breathing behind fixed cameras; player idles in place
     player.update({ moveAxis: () => [0, 0], pressed: () => false, down: () => false, endFrame: () => {} }, orbit.smoothYaw, dt, elapsed)
   }
+  if (!cinematic) {
+    world.applyWorldRules(player)
+    zoneLight.update(player.pos.x, player.pos.z, dt, player.pos.y)
+    // music follows the atmosphere's zone
+    if (zoneLight.audioZone !== score.zone && audio.started) {
+      score.zone = zoneLight.audioZone
+      score.activeLayers = zoneKindles(score.zone)
+      score.buildZone()
+      audio.state.layers = Math.min(score.activeLayers + 1, score.layerGains.length)
+    }
+  }
   world.update(dt, elapsed)
   night.update(dt, camera)
   embers.update(dt, camera)
@@ -130,6 +143,7 @@ window.__MOONREST__ = {
     return true
   },
   releaseCam() { cinematic = false },
+  setCamYaw(y) { orbit.yaw = orbit.smoothYaw = y; return true },
   setAction(a) { player.setAction(a); return true },
   boneDebug() {
     return {
@@ -151,7 +165,7 @@ window.__MOONREST__ = {
     }
   },
   sampleFrame() {
-    return pipeline.sampleFrame(scene, camera, ZONES.park.fog)
+    return pipeline.sampleFrame(scene, camera, '#' + zoneLight.fog.getHexString())
   },
   get state() {
     const fps = frameTimes.length ? frameTimes.length / frameTimes.reduce((a, b) => a + b, 0) : 0
@@ -162,7 +176,10 @@ window.__MOONREST__ = {
       action: player.anim.action,
       speed: +player.anim.speed.toFixed(2),
       surface: player.surface,
-      zone: 'park',
+      zone: zoneLight.currentZoneId,
+      audioZone: zoneLight.audioZone,
+      fogColor: '#' + zoneLight.fog.getHexString(),
+      fogFar: +zoneLight.fogFar.toFixed(1),
       nightT: +night.minutes.toFixed(2),
       kindled: world.kindledIds,
       peers: 0,

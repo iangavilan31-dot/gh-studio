@@ -103,7 +103,8 @@ export class PlayerController {
       const hx = (this.world.heightAt(this.pos.x + g, this.pos.z) - this.world.heightAt(this.pos.x - g, this.pos.z)) / (2 * g)
       const hz = (this.world.heightAt(this.pos.x, this.pos.z + g) - this.world.heightAt(this.pos.x, this.pos.z - g)) / (2 * g)
       const slope = Math.atan(Math.hypot(hx, hz))
-      if (slope > (40 * Math.PI) / 180) {
+      const onLadder = this.world.onLadder && this.world.onLadder(this.pos.x, this.pos.z)
+      if (slope > (40 * Math.PI) / 180 && !onLadder) {
         this.pos.x -= hx * 2.2 * dt
         this.pos.z -= hz * 2.2 * dt
       }
