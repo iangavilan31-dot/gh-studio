@@ -3,12 +3,16 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>G&amp;H Studio</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23141e1a'/><text y='72' x='18' font-size='70' fill='%23ffffff40'>◈</text></svg>" />
-    <meta name="description" content="Ian Gavilan &amp; Luka Hernandez — Digital work, done right." />
+    <title>MOONREST</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230b1626'/><circle cx='50' cy='50' r='30' fill='%23e8e4ff'/><circle cx='40' cy='44' r='5' fill='%238f7fd4'/><circle cx='60' cy='58' r='7' fill='%238f7fd4'/><circle cx='58' cy='40' r='3' fill='%238f7fd4'/></svg>" />
+    <meta name="description" content="MOONREST — a cozy night-walk through a sleeping world. Kindle the old lights before the moon sets." />
+    <style>
+      html, body { margin: 0; padding: 0; background: #000; overflow: hidden; height: 100%; }
+      #game { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <canvas id="game"></canvas>
+    <script type="module" src="/src/game/main.js"></script>
   </body>
 </html>
