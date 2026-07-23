@@ -47,14 +47,29 @@ Long sessions get summarized/compacted. Externalize ALL state to disk so nothing
 lost. Maintain these files from the very first minutes and update them after EVERY
 milestone and EVERY judge pass:
 
+- `docs/build/features.json` — **the feature ledger, the single source of truth.**
+  In your very first working block, expand Parts 3–10 of this spec into a flat list
+  of concrete features, each `{ "id", "milestone", "description", "steps": [how to
+  verify it like a player would], "passes": false }`. Every feature starts
+  `passes: false`. **It is unacceptable to remove or edit features/tests because
+  this could lead to missing or buggy functionality** — the ledger only ever gains
+  entries or flips `passes` to `true`, and a flip is only permitted after you have
+  personally read the evidence (screenshot, test output, log) proving it works
+  end-to-end. JSON, not Markdown, deliberately: it resists accidental rewriting.
 - `docs/build/PLAN.md` — the milestone checklist from Part 12 with live status
   (`[ ]` / `[x]` / `[~] in progress`), plus any re-planning decisions and why.
 - `docs/build/PROGRESS.md` — append-only log: timestamped entries, what was done,
-  what's verified working, exact next action. Written so that a fresh agent with zero
-  context could resume from it alone.
+  what's verified working, exact next action, and a **Learnings** section per entry
+  (patterns discovered, gotchas, commands that work). Written so that a fresh agent
+  with zero context could resume from it alone.
 - `docs/build/JUDGE.md` — every judge pass: scores per rubric dimension, defects
   found (numbered), fixes applied, before/after notes.
-- `docs/build/DECISIONS.md` — any place you deviated from this spec and why.
+- `docs/build/DECISIONS.md` — any place you deviated from this spec and why, plus
+  every workaround assumption you made, **ranked by how expensive it would be if
+  wrong** (the human scans the risky calls first in the morning).
+- `scripts/init.sh` — one command that starts the dev/preview server and runs the
+  smoke test. Write it in M0, keep it current forever; it is how every work cycle
+  begins.
 
 **Re-orientation rule:** after any compaction, or whenever you feel uncertain what to
 do next: re-read `docs/MASTER_PROMPT.md` Part 0 + Part 12, then `PLAN.md`, then the
@@ -84,8 +99,22 @@ tail of `PROGRESS.md`. Never re-derive the plan from memory.
   yourself with the Read tool and inspect them against the Vibe Constitution
   (Part 2) every art milestone and every judge pass. You are the art director:
   LOOK at the work.
+- **WebGL defeats DOM inspection — build test hooks.** A canvas is opaque to
+  selectors, so expose a deliberate test surface from M0: a global
+  `window.__MOONREST__` object with game state (player pos, current zone, nightT,
+  kindled-light ids, peer count, fps rolling average), command methods for the
+  rigs (`teleport(pose)`, `kindle(id)`, `skipTo(minutes)`, `autopilot()`), and a
+  **seeded RNG** (single seedable PRNG used by all generation) so screenshots and
+  playthroughs are reproducible. The shoot rig must also assert the canvas is
+  non-blank (pixel sample: >5% of sampled pixels differ from the clear color).
+- **Never use `alert()`/`confirm()`/`prompt()`** anywhere — native modals are
+  invisible to the automation that verifies your work (and they're vibe-breaking
+  anyway). All UI is in-world or DOM.
 - **Console hygiene:** the shoot script must also capture the browser console; any
   error or warning in it is a defect.
+- **Evidence over assertion, always:** show the test output, the command and what
+  it returned, or name the screenshot you read. Your own "it works" doesn't count
+  — not to the user, and not to you.
 
 ## 0.5 Scope discipline
 
@@ -153,7 +182,56 @@ game code so the long run is self-sustaining:
 6. **Cost/turn discipline:** don't idle the session (idle gaps lose the prompt
    cache and waste budget); don't re-read large files you just wrote; offload
    bulk exploration to subagents if you must survey many files, keeping the main
-   context for building.
+   context for building. Keep raw logs out of context: redirect command output to
+   a file and read the tail (`cmd > /tmp/out.log 2>&1; tail -20 /tmp/out.log`).
+
+## 0.8 The work cycle (the loop itself)
+
+Work in small cycles, each shaped like this. This ritual is what makes an
+overnight run converge instead of drift:
+
+1. **Re-anchor:** confirm working directory; read `PLAN.md`, the tail of
+   `PROGRESS.md`, and `features.json`; check `git log --oneline -5`.
+2. **Baseline:** run `scripts/init.sh` (build/serve + smoke test). If the
+   baseline is broken, fixing it IS the cycle — never build new features on a
+   broken baseline; broken code compounds across iterations.
+3. **Pick ONE thing:** the highest-priority `passes: false` feature in the
+   current milestone. One feature per cycle — sized to fit comfortably; if a
+   feature is too big for one cycle, split it in the ledger (adding entries is
+   allowed; removing is not).
+4. **Search before writing:** check whether it's partially implemented already —
+   never assume "not implemented," never re-implement in parallel.
+5. **Implement, then verify like a player:** run the feature's `steps` via the
+   test hooks/screenshot rig; READ the evidence; only then flip `passes: true`.
+6. **Ratchet:** commit (`M<n>: <feature-id> — verified: <how>`); append the
+   PROGRESS entry with Learnings; update PLAN if a milestone closed.
+
+**Do-not-stop rules (this is an overnight pass):**
+- Do not stop early because of context/budget concerns — the harness compacts
+  and continues; your job is to save state (0.2) and keep working. Never
+  artificially wrap up because the session feels long.
+- If you hit a blocker, don't stop and don't ask: use a mock, a stub, or a
+  documented assumption and keep moving; log it in `DECISIONS.md` ranked by risk.
+- **Escape hatch:** if the same feature blocks 3 cycles, write a blocker note
+  (what you tried, best alternative), move to the next feature, and return to it
+  in M9. Blocked ≠ done: it stays `passes: false`.
+- Forbidden shortcuts, always: deleting/weakening tests or ledger entries,
+  hard-coding to pass a check, `--no-verify`, force-push, placeholder
+  implementations left behind, suppressing errors instead of fixing root causes.
+
+**Solution-quality rules:**
+- Write general solutions, not test-passers: checks verify correctness, they do
+  not define it. If a check itself is wrong, fix the check and say so in
+  DECISIONS.md — don't game it.
+- Avoid over-engineering: no abstractions for one-time operations, no
+  hypothetical-future design. The right amount of complexity is the minimum that
+  serves THIS spec. (The spec is ambitious enough.)
+- Go beyond the basics *within* scope: every feature listed here deserves its
+  full, juiced, animated, sounded version — "fully-featured" means the polish
+  items in Parts 4–10, not extra features.
+- Clean up after yourself: temporary scripts/files created for iteration are
+  deleted before milestone commits (the shoot rig and init.sh are permanent
+  tooling, not temp files).
 
 ---
 
@@ -813,8 +891,12 @@ grind, arch bell, earthquake-free — nothing threatening ever.
   mode, accessibility, meta, error boundary. *Accept: menu walk screenshot set;
   settings persist across reload (assert); all four Memory modes screenshot.*
 - **M9 — JUDGE LOOPS (the overnight heart — see 12.4).**
-- **M10 — Ship.** Final build, README with play/host instructions + credits,
-  final PROGRESS entry, push, PR per repo workflow.
+- **M10 — Ship.** Final build; README with play/host instructions + credits;
+  **the Morning Report** appended to PROGRESS.md: (1) what's finished, (2) what
+  was worked around and why (from DECISIONS.md, riskiest first), (3) what's
+  waiting on a human decision, (4) the evidence it works — final shot reel,
+  autopilot log, perf numbers, judge scores. Push, PR per repo workflow. Final
+  line: `SHIP` with the evidence list.
 
 ## 12.2 Definition of Done (any feature)
 
@@ -828,11 +910,24 @@ move on, return in M9. PROGRESS.md must never go 30 min without an entry.
 
 ## 12.4 The Judge (rubric + loop)
 
-A judge pass = fresh-eyes adversarial review. Protocol:
+Two kinds of gate, never confused:
 
-1. Re-read Part 2 verbatim. Regenerate ALL zone screenshots + the 4 Memory-mode
+- **Hard gates are deterministic** and live in scripts: build exit code, console
+  cleanliness, non-blank canvas, hue-match ΔE check, FPS p95, bundle size,
+  autopilot completion, two-context co-op assertions. A hard gate is pass/fail;
+  opinion is irrelevant. All hard gates must pass before a judge pass counts.
+- **Judge scores are for the fuzzy dimensions** (composition, charm, feel, "does
+  it look like the reference"). Scored honestly, evidence-grounded, and used to
+  direct the next fix cycle — never as a substitute for hard gates.
+
+Judge pass protocol:
+
+1. Run every hard gate. Any failure → fix first; the judge pass restarts.
+2. Re-read Part 2 verbatim. Regenerate ALL zone screenshots + the 4 Memory-mode
    shots + a co-op two-view pair. Run the perf capture and the autopilot night.
-2. Score 1–10 each dimension, written to JUDGE.md with one-line justification:
+   READ every image.
+3. Score 1–10 each dimension, written to JUDGE.md with one-line evidence-grounded
+   justification:
    **(a)** palette fidelity vs Part 2.1 (programmatic hue check + eye),
    **(b)** silhouette/composition per shot (leading line? landmark? fog reveal?),
    **(c)** atmosphere (particles/fog/idle motion present and alive in every
@@ -843,9 +938,17 @@ A judge pass = fresh-eyes adversarial review. Protocol:
    clean, error paths), **(j)** the ineffable: "does this screenshot look like
    the reference footage?" — compare directly against the scene descriptions in
    docs/VIBE_BIBLE.md §1.
-3. List every defect found, ranked by vibe-damage. Fix top defects. Re-verify
-   fixed ones immediately.
-4. **Loop condition:** repeat judge passes until (average ≥ 8.5 AND no dimension
+4. **Fresh eyes, competitively:** spawn two reviewer subagents with clean
+   context. Tell each: "You did not write this code. Review the game against
+   docs/MASTER_PROMPT.md Parts 2–11 — screenshots in docs/build/shots/, ledger
+   in features.json. Report only gaps that affect correctness, the stated
+   requirements, or the vibe rules — not style preferences. Whoever finds the
+   larger number of serious issues gets five points." Merge their findings into
+   the defect list. (A builder grading its own homework misses what a fresh
+   context catches.)
+5. List every defect found, ranked by vibe-damage. Fix top defects. Re-verify
+   fixed ones immediately (evidence, then flip).
+6. **Loop condition:** repeat judge passes until (average ≥ 8.5 AND no dimension
    < 7) for TWO CONSECUTIVE passes, or until two consecutive passes yield zero
    new defects and no score improvement. Then proceed to M10. Minimum 3 judge
    passes regardless — the first two always find something.
