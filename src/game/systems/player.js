@@ -123,6 +123,13 @@ export class PlayerController {
 
     // drive rig
     advanceAnim(this.anim, dt, speed, !this.grounded)
+
+    // footstep events on stride beats (each leg plant = phase crossing π)
+    const strideIdx = Math.floor(this.anim.phase / Math.PI)
+    if (strideIdx !== this._lastStride) {
+      if (this.grounded && speed > 0.4 && this.onFootstep) this.onFootstep(this.surface, Math.min(1, speed / 3.2))
+      this._lastStride = strideIdx
+    }
     this.rig.group.position.copy(this.pos)
     this.rig.group.rotation.y = this.yaw
     applyPose(this.rig, this.anim, time)

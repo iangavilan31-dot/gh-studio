@@ -43,8 +43,9 @@ export function tree({ rng, height = 6, trunkR = 0.6, canopyR = 4.5, cards = 4 }
   return g
 }
 
-// Iron park lamp with open cage. Returns { group, flame, halo, glass } —
-// flame/halo are the animated/kindle-state parts.
+// Iron park lamp with open cage. Kindle-state parts (flame/halo/glass/pool)
+// get their OWN materials (never .clone() a retro material — that severs the
+// shared global fog/ambient uniform objects; always construct via retroMaterial).
 export function lampPost({ height = 3.0, lit = true } = {}) {
   const mats = sharedMats()
   const g = new THREE.Group()
@@ -58,24 +59,57 @@ export function lampPost({ height = 3.0, lit = true } = {}) {
   const cap = M(new THREE.ConeGeometry(0.3, 0.26, 6), mats.iron)
   cap.position.y = height + 0.6
   g.add(cap)
-  const glass = M(new THREE.BoxGeometry(0.3, 0.44, 0.3), mats.glassWarm)
+  const glassMat = retroMaterial({ map: TEX.white(), emissive: 0xc08a30, transparent: true, opacity: 0.45, depthWrite: false })
+  const glass = M(new THREE.BoxGeometry(0.3, 0.44, 0.3), glassMat)
   glass.position.y = height + 0.25
   g.add(glass)
-  const flame = M(new THREE.PlaneGeometry(0.34, 0.34), mats.flame.clone())
-  flame.material.uniforms.uMap.value = TEX.flameSheet().clone()
-  flame.material.uniforms.uMap.value.repeat.set(0.25, 1)
+  const flameTex = TEX.flameSheet().clone()
+  flameTex.repeat.set(0.25, 1)
+  const flame = M(new THREE.PlaneGeometry(0.34, 0.34), retroMaterial({ map: flameTex, emissive: 0xffffff, alphaTest: 0.4 }))
   flame.position.y = height + 0.22
   g.add(flame)
-  const halo = M(new THREE.PlaneGeometry(1.35, 1.35), mats.halo)
+  const haloMat = retroMaterial({ map: TEX.glowDot({ color: '#e8a84a' }), transparent: true, depthWrite: false, opacity: 0.55 })
+  haloMat.blending = THREE.AdditiveBlending
+  const halo = M(new THREE.PlaneGeometry(1.35, 1.35), haloMat)
   halo.position.y = height + 0.3
   g.add(halo)
-  const pool = M(new THREE.CircleGeometry(3.4, 20), mats.pool)
+  const poolMat = retroMaterial({ map: TEX.glowDot({ color: '#e8a84a' }), transparent: true, depthWrite: false, opacity: 0.4 })
+  poolMat.blending = THREE.AdditiveBlending
+  const pool = M(new THREE.CircleGeometry(3.4, 20), poolMat)
   pool.rotation.x = -Math.PI / 2
   pool.position.y = 0.02
   g.add(pool)
   if (!lit) { flame.visible = false; halo.visible = false; pool.visible = false; glass.visible = false }
   g.userData.collider = { r: 0.16, h: height }
-  return { group: g, flame, halo, glass, pool }
+  return { group: g, flame, halo, glass, pool, flameH: height + 0.25 }
+}
+
+// Firefly jar on a stump (Park's 4th cold light; release behavior lands in M6).
+export function fireflyJar() {
+  const mats = sharedMats()
+  const g = new THREE.Group()
+  const stump = M(new THREE.CylinderGeometry(0.32, 0.4, 0.5, 8), mats.bark)
+  stump.position.y = 0.25
+  g.add(stump)
+  const glassMat = retroMaterial({ map: TEX.white(), emissive: 0x9a9a40, transparent: true, opacity: 0.35, depthWrite: false })
+  const jar = M(new THREE.CylinderGeometry(0.11, 0.13, 0.22, 8), glassMat)
+  jar.position.y = 0.61
+  g.add(jar)
+  const lid = M(new THREE.CylinderGeometry(0.12, 0.12, 0.04, 8), mats.iron)
+  lid.position.y = 0.74
+  g.add(lid)
+  const haloMat = retroMaterial({ map: TEX.glowDot({ color: '#d8e858' }), transparent: true, depthWrite: false, opacity: 0.5 })
+  haloMat.blending = THREE.AdditiveBlending
+  const halo = M(new THREE.PlaneGeometry(0.9, 0.9), haloMat)
+  halo.position.y = 0.62
+  g.add(halo)
+  const glass = jar
+  const flame = null
+  const pool = null
+  glass.visible = false
+  halo.visible = false
+  g.userData.collider = { r: 0.42, h: 0.8 }
+  return { group: g, flame, halo, glass, pool, flameH: 0.62 }
 }
 
 // Park bench: planks + iron legs. Long variant for Beldam's Long Bench.

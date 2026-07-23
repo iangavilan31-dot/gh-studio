@@ -5,7 +5,7 @@
 import * as THREE from 'three'
 import { retroMaterial, ensureVertexColors } from '../art/materials.js'
 import * as TEX from '../art/textures.js'
-import { tree, lampPost, bench, sharedMats } from '../art/meshes.js'
+import { tree, lampPost, bench, fireflyJar, sharedMats } from '../art/meshes.js'
 import { worldRNG } from '../core/rng.js'
 
 export class World {
@@ -13,10 +13,48 @@ export class World {
     this.scene = scene
     this.camera = camera
     this.colliders = []      // { x, z, r, h }
-    this.interactables = []  // { id, x, z } (M2 wires actions)
+    this.interactables = []  // { id, x, z, kind }
     this.flames = []         // { mesh, tex, frame, acc } sprite animation
     this.halos = []          // billboards to face camera
+    this.lights = []         // cold-light registry: { id, zone, x, z, y, parts, kindled, bloom }
+    this.onKindle = null     // main wires chime/embers/score here
     this.buildPark()
+  }
+
+  // — cold lights (the kindling objectives, 6.1) —
+  registerLight(id, zone, lampParts, x, z) {
+    const y = this.heightAt(x, z)
+    this.lights.push({
+      id, zone, x, z,
+      y: y + (lampParts.flameH ?? 3.2),
+      parts: lampParts,
+      kindled: false,
+      bloom: 0,
+      flickerSeed: worldRNG.range(0, Math.PI * 2),
+      haloBase: lampParts.halo ? lampParts.halo.material.uniforms.uOpacity.value : 0.55,
+      poolBase: lampParts.pool ? lampParts.pool.material.uniforms.uOpacity.value : 0.4,
+      glassBase: lampParts.glass ? lampParts.glass.material.uniforms.uOpacity.value : 0.45,
+    })
+    this.interactables.push({ id, x, z, kind: 'light' })
+    if (lampParts.flame) this.flames.push({ mesh: lampParts.flame, tex: lampParts.flame.material.uniforms.uMap.value, frame: worldRNG.int(0, 3), acc: worldRNG.range(0, 0.12) })
+    if (lampParts.halo) this.halos.push(lampParts.halo)
+  }
+
+  get kindledCount() { return this.lights.filter((l) => l.kindled).length }
+  get kindledIds() { return this.lights.filter((l) => l.kindled).map((l) => l.id) }
+
+  kindle(id) {
+    const light = this.lights.find((l) => l.id === id)
+    if (!light || light.kindled) return false
+    light.kindled = true
+    light.bloom = 0.0001 // bloom ramp starts
+    const p = light.parts
+    if (p.flame) p.flame.visible = true
+    if (p.halo) { p.halo.visible = true; p.halo.material.uniforms.uOpacity.value = 0 }
+    if (p.pool) { p.pool.visible = true; p.pool.material.uniforms.uOpacity.value = 0 }
+    if (p.glass) { p.glass.visible = true; p.glass.material.uniforms.uOpacity.value = 0 }
+    if (this.onKindle) this.onKindle(light)
+    return true
   }
 
   // — terrain —
@@ -70,10 +108,6 @@ export class World {
     return group
   }
 
-  registerLamp(lamp, x, z) {
-    this.flames.push({ mesh: lamp.flame, tex: lamp.flame.material.uniforms.uMap.value, frame: worldRNG.int(0, 3), acc: worldRNG.range(0, 0.12) })
-    this.halos.push(lamp.halo)
-  }
 
   buildPark() {
     const rng = worldRNG.fork('park')
@@ -119,10 +153,10 @@ export class World {
     this.place(longBench, 2, -19.6, 0) // faces +z (the park center)
     this.benchPos = new THREE.Vector3(2, this.heightAt(2, -19.6), -19.6)
 
-    const benchLamp = lampPost({})
+    // Park's cold lights (Part 3.2.1): bench lamp, two path lanterns, firefly jar
+    const benchLamp = lampPost({ lit: false })
     this.place(benchLamp.group, 4.2, -19.2)
-    this.registerLamp(benchLamp, 4.2, -19.2)
-    this.interactables.push({ id: 'park-bench-lamp', x: 4.2, z: -19.2 })
+    this.registerLight('park-bench-lamp', 'park', benchLamp, 4.2, -19.2)
 
     // two more benches on the loop
     for (const a of [Math.PI * 0.55, Math.PI * 1.25]) {
@@ -131,17 +165,24 @@ export class World {
       this.place(b, x, z, -a + Math.PI / 2)
     }
 
-    // two path lanterns on the loop (cold in M2; lit for the graybox look)
+    // two cold path lanterns on the loop
+    let li = 0
     for (const a of [Math.PI * 0.15, Math.PI * 0.85]) {
-      const lamp = lampPost({})
+      const lamp = lampPost({ lit: false })
       const x = Math.cos(a) * 19.9, z = Math.sin(a) * 19.9
       this.place(lamp.group, x, z)
-      this.registerLamp(lamp, x, z)
+      this.registerLight(`park-lantern-${++li}`, 'park', lamp, x, z)
     }
+
+    // firefly jar on a stump, off the path (release behavior in M6)
+    const jar = fireflyJar()
+    this.place(jar.group, -9, -11, 0.6)
+    this.registerLight('park-firefly-jar', 'park', jar, -9, -11)
   }
 
   update(dt, time) {
     for (const f of this.flames) {
+      if (!f.mesh.visible) continue
       f.acc += dt
       if (f.acc > 0.125) {
         f.acc = 0
@@ -150,7 +191,22 @@ export class World {
       }
       f.mesh.lookAt(this.camera.position.x, f.mesh.getWorldPosition(_wp).y, this.camera.position.z)
     }
-    for (const h of this.halos) h.lookAt(this.camera.position)
+    for (const h of this.halos) { if (h.visible) h.lookAt(this.camera.position) }
+
+    // kindled-light bloom ramps (2s warm ease) + gentle forever-flicker
+    for (const l of this.lights) {
+      if (!l.kindled) continue
+      if (l.bloom < 1) l.bloom = Math.min(1, l.bloom + dt / 2)
+      const ease = 1 - (1 - l.bloom) * (1 - l.bloom) // ease-out
+      const flicker = 1 + Math.sin(time * 7.3 + l.flickerSeed) * 0.05 + Math.sin(time * 13.7 + l.flickerSeed * 2) * 0.03
+      const p = l.parts
+      if (p.halo) {
+        p.halo.material.uniforms.uOpacity.value = l.haloBase * ease * flicker
+        p.halo.scale.setScalar(0.6 + 0.4 * ease)
+      }
+      if (p.pool) p.pool.material.uniforms.uOpacity.value = l.poolBase * ease * flicker
+      if (p.glass) p.glass.material.uniforms.uOpacity.value = l.glassBase * ease
+    }
   }
 }
 

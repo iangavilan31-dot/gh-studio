@@ -137,7 +137,7 @@
         "screenshots: prompt appears at <2m, absent at >2m",
         "channel interrupt on release verified in log"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m2-kindle-flow",
@@ -147,7 +147,7 @@
         "before/during/after screenshot triptych",
         "kindled id appears in state and survives walking away/back"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m2-audio-engine",
@@ -157,7 +157,7 @@
         "engine state log shows buses and levels",
         "no clicks/pops on start/stop (inspect rendered offline buffer peaks)"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m2-score-park",
@@ -167,7 +167,7 @@
         "engine log: layer count follows kindle count",
         "listen-proxy: offline-render RMS per layer bus changes after kindle"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m2-footstep-sfx",
@@ -177,7 +177,7 @@
         "log: surface detection changes with ground material under player",
         "steps fire on stride beats not per-frame"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m2-moon-arc",
@@ -187,7 +187,7 @@
         "two screenshots: t=5 vs t=35 show visibly lower moon",
         "moon visible in fog-heavy shot"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m3-zonelight-blend",
