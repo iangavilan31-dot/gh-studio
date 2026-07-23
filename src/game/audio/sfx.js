@@ -126,6 +126,51 @@ export function uiConfirm() {
   }
 }
 
+// Chicken clucks — bandpass chirp bursts (they carry Zone 2; MASTER_PROMPT 9.3)
+export function cluck(alarmed = false) {
+  if (!audio.started) return
+  const ctx = audio.ctx
+  const t0 = ctx.currentTime
+  const n = alarmed ? rng.int(3, 5) : rng.int(1, 2)
+  for (let i = 0; i < n; i++) {
+    const t = t0 + i * (alarmed ? 0.09 : 0.16) * rng.range(0.9, 1.15)
+    const o = ctx.createOscillator()
+    o.type = 'square'
+    const f0 = (alarmed ? 620 : 480) * rng.range(0.9, 1.1)
+    o.frequency.setValueAtTime(f0, t)
+    o.frequency.exponentialRampToValueAtTime(f0 * 1.6, t + 0.03)
+    o.frequency.exponentialRampToValueAtTime(f0 * 0.8, t + 0.09)
+    const bp = ctx.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.frequency.value = 900
+    bp.Q.value = 2.4
+    const g = ctx.createGain()
+    g.gain.setValueAtTime(0, t)
+    g.gain.linearRampToValueAtTime(alarmed ? 0.12 : 0.07, t + 0.012)
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.11)
+    o.connect(bp); bp.connect(g); g.connect(audio.buses.sfx)
+    o.start(t); o.stop(t + 0.14)
+  }
+}
+
+// Comedic sleeper snore: filtered noise inhale + soft sine whistle out.
+export function snore() {
+  if (!audio.started) return
+  const ctx = audio.ctx
+  const t = ctx.currentTime
+  noiseBurst({ t, dur: 0.5, filterType: 'lowpass', freq: 300, q: 1.5, gain: 0.05 })
+  const o = ctx.createOscillator()
+  o.type = 'sine'
+  o.frequency.setValueAtTime(190, t + 0.55)
+  o.frequency.linearRampToValueAtTime(150, t + 0.95)
+  const g = ctx.createGain()
+  g.gain.setValueAtTime(0, t + 0.55)
+  g.gain.linearRampToValueAtTime(0.035, t + 0.62)
+  g.gain.setTargetAtTime(0, t + 0.85, 0.08)
+  o.connect(g); g.connect(audio.buses.sfx)
+  o.start(t + 0.55); o.stop(t + 1.1)
+}
+
 // bottle pickup "hmm!" — happy little formant blip
 export function brewHum() {
   if (!audio.started) return

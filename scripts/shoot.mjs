@@ -67,6 +67,10 @@ async function main() {
     // let textures/first frames settle; moon mid-descent so Rule 6 holds in shots
     await page.waitForTimeout(1200)
     await page.evaluate(() => window.__MOONREST__.skipTo(24))
+    if (process.argv.includes('--kindled')) {
+      await page.evaluate(() => window.__MOONREST__.lights.forEach((l) => window.__MOONREST__.kindle(l.id)))
+      await page.waitForTimeout(2600)
+    }
 
     const allPoses = await page.evaluate(() => window.__MOONREST__.poses)
     const poses = smoke ? [allPoses[0]] : (askedPoses.length ? askedPoses : allPoses)

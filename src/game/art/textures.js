@@ -7,6 +7,7 @@ import * as THREE from 'three'
 import { worldRNG } from '../core/rng.js'
 
 const cache = new Map()
+export let textureGenMs = 0 // boot-budget evidence (<300ms, Part 7.1)
 
 export function canvasOf(size, fn) {
   const c = document.createElement('canvas')
@@ -72,8 +73,10 @@ export function paint(ctx, size, rng, base, { rough = 1, highlight = 0.12, shado
 
 function make(name, builder) {
   if (cache.has(name)) return cache.get(name)
+  const t0 = performance.now()
   const rng = worldRNG.fork('tex/' + name)
   const t = builder(rng)
+  textureGenMs += performance.now() - t0
   cache.set(name, t)
   return t
 }
@@ -420,6 +423,148 @@ export function glowDot({ name = 'glow', color = '#e8c26a' } = {}) {
       g.addColorStop(1, `rgba(${r},${gg},${b},0)`)
       ctx.fillStyle = g
       ctx.fillRect(0, 0, size, size)
+    })
+    const t = toTexture(c)
+    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
+    return t
+  })
+}
+
+// Warm window: amber gradient + timber crossbars (green variant for Gloomspire).
+export function window_({ name = 'window', warm = '#f0a848', green = false } = {}) {
+  return make(name + (green ? 'g' : ''), (rng) => {
+    const c = canvasOf(32, (ctx) => {
+      const col = green ? '#58e050' : warm
+      const [r, g, b] = hex(col)
+      const grad = ctx.createRadialGradient(16, 20, 2, 16, 16, 20)
+      grad.addColorStop(0, `rgb(${Math.min(255, r + 60)},${Math.min(255, g + 50)},${Math.min(255, b + 30)})`)
+      grad.addColorStop(0.7, rgb([r, g, b]))
+      grad.addColorStop(1, rgb(darken([r, g, b], 0.25)))
+      ctx.fillStyle = grad
+      ctx.fillRect(0, 0, 32, 32)
+      // timber crossbars
+      ctx.fillStyle = '#241a12'
+      ctx.fillRect(14, 0, 3, 32)
+      ctx.fillRect(0, 14, 32, 3)
+      ctx.strokeStyle = '#241a12'
+      ctx.lineWidth = 4
+      ctx.strokeRect(0, 0, 32, 32)
+    })
+    return toTexture(c)
+  })
+}
+export { window_ as window }
+
+// Rain streak: thin vertical bright line, soft ends.
+export function streak({ name = 'streak', color = '#9fb8c8' } = {}) {
+  return make(name, () => {
+    const c = document.createElement('canvas')
+    c.width = 8; c.height = 32
+    const ctx = c.getContext('2d')
+    const [r, g, b] = hex(color)
+    const grad = ctx.createLinearGradient(0, 0, 0, 32)
+    grad.addColorStop(0, `rgba(${r},${g},${b},0)`)
+    grad.addColorStop(0.5, `rgba(${r},${g},${b},0.75)`)
+    grad.addColorStop(1, `rgba(${r},${g},${b},0)`)
+    ctx.fillStyle = grad
+    ctx.fillRect(3, 0, 2, 32)
+    const t = toTexture(c)
+    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
+    return t
+  })
+}
+
+// Splash ring: thin circle outline.
+export function ring({ name = 'ring', color = '#8fa8b8' } = {}) {
+  return make(name, () => {
+    const c = canvasOf(32, (ctx) => {
+      ctx.clearRect(0, 0, 32, 32)
+      ctx.strokeStyle = rgb(hex(color))
+      ctx.globalAlpha = 0.8
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(16, 16, 12, 0, Math.PI * 2)
+      ctx.stroke()
+    })
+    const t = toTexture(c)
+    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
+    return t
+  })
+}
+
+// Little leaf sprite.
+export function leaf({ name = 'leaf', color = '#4a6e58' } = {}) {
+  return make(name, (rng) => {
+    const c = canvasOf(16, (ctx) => {
+      ctx.clearRect(0, 0, 16, 16)
+      ctx.fillStyle = rgb(hex(color))
+      ctx.beginPath()
+      ctx.ellipse(8, 8, 6, 3.4, 0.7, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.strokeStyle = rgb(darken(hex(color), 0.2))
+      ctx.lineWidth = 1
+      ctx.beginPath(); ctx.moveTo(3, 12); ctx.lineTo(13, 4); ctx.stroke()
+    })
+    const t = toTexture(c)
+    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
+    return t
+  })
+}
+
+// Soft smoke puff.
+export function puff({ name = 'puff', color = '#6a7280' } = {}) {
+  return make(name, (rng) => {
+    const c = canvasOf(48, (ctx) => {
+      ctx.clearRect(0, 0, 48, 48)
+      const [r, g, b] = hex(color)
+      for (let i = 0; i < 9; i++) {
+        const x = 24 + rng.range(-9, 9), y = 24 + rng.range(-9, 9)
+        const rad = rng.range(6, 13)
+        const grad = ctx.createRadialGradient(x, y, 1, x, y, rad)
+        grad.addColorStop(0, `rgba(${r},${g},${b},0.5)`)
+        grad.addColorStop(1, `rgba(${r},${g},${b},0)`)
+        ctx.fillStyle = grad
+        ctx.fillRect(0, 0, 48, 48)
+      }
+    })
+    const t = toTexture(c)
+    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
+    return t
+  })
+}
+
+// Star sprite: tiny 4-point twinkle.
+export function star({ name = 'starSprite' } = {}) {
+  return make(name, () => {
+    const c = canvasOf(16, (ctx) => {
+      ctx.clearRect(0, 0, 16, 16)
+      const g = ctx.createRadialGradient(8, 8, 0.5, 8, 8, 7)
+      g.addColorStop(0, 'rgba(240,240,255,1)')
+      g.addColorStop(0.35, 'rgba(200,205,255,0.4)')
+      g.addColorStop(1, 'rgba(200,205,255,0)')
+      ctx.fillStyle = g
+      ctx.fillRect(0, 0, 16, 16)
+      ctx.fillStyle = 'rgba(240,240,255,0.9)'
+      ctx.fillRect(7, 2, 2, 12)
+      ctx.fillRect(2, 7, 12, 2)
+    })
+    const t = toTexture(c)
+    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
+    return t
+  })
+}
+
+// Snore "z" glyph.
+export function zGlyph({ name = 'zzz' } = {}) {
+  return make(name, () => {
+    const c = canvasOf(24, (ctx) => {
+      ctx.clearRect(0, 0, 24, 24)
+      ctx.strokeStyle = '#cfd6e8'
+      ctx.lineWidth = 3
+      ctx.lineCap = 'round'
+      ctx.beginPath()
+      ctx.moveTo(5, 6); ctx.lineTo(18, 6); ctx.lineTo(5, 18); ctx.lineTo(19, 18)
+      ctx.stroke()
     })
     const t = toTexture(c)
     t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
