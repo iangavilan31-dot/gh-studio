@@ -88,7 +88,7 @@
         "renderer.info tri count for avatar <= 2500",
         "fog screenshot at 20m: silhouette still readable"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m1-player-anim",
@@ -98,7 +98,7 @@
         "capture frames of idle/walk/jog show pose differences",
         "no foot-slide: stride phase matches ground speed in capture"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m1-controller",
@@ -108,7 +108,7 @@
         "logged latency measurement < 50ms (input event -> position delta)",
         "30s movement capture reviewed"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m1-camera",
@@ -118,7 +118,7 @@
         "camera never clips through proof-scene wall in capture",
         "FOV widens while jogging (logged)"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m1-park-graybox",
@@ -127,7 +127,7 @@
       "steps": [
         "walk the loop in a capture without falling through or escaping bounds"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m2-interact",

@@ -261,6 +261,37 @@ export function iron({ name = 'iron' } = {}) {
   })
 }
 
+// Wood planks (benches, signs, floors).
+export function plank({ name = 'plank' } = {}) {
+  return make(name, (rng) => {
+    const size = 64
+    const c = canvasOf(size, (ctx) => {
+      const base = hex('#4a3a2c')
+      ctx.fillStyle = rgb(base)
+      ctx.fillRect(0, 0, size, size)
+      const rows = 4
+      for (let r = 0; r < rows; r++) {
+        const y = r * (size / rows)
+        const col = mix(base, hex(rng.pick(['#54402e', '#41332a', '#4e3d2e'])), 0.7)
+        ctx.fillStyle = rgb(col)
+        ctx.fillRect(0, y + 1, size, size / rows - 2)
+        // grain
+        for (let i = 0; i < 7; i++) {
+          ctx.strokeStyle = rgb(rng.chance(0.5) ? darken(col, 0.15) : lighten(col, 0.07))
+          ctx.lineWidth = 1
+          ctx.globalAlpha = 0.6
+          const gy = y + rng.range(2, size / rows - 2)
+          ctx.beginPath(); ctx.moveTo(0, gy); ctx.bezierCurveTo(size * 0.3, gy + rng.range(-1, 1), size * 0.7, gy + rng.range(-1, 1), size, gy); ctx.stroke()
+        }
+        ctx.globalAlpha = 1
+        ctx.fillStyle = rgb(darken(base, 0.35)); ctx.fillRect(0, y, size, 1)
+        ctx.fillStyle = rgb(lighten(base, 0.08)); ctx.fillRect(0, y + 1, size, 1)
+      }
+    })
+    return toTexture(c)
+  })
+}
+
 // Radial warm glow sprite (lamp halos, kindle blooms).
 export function glowDot({ name = 'glow', color = '#e8c26a' } = {}) {
   return make(name + color, () => {

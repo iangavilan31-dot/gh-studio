@@ -46,3 +46,25 @@ docs/build/PLAN.md, then the tail of this file. Never re-derive the plan from me
 - Spawn `node_modules/.bin/vite` directly, not `npm run` (orphaned child on kill → port stuck). `pkill -f "vite preview"` clears strays.
 - Playwright must use executablePath /opt/pw-browsers/chromium + --enable-unsafe-swiftshader for headless WebGL. Headless fps ~11-15 (software GL) — perf gate must run its own math, not trust headless fps as hardware proxy.
 - renderer.info resets per render() — snapshot after scene pass, before post quad.
+
+---
+
+## 2026-07-23 ~23:30 UTC — M1 COMPLETE: The Lamplighter
+
+**Done:**
+- `art/characters.js`: procedural wizard builder — 914 tris (budget 2500), one 128px painted atlas (robe/skin/beard/leather/metal/wood/glass regions, UV-remapped primitives), bone hierarchy root/hips/spine/head/hat/beard/arms/legs, bent-tip hat, apex-down beard, lantern-staff with hook + swinging mini-lantern + own flame sprite/halo (player's light source). 4 co-op tints defined.
+- `systems/anim.js`: distance-driven stride phase (no foot-slide by construction), idle breathe w/ hat counter-bob, walk/jog with brim flap, beard sway, lantern pendulum, overlays sit/lie/sleep/wave/point/channel/giggle.
+- `systems/input.js` + `player.js`: WASD camera-relative (basis re-derived — see Learnings), 120ms ease-out accel, <90ms turn, hop 0.5m, slope>40° slide, C sit/lie, latency instrumentation.
+- `systems/camera.js`: orbit smoothing 0.12s, collider pull-in w/ 0.25s recovery, FOV 55→59 jog ease, auto-frame ≤2°/s.
+- `world/world.js`: Park graybox — displaced terrain w/ heightAt/surfaceAt, dirt loop path, 14 trees + Long Bench + bench lamp + 2 path lanterns + 2 loop benches, circle colliders, bounds r=30.
+- `scripts/feelcheck.mjs` (permanent gate): 12 assertions, ALL PASS — walk 1.6 / jog 3.2 / fov 58.7 / decel / **latency 9.4ms** (<50ms spec) / hop apex 0.32m sampled / sit / lie / bounds 26≤30 / tree pushout d=1.54 / console clean.
+
+**Evidence read:** player.png (silhouette: hat+beard+staff-lantern read), park.png (bench+lamp+path composition, player readable at ~13m in fog), anim/walk-*.png + jog-*.png (stride + robe sway + lantern swing), sit/lie/wave shots, feelcheck output above.
+
+**Next action:** M2 — interact/kindle system, AudioEngine + Park generative layers, moon on arc.
+
+**Learnings:**
+- Camera-relative basis for yaw convention `rig faces +z at yaw 0`: forward=(-sin cy,-cos cy), right=(cos cy,-sin cy). Wave emote must go up-and-OUT (rotation.z≈2.15), not forward — forward poses are body-occluded from the follow cam.
+- Emissive glass boxes read as glowing rectangles — keep lantern glass translucent (opacity<0.5) and let the flame sprite + halo carry the glow.
+- Robe atlas must be painted near-white (#e2dcee) for dark tints (#4B3B6E) to survive the hemi light; character hemi = mix(fog*1.7, skyUp*2.1, wn.y).
+- Actions verified numerically via __MOONREST__.boneDebug() — keep it; cheap bone-state assertions beat squinting at dark pixels.

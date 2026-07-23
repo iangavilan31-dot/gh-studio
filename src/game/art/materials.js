@@ -70,7 +70,7 @@ const FRAG = /* glsl */ `
     vec3 col = tex.rgb * vColor;
     #ifdef USE_HEMI
     // characters: sky color from above, fog color from below (Part 8.2)
-    vec3 hemi = mix(uFogColor * 1.2, uSkyUp * 1.35, vHemi);
+    vec3 hemi = mix(uFogColor * 1.7, uSkyUp * 2.1, vHemi);
     col *= hemi;
     #else
     col *= uAmbient;
