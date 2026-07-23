@@ -215,9 +215,9 @@ export function canopy({ name = 'canopy', base = '#1a2f2b', light = '#3f5f53' } 
   })
 }
 
-// 4-frame flame sprite sheet (horizontal strip).
-export function flameSheet({ name = 'flame' } = {}) {
-  return make(name, (rng) => {
+// 4-frame flame sprite sheet (horizontal strip). cool=true → arcane cyan.
+export function flameSheet({ name = 'flame', cool = false } = {}) {
+  return make(name + (cool ? 'c' : ''), (rng) => {
     const fw = 32, fh = 32
     const c = document.createElement('canvas')
     c.width = fw * 4; c.height = fh
@@ -225,12 +225,19 @@ export function flameSheet({ name = 'flame' } = {}) {
     for (let f = 0; f < 4; f++) {
       const ox = f * fw
       const flick = rng.range(-2, 2)
-      const layers = [
-        { col: '#7a2d10', r: 9 },
-        { col: '#e08a30', r: 7 },
-        { col: '#f0b848', r: 5 },
-        { col: '#ffe9b0', r: 2.6 },
-      ]
+      const layers = cool
+        ? [
+            { col: '#104a4a', r: 9 },
+            { col: '#2e9a9a', r: 7 },
+            { col: '#7fd4d4', r: 5 },
+            { col: '#d8fbfb', r: 2.6 },
+          ]
+        : [
+            { col: '#7a2d10', r: 9 },
+            { col: '#e08a30', r: 7 },
+            { col: '#f0b848', r: 5 },
+            { col: '#ffe9b0', r: 2.6 },
+          ]
       for (const L of layers) {
         ctx.fillStyle = L.col
         ctx.beginPath()
@@ -256,6 +263,115 @@ export function iron({ name = 'iron' } = {}) {
     const size = 64
     const c = canvasOf(size, (ctx) => {
       paint(ctx, size, rng, hex('#23262b'), { rough: 0.8, highlight: 0.18, shadow: 0.2 })
+    })
+    return toTexture(c)
+  })
+}
+
+// Plaster + timber (village half-timbered walls).
+export function plaster({ name = 'plaster' } = {}) {
+  return make(name, (rng) => {
+    const size = 96
+    const c = canvasOf(size, (ctx) => {
+      paint(ctx, size, rng, hex('#c8c0ae'), { rough: 0.7, highlight: 0.06, shadow: 0.08 })
+      // dark timber frame: border + one diagonal
+      ctx.fillStyle = rgb(hex('#241a12'))
+      ctx.fillRect(0, 0, size, 7)
+      ctx.fillRect(0, size - 7, size, 7)
+      ctx.fillRect(0, 0, 7, size)
+      ctx.fillRect(size - 7, 0, 7, size)
+      ctx.save()
+      ctx.translate(size / 2, size / 2)
+      ctx.rotate(rng.chance(0.5) ? 0.78 : -0.78)
+      ctx.fillRect(-size, -3.5, size * 2, 7)
+      ctx.restore()
+      // re-highlight plaster panels lightly
+      splotch(ctx, size, rng, { color: hex('#d8d0bc'), count: 10, rmin: 4, rmax: 12, alpha: 0.25 })
+    })
+    return toTexture(c)
+  })
+}
+
+// Shingle rows (roofs).
+export function shingle({ name = 'shingle', base = '#2e3438', moss = 0 } = {}) {
+  return make(name + moss, (rng) => {
+    const size = 96
+    const b = hex(base)
+    const c = canvasOf(size, (ctx) => {
+      ctx.fillStyle = rgb(darken(b, 0.3))
+      ctx.fillRect(0, 0, size, size)
+      const rows = 6, cols = 6
+      for (let r = 0; r < rows; r++) {
+        const y = r * (size / rows)
+        for (let col = 0; col < cols; col++) {
+          const off = (r % 2) * (size / cols / 2)
+          const x = col * (size / cols) + off - size / cols / 2
+          let sc = mix(b, hex(rng.pick(['#353b40', '#282e33', '#31383a'])), 0.7)
+          if (moss > 0 && rng.chance(moss)) sc = mix(sc, hex('#3c5c44'), 0.6)
+          ctx.fillStyle = rgb(sc)
+          ctx.beginPath()
+          ctx.roundRect(x, y, size / cols - 2, size / rows + 4, [0, 0, 5, 5])
+          ctx.fill()
+          ctx.fillStyle = rgb(lighten(sc, 0.1))
+          ctx.fillRect(x + 1, y + 1, size / cols - 4, 2)
+        }
+      }
+    })
+    return toTexture(c)
+  })
+}
+
+// Stone block (towers, ruins, castle).
+export function stoneBlock({ name = 'stone', base = '#4a4f52' } = {}) {
+  return make(name, (rng) => {
+    const size = 96
+    const b = hex(base)
+    const c = canvasOf(size, (ctx) => {
+      ctx.fillStyle = rgb(darken(b, 0.4))
+      ctx.fillRect(0, 0, size, size)
+      const rows = 4
+      for (let r = 0; r < rows; r++) {
+        const y = r * (size / rows)
+        const cols = 3
+        for (let col = 0; col < cols; col++) {
+          const off = (r % 2) * (size / cols / 2)
+          const x = col * (size / cols) + off - size / cols / 2
+          const sc = mix(b, hex(rng.pick(['#54595c', '#42474a', '#4e5356'])), 0.7)
+          ctx.fillStyle = rgb(sc)
+          ctx.fillRect(x + 1, y + 1, size / cols - 3, size / rows - 3)
+          ctx.fillStyle = rgb(lighten(sc, 0.1))
+          ctx.fillRect(x + 1, y + 1, size / cols - 3, 2)
+          ctx.fillStyle = rgb(darken(sc, 0.18))
+          ctx.fillRect(x + 1, y + size / rows - 4, size / cols - 3, 2)
+        }
+      }
+      splotch(ctx, size, rng, { color: darken(b, 0.3), count: 16, rmin: 3, rmax: 9, alpha: 0.2 })
+    })
+    return toTexture(c)
+  })
+}
+
+// Water: flat deep blue + lighter wavelet rows (scrolled at runtime).
+export function water({ name = 'water', base = '#22375c', light = '#374c70' } = {}) {
+  return make(name, (rng) => {
+    const size = 96
+    const b = hex(base)
+    const c = canvasOf(size, (ctx) => {
+      ctx.fillStyle = rgb(b)
+      ctx.fillRect(0, 0, size, size)
+      for (let i = 0; i < 22; i++) {
+        const y = rng.range(0, size)
+        const w = rng.range(8, 26)
+        ctx.strokeStyle = rgb(mix(b, hex(light), rng.range(0.5, 1)))
+        ctx.globalAlpha = rng.range(0.35, 0.7)
+        ctx.lineWidth = rng.range(1, 2)
+        ctx.beginPath()
+        const x = rng.range(0, size)
+        ctx.moveTo(x, y)
+        ctx.quadraticCurveTo(x + w / 2, y - 1.5, x + w, y)
+        ctx.stroke()
+      }
+      ctx.globalAlpha = 1
     })
     return toTexture(c)
   })

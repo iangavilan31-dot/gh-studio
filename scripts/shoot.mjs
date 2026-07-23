@@ -64,8 +64,9 @@ async function main() {
 
     await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'load' })
     await page.waitForFunction(() => window.__MOONREST__ && window.__MOONREST__.ready, null, { timeout: 15000 })
-    // let textures/first frames settle
+    // let textures/first frames settle; moon mid-descent so Rule 6 holds in shots
     await page.waitForTimeout(1200)
+    await page.evaluate(() => window.__MOONREST__.skipTo(24))
 
     const allPoses = await page.evaluate(() => window.__MOONREST__.poses)
     const poses = smoke ? [allPoses[0]] : (askedPoses.length ? askedPoses : allPoses)
