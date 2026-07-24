@@ -9,7 +9,7 @@ import { retroMaterial, ensureVertexColors } from '../art/materials.js'
 import * as TEX from '../art/textures.js'
 import { worldRNG } from '../core/rng.js'
 import { applyPose, makeAnimState } from './anim.js'
-import { cluck, snore, catPurr } from '../audio/sfx.js'
+import { cluck, snore, catPurr, caw } from '../audio/sfx.js'
 import { sharedMats } from '../art/meshes.js'
 
 function M(geo, mat, tint) {
@@ -359,6 +359,7 @@ export class NPCSystem {
     this.npcs = []
     this.stirred = new Set()
     this.buildAll()
+    this.buildRavens()
   }
 
   buildAll() {
@@ -619,6 +620,23 @@ export class NPCSystem {
       this.stirred.add('beldam')
       this.beldam.stirT = 7
       this.hud.say('...ah. The Lamplighter’s up. Roads are dark, friend. The moon won’t wait... zzz', 6.5)
+    }
+  }
+
+  // AA.5: the first kindle advertises itself — a few beats after control,
+  // Beldam murmurs the pointer at the cold lamp beside his bench. Once per
+  // night; skipped if the player already found it.
+  nightIntro() { this.introT = 7 }
+  updateIntro(dt) {
+    if (!(this.introT > 0)) return
+    this.introT -= dt
+    if (this.introT <= 0 && !this.stirred.has('beldam-intro')) {
+      this.stirred.add('beldam-intro')
+      const lamp = this.world.lights.find((l) => l.id === 'park-bench-lamp')
+      if (lamp && !lamp.kindled) {
+        this.beldam.stirT = 6
+        this.hud.say('...mm. lamp went cold again. right here, beside my bench, friend... zzz', 6)
+      }
     }
   }
 
@@ -884,8 +902,86 @@ export class NPCSystem {
     }
   }
 
+  // Ravens (PRESTIGE O.2): 2–3 world-wide, perched on weathered posts in the
+  // open country. They never fly. They turn their heads to track a passing
+  // player, and each spends its single caw the first time someone comes close.
+  buildRavens() {
+    const mats = sharedMats()
+    const black = retroMaterial({ map: TEX.white(), hemi: true })
+    this.ravens = []
+    for (const [rx, rz] of [[58, -28], [-88, 62], [-126, 88]]) {
+      const perch = new THREE.Group()
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.09, 1.15, 5), mats.plank)
+      ensureVertexColors(post.geometry)
+      post.position.y = 0.57
+      post.rotation.z = this.rng.range(-0.06, 0.06) // none stand straight
+      perch.add(post)
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.07, 0.07), mats.plank)
+      ensureVertexColors(rail.geometry, [0.8, 0.78, 0.75])
+      rail.position.set(0.35, 0.88, 0)
+      rail.rotation.y = this.rng.range(0, 1)
+      perch.add(rail) // a stub of fence the rest of which is long gone
+      const bird = new THREE.Group()
+      const body = new THREE.Mesh(new THREE.ConeGeometry(0.09, 0.3, 6), black)
+      ensureVertexColors(body.geometry, [0.1, 0.1, 0.13])
+      body.rotation.x = -1.25 // tail up, chest forward
+      body.position.y = 0.09
+      bird.add(body)
+      const head = new THREE.Group()
+      const skull = new THREE.Mesh(new THREE.SphereGeometry(0.055, 6, 5), black)
+      ensureVertexColors(skull.geometry, [0.12, 0.12, 0.15])
+      head.add(skull)
+      const beak = new THREE.Mesh(new THREE.ConeGeometry(0.02, 0.07, 5), black)
+      ensureVertexColors(beak.geometry, [0.2, 0.19, 0.17])
+      beak.rotation.x = Math.PI / 2
+      beak.position.z = 0.07
+      head.add(beak)
+      head.position.set(0, 0.19, 0.08)
+      bird.add(head)
+      bird.position.y = 1.15
+      perch.add(bird)
+      const gy = this.world.heightAt(rx, rz)
+      perch.position.set(rx, gy, rz)
+      this.scene.add(perch)
+      this.ravens.push({ perch, head, x: rx, z: rz, cawed: false, idleYaw: this.rng.range(-0.5, 0.5), idleT: this.rng.range(2, 8) })
+    }
+    this.npcs.push({ kind: 'ravens', update: (dt, t, player) => this.updateRavens(dt, t, player) })
+  }
+
+  updateRavens(dt, t, player) {
+    for (const r of this.ravens) {
+      const d = Math.hypot(player.pos.x - r.x, player.pos.z - r.z)
+      if (d < 14) {
+        // the head follows the walker — nothing else moves
+        const target = Math.atan2(player.pos.x - r.x, player.pos.z - r.z) - r.perch.rotation.y
+        r.head.rotation.y += (target - r.head.rotation.y) * Math.min(1, dt * 3.5)
+        if (d < 6 && !r.cawed) { r.cawed = true; caw() }
+      } else {
+        r.idleT -= dt
+        if (r.idleT <= 0) { r.idleT = this.rng.range(4, 11); r.idleYaw = this.rng.range(-0.7, 0.7) }
+        r.head.rotation.y += (r.idleYaw - r.head.rotation.y) * Math.min(1, dt * 0.8)
+      }
+    }
+  }
+
+  // AA.5 wander-test surface: where the sleepers (and their small comedies) live
+  get anchors() {
+    const a = []
+    const push = (obj) => {
+      const p = obj?.rig?.group?.position
+      if (p) a.push({ x: p.x, z: p.z })
+    }
+    push(this.beldam); push(this.nib); push(this.mote); push(this.curator)
+    push(this.king); push(this.gargoyle)
+    if (this.cat?.group) a.push({ x: this.cat.group.position.x, z: this.cat.group.position.z })
+    for (const ch of this.chickens ?? []) if (ch.rig?.group) a.push({ x: ch.rig.group.position.x, z: ch.rig.group.position.z })
+    for (const r of this.ravens ?? []) a.push({ x: r.x, z: r.z })
+    return a
+  }
+
   update(dt, t, player, camera) {
     for (const n of this.npcs) n.update(dt, t, player, camera)
+    this.updateIntro(dt)
     // Nib's sleep-talk pacing
     if (this.nibTalk > 0) {
       this.nibTalkT = (this.nibTalkT ?? 0) + dt

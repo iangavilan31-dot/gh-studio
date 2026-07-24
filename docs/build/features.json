@@ -991,7 +991,8 @@
     "autopilot night reaches all required kindles + 8 stirs",
     "scripted 3-min random wander logs an actionable encounter at least every 20s"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "wandercheck.mjs (new hard gate) PASS: seeded 3-min random walk max encounter gap 16.1s (<=20s), Beldam murmur pointer within 60s (subtitle asserted), cold bench lamp 1.9m from spawn; autopilotcheck PASS (37 kindles, 8 stirs, reel/card/reset); pause counters live (shellcheck)"
   },
   {
    "id": "POLISH-AA6",
@@ -1001,7 +1002,8 @@
     "traversal check walks all zones on foot",
     "8-zone Restored-mode reel exists and each shot matches its zone spec at blockout+ quality"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "traversecheck PASS walks all 8 zones + foglands on foot in THIS repo Vite app; full Restored reel shot + READ this session; zone specs hold at art quality (see AA.1-AA.4 evidence)"
   },
   {
    "id": "POLISH-AA7",

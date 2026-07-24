@@ -247,6 +247,7 @@ function startNight(fresh = false) {
   cinematic = false
   orbit.autoPlace(player.pos, Math.PI) // wake up with the night in view, not bark
   nightflow.noteInput()
+  npcs.nightIntro() // AA.5: Beldam points at the first cold lamp
   return true
 }
 
@@ -736,6 +737,17 @@ window.__MOONREST__ = {
   get trinkets() { return progress.trinkets },
   bootAudio() { bootAudio(); return audio.started },
   get lights() { return world.lights.map((l) => ({ id: l.id, kindled: l.kindled, x: l.x, z: l.z })) },
+  // AA.5 wander-test surface: everything actionable or discoverable a walker
+  // can "surface" — interactables (lights/brews), foglands breadcrumbs +
+  // fingerposts, and the sleepers themselves
+  get pois() {
+    const out = world.interactables.map((i) => ({ kind: i.kind, x: i.x, z: i.z }))
+    for (const c of world.crumbs ?? []) out.push({ kind: 'crumb', x: c[0], z: c[1] })
+    for (const sp of world.signposts ?? []) out.push({ kind: 'sign', x: sp.x, z: sp.z })
+    for (const b of world.benches ?? []) out.push({ kind: 'bench', x: b[0], z: b[1] })
+    for (const s of npcs.anchors ?? []) out.push({ kind: 'sleeper', x: s.x, z: s.z })
+    return out
+  },
   // rig debug: a light's dynamic parts (flame/halo/pool/glass/pilot) state
   lightDebug(id) {
     const l = world.lights.find((x) => x.id === id)

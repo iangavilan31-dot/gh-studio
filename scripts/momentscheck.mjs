@@ -25,6 +25,13 @@ const browser = await chromium.launch({
   args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-angle=swiftshader'],
 })
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+  // Behavior gate: run the light 480x270 retro pipeline — headless software
+  // raster can't do native-res Restored at playable frame times, and this
+  // gate tests mechanics, not the renderer (Restored is covered by the
+  // shoot/hue/shell/perf gates).
+  await page.addInitScript(() => {
+    try { localStorage.setItem('moonrest-settings-v1', JSON.stringify({ settingsV: 2, memoryMode: 'n64', resScale: 1 })) } catch (e) {}
+  })
 const issues = []
 page.on('console', (m) => { if (m.type() === 'error') issues.push(m.text()) })
 page.on('pageerror', (e) => issues.push(e.message))

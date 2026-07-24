@@ -27,7 +27,13 @@ export class Input {
       this.pressTimes.set(e.code, performance.now())
     })
     window.addEventListener('keyup', (e) => this.keys.delete(e.code))
-    window.addEventListener('blur', () => this.keys.clear())
+    // stuck-key guard on alt-tab — but only when focus is REALLY gone: some
+    // browser activity (compositor screenshots, devtools) fires a momentary
+    // blur with focus back instantly, and dropping a held channel key for
+    // that reads as an input glitch
+    window.addEventListener('blur', () => {
+      setTimeout(() => { if (!document.hasFocus()) this.keys.clear() }, 150)
+    })
 
     canvas.addEventListener('click', () => {
       if (!this.pointerLocked) {
