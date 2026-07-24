@@ -96,7 +96,7 @@ try {
   // — Memory dials —
   await page.evaluate(() => window.__MOONREST__.setMemoryMode('ps1'))
   d = await page.evaluate(() => window.__MOONREST__.shellDebug())
-  check('PS1 dial: vertex snap + affine', d.memory.snap === 1 && d.memory.affine === 0.8 && d.memory.softBlur === 0)
+  check('PS1 dial: vertex snap + affine', d.memory.snap === 1 && d.memory.affine === 0.35 && d.memory.softBlur === 0)
   await page.evaluate(() => window.__MOONREST__.setMemoryMode('vhs'))
   d = await page.evaluate(() => window.__MOONREST__.shellDebug())
   check('VHS dial: scanlines + chroma + wobble', d.memory.scanline > 0 && d.memory.chroma > 0 && d.memory.wobble > 0)

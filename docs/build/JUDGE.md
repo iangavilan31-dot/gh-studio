@@ -67,3 +67,76 @@ Shot verdicts (all REVIEWED this pass):
 Defect candidates carried to M9: chandelier ring readability; moon streak
 strength; Mote/gargoyle only visible up close (no dedicated poses yet); draw-call
 budget still unmerged (D6).
+
+---
+
+## M9 — JUDGE PASS 1 (2026-07-24 ~11:00 UTC)
+
+### Step 1 — hard gates (all green, runs within this pass window)
+build ✓ · init.sh smoke ✓ · feel 12/12 · kindle 13/13 · traverse 11/11 ·
+hue 8/8 · autopilot 14/14 · perf (97 calls / 80.4k tris / 214KB gz) ·
+coop 17/17 · moments 12/12 · shell 15/15.
+
+### Step 2 — full reel regenerated + READ
+All poses --kindled + 4 memory modes (mode-*.png) + coop pair + title/pause/vhs.
+Every PNG personally read this pass.
+
+### Step 3 — scores (1–10, evidence-grounded)
+- (a) palette fidelity: **8.5** — hue gate 8/8; park/village/ruins/gloomspire/hall/mosswood
+  match 2.1 by eye; rooftops foreground desaturates to near-black slabs, isle very dim.
+- (b) silhouette/composition: **7** — village S-curve, mosswood trunk vignette, hall
+  nave STRONG; foglands pose is a lamp close-up (corridor unreadable), rooftops
+  foreground is empty slab, isle keep too faint to landmark.
+- (c) atmosphere: **8** — every zone has live particles; rooftops shot shows sparse
+  stars for the "densest starfield" zone; isle sea sparkle out of frame.
+- (d) character feel: **8.5** — feel gates green (latency logged, no foot-slide,
+  hop/turn easing); action overlays read; giggle/wink charm present.
+- (e) audio: **8** — kindle 13/13 (layer adds + RMS assert); zone keys/scores; bell,
+  music box; loop-boundary seamlessness only indirectly asserted.
+- (f) co-op: **8.5** — coop 17/17 (sync, moments, brazier law, late join, fades);
+  rune plates read in both coop shots; interp visually smooth in stills.
+- (g) performance: **9** — 97 ≤120 calls, 80.4k ≤150k tris, 214KB ≤1.2MB gz,
+  boot ~370ms ≤3s; p95 software-GL baseline documented.
+- (h) UX shell: **8.5** — shell 15/15; title/pause/settings/credits/photo complete;
+  a11y present (subtitles default-on, no-strobe, hold-toggle, remap, gamepad).
+- (i) stability: **9** — all gates console-clean; error boundary in-fiction;
+  state files survived two worker restarts mid-build.
+- (j) reference-likeness: **7.5** — park/village/gloomspire/hall genuinely read like
+  the reference stills; rooftops/isle don't yet; PS1 dial currently breaks the look.
+
+**Average 8.25 — below exit (need ≥8.5, none <7 ×2). Continue.**
+
+### Step 5 — defects (builder pass), ranked by vibe-damage
+1. **PS1 Memory dial affine warp destroys near geometry** (mode-ps1.png: street
+   melts into stretched triangles). Affine 0.8 + half-res snap far too strong.
+2. **Foglands pose shoots the inside of a lantern** (foglands.png) — the
+   breadcrumb corridor, the whole point of the Foglands, is not in frame.
+3. **Rooftops shot**: pitch-black AO pools (Rule 1: darkness must stay saturated
+   cool), sparse stars in the densest-star zone, Nib/gnome not in frame.
+4. **Isle shot too dim/empty**: keep landmark faint, sea/foam/sparkle out of
+   frame, kindled keep brazier invisible — composition fails Rule 9 landmark pull.
+5. **Mosswood arch top reads as a broken "C"** from the approach (torus arc
+   opens sideways instead of spanning the pillars).
+6. Village plaster walls read bright white against the #111b19 dominant field
+   (they wash the indigo mood at night; should sit darker/cooler).
+7. Carried: hall chandelier rings faint; moon streak weak; Mote/gargoyle lack
+   dedicated poses (they exist only in ambient framing).
+
+Fresh-eyes findings (step 4) to be merged below when both reviewers return.
+
+### Pass 1 fixes applied (builder defects 1–7) — all re-verified
+1. PS1 affine 0.8 → 0.35 + full-RT snap grid: street no longer melts
+   (mode-ps1.png re-read: intact cobbles + era jitter). shellcheck updated + green.
+2. Foglands pose reframed to the first breadcrumb lamp: warm pool + fog wall +
+   faint spire silhouette (foglands.png re-read — the corridor statement reads).
+3. Rooftops pose reframed onto the roof strip looking west: hook lantern focal +
+   moths + chimney smoke + 50% cobalt sky (rooftops.png re-read). Stars sized
+   0.7–2.05 (was 0.55–1.7).
+4. Isle pose moved onto the causeway: keep + crenellations + kindled brazier glow
+   + cove beacon + palm + moon (isle.png re-read; landmark pull restored).
+5. Arch top: removed the sideways Z-rotation — the arc now SPANS the pillars
+   (mosswood.png re-read: proper gate, STRONG).
+6. Village plaster dimmed/cooled via vertex tint [0.72,0.75,0.88].
+7. Hall chandelier halos 3.4→4.3 / 0.6→0.78 (hall.png re-read: rings read);
+   moon streak 0.4→0.62 opacity, 9→11 wide.
+Re-verified: hue 8/8, shell 15/15, perf 96 calls, feel 12/12 — all green.

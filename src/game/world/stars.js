@@ -53,7 +53,7 @@ export class Stars {
       pos[i * 3] = Math.cos(a) * Math.cos(e) * r
       pos[i * 3 + 1] = Math.sin(e) * r
       pos[i * 3 + 2] = Math.sin(a) * Math.cos(e) * r
-      size[i] = rng.range(0.55, 1.7)
+      size[i] = rng.range(0.7, 2.05)
       seed[i] = rng.next()
     }
     geo.setAttribute('iPos', new THREE.InstancedBufferAttribute(pos, 3))

@@ -498,7 +498,8 @@ export class World {
       const baseH = streetH(hd.x)
       const wallH = 4.6
       const body = new THREE.Mesh(new THREE.BoxGeometry(hd.w, wallH, hd.d), plasterMat)
-      ensureVertexColors(body.geometry)
+      // plaster sits dim + moon-cool at night so the indigo field stays dominant
+      ensureVertexColors(body.geometry, [0.72, 0.75, 0.88])
       body.position.set(hd.x, baseH + wallH / 2, z)
       this.scene.add(body)
       // roof slab (walkable height matches layout roofH = streetH+5.6)
@@ -777,7 +778,9 @@ export class World {
     this.registerLight('rooftops-telescope-brazier', 'rooftops', scopeBrazier, 134.5, streetZ(134.5) - 9, roofH(134.5))
 
     // low over the moss at Nib, cobalt sky filling the frame (Part 3.2.3)
-    this.poses.rooftops = { pos: [121.6, roofH(121.6) + 0.9, streetZ(121.6) - 11.4], look: [117.6, roofH(117.6) + 0.7, streetZ(117.6) - 8.4] }
+    // on the roof itself, looking west along the strip: hook lantern + Nib's
+    // pine mid-frame, the village spire and open cobalt sky beyond
+    this.poses.rooftops = { pos: [122.8, roofH(122.8) + 0.7, streetZ(122.8) - 9.6], look: [117.8, roofH(117.8) + 1.0, streetZ(117.8) - 10.2] }
     // close on Nib for the sleeper evidence shots
     this.poses.nib = { pos: [119.6, roofH(119.6) + 0.55, streetZ(119.6) - 11.1], look: [118.2, roofH(118.2) + 0.2, streetZ(118.2) - 10.0] }
   }
@@ -1214,9 +1217,9 @@ export class World {
       ring.rotation.x = Math.PI / 2
       ring.position.set(cx, y0 + 5.6, z)
       this.scene.add(ring)
-      const haloMat = retroMaterial({ map: TEX.glowDot({ color: '#ffb45e' }), transparent: true, depthWrite: false, opacity: 0.6 })
+      const haloMat = retroMaterial({ map: TEX.glowDot({ color: '#ffb45e' }), transparent: true, depthWrite: false, opacity: 0.78 })
       haloMat.blending = THREE.AdditiveBlending
-      const halo = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), haloMat)
+      const halo = new THREE.Mesh(new THREE.PlaneGeometry(4.3, 4.3), haloMat)
       ensureVertexColors(halo.geometry)
       halo.position.set(cx, y0 + 5.7, z)
       this.scene.add(halo)
@@ -1259,8 +1262,9 @@ export class World {
     }
     const archTop = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.7, 6, 10, Math.PI), mossStone)
     ensureVertexColors(archTop.geometry)
+    // half-torus in ZY after the Y-rotation: the arc SPANS the two pillars
+    // (an extra Z-rotation used to fold it sideways into a broken "C")
     archTop.rotation.y = Math.PI / 2
-    archTop.rotation.z = Math.PI / 2
     archTop.position.set(ax, heightAt(ax, az) + 6.2, az)
     this.scene.add(archTop)
     // 2 hanging arch lanterns + 2 trail lanterns (cold lights)
@@ -1372,15 +1376,16 @@ export class World {
     this.waterMats.push({ tex: foamTex, sx: 0.01, sy: 0 })
 
     // moon streak on the sea: long additive strip aimed at the moon azimuth
-    const streakMat = retroMaterial({ map: TEX.glowDot({ color: '#c8d4f0' }), transparent: true, depthWrite: false, opacity: 0.4, noFog: true })
+    const streakMat = retroMaterial({ map: TEX.glowDot({ color: '#c8d4f0' }), transparent: true, depthWrite: false, opacity: 0.62, noFog: true })
     streakMat.blending = THREE.AdditiveBlending
-    this.moonStreak = new THREE.Mesh(new THREE.PlaneGeometry(9, 95), streakMat)
+    this.moonStreak = new THREE.Mesh(new THREE.PlaneGeometry(11, 95), streakMat)
     ensureVertexColors(this.moonStreak.geometry)
     this.moonStreak.rotation.x = -Math.PI / 2
     this.moonStreak.position.set(0, WATER_Y + 0.05, -95)
     this.scene.add(this.moonStreak)
 
-    this.poses.isle = { pos: [13, 1.7, -101], look: [-7, kBase + 6, -155] }
+    // from the causeway: lantern chain leads to the keep, sea + streak at left
+    this.poses.isle = { pos: [8.5, 2.6, -121], look: [-2.5, kBase + 5.5, -152] }
     // sea view for the water/moon-streak evidence (m5-water)
     this.poses.sea = { pos: [4, 2.2, -50], look: [-30, 10, -130] }
   }
@@ -1479,7 +1484,9 @@ export class World {
       if (!this.fogProps) this.fogProps = []
       this.fogProps.push({ g: lamp.group, x: cx, z: cz })
     }
-    this.poses.foglands = { pos: [30, heightAt(30, 2) + 1.4, 2.5], look: [52, heightAt(52, 0) + 1, 0] }
+    // the corridor itself: stand at the first breadcrumb, the next one is
+    // already half-swallowed by the fog wall
+    this.poses.foglands = { pos: [28.5, heightAt(28.5, 2.8) + 1.3, 2.8], look: [46, heightAt(46, -1) + 0.6, -1.2] }
   }
 
   // world rules applied after player movement (mosswood loop-through)
