@@ -879,7 +879,7 @@ grind, arch bell, earthquake-free — nothing threatening ever.
 - **M5 — Art pass II (Ruins, Gloomspire, Hall, Mosswood, Isle)** incl. Hall
   vertex-light showcase, water, nebula. *Accept: same hue-match protocol; the
   full 8-shot reel reviewed side-by-side in JUDGE.md.*
-- **M6 — Systems complete.** All cold lights, sleeper stirs, trinkets, brews,
+- **M6 — Systems complete.** All cold lights, sleep­er stirs, trinkets, brews,
   ghost cat, gargoyle, Night's End + attract mode, save/persist. *Accept:
   scripted full-night playthrough via debug autopilot (walk waypoints + kindle
   all) completes and logs every beat; stats card screenshot.*
