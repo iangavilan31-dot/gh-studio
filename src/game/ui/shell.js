@@ -50,11 +50,15 @@ export class Shell {
     this.blocking = false // player input gated while a screen is up
 
     // in-fiction error boundary (Part 10) — never alert(). Benign browser-API
-    // rejections (pointer-lock cooldown, autoplay policy) are not crashes.
-    window.addEventListener('error', () => this.showError())
+    // denials (pointer lock, gamepad, fullscreen, storage — common in sandboxed
+    // embeds like artifact iframes) are the environment saying no, not a crash.
+    const benign = /pointer ?lock|gamepad|permissions? polic|SecurityError|NotAllowedError|user gesture|fullscreen|localStorage|storage|play\(\)/i
+    window.addEventListener('error', (e) => {
+      if (benign.test(String(e?.message ?? ''))) return
+      this.showError()
+    })
     window.addEventListener('unhandledrejection', (e) => {
-      const msg = String(e?.reason?.message ?? e?.reason ?? '')
-      if (/pointer ?lock|NotAllowedError|user gesture|play\(\)/i.test(msg)) return
+      if (benign.test(String(e?.reason?.message ?? e?.reason ?? ''))) return
       this.showError()
     })
 
