@@ -431,7 +431,10 @@ export class NPCSystem {
 
     // — The Pale King asleep on his throne + ghost cat on his lap (Hall) —
     const king = buildPaleKing()
-    king.group.position.set(-110, 2.3, 168.2)
+    // scaled up and set right against the throne front so he reads as seated
+    // royalty from down the carpet, not a wisp at the tower's foot
+    king.group.position.set(-110, 2.3, 167.55) // throne front face sits at z=168
+    king.group.scale.setScalar(1.3)
     king.group.rotation.y = Math.PI // faces down the hall (−z)
     this.scene.add(king.group)
     this.king = king
