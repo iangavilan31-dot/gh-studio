@@ -17,11 +17,14 @@ export function canvasOf(size, fn) {
   return c
 }
 
-export function toTexture(canvas, { repeat = 1 } = {}) {
+export function toTexture(canvas, { repeat = 1, mips = true } = {}) {
   const t = new THREE.CanvasTexture(canvas)
   t.magFilter = THREE.NearestFilter
-  t.minFilter = THREE.NearestFilter
-  t.generateMipmaps = false
+  // Part Q.1: mipmaps (nearest-within-level) kill distance shimmer at native
+  // res; the shared material's uLodBias (-0.5 in Restored) keeps edges crisp.
+  // Alpha-tested card textures opt out (mips erode cutout coverage).
+  t.minFilter = mips ? THREE.NearestMipmapLinearFilter : THREE.NearestFilter
+  t.generateMipmaps = mips
   t.wrapS = t.wrapT = THREE.RepeatWrapping
   t.colorSpace = THREE.NoColorSpace
   if (repeat !== 1) t.repeat.set(repeat, repeat)
@@ -212,7 +215,7 @@ export function canopy({ name = 'canopy', base = '#1a2f2b', light = '#3f5f53' } 
       }
       ctx.globalAlpha = 1
     })
-    const t = toTexture(c)
+    const t = toTexture(c, { mips: false }) // alpha-tested card: mips erode cutout
     t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
     return t
   })
@@ -254,7 +257,8 @@ export function flameSheet({ name = 'flame', cool = false } = {}) {
         ctx.fill()
       }
     }
-    const t = toTexture(c)
+    // NPOT strip + alpha-tested sprite frames: no mips (frame bleed + cutout erosion)
+    const t = toTexture(c, { mips: false })
     t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
     return t
   })

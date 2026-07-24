@@ -18,6 +18,9 @@ export const globalUniforms = {
   uSnapEnable: { value: 0 },                        // 0/1 vertex snap
   uSnapRes: { value: new THREE.Vector2(240, 135) }, // snap grid (half internal res)
   uAffineMix: { value: 0 },                         // 0..1 affine-interpolation blend
+  // Restored mode (Part Q.1): -0.5 mip LOD bias keeps texel edges crisp at
+  // distance without shimmer; 0 in the retro dials
+  uLodBias: { value: 0 },
 }
 
 const VERT = /* glsl */ `
@@ -79,8 +82,9 @@ const FRAG = /* glsl */ `
   uniform vec3 uEmissive;
   uniform float uAlphaTest;
   uniform float uOpacity;
+  uniform float uLodBias;
   void main() {
-    vec4 tex = texture2D(uMap, vUv);
+    vec4 tex = texture2D(uMap, vUv, uLodBias);
     if (tex.a < uAlphaTest) discard;
     vec3 col = tex.rgb * vColor;
     #ifdef USE_HEMI
@@ -139,6 +143,7 @@ export function retroMaterial({
       uSnapEnable: globalUniforms.uSnapEnable,
       uSnapRes: globalUniforms.uSnapRes,
       uAffineMix: globalUniforms.uAffineMix,
+      uLodBias: globalUniforms.uLodBias,
     },
   })
   return mat

@@ -104,9 +104,10 @@ try {
   await page.waitForTimeout(500)
   await page.locator('#game').screenshot({ path: resolve(shotsDir, 'vhs.png') })
   console.log('saved vhs.png')
-  await page.evaluate(() => window.__MOONREST__.setMemoryMode('clean'))
+  await page.evaluate(() => window.__MOONREST__.setMemoryMode('restored'))
   d = await page.evaluate(() => window.__MOONREST__.shellDebug())
-  check('Clean dial: 2× RT, dither off', d.memory.rtW >= 960 && d.memory.quantize === 0)
+  // Part Q.1: native-res RT (viewport-sized, not 480-based), film-grain dither ≤0.15, sharpen on
+  check('Restored dial: native RT + grain dither + sharpen', d.memory.rtW >= 1280 && d.memory.dither <= 0.15 && d.memory.sharpen > 0, JSON.stringify(d.memory))
 
   // — settings persist across reload —
   await page.evaluate(() => window.__MOONREST__.setMemoryMode('vhs'))
@@ -114,7 +115,7 @@ try {
   await page.waitForFunction(() => window.__MOONREST__?.ready)
   d = await page.evaluate(() => window.__MOONREST__.shellDebug())
   check('settings persist (localStorage)', d.settings.memoryMode === 'vhs' && d.memory.scanline > 0)
-  await page.evaluate(() => window.__MOONREST__.setMemoryMode('n64'))
+  await page.evaluate(() => window.__MOONREST__.setMemoryMode('restored'))
 
   // — photo mode —
   await page.evaluate(() => window.__MOONREST__.startNight())
