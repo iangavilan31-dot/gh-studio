@@ -396,6 +396,11 @@ function teleport(poseName) {
   // poses may pin the night minute (AA.1): each zone's shot catches the moon
   // where its authored framing honestly crosses the descending arc
   if (p.minute != null) night.skipTo(p.minute)
+  // poses may stage the player (AA.2 lantern-pool evidence)
+  if (p.player) {
+    player.pos.set(p.player[0], world.heightAt(p.player[0], p.player[1]), p.player[1])
+    player.yaw = player.targetYaw = p.player[2] ?? 0
+  }
   // atmosphere follows the viewed zone, not the parked player
   // (XZ from the look target; Y from the camera, so elevation-gated zones
   //  like the rooftops only claim shots taken from up there)
@@ -423,6 +428,23 @@ function tick() {
   globalUniforms.uTime.value = elapsed
   frameTimes.push(dt)
   if (frameTimes.length > 90) frameTimes.shift()
+
+  // carried lantern pools (AA.2): local + remote staff lanterns feed the
+  // shared shader's warm falloff; gentle flicker keeps the pool alive
+  {
+    const lp = globalUniforms.uLanternPos.value
+    const ls = globalUniforms.uLanternStr.value
+    let li = 0
+    const feed = (rig, seed) => {
+      if (li >= 4 || !rig?.bones?.staffLantern) return
+      rig.bones.staffLantern.getWorldPosition(lp[li])
+      ls[li] = 0.82 + 0.12 * Math.sin(elapsed * 8.3 + seed) + 0.06 * Math.sin(elapsed * 13.1 + seed * 2)
+      li++
+    }
+    feed(player.rig, 0)
+    for (const [, rp] of net.remotes) { if (!rp.fading) feed(rp.rig, 3.7 * li) }
+    for (; li < 4; li++) { lp[li].set(0, -999, 0); ls[li] = 0 }
+  }
 
   input.pollGamepad()
   const inputActive = input.keys.size > 0 || input.justPressed.size > 0
