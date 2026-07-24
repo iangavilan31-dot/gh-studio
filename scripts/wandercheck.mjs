@@ -25,6 +25,7 @@ const browser = await chromium.launch({
   args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-angle=swiftshader'],
 })
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } })
+await page.addInitScript(() => { window.__NIGHT_SEED__ = 42 }) // D.1: rigs run a pinned night signature
 // MASTER 0.4 console hygiene: any console error/warning is a defect
 const issues = []
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') issues.push(m.text()) })

@@ -395,6 +395,8 @@ function applySettings(s) {
   interact.holdToToggle = s.holdToToggle
   hud.subtitlesOn = s.subtitles
   orbit.autoFrame = s.cameraAssist !== false // Part 4.3: assist has an off switch
+  orbit.firstPerson = s.viewMode === 'first' // Q.3: wizard's eyes
+  orbit.intimacy = s.camIntimacy ?? 1
   window.__REDUCED_MOTION__ = s.reducedMotion
 }
 
@@ -480,6 +482,20 @@ canvas.addEventListener('wheel', (e) => {
 const zoneKindles = (zone) => world.lights.filter((l) => l.zone === zone && l.kindled).length
 
 // kindle consequences: chime in zone key, ember burst, next music layer (6.1)
+// D.1 the Uncertain Road: each real-world night deals gentle variations —
+// cosmetic scalars only (fog reach, wind temper, moon warmth), deterministic
+// per seed, NEVER gating progression. Rigs may pin __NIGHT_SEED__.
+const nightSeedVal = window.__NIGHT_SEED__ ?? Math.floor(Date.now() / 86400000)
+const sigRng = worldRNG.fork('night/' + nightSeedVal)
+const nightSignature = {
+  seed: nightSeedVal,
+  fogDrift: +(0.94 + sigRng.next() * 0.12).toFixed(3),   // ±6% fog reach
+  gustiness: +(0.7 + sigRng.next() * 0.6).toFixed(2),    // wind temper
+  moonWarmth: +(0.94 + sigRng.next() * 0.14).toFixed(3), // moon face tint
+}
+night.signatureTint = nightSignature.moonWarmth
+night.setPhase(night.phaseAge) // re-apply: the face tint now carries the signature
+
 let kindleStreak = 0, lastKindleT = -999
 world.onKindle = (light, remote) => {
   if (audio.started && !score.playing) score.start() // F.3: the first flame wakes the music
@@ -625,6 +641,8 @@ function tick() {
     player.update(NULL_INPUT, orbit.smoothYaw, dt, elapsed)
   } else if (!cinematic && !shell.blocking) {
     const jogging = input.down('ShiftLeft', 'ShiftRight') && player.anim.speed > 2
+    // Q.3: V flips between the wizard's back and the wizard's eyes (persisted)
+    if (input.pressed('KeyV')) { shell.s.viewMode = shell.s.viewMode === 'first' ? 'third' : 'first'; shell.save(); applySettings(shell.s) }
     player.update(input, orbit.smoothYaw, dt, elapsed)
     handleEmoteWheel() // consumes the look while open, so the camera holds still
     orbit.update(player.pos, player.yaw, jogging, wheelOpen ? [0, 0] : input.consumeLook(), dt, world.interactables)
@@ -646,6 +664,8 @@ function tick() {
     if (shell.blocking && !cinematic) hud.hidePrompt()
     player.update(NULL_INPUT, orbit.smoothYaw, dt, elapsed)
   }
+  // Q.3: in the wizard's eyes the wizard is not in front of them
+  rig.group.visible = !(orbit.firstPerson && mode === 'game' && !cinematic && !photo.on)
   // staff-lantern glow pulses with footsteps (4.1), settling between strides
   if (rig.staffHalo) {
     staffPulse = Math.max(0, staffPulse - dt * 2.2)
@@ -654,14 +674,14 @@ function tick() {
   nightflow.update(dt, inputActive)
   // clock-driven atmosphere: min-30 warmth ease + lunar-phase fog tightening
   zoneLight.warmBias = (zoneLight.warmBias ?? 0) + ((night.warmBias ?? 0) - (zoneLight.warmBias ?? 0)) * (1 - Math.exp(-dt / 8))
-  zoneLight.fogTight = night.fogTight
+  zoneLight.fogTight = night.fogTight * nightSignature.fogDrift // moon phase × D.1 signature
   if (!cinematic && mode !== 'title' && !photo.on) {
     world.applyWorldRules(player)
     zoneLight.update(player.pos.x, player.pos.z, dt, player.pos.y)
     // C.4: a mosswood/foglands gust tugs the hat for a few seconds at a time
     const gustEnv = Math.max(0, Math.sin(elapsed * 0.23) - 0.82) / 0.18
     player.anim.windGust = (zoneLight.currentZoneId === 'mosswood' || zoneLight.currentZoneId === 'foglands')
-      ? gustEnv * (0.55 + 0.45 * Math.sin(elapsed * 1.7)) : 0
+      ? gustEnv * (0.55 + 0.45 * Math.sin(elapsed * 1.7)) * nightSignature.gustiness : 0
     // F.2: positional landmark cues track the listener every frame
     if (audio.started) cues.update(player.pos.x, player.pos.z, orbit.smoothYaw + (orbit.revealYawOff ?? 0))
     // music + ambience beds + room acoustics follow the atmosphere's zone
@@ -770,6 +790,7 @@ function analyzePixels(buf) {
 window.__MOONREST__ = {
   ready: true,
   seed: worldRNG.seed,
+  nightSignature, // D.1: tonight's dealt variations (cosmetic, never gating)
   poses: Object.keys(POSES),
   teleport,
   teleportPlayer(x, z, yaw = 0) {
@@ -994,6 +1015,8 @@ window.__MOONREST__ = {
       fps: Math.round(fps),
       fov: +camera.fov.toFixed(1),
       camDist: +orbit.curDist.toFixed(2), // C.2 doorway-snap evidence
+      viewMode: orbit.firstPerson ? 'first' : 'third', // Q.3
+      rigVisible: rig.group.visible,
 
       brews: world.brewCount,
       trinketCount: progress.trinkets.length,

@@ -21,6 +21,7 @@ const browser = await chromium.launch({
   args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-angle=swiftshader'],
 })
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } })
+await page.addInitScript(() => { window.__NIGHT_SEED__ = 42 }) // D.1: rigs run a pinned night signature
 await page.addInitScript(() => {
   try { localStorage.setItem('moonrest-settings-v1', JSON.stringify({ settingsV: 2, memoryMode: 'n64', resScale: 1 })) } catch (e) {}
 })

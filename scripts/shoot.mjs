@@ -56,6 +56,7 @@ async function main() {
   })
   try {
     const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } })
+await page.addInitScript(() => { window.__NIGHT_SEED__ = 42 }) // D.1: rigs run a pinned night signature
     page.on('console', (msg) => {
       const type = msg.type()
       if (type === 'error' || type === 'warning') consoleIssues.push(`[console.${type}] ${msg.text()}`)

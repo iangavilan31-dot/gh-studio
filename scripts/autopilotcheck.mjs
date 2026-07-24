@@ -21,6 +21,7 @@ const browser = await chromium.launch({
   args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--autoplay-policy=no-user-gesture-required'],
 })
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } })
+await page.addInitScript(() => { window.__NIGHT_SEED__ = 42 }) // D.1: rigs run a pinned night signature
   // Behavior gate: run the light 480x270 retro pipeline — headless software
   // raster can't do native-res Restored at playable frame times, and this
   // gate tests mechanics, not the renderer (Restored is covered by the

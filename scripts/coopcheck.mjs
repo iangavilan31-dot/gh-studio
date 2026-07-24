@@ -46,6 +46,7 @@ async function boot(tag) {
   // gate tests mechanics, not the renderer (Restored is covered by the
   // shoot/hue/shell/perf gates).
   await page.addInitScript(() => {
+    window.__NIGHT_SEED__ = 42 // D.1: rigs run a pinned night signature
     try { localStorage.setItem('moonrest-settings-v1', JSON.stringify({ settingsV: 2, memoryMode: 'n64', resScale: 1 })) } catch (e) {}
   })
   page.on('console', (m) => { if (m.type() === 'error') issues[tag].push(`[${tag}] ${m.text()}`) })

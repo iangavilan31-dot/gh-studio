@@ -116,34 +116,49 @@ export class OrbitCamera {
     this.smoothYaw += dy * k
     this.smoothPitch += (this.pitch - this.smoothPitch) * k
 
-    // pivot: 1.8m above hip → about head height of the little wizard + margin
-    _pivot.set(playerPos.x, playerPos.y + 1.25, playerPos.z)
-
     const viewYaw = this.smoothYaw + this.revealYawOff
-    _dir.set(
-      Math.sin(viewYaw) * Math.cos(this.smoothPitch),
-      -Math.sin(this.smoothPitch),
-      Math.cos(viewYaw) * Math.cos(this.smoothPitch)
-    )
-    const wantDist = this.dist + revealAmt * 2.1 + this.jogLag
-    _desired.copy(_pivot).addScaledVector(_dir, wantDist)
-    _desired.y = Math.max(_desired.y, this.world.heightAt(_desired.x, _desired.z) + 0.3)
 
-    // collision: march along pivot→desired, pull in at first obstruction (0.25s recovery)
-    let targetDist = wantDist
-    const steps = 10
-    for (let i = 1; i <= steps; i++) {
-      const t = (i / steps) * wantDist
-      const px = _pivot.x + _dir.x * t
-      const py = _pivot.y + _dir.y * t
-      const pz = _pivot.z + _dir.z * t
-      if (this.world.cameraBlocked(px, py, pz, 0.25)) { targetDist = Math.max(1.5, t - 0.3); break } // floor keeps the wizard in frame
+    // Q.3 wizard's eyes: the camera sits at the keeper's brow looking out
+    // along the view direction — no orbit, no collision march, wider pitch
+    if (this.firstPerson) {
+      _pivot.set(playerPos.x, playerPos.y + 1.42, playerPos.z)
+      _dir.set(
+        Math.sin(viewYaw) * Math.cos(this.smoothPitch),
+        -Math.sin(this.smoothPitch),
+        Math.cos(viewYaw) * Math.cos(this.smoothPitch)
+      )
+      this.curDist = 0
+      this.camera.position.copy(_pivot)
+      this.camera.lookAt(_desired.copy(_pivot).addScaledVector(_dir, -3))
+    } else {
+      // pivot: 1.8m above hip → about head height of the little wizard + margin
+      _pivot.set(playerPos.x, playerPos.y + 1.25, playerPos.z)
+
+      _dir.set(
+        Math.sin(viewYaw) * Math.cos(this.smoothPitch),
+        -Math.sin(this.smoothPitch),
+        Math.cos(viewYaw) * Math.cos(this.smoothPitch)
+      )
+      const wantDist = this.dist * (this.intimacy ?? 1) + revealAmt * 2.1 + this.jogLag
+      _desired.copy(_pivot).addScaledVector(_dir, wantDist)
+      _desired.y = Math.max(_desired.y, this.world.heightAt(_desired.x, _desired.z) + 0.3)
+
+      // collision: march along pivot→desired, pull in at first obstruction (0.25s recovery)
+      let targetDist = wantDist
+      const steps = 10
+      for (let i = 1; i <= steps; i++) {
+        const t = (i / steps) * wantDist
+        const px = _pivot.x + _dir.x * t
+        const py = _pivot.y + _dir.y * t
+        const pz = _pivot.z + _dir.z * t
+        if (this.world.cameraBlocked(px, py, pz, 0.25)) { targetDist = Math.max(1.5, t - 0.3); break } // floor keeps the wizard in frame
+      }
+      if (targetDist < this.curDist) this.curDist = targetDist // snap in (never clip)
+      else this.curDist += (targetDist - this.curDist) * (1 - Math.exp(-dt / 0.25)) // ease out
+
+      this.camera.position.copy(_pivot).addScaledVector(_dir, this.curDist)
+      this.camera.lookAt(_pivot)
     }
-    if (targetDist < this.curDist) this.curDist = targetDist // snap in (never clip)
-    else this.curDist += (targetDist - this.curDist) * (1 - Math.exp(-dt / 0.25)) // ease out
-
-    this.camera.position.copy(_pivot).addScaledVector(_dir, this.curDist)
-    this.camera.lookAt(_pivot)
 
     // FOV: 55 (+4 while jogging), eased; reveals widen further (C.2)
     const targetFov = (jogging ? 59 : 55) + revealAmt * 5

@@ -138,7 +138,8 @@ export class Night {
     this.illum = 0.5 * (1 - Math.cos(age * Math.PI * 2)) // 0 new → 1 full
     this.fogTight = 1 - 0.15 * (1 - this.illum)
     if (this.face) {
-      this.face.material.uniforms.uEmissive.value.set('#9d97c2').multiplyScalar(0.5 + 0.75 * this.illum)
+      // signatureTint: the D.1 night signature warms or cools the face a touch
+      this.face.material.uniforms.uEmissive.value.set('#9d97c2').multiplyScalar((0.5 + 0.75 * this.illum) * (this.signatureTint ?? 1))
       this.flare.material.uniforms.uOpacity.value = 0.35 + 0.65 * this.illum
     }
   }
