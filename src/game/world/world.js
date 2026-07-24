@@ -1693,7 +1693,7 @@ export class World {
       this.registerLight(`wayside-shrine-${shrineN}`, 'wayside', sc, sx, sz + 0.38, heightAt(sx, sz) + 0.38)
     }
     // memorial stones — worn markers of the order, three words at most, moss
-    for (const [mx, mz, lean] of [[-34, 22, 0.08], [62, 80, -0.06], [-74, 96, 0.13]]) {
+    for (const [mx, mz, lean] of [[-34, 22, 0.08], [62, 80, -0.06], [-74, 96, 0.13], [-66, 36, -0.1]]) {
       const slab = new THREE.Mesh(new THREE.BoxGeometry(0.5, rng.range(0.7, 1.0), 0.16), shrineStone)
       ensureVertexColors(slab.geometry, [0.62, 0.66, 0.62])
       const g = new THREE.Group()
