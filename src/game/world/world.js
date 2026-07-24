@@ -1691,7 +1691,10 @@ export class World {
         fp.userData.dyn = true
         this.scene.add(fp)
       }
-      const shaftMat = retroMaterial({ map: TEX.glowDot({ name: 'hallshaft', color: '#9d97c2' }), transparent: true, depthWrite: false, opacity: 0.085 })
+      // a streak, not a dot: stretched radial glow reads as smudge — the
+      // beam texture is what makes it a shaft of moonlight
+      const shaftMat = retroMaterial({ map: TEX.streak({ name: 'hallshaft', color: '#9d97c2' }), transparent: true, depthWrite: false, opacity: 0.34 })
+      shaftMat.side = THREE.DoubleSide // one-sided planes were culled from the corridor view
       shaftMat.blending = THREE.AdditiveBlending
       for (const z of [149, 161]) {
         const sh = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 9.5), shaftMat)
