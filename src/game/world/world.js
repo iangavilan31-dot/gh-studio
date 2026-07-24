@@ -119,7 +119,17 @@ export class World {
       for (const b of this.aabbs) {
         if (x > b.minX - 1.3 && x < b.maxX + 1.3 && z > b.minZ - 1.3 && z < b.maxZ + 1.3) v = Math.min(v, 0.8)
       }
-      col.setXYZ(i, v, v, v)
+      // AA.4: macro ground variation — low-frequency painted patchiness so no
+      // screen-quarter of lawn reads flat; mossy drifts and dry patches wander
+      // the field the way a groundskeeper never quite kept up with
+      const n1 = Math.sin(x * 0.11 + Math.sin(z * 0.07) * 2.1) * Math.cos(z * 0.09 + Math.sin(x * 0.05) * 1.7)
+      const n2 = Math.sin(x * 0.31 + z * 0.23)
+      const patch = 0.87 + 0.13 * (n1 * 0.7 + n2 * 0.3)
+      let pr = patch, pg = patch, pb = patch
+      const mossy = Math.sin(x * 0.045 + 1.3) * Math.cos(z * 0.052 - 0.7)
+      if (mossy > 0.25) { pg *= 1.07; pr *= 0.93 }
+      else if (mossy < -0.35) { pr *= 1.06; pg *= 0.99; pb *= 0.9 }
+      col.setXYZ(i, v * pr, v * pg, v * pb)
     }
     col.needsUpdate = true
     // store base for warm-pool lerps
@@ -290,6 +300,7 @@ export class World {
     this.scene.add(this.ground)
 
     // path/street ribbons (visual strips slightly above terrain)
+    this.ribbons = [] // recorded for the AA.4 edging pass
     const addRibbon = (points, width, tex, repeat) => {
       const geoR = ribbonGeometry(points, width)
       const t = tex
@@ -297,6 +308,7 @@ export class World {
       ensureVertexColors(geoR)
       const m = new THREE.Mesh(geoR, retroMaterial({ map: t }))
       this.scene.add(m)
+      this.ribbons.push({ points, width })
       return m
     }
     // park loop (dirt)
@@ -330,6 +342,40 @@ export class World {
     addRibbon([[0, -40], [0, -70], [0, -100], [0, -128]], 4.5, TEX.cobblestone({ name: 'isleCauseway' }), 28)
     // isle switchback to keep
     addRibbon([[0, -132], [8, -140], [4, -148], [-6, -146], [-8, -152], [0, -155]], 2.6, TEX.dirt({ name: 'isleSwitch' }), 16)
+
+    // AA.4: path edging stones — uneven, clustered, full of gaps (P.1: nothing
+    // evenly spaced). One merged mesh, one draw call, for every road at once.
+    const srng = worldRNG.fork('edging')
+    const stoneGeos = []
+    for (const { points, width } of this.ribbons) {
+      for (let i = 0; i < points.length - 1; i++) {
+        const [x0, z0] = points[i], [x1, z1] = points[i + 1]
+        const segLen = Math.hypot(x1 - x0, z1 - z0)
+        const steps = Math.max(1, Math.round(segLen / 2.1))
+        for (let s = 0; s < steps; s++) {
+          for (const side of [-1, 1]) {
+            if (srng.chance(0.44)) continue // the gaps make it handmade
+            const t = (s + srng.range(0.1, 0.9)) / steps
+            const px = x0 + (x1 - x0) * t, pz = z0 + (z1 - z0) * t
+            const dx = (x1 - x0) / segLen, dz = (z1 - z0) / segLen
+            const off = width / 2 + srng.range(0.12, 0.5)
+            const gx = px - dz * side * off, gz = pz + dx * side * off
+            const gy = heightAt(gx, gz)
+            if (gy < WATER_Y + 1.0) continue // no stones hovering over the sea
+            const r = srng.range(0.13, 0.32)
+            const g = new THREE.IcosahedronGeometry(r, 0)
+            g.scale(1, srng.range(0.5, 0.75), 1)
+            g.rotateY(srng.range(0, Math.PI))
+            g.translate(gx, gy + r * 0.22, gz)
+            const shade = 0.6 + srng.range(-0.09, 0.09)
+            ensureVertexColors(g, [shade * 0.97, shade, shade * 0.96])
+            stoneGeos.push(g)
+          }
+        }
+      }
+    }
+    const stoneMesh = new THREE.Mesh(mergeGeometries(stoneGeos, false), retroMaterial({ map: TEX.stoneBlock({ name: 'edging', base: '#4a5451' }) }))
+    this.scene.add(stoneMesh)
   }
 
   buildWater() {
@@ -434,22 +480,44 @@ export class World {
       ensureVertexColors(stump.geometry)
       this.place((() => { const g = new THREE.Group(); g.add(stump); stump.position.y = 0.22; g.userData.collider = { r: 0.42, h: 0.5 }; return g })(), Math.cos(a) * r, Math.sin(a) * r)
     }
+    // mushroom story-clusters (AA.4/B.1): sized to READ at pose distance,
+    // grouped in 3s and 5s near the path's inner ring, never evenly spaced
     const shroomMat = retroMaterial({ map: TEX.white(), hemi: true })
-    for (let i = 0; i < 7; i++) {
-      const a = rng.range(0, Math.PI * 2), r = rng.range(6, 24)
+    for (let i = 0; i < 9; i++) {
+      const a = rng.range(0, Math.PI * 2), r = rng.chance(0.6) ? rng.range(13, 22) : rng.range(5, 11)
       const x = Math.cos(a) * r, z = Math.sin(a) * r
       const cluster = new THREE.Group()
-      for (let k = 0; k < rng.int(2, 4); k++) {
-        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.03, 0.12, 5), shroomMat)
+      const count = rng.chance(0.4) ? 5 : 3
+      for (let k = 0; k < count; k++) {
+        const s = rng.range(0.8, 1.9) // big hero shroom + little siblings
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.045 * s, 0.06 * s, 0.26 * s, 5), shroomMat)
         ensureVertexColors(stem.geometry, [0.85, 0.82, 0.72])
-        stem.position.set(rng.range(-0.2, 0.2), 0.06, rng.range(-0.2, 0.2))
+        stem.position.set(rng.range(-0.45, 0.45), 0.13 * s, rng.range(-0.45, 0.45))
         cluster.add(stem)
-        const cap = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 4, 0, Math.PI * 2, 0, Math.PI / 2), shroomMat)
+        const cap = new THREE.Mesh(new THREE.SphereGeometry(0.14 * s, 6, 4, 0, Math.PI * 2, 0, Math.PI / 2), shroomMat)
         ensureVertexColors(cap.geometry, rng.chance(0.5) ? [0.6, 0.28, 0.2] : [0.66, 0.6, 0.48])
-        cap.position.set(stem.position.x, 0.12, stem.position.z)
+        cap.position.set(stem.position.x, 0.26 * s, stem.position.z)
         cluster.add(cap)
       }
       this.place(cluster, x, z)
+    }
+    // lawn boulders in twos and threes — the lawn stops being a flat quarter
+    const rockMat = retroMaterial({ map: TEX.stoneBlock({ name: 'lawnrock', base: '#525c56' }) })
+    for (let i = 0; i < 5; i++) {
+      const a = rng.range(0, Math.PI * 2), r = rng.range(7, 23)
+      const bx = Math.cos(a) * r, bz = Math.sin(a) * r
+      const grp = new THREE.Group()
+      for (let k = 0; k < rng.int(2, 3); k++) {
+        const rr = rng.range(0.28, 0.6)
+        const rock = new THREE.Mesh(new THREE.IcosahedronGeometry(rr, 0), rockMat)
+        rock.geometry.scale(1, rng.range(0.55, 0.8), 1)
+        rock.geometry.rotateY(rng.range(0, Math.PI))
+        ensureVertexColors(rock.geometry, [0.55, 0.6 + rng.range(0, 0.08), 0.55]) // mossy tops
+        rock.position.set(rng.range(-0.9, 0.9), rr * 0.35, rng.range(-0.9, 0.9))
+        grp.add(rock)
+      }
+      grp.userData.collider = { r: 0.8, h: 0.7 }
+      this.place(grp, bx, bz)
     }
     // stone birdbath
     const bath = new THREE.Group()
@@ -764,14 +832,78 @@ export class World {
       this.scene.add(g)
       return g
     }
+    // kindled roof lights bloom warm pools onto the shingles (AA.2) — the
+    // hanging lantern builder has no ground under it, so the pool is ours
+    const roofPool = (px, pz, py, size = 3.4) => {
+      const pool = new THREE.Mesh(new THREE.PlaneGeometry(size, size), (() => {
+        const m = retroMaterial({ map: TEX.glowDot({ name: 'roofpool', color: '#f08a20' }), transparent: true, depthWrite: false, opacity: 1.0 })
+        m.blending = THREE.AdditiveBlending
+        return m
+      })())
+      ensureVertexColors(pool.geometry)
+      pool.rotation.x = -Math.PI / 2
+      pool.position.set(px, py + 0.17, pz) // above the visual shingle tops
+      pool.visible = false
+      pool.userData.dyn = true
+      this.scene.add(pool)
+      return pool
+    }
     for (const [i, lx, lz] of [[1, 119.5, streetZ(119.5) - 10.3], [2, 127, streetZ(127) - 7.6]]) {
       hookPost(lx, lz)
       const l = hangingLantern({ accent: '#e8a84a' })
       l.group.position.set(lx + 0.28, roofH(lx) + 1.85, lz)
       this.scene.add(l.group)
       this.sways.push(l.group)
+      l.pool = roofPool(lx + 0.28, lz, roofH(lx), 4.4)
       this.registerLight(`rooftops-lantern-${i}`, 'rooftops', l, lx + 0.28, lz, roofH(lx) + 1.85)
     }
+    // AA.4: roof-ridge chimneys + a sagging clothesline — the strip's skyline
+    // stops being an empty plane; cloth silhouettes catch the moon
+    const chimneyAt = (cx, cz, h = 1.25) => {
+      const g = new THREE.Group()
+      const stack = new THREE.Mesh(new THREE.BoxGeometry(0.72, h, 0.72), stoneMat)
+      ensureVertexColors(stack.geometry)
+      stack.position.y = h / 2
+      g.add(stack)
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(0.94, 0.14, 0.94), stoneMat)
+      ensureVertexColors(cap.geometry, [0.8, 0.8, 0.8])
+      cap.position.y = h + 0.07
+      g.add(cap)
+      g.position.set(cx, roofH(cx), cz)
+      this.scene.add(g)
+      this.colliders.push({ x: cx, z: cz, r: 0.6, h, y0: roofH(cx) })
+      return g
+    }
+    const ch1 = chimneyAt(121.6, streetZ(121.6) - 12.1, 1.35)
+    const ch2 = chimneyAt(125.4, streetZ(125.4) - 11.4, 1.05)
+    // clothesline: one line, three cloths, one odd sock (P.4's fingerprint)
+    {
+      const p1 = ch1.position.clone().add(new THREE.Vector3(0, 1.32, 0))
+      const p2 = ch2.position.clone().add(new THREE.Vector3(0, 1.02, 0))
+      const mid = p1.clone().lerp(p2, 0.5); mid.y -= 0.35 // the sag
+      const lineGeo = new THREE.BufferGeometry().setFromPoints(
+        new THREE.QuadraticBezierCurve3(p1, mid, p2).getPoints(12))
+      const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0x8a8a92 }))
+      this.scene.add(line)
+      const clothMat = retroMaterial({ map: TEX.white(), hemi: true, side: THREE.DoubleSide })
+      const curve = new THREE.QuadraticBezierCurve3(p1, mid, p2)
+      const cloths = [
+        { t: 0.3, w: 0.5, h: 0.62, tint: [0.52, 0.5, 0.46] },
+        { t: 0.52, w: 0.44, h: 0.5, tint: [0.44, 0.46, 0.5] },
+        { t: 0.72, w: 0.16, h: 0.3, tint: [0.55, 0.38, 0.3] }, // the odd sock
+      ]
+      for (const c of cloths) {
+        const cloth = new THREE.Mesh(new THREE.PlaneGeometry(c.w, c.h), clothMat)
+        ensureVertexColors(cloth.geometry, c.tint)
+        const pt = curve.getPoint(c.t)
+        cloth.position.set(pt.x, pt.y - c.h / 2, pt.z)
+        cloth.rotation.y = Math.atan2(p2.x - p1.x, p2.z - p1.z) + Math.PI / 2
+        cloth.userData.dyn = true
+        this.scene.add(cloth)
+        this.sways.push(cloth)
+      }
+    }
+
     // stargazer's telescope + brazier
     const scope = new THREE.Group()
     const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 1.2, 7), stoneMat)
@@ -794,12 +926,17 @@ export class World {
     const scopeBrazier = brazier({ scale: 0.7 })
     scopeBrazier.group.position.set(134.5, roofH(134.5), streetZ(134.5) - 9)
     this.scene.add(scopeBrazier.group)
+    scopeBrazier.pool = roofPool(134.5, streetZ(134.5) - 9, roofH(134.5), 2.8)
     this.registerLight('rooftops-telescope-brazier', 'rooftops', scopeBrazier, 134.5, streetZ(134.5) - 9, roofH(134.5))
 
     // low over the moss at Nib, cobalt sky filling the frame (Part 3.2.3)
     // on the roof itself, looking west along the strip: hook lantern + Nib's
     // pine mid-frame, the village spire and open cobalt sky beyond
-    this.poses.rooftops = { pos: [122.8, roofH(122.8) + 0.7, streetZ(122.8) - 9.6], look: [117.8, roofH(117.8) + 1.6, streetZ(117.8) - 10.2], minute: 29 }
+    // recomposed (AA.4): Nib + his pine + chimney line as the middle-ground
+    // subject, moss roofs leading left, moon low over the western roofline
+    // shot along the prop line from the NE: Nib's pine + lantern + chimneys
+    // + clothesline, the low moon dead ahead over the western roofline
+    this.poses.rooftops = { pos: [128.6, roofH(128.6) + 0.7, streetZ(128.6) - 5.9], look: [118.8, roofH(118.8) + 1.05, streetZ(118.8) - 9.9], minute: 31 }
     // close on Nib for the sleeper evidence shots
     this.poses.nib = { pos: [119.6, roofH(119.6) + 0.55, streetZ(119.6) - 11.1], look: [118.2, roofH(118.2) + 0.2, streetZ(118.2) - 10.0] }
   }
@@ -1313,7 +1450,9 @@ export class World {
       this.scene.add(card)
       this.fogCards.push({ mesh: card, baseX: fx, seed: fx * 0.7 })
     }
-    this.poses.mosswood = { pos: [63, heightAt(63, 110) + 1.5, 110.5], look: [84, heightAt(84, 110) + 5.5, 110], minute: 6 }
+    // recomposed (AA.4): Mote sleeping mid-left, arch as the far subject, his
+    // snore-z drifting INSIDE the frame instead of clipping its edge
+    this.poses.mosswood = { pos: [61.5, heightAt(61.5, 112.0) + 1.6, 112.0], look: [84, heightAt(84, 108.5) + 4.6, 108.5], minute: 6 }
   }
 
   buildIsle() {
@@ -1322,6 +1461,33 @@ export class World {
     const keepTex = TEX.stoneBlock({ name: 'keepstone', base: '#4a5560' })
     keepTex.repeat.set(3, 2)
     const stoneMat = retroMaterial({ map: keepTex })
+
+    // an anchored rowboat offshore (7.2's boat; AA.4 gives the open water a
+    // middle-ground silhouette) — rocks gently with the swell
+    {
+      const boat = new THREE.Group()
+      const hullMat = retroMaterial({ map: TEX.plank({ name: 'boatwood' }) })
+      const hull = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.62, 3.4, 7, 1, false, 0, Math.PI), hullMat)
+      ensureVertexColors(hull.geometry, [0.5, 0.44, 0.4])
+      hull.rotation.z = Math.PI / 2
+      hull.rotation.y = Math.PI / 2
+      hull.scale.set(1, 0.42, 1)
+      boat.add(hull)
+      const bench2 = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.08, 0.3), hullMat)
+      ensureVertexColors(bench2.geometry, [0.42, 0.38, 0.34])
+      bench2.position.y = 0.05
+      boat.add(bench2)
+      const prow = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.9, 5), hullMat)
+      ensureVertexColors(prow.geometry, [0.46, 0.4, 0.36])
+      prow.rotation.x = Math.PI / 2
+      prow.position.set(0, 0.05, 1.95)
+      boat.add(prow)
+      boat.position.set(-26, WATER_Y + 0.34, -96)
+      boat.rotation.y = 0.7
+      boat.userData.dyn = true
+      this.scene.add(boat)
+      this.sways.push(boat) // the swell rocks it
+    }
     // the keep on the island top
     const kx = 0, kz = -152
     const kBase = heightAt(kx, kz)
@@ -1407,7 +1573,7 @@ export class World {
     // sea flanking, keep beyond, moon high in frame
     this.poses.isle = { pos: [2.2, 2.3, -86], look: [-20, kBase + 13, -152], minute: 37 }
     // sea view for the water/moon-streak evidence (m5-water)
-    this.poses.sea = { pos: [4, 2.2, -50], look: [-30, 10, -130], minute: 37 }
+    this.poses.sea = { pos: [1.5, 2.1, -85], look: [-40, 1.2, -111], minute: 37 }
   }
 
   // The Hall's baked-vertex-light showcase (Part 3.2.6 / 8.4): NO lights at all —
@@ -1506,7 +1672,7 @@ export class World {
     }
     // the corridor itself: stand at the first breadcrumb, the next one is
     // already half-swallowed by the fog wall
-    this.poses.foglands = { pos: [28.5, heightAt(28.5, 2.8) + 1.3, 2.8], look: [46, heightAt(46, -1) + 4.0, -1.2], minute: 5 }
+    this.poses.foglands = { pos: [29.6, heightAt(29.6, 2.2) + 1.15, 2.2], look: [44, heightAt(44, -1) + 3.2, -1.3], minute: 5 }
   }
 
   // world rules applied after player movement (mosswood loop-through)
