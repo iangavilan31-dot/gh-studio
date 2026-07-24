@@ -106,3 +106,15 @@ walks under the arch and legitimately earns the Gatewalkers arch-stone (trinket 
 **Risk: LOW.** M7 ships the full co-op stack + `hostNight/joinNight` surface; the
 title-screen "Host Night / Join Night" buttons and the pause-menu room code are M8
 shell work where the spec places them (Part 10).
+
+## D16 — License note lives in the credits screen (+ README at M10), not a repo-level LICENSE file
+**Risk: LOW.** Part 10 asks for an "MIT-style LICENSE note for code". This branch sits
+inside a personal portfolio repo that has no LICENSE file; adding one at repo root would
+relicense the OWNER'S existing code, which isn't this build's call. The note ships
+in-game (credits screen) and in the M10 README section, scoped to the game's code.
+
+## D17 — Rigs auto-enter the night; attract-at-title is wired but not gate-timed
+**Risk: LOW.** teleport()/teleportPlayer()/autopilot() clear the title shell so all
+pre-M8 rigs keep working unmodified (the title itself is gated by shellcheck).
+Title attract fires at 90s idle reusing the M6 reel (in-game 180s path IS exercised by
+long rig runs); a dedicated 90s-wait assert would add wall-clock for little signal.

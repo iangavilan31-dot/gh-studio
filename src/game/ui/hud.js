@@ -62,6 +62,7 @@ export class HUD {
   }
 
   say(text, seconds = 4) {
+    if (this.subtitlesOn === false) return // a11y setting (Part 10)
     this.subtitle.textContent = text
     this.subtitle.classList.add('on')
     clearTimeout(this.subtitleTimer)

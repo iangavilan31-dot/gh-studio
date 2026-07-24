@@ -21,6 +21,7 @@ import { Progress } from './systems/progress.js'
 import { NightFlow } from './systems/nightflow.js'
 import { Moments } from './systems/moments.js'
 import { Net } from './net/coop.js'
+import { Shell, loadSettings } from './ui/shell.js'
 import { audio } from './audio/engine.js'
 import { score } from './audio/score.js'
 import { footstep, kindleChime } from './audio/sfx.js'
@@ -186,6 +187,118 @@ let neSent = false // host tells clients when the min-40 clock ends the night
 // instead of waiting out a dead connection
 window.addEventListener('pagehide', () => { if (net.active) net.leave() })
 
+// ——— The shell (Part 10): title → night, pause, settings, photo mode ———
+let mode = 'title' // 'title' | 'game'
+let titleIdle = 0
+const NULL_INPUT = { moveAxis: () => [0, 0], pressed: () => false, down: () => false, endFrame: () => {} }
+
+function startNight(fresh = false) {
+  if (fresh) {
+    try { localStorage.removeItem('moonrest-save-v1') } catch (e) { /* private mode */ }
+    progress.trinkets.length = 0
+    for (const b of world.brews) { b.taken = false; b.group.visible = true }
+  }
+  mode = 'game'
+  cinematic = false
+  nightflow.noteInput()
+  return true
+}
+
+// Memory dials (Part 8.6) + every other setting, applied in one place
+function applySettings(s) {
+  const post = pipeline.postUniforms
+  let preset = { uSoftBlur: 0.6, uQuantize: 32, uDither: 0.5, uScanline: 0, uChroma: 0, uWobble: 0 } // N64
+  let snap = 0, affine = 0, hissBoost = 0, res = s.resScale
+  if (s.memoryMode === 'ps1') { preset = { uSoftBlur: 0, uQuantize: 32, uDither: 0.65, uScanline: 0, uChroma: 0, uWobble: 0 }; snap = 1; affine = 0.8 }
+  else if (s.memoryMode === 'vhs') { preset = { uSoftBlur: 0.35, uQuantize: 28, uDither: 0.5, uScanline: 0.55, uChroma: 1.3, uWobble: s.reducedMotion ? 0 : 1 }; hissBoost = 6 }
+  else if (s.memoryMode === 'clean') { preset = { uSoftBlur: 0, uQuantize: 0, uDither: 0, uScanline: 0, uChroma: 0, uWobble: 0 }; res = Math.max(res, 2) }
+  for (const [k, v] of Object.entries(preset)) post[k].value = v
+  globalUniforms.uSnapEnable.value = snap
+  globalUniforms.uAffineMix.value = affine
+  pipeline.setResScale(res)
+  globalUniforms.uSnapRes.value.set(Math.round(pipeline.rt.width / 2), Math.round(pipeline.rt.height / 2))
+  audio.applyPrefs({ music: s.volMusic, ambience: s.volAmbience, sfx: s.volSfx, hissOn: s.hiss, hissBoostDb: hissBoost })
+  input.remap = { KeyE: s.keyKindle, Space: s.keyHop, KeyC: s.keySit }
+  input.sensitivity = s.sensitivity
+  input.invertY = s.invertY
+  interact.holdToToggle = s.holdToToggle
+  hud.subtitlesOn = s.subtitles
+  window.__REDUCED_MOTION__ = s.reducedMotion
+}
+
+const shell = new Shell({
+  startNight,
+  hostNight: () => net.host(),
+  joinNight: (code) => net.join(code),
+  applySettings,
+  getStats: () => ({ lights: world.kindledCount, lightsTotal: world.lights.length, brews: world.brewCount, trinkets: progress.trinkets, code: net.code }),
+  hasSave: () => { try { return !!localStorage.getItem('moonrest-save-v1') } catch (e) { return false } },
+  bootAudio: () => bootAudio(),
+})
+applySettings(shell.s)
+
+// ——— Photo mode (Part 10): P — free-fly, roll, FOV, filter, UI hide, PNG ———
+const photo = { on: false, euler: new THREE.Euler(0, 0, 0, 'YXZ'), fov: 55, hint: null }
+function togglePhoto(on) {
+  photo.on = on
+  const ui = document.getElementById('ui')
+  if (on) {
+    photo.euler.setFromQuaternion(camera.quaternion, 'YXZ')
+    photo.fov = camera.fov
+    hud.hidePrompt()
+    photo.hint = document.createElement('div')
+    photo.hint.className = 'photohint'
+    photo.hint.textContent = 'photo · WASD fly · mouse aim · Q/Z roll · wheel zoom · F filter · H hide · Enter save · P leave'
+    ui.appendChild(photo.hint)
+  } else {
+    photo.hint?.remove()
+    ui.style.display = ''
+    camera.fov = 55
+    camera.updateProjectionMatrix()
+  }
+}
+function updatePhoto(dt) {
+  const [lx, ly] = input.consumeLook()
+  photo.euler.y -= lx * 0.0032
+  photo.euler.x = Math.max(-1.45, Math.min(1.45, photo.euler.x - ly * 0.0032))
+  if (input.down('KeyQ')) photo.euler.z += dt * 0.7
+  if (input.down('KeyZ')) photo.euler.z -= dt * 0.7
+  camera.quaternion.setFromEuler(photo.euler)
+  const [ax, az] = input.moveAxis()
+  const sp = input.down('ShiftLeft', 'ShiftRight') ? 16 : 5.5
+  _pv.set(ax, 0, az).applyQuaternion(camera.quaternion)
+  camera.position.addScaledVector(_pv, sp * dt)
+  camera.fov = photo.fov
+  camera.updateProjectionMatrix()
+  if (input.pressed('KeyF')) { // filter picker cycles the Memory dials
+    const modes = ['n64', 'ps1', 'vhs', 'clean']
+    shell.s.memoryMode = modes[(modes.indexOf(shell.s.memoryMode) + 1) % modes.length]
+    shell.save(); applySettings(shell.s)
+  }
+  if (input.pressed('KeyH')) {
+    const ui = document.getElementById('ui')
+    ui.style.display = ui.style.display === 'none' ? '' : 'none'
+  }
+  if (input.pressed('Enter')) capturePhoto()
+}
+const _pv = new THREE.Vector3()
+function capturePhoto() {
+  const prev = pipeline.resScale
+  pipeline.setResScale(Math.max(2, prev)) // internal RT at 2× for the keepsake
+  pipeline.render(scene, camera, elapsed)
+  const url = canvas.toDataURL('image/png')
+  pipeline.setResScale(prev)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `moonrest-${Math.round(performance.now())}.png`
+  a.click()
+}
+canvas.addEventListener('wheel', (e) => {
+  if (!photo.on) return
+  e.preventDefault()
+  photo.fov = Math.max(20, Math.min(90, photo.fov + Math.sign(e.deltaY) * 2.5))
+}, { passive: false })
+
 const zoneKindles = (zone) => world.lights.filter((l) => l.zone === zone && l.kindled).length
 
 // kindle consequences: chime in zone key, ember burst, next music layer (6.1)
@@ -216,6 +329,7 @@ let cinematic = false
 function teleport(poseName) {
   const p = POSES[poseName]
   if (!p) return false
+  if (mode === 'title') { shell.clear(); mode = 'game' } // rigs shoot the night, not the menu
   cinematic = true
   hud.hidePrompt() // no HUD in cinematic frames (12.5)
   hud.clearSubtitle()
@@ -244,10 +358,30 @@ function tick() {
   frameTimes.push(dt)
   if (frameTimes.length > 90) frameTimes.shift()
 
+  input.pollGamepad()
   const inputActive = input.keys.size > 0 || input.justPressed.size > 0
   if (inputActive) nightflow.noteInput()
 
-  if (!cinematic) {
+  // photo mode toggle (in the night, no menu up)
+  if (mode === 'game' && !shell.screen && !cinematic && input.pressed('KeyP')) togglePhoto(!photo.on)
+
+  if (mode === 'title') {
+    // live Park diorama drifts behind the title (Part 10)
+    titleIdle = inputActive ? 0 : titleIdle + dt
+    if (titleIdle > 90 && shell.screen === 'title') nightflow.startAttract()
+    if (!nightflow.attract && !nightflow.ending) {
+      const a = elapsed * 0.03
+      const ty = world.heightAt(2, -19.6)
+      camera.position.set(2 + Math.cos(a) * 8, ty + 2.4, -19.6 + Math.sin(a) * 8)
+      camera.lookAt(2, ty + 1.1, -19.6)
+      zoneLight.update(2, -19.6, dt, 2)
+    }
+    player.update(NULL_INPUT, orbit.smoothYaw, dt, elapsed)
+  } else if (photo.on && !cinematic) {
+    updatePhoto(dt)
+    zoneLight.update(camera.position.x, camera.position.z, dt, camera.position.y)
+    player.update(NULL_INPUT, orbit.smoothYaw, dt, elapsed)
+  } else if (!cinematic && !shell.blocking) {
     const jogging = input.down('ShiftLeft', 'ShiftRight') && player.anim.speed > 2
     player.update(input, orbit.smoothYaw, dt, elapsed)
     orbit.update(player.pos, player.yaw, jogging, input.consumeLook(), dt, world.interactables)
@@ -265,14 +399,15 @@ function tick() {
       pipeline.postUniforms.uWarm.value = Math.max(0, pipeline.postUniforms.uWarm.value - dt)
     }
   } else {
-    // world keeps breathing behind fixed cameras; player idles in place
-    player.update({ moveAxis: () => [0, 0], pressed: () => false, down: () => false, endFrame: () => {} }, orbit.smoothYaw, dt, elapsed)
+    // menus/cinematics: world keeps breathing, player idles in place
+    if (shell.blocking && !cinematic) hud.hidePrompt()
+    player.update(NULL_INPUT, orbit.smoothYaw, dt, elapsed)
   }
   nightflow.update(dt, inputActive)
   // clock-driven atmosphere: min-30 warmth ease + lunar-phase fog tightening
   zoneLight.warmBias = (zoneLight.warmBias ?? 0) + ((night.warmBias ?? 0) - (zoneLight.warmBias ?? 0)) * (1 - Math.exp(-dt / 8))
   zoneLight.fogTight = night.fogTight
-  if (!cinematic) {
+  if (!cinematic && mode !== 'title' && !photo.on) {
     world.applyWorldRules(player)
     zoneLight.update(player.pos.x, player.pos.z, dt, player.pos.y)
     // music follows the atmosphere's zone
@@ -305,11 +440,31 @@ window.__MOONREST__ = {
   poses: Object.keys(POSES),
   teleport,
   teleportPlayer(x, z, yaw = 0) {
+    if (mode === 'title') { shell.clear(); mode = 'game' } // rigs auto-enter the night
     cinematic = false
     player.pos.set(x, world.heightAt(x, z), z)
     player.yaw = player.targetYaw = yaw
     return true
   },
+  startNight(fresh = false) { shell.clear(); return startNight(fresh) },
+  shellDebug() {
+    return {
+      mode, screen: shell.screen, blocking: shell.blocking, photo: photo.on,
+      settings: { ...shell.s },
+      memory: {
+        softBlur: pipeline.postUniforms.uSoftBlur.value, quantize: pipeline.postUniforms.uQuantize.value,
+        scanline: pipeline.postUniforms.uScanline.value, chroma: pipeline.postUniforms.uChroma.value,
+        wobble: pipeline.postUniforms.uWobble.value, snap: globalUniforms.uSnapEnable.value,
+        affine: globalUniforms.uAffineMix.value, rtW: pipeline.rt.width, rtH: pipeline.rt.height,
+      },
+      menuItems: [...document.querySelectorAll('.shell .mi')].map((m) => m.textContent),
+      fontsLoaded: !!document.fonts && [...document.fonts].some((f) => /IM Fell|Alegreya/i.test(f.family)),
+    }
+  },
+  setMemoryMode(m) { shell.s.memoryMode = m; shell.save(); applySettings(shell.s); return true },
+  openPause() { shell.showPause(); return true },
+  togglePhotoMode(v) { togglePhoto(v ?? !photo.on); return photo.on },
+  triggerErrorBoundary() { window.dispatchEvent(new ErrorEvent('error', { message: 'rig probe' })); return true },
   releaseCam() { cinematic = false },
   setCamYaw(y) { orbit.yaw = orbit.smoothYaw = y; return true },
   setAction(a) { player.setAction(a); return true },
@@ -520,6 +675,7 @@ function updateOverlay(dt) {
 async function autopilot() {
   if (window.__AUTOPILOT_RUNNING__) return false
   window.__AUTOPILOT_RUNNING__ = true
+  if (mode === 'title') { shell.clear(); mode = 'game' }
   const wait = (ms) => new Promise((r) => setTimeout(r, ms))
   const M = window.__MOONREST__
   const zonesFirst = ['park', 'village', 'rooftops', 'ruins', 'gloomspire', 'hall', 'mosswood']
