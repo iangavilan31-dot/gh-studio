@@ -1103,7 +1103,8 @@
     "signature in test surface",
     "variations never block progression"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "__MOONREST__.nightSignature = {seed, fogDrift \u00b16%, gustiness 0.7-1.3, moonWarmth \u00b17%} \u2014 deterministic per seed (worldRNG fork 'night/<seed>'), all cosmetic scalars, no progression gates. Rigs pin __NIGHT_SEED__=42 for reproducible gates; fpcheck.mjs printed a live signature."
   },
   {
    "id": "POLISH-E6",
@@ -1165,7 +1166,8 @@
     "first-person functional in capture",
     "settings persist"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "scripts/fpcheck.mjs: V toggles wizard's-eyes (state.viewMode 'first', rig hidden, camDist 0), persists across reload; docs/build/shots/anim/firstperson.png read (eye-height frame, no wizard, carried-lantern pool visible). Camera closeness cycle (roomy/standard/close) in settings. Headphone mode not shipped (steps require first-person + persistence only)."
   }
  ]
 }

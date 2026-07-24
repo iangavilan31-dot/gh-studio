@@ -16,6 +16,7 @@ export const SETTINGS_DEFAULTS = {
   volMusic: 0.8, volAmbience: 0.7, volSfx: 0.9, hiss: true,
   sensitivity: 1, invertY: false, holdToToggle: false, subtitles: true,
   cameraAssist: true,
+  viewMode: 'third', camIntimacy: 1, // Q.3: wizard's back / wizard's eyes + closeness
   keyKindle: 'KeyE', keyHop: 'Space', keySit: 'KeyC',
 }
 
@@ -313,6 +314,8 @@ export class Shell {
     cycle('look sensitivity', 'sensitivity', [0.5, 0.75, 1, 1.5, 2], ['0.5×', '0.75×', '1×', '1.5×', '2×'])
     cycle('invert look Y', 'invertY', [false, true], ['off', 'on'])
     cycle('camera auto-frame', 'cameraAssist', [true, false], ['on', 'off'])
+    cycle('view (V in the night)', 'viewMode', ['third', 'first'], ["wizard's back", "wizard's eyes"])
+    cycle('camera closeness', 'camIntimacy', [1.15, 1, 0.88], ['roomy', 'standard', 'close'])
     rebind('kindle', 'keyKindle')
     rebind('hop', 'keyHop')
     rebind('sit / lie', 'keySit')

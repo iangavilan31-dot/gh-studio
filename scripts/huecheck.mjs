@@ -45,6 +45,7 @@ const browser = await chromium.launch({
   args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-angle=swiftshader'],
 })
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } })
+await page.addInitScript(() => { window.__NIGHT_SEED__ = 42 }) // D.1: rigs run a pinned night signature
 page.on('pageerror', (e) => console.error('PAGEERROR', e.message))
 await page.goto(`http://localhost:${PORT}/`)
 await page.waitForFunction(() => window.__MOONREST__?.ready)
