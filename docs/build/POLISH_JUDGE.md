@@ -49,7 +49,21 @@ counts until all eight AA items carry screenshot evidence here.
   (readable, though E.6 candle-pool showcase work remains), park/gloomspire/
   mosswood/isle/foglands reshot. Park warmth margin is thin (0.00152 vs
   0.0015) — AA.4 density adds honest warm content to that frame.
-### AA.4 — density: pending
+### AA.4 — density ✅ 2026-07-24
+- Global: low-frequency painted ground variation (mossy drifts, dry patches)
+  baked into vertex colors; path edging stones along every road ribbon (one
+  merged draw call, clustered with gaps per P.1); water wavelet contrast up.
+- Park: mushroom story-clusters sized to read + lawn boulders in 2s/3s.
+- Rooftops: ridge chimneys + sagging clothesline (with P.4's odd sock), roof
+  lantern warm pools; pose recomposed along the prop line, moon over the
+  western roofs. Mosswood: pose recomposed — Mote sleeping mid-left, arch
+  subject, snore-z inside frame. Sea: true across-the-water frame with the
+  spec's offshore rowboat + causeway leading line. Foglands: near breadcrumb
+  lantern + edging in frame.
+- NEW HARD GATE: scripts/quartercheck.mjs — per-quadrant luminance stddev +
+  edge energy on every zone shot; ground quadrants must be differentiated
+  (sky quadrants exempt as authored gradient). 10/10 PASS. huecheck 9/9,
+  perfgate PASS (101 calls / 89.8k tris).
 ### AA.5 — fun floor: pending
 ### AA.6 — content completeness: pending
 ### AA.7 — player readability ✅ 2026-07-24

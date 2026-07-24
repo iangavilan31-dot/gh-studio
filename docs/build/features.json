@@ -980,7 +980,8 @@
     "no shot contains a screen-quarter of undifferentiated ground or sky (excluding authored sky gradient)",
     "programmatic quarter-variance check on all zone shots"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "quartercheck.mjs (new hard gate): 10/10 shots, no ground quadrant flat; ground macro-variation bake, path edging stones (merged, gap-clustered), park mushroom/boulder story-clusters, offshore rowboat, rooftop chimneys+clothesline+odd sock, roof lantern pools; recomposed rooftops/mosswood/sea/foglands poses; shots READ; perfgate 101 calls 89.8k tris"
   },
   {
    "id": "POLISH-AA5",

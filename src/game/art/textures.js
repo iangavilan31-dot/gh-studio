@@ -366,11 +366,13 @@ export function water({ name = 'water', base = '#22375c', light = '#374c70' } = 
     const c = canvasOf(size, (ctx) => {
       ctx.fillStyle = rgb(b)
       ctx.fillRect(0, 0, size, size)
-      for (let i = 0; i < 22; i++) {
+      // AA.4: wavelet density/contrast up — open water must never read as a
+      // flat quarter, even away from the moon streak
+      for (let i = 0; i < 36; i++) {
         const y = rng.range(0, size)
         const w = rng.range(8, 26)
-        ctx.strokeStyle = rgb(mix(b, hex(light), rng.range(0.5, 1)))
-        ctx.globalAlpha = rng.range(0.35, 0.7)
+        ctx.strokeStyle = rgb(mix(b, lighten(hex(light), rng.chance(0.3) ? 0.12 : 0), rng.range(0.5, 1)))
+        ctx.globalAlpha = rng.range(0.5, 0.85)
         ctx.lineWidth = rng.range(1, 2)
         ctx.beginPath()
         const x = rng.range(0, size)

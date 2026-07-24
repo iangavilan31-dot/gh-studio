@@ -736,6 +736,13 @@ window.__MOONREST__ = {
   get trinkets() { return progress.trinkets },
   bootAudio() { bootAudio(); return audio.started },
   get lights() { return world.lights.map((l) => ({ id: l.id, kindled: l.kindled, x: l.x, z: l.z })) },
+  // rig debug: a light's dynamic parts (flame/halo/pool/glass/pilot) state
+  lightDebug(id) {
+    const l = world.lights.find((x) => x.id === id)
+    if (!l) return null
+    const part = (p) => p ? { visible: p.visible, opacity: p.material?.uniforms?.uOpacity?.value ?? null, pos: p.getWorldPosition(new THREE.Vector3()).toArray().map((v) => +v.toFixed(2)) } : null
+    return { id: l.id, kindled: l.kindled, bloom: l.bloom, flame: part(l.parts.flame), halo: part(l.parts.halo), pool: part(l.parts.pool), glass: part(l.parts.glass), pilot: part(l.pilot) }
+  },
   get interactLog() { return interact.log },
   setPost(patch) {
     for (const [k, v] of Object.entries(patch)) {
