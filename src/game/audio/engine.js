@@ -78,6 +78,30 @@ export class AudioEngine {
     this.hallMix.gain.value = 0
     this.reverbSend.connect(this.roomMix)
     this.roomMix.connect(this.reverb)
+
+    // F.1/O.1: the night's shared pulse — one low swell every 24–40s, felt
+    // more than heard, common to every zone (the same night under all keys)
+    {
+      const osc = ctx.createOscillator()
+      osc.type = 'sine'
+      osc.frequency.value = 54
+      const pg = ctx.createGain()
+      pg.gain.value = 0
+      osc.connect(pg)
+      pg.connect(this.buses.ambience)
+      osc.start()
+      this.nightPulse = pg
+      const swell = () => {
+        if (!this.ctx) return
+        const t = this.ctx.currentTime
+        pg.gain.cancelScheduledValues(t)
+        pg.gain.setValueAtTime(0, t)
+        pg.gain.linearRampToValueAtTime(0.05, t + 3.4)
+        pg.gain.setTargetAtTime(0, t + 4.6, 2.2)
+        this._pulseTimer = setTimeout(swell, 24000 + Math.random() * 16000)
+      }
+      this._pulseTimer = setTimeout(swell, 9000)
+    }
     this.reverbSend.connect(this.hallMix)
     this.hallMix.connect(this.reverbHall)
     this.reverb.connect(this.master)
