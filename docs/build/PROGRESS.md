@@ -469,3 +469,15 @@ reviewer F (code diff 9b4ad57..HEAD). NEXT: apply reviewer findings,
 full reshoot + sequential gates as the pass-3 record, score pass 3 in
 POLISH_JUDGE.md (needs avg >= 9.0 AND opening/movement/atmosphere/
 production >= 9, audio >= 8.5, no category < 8).
+
+## JUDGE PASS 3 = PASS (9.04) — first of two consecutive
+Official record 11/11 sequential; all Part L thresholds met (opening 9.0,
+movement 9.0, atmosphere 9.2, audio 8.9, production 9.2, min cat 8.8).
+Evidence: full reel + postcards + intro beats + probes, all personally
+read. POLISH-52..62 committed and pushed.
+IN FLIGHT: pass-4 CONFIRMING reviewers (G visual / H code on
+c1b99c8..HEAD). NEXT: apply any findings, final sequential gate record,
+score pass 4; if >= 9.0 with thresholds → two consecutive passes → append
+the Morning Report ending exactly with the ship line, then republish the
+artifact per the post-ship entry above (npm run build && node
+scripts/package-artifact.mjs, publish dist/moonrest-artifact.html).
