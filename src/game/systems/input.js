@@ -34,6 +34,9 @@ export class Input {
     window.addEventListener('blur', () => {
       setTimeout(() => { if (!document.hasFocus()) this.keys.clear() }, 150)
     })
+    // ...and refocus clears too: a keyup lost inside a sub-150ms blur must
+    // not leave a key latched (held keys re-register via OS key repeat)
+    window.addEventListener('focus', () => this.keys.clear())
 
     canvas.addEventListener('click', () => {
       if (!this.pointerLocked) {

@@ -89,7 +89,7 @@ const POST_FRAG = /* glsl */ `
     // is COLORIZED toward the zone hue while warm accents keep their fire
     // (Rule 2: warmth stays precious, uncontaminated).
     float lum = dot(col, vec3(0.299, 0.587, 0.114));
-    vec3 lift = uFloor * smoothstep(0.4, 0.05, lum);
+    vec3 lift = uFloor * (1.0 - smoothstep(0.05, 0.4, lum));
     col = lift + col * (vec3(1.0) - lift);
     col = pow(col, vec3(1.0 / uGamma));
     gl_FragColor = vec4(col, 1.0);

@@ -954,7 +954,10 @@ export class NPCSystem {
       if (d < 14) {
         // the head follows the walker — nothing else moves
         const target = Math.atan2(player.pos.x - r.x, player.pos.z - r.z) - r.perch.rotation.y
-        r.head.rotation.y += (target - r.head.rotation.y) * Math.min(1, dt * 3.5)
+        let dy = target - r.head.rotation.y
+        while (dy > Math.PI) dy -= Math.PI * 2
+        while (dy < -Math.PI) dy += Math.PI * 2 // never the owl-spin
+        r.head.rotation.y += dy * Math.min(1, dt * 3.5)
         if (d < 6 && !r.cawed) { r.cawed = true; caw() }
       } else {
         r.idleT -= dt

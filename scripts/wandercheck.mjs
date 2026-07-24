@@ -25,6 +25,10 @@ const browser = await chromium.launch({
   args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-angle=swiftshader'],
 })
 const page = await browser.newPage({ viewport: { width: 960, height: 540 } })
+// MASTER 0.4 console hygiene: any console error/warning is a defect
+const issues = []
+page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') issues.push(m.text()) })
+page.on('pageerror', (e) => issues.push(e.message))
 let fails = 0
 const check = (name, ok, detail) => { console.log(`${ok ? 'PASS' : 'FAIL'} ${name}${detail ? ' — ' + detail : ''}`); if (!ok) fails++ }
 
@@ -99,6 +103,7 @@ console.log(`pois=${result.poiCount} wander ended in ${result.zone} at [${result
 console.log('worst gaps:', result.gaps.map((g) => `${g.gap}s ending at [${g.at}]`).join(' · '))
 check(`actionable encounter at least every ${MAX_GAP_S}s over ${WANDER_S}s`, result.maxGap <= MAX_GAP_S, `max gap ${result.maxGap.toFixed(1)}s`)
 
+check('console clean', issues.length === 0, issues.slice(0, 3).join(' | '))
 console.log(fails === 0 ? 'WANDER GATE PASS' : `WANDER GATE: ${fails} FAILURES`)
 await browser.close()
 preview.kill()

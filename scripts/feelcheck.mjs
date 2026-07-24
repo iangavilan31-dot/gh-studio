@@ -75,7 +75,7 @@ check('decelerates to rest', st.speed < 0.1, `speed=${st.speed}`)
 check('fov returns toward 55', Math.abs(st.fov - 55) < 1.3, `fov=${st.fov}`)
 
 // 3) input latency log (input event → movement applied)
-check('latency = one frame (headless swiftshader frame can reach ~180ms; input applies on the NEXT tick by architecture, so 60fps hardware ⇒ ≤16.7ms — the M6 perf gate owns the frame-time budget)', st.latency.length > 0 && st.latency.every((l) => l.ms < 400), JSON.stringify(st.latency))
+check('latency = one frame (headless swiftshader frame can reach ~180ms; input applies on the NEXT tick by architecture, so 60fps hardware ⇒ ≤16.7ms — the M6 perf gate owns the frame-time budget)', st.latency.length > 0 && st.latency.every((l) => l.ms < 220), JSON.stringify(st.latency))
 
 // 4) hop: 0.5m apex — sampled IN-PAGE every frame (node-side polling misses
 // the peak entirely when headless frames stretch past 100ms)
