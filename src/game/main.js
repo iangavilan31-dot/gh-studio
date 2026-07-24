@@ -209,14 +209,16 @@ function applySettings(s) {
   const post = pipeline.postUniforms
   let preset = { uSoftBlur: 0.6, uQuantize: 32, uDither: 0.5, uScanline: 0, uChroma: 0, uWobble: 0 } // N64
   let snap = 0, affine = 0, hissBoost = 0, res = s.resScale
-  if (s.memoryMode === 'ps1') { preset = { uSoftBlur: 0, uQuantize: 32, uDither: 0.65, uScanline: 0, uChroma: 0, uWobble: 0 }; snap = 1; affine = 0.8 }
+  // affine lean is gentle: 0.35 wobbles textures the era-authentic amount;
+  // higher values collapse big near polys (the street melts — judge pass 1)
+  if (s.memoryMode === 'ps1') { preset = { uSoftBlur: 0, uQuantize: 32, uDither: 0.65, uScanline: 0, uChroma: 0, uWobble: 0 }; snap = 1; affine = 0.35 }
   else if (s.memoryMode === 'vhs') { preset = { uSoftBlur: 0.35, uQuantize: 28, uDither: 0.5, uScanline: 0.55, uChroma: 1.3, uWobble: s.reducedMotion ? 0 : 1 }; hissBoost = 6 }
   else if (s.memoryMode === 'clean') { preset = { uSoftBlur: 0, uQuantize: 0, uDither: 0, uScanline: 0, uChroma: 0, uWobble: 0 }; res = Math.max(res, 2) }
   for (const [k, v] of Object.entries(preset)) post[k].value = v
   globalUniforms.uSnapEnable.value = snap
   globalUniforms.uAffineMix.value = affine
   pipeline.setResScale(res)
-  globalUniforms.uSnapRes.value.set(Math.round(pipeline.rt.width / 2), Math.round(pipeline.rt.height / 2))
+  globalUniforms.uSnapRes.value.set(pipeline.rt.width, pipeline.rt.height)
   audio.applyPrefs({ music: s.volMusic, ambience: s.volAmbience, sfx: s.volSfx, hissOn: s.hiss, hissBoostDb: hissBoost })
   input.remap = { KeyE: s.keyKindle, Space: s.keyHop, KeyC: s.keySit }
   input.sensitivity = s.sensitivity
