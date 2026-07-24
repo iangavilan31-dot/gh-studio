@@ -64,6 +64,16 @@ export class Shell {
 
   save() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(this.s)) } catch { /* private mode */ } }
 
+  // the whole night, edge to edge (also reachable via the browser's F11)
+  toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.()
+    } else {
+      const p = document.documentElement.requestFullscreen?.()
+      p?.catch?.(() => this.toast('your browser held the frame — try F11 instead.'))
+    }
+  }
+
   // — 300ms fog fade between screens —
   transition(fn) {
     this.fade.classList.add('on')
@@ -130,6 +140,7 @@ export class Shell {
     this.menuItem(list, 'New Night', () => this.begin(true))
     this.menuItem(list, 'Host Night', () => this.beginHost())
     this.menuItem(list, 'Join Night', () => this.showJoin())
+    this.menuItem(list, 'Fullscreen', () => this.toggleFullscreen())
     this.menuItem(list, 'Settings', () => this.showSettings('title'))
     this.menuItem(list, 'Credits', () => this.showCredits('title'))
     this.focusItem(list.firstChild)
@@ -203,6 +214,7 @@ export class Shell {
     this.el('div', 'hint', 'WASD walk · Shift jog · mouse look · E kindle (hold) · Tab emote wheel · C sit/lie · Space hop · P photo · F3 lantern-keeper’s ledger', card)
     const list = this.el('div', 'menu', null, card)
     this.menuItem(list, 'Back to the Night', () => this.closeToNight())
+    this.menuItem(list, 'Fullscreen', () => this.toggleFullscreen())
     this.menuItem(list, 'Settings', () => this.showSettings('pause'))
     this.menuItem(list, 'Credits', () => this.showCredits('pause'))
     this.menuItem(list, 'Leave to Title', () => this.transition(() => location.reload()))
