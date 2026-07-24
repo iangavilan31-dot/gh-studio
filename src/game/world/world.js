@@ -236,7 +236,9 @@ export class World {
     // ember pilot-glow (AA.2): every cold light advertises itself — a faint
     // breathing ember at the flame seat until the real flame takes over
     if (!this.pilotMat) {
-      this.pilotMat = retroMaterial({ map: TEX.glowDot({ name: 'pilot', color: '#e07828' }), transparent: true, depthWrite: false, opacity: 0.5, emissive: 0xd06820 })
+      // +20% pilot presence: unkindled shots lean on these embers for their
+      // warm accent (judge pass 3, findings 5/8)
+      this.pilotMat = retroMaterial({ map: TEX.glowDot({ name: 'pilot', color: '#e07828' }), transparent: true, depthWrite: false, opacity: 0.6, emissive: 0xd06820 })
       this.pilotMat.blending = THREE.AdditiveBlending
     }
     const pilot = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.34), this.pilotMat)
@@ -557,6 +559,7 @@ export class World {
     bath.userData.collider = { r: 0.5, h: 0.9 }
     this.place(bath, -12, 6)
     // low fences by the north entrance
+    const fencePostMat = retroMaterial({ map: TEX.woodPost({ name: 'fencePost', base: '#453728' }) })
     const fence = (x1, z1, x2, z2) => {
       const g = new THREE.Group()
       const len = Math.hypot(x2 - x1, z2 - z1)
@@ -564,7 +567,7 @@ export class World {
       for (let i = 0; i <= n; i++) {
         const t = i / n
         const px = x1 + (x2 - x1) * t, pz = z1 + (z2 - z1) * t
-        const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.65, 0.09), mats.plank)
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.65, 0.09), fencePostMat)
         ensureVertexColors(post.geometry)
         post.position.set(px - x1, this.heightAt(px, pz) - this.heightAt(x1, z1) + 0.32, pz - z1)
         g.add(post)
@@ -1625,6 +1628,25 @@ export class World {
       prow.rotation.x = Math.PI / 2
       prow.position.set(0, 0.05, 1.95)
       boat.add(prow)
+      // a hung stern lantern — sea.png's one warm accent (judge pass 3, #5):
+      // somebody means to row back out; the light waits with the boat
+      const sternPole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.7, 5), hullMat)
+      ensureVertexColors(sternPole.geometry, [0.4, 0.36, 0.32])
+      sternPole.position.set(0, 0.4, -1.5)
+      sternPole.rotation.x = -0.25
+      boat.add(sternPole)
+      const sternGlow = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.9), (() => {
+        const m = retroMaterial({ map: TEX.glowDot({ color: '#e8a84a' }), transparent: true, depthWrite: false, opacity: 0.75 })
+        m.blending = THREE.AdditiveBlending
+        return m
+      })())
+      ensureVertexColors(sternGlow.geometry)
+      sternGlow.position.set(0, 0.72, -1.62)
+      boat.add(sternGlow)
+      const sternCore = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.16, 0.12), retroMaterial({ map: TEX.white(), emissive: 0xe8862a }))
+      ensureVertexColors(sternCore.geometry, [1, 0.7, 0.3])
+      sternCore.position.set(0, 0.72, -1.62)
+      boat.add(sternCore)
       boat.position.set(-26, WATER_Y + 0.34, -96)
       boat.rotation.y = 0.7
       boat.userData.dyn = true
@@ -1895,9 +1917,10 @@ export class World {
       { x: -20, z: 110, labels: ['MOSSWOOD →', '← GLOOMSPIRE'] },
     ]
     this.signposts = posts.map((pd) => ({ x: pd.x, z: pd.z }))
+    const postWood = retroMaterial({ map: TEX.woodPost() }) // grain runs WITH the post
     for (const pd of posts) {
       const g = new THREE.Group()
-      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 2.6, 6), mats.plank)
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 2.6, 6), postWood)
       ensureVertexColors(post.geometry)
       post.position.y = 1.3
       g.add(post)
@@ -1977,13 +2000,17 @@ export class World {
       // the Long Bench from the south lawn, path leading away, late moon
       { zone: 'park', idx: 1, pos: [-2.4, hy(-2.4, -24.0) + 1.4, -24.0], look: [2.6, hy(2, -19.6) + 1.7, -19.6], minute: 33 },
       // downhill from the top of Emberwick: lamps stepping down, moon low west
-      { zone: 'village', idx: 1, pos: [126, streetH(126) + 2.0, streetZ(126) + 2.0], look: [96, streetH(96) + 1.2, streetZ(96)], minute: 30 },
-      // Nib and his pine, moon behind the western roofline
-      { zone: 'rooftops', idx: 1, pos: [121.8, streetH(121.8) + 5.6 + 0.85, streetZ(121.8) - 8.9], look: [119.2, streetH(119.2) + 5.6 + 0.25, streetZ(119.2) - 11.2], minute: 31 },
+      // (dolly 3m forward — the empty bottom third read as void; judge #9)
+      { zone: 'village', idx: 1, pos: [123, streetH(123) + 2.0, streetZ(123) + 1.6], look: [96, streetH(96) + 1.2, streetZ(96)], minute: 30 },
+      // the roof-edge canyon: down the street from above, warm windows both
+      // sides, the moon low at the street's end (the flat walkable roofs
+      // offer no "roofscape" — the drama is the street below)
+      { zone: 'rooftops', idx: 1, pos: [124, streetH(124) + 5.6 + 1.0, streetZ(124) - 3.5], look: [102, streetH(102) + 4.5, streetZ(102)], minute: 33 },
       // across the colonnade to the moonwell, moon in the southeast gap
       { zone: 'ruins', idx: 1, pos: [-104, hy(-104, -7) + 1.5, -7], look: [-117, hy(-117, 5) + 2.4, 5], minute: 22 },
-      // castle silhouette across the moat water from the west bank
-      { zone: 'gloomspire', idx: 1, pos: [-140, hy(-140, 114) + 2.2, 114], look: [-112, hy(-112, 126) + 8.5, 126], minute: 16 },
+      // castle silhouette across the moat from the west bank — at minute 3
+      // the moon hangs due EAST, straight behind the towers from here
+      { zone: 'gloomspire', idx: 1, pos: [-140, hy(-140, 114) + 2.2, 114], look: [-112, hy(-112, 126) + 10, 126], minute: 3 },
       // the album cover: throne steps, carpet, candle vault (E.6)
       { zone: 'hall', idx: 1, pos: [-110, hallY + 1.3, 162.5], look: [-110, hallY + 2.6, 169.8], minute: 24 },
       // under the arch looking back down the path, moon low over the trail

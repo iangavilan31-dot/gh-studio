@@ -119,9 +119,11 @@ export class OrbitCamera {
     const viewYaw = this.smoothYaw + this.revealYawOff
 
     // Q.3 wizard's eyes: the camera sits at the keeper's brow looking out
-    // along the view direction — no orbit, no collision march, wider pitch
+    // along the view direction — no orbit, no collision march
     if (this.firstPerson) {
-      _pivot.set(playerPos.x, playerPos.y + 1.42, playerPos.z)
+      // eye height follows the pose (sit/lie) with a soft blend
+      this.fpEye = (this.fpEye ?? 1.42) + ((this.fpEyeTarget ?? 1.42) - (this.fpEye ?? 1.42)) * Math.min(1, dt * 5)
+      _pivot.set(playerPos.x, playerPos.y + this.fpEye, playerPos.z)
       _dir.set(
         Math.sin(viewYaw) * Math.cos(this.smoothPitch),
         -Math.sin(this.smoothPitch),

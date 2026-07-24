@@ -67,9 +67,11 @@ export const ZONES = {
   mosswood: {
     name: 'The Mosswood Gate',
     x: 60, z: 110, r: 44,
-    skyStops: ['#0c1414', '#111e1d', '#15292a', '#1d3630', '#244035'],
-    fog: '#244035', fogNear: 6, fogFar: 30,
-    ambient: '#9db4a4', skyUp: '#2c473a',
+    // ambient one step up from #9db4a4: the gate was 10% off the murk and the
+    // zone read as a black-green smear at thumbnail size (judge pass 3, #7)
+    skyStops: ['#0e1817', '#142322', '#182e2f', '#213c35', '#28463a'],
+    fog: '#28463a', fogNear: 6, fogFar: 30,
+    ambient: '#adc4b4', skyUp: '#345242',
     accent: '#e08a30',
     audioZone: 'mosswood',
   },

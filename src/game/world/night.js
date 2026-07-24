@@ -59,16 +59,18 @@ function crossFlareTexture() {
     ctx.clearRect(0, 0, 128, 128)
     // core kept faint so the painted face reads through the halo (AA.1)
     const g = ctx.createRadialGradient(64, 64, 2, 64, 64, 64)
-    g.addColorStop(0, 'rgba(232,228,255,0.26)')
-    g.addColorStop(0.4, 'rgba(180,170,230,0.12)')
+    g.addColorStop(0, 'rgba(232,228,255,0.18)')
+    g.addColorStop(0.4, 'rgba(180,170,230,0.1)')
     g.addColorStop(1, 'rgba(180,170,230,0)')
     ctx.fillStyle = g
     ctx.fillRect(0, 0, 128, 128)
-    // soft cross streaks (the N64 lens cross)
+    // soft cross streaks (the N64 lens cross) — kept well under the face:
+    // at 0.5 the cross bisected the maria and the moon read as a sparkle,
+    // not a character (judge pass 3, finding 4)
     const streak = (w, h) => {
       const lg = ctx.createLinearGradient(64 - w / 2, 0, 64 + w / 2, 0)
       lg.addColorStop(0, 'rgba(232,228,255,0)')
-      lg.addColorStop(0.5, 'rgba(232,228,255,0.5)')
+      lg.addColorStop(0.5, 'rgba(232,228,255,0.26)')
       lg.addColorStop(1, 'rgba(232,228,255,0)')
       ctx.fillStyle = lg
       ctx.fillRect(64 - w / 2, 64 - h / 2, w, h)

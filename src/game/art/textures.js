@@ -591,6 +591,34 @@ export function white() {
   })
 }
 
+// Vertical-grain post wood: tall thin posts (fingerposts, fences) wearing the
+// 4-row plank texture read as barcode banding — this grain runs WITH the post.
+export function woodPost({ name = 'woodPost', base = '#4a3a2c' } = {}) {
+  return make(name, (rng) => {
+    const c = canvasOf(64, (ctx) => {
+      const b = hex(base)
+      ctx.fillStyle = rgb(b)
+      ctx.fillRect(0, 0, 64, 64)
+      for (let i = 0; i < 12; i++) {
+        const x = 2 + i * 5.4 + rng.range(-1.5, 1.5)
+        ctx.strokeStyle = rgb(mix(b, hex(rng.pick(['#54402e', '#3c2f24', '#57452f'])), 0.75))
+        ctx.lineWidth = rng.range(1.2, 2.6)
+        ctx.beginPath()
+        ctx.moveTo(x, 0)
+        ctx.bezierCurveTo(x + rng.range(-2, 2), 21, x + rng.range(-2, 2), 42, x + rng.range(-3, 3), 64)
+        ctx.stroke()
+      }
+      // one knot, off-center
+      ctx.fillStyle = rgb(darken(b, 0.18))
+      ctx.beginPath()
+      ctx.ellipse(18 + rng.range(-6, 20), 20 + rng.range(-8, 22), 3.2, 4.6, 0.3, 0, Math.PI * 2)
+      ctx.fill()
+      splotch(ctx, 64, rng, { color: lighten(b, 0.08), count: 8, rmin: 2, rmax: 5, alpha: 0.3 })
+    })
+    return toTexture(c)
+  })
+}
+
 // Scratched marks (PRESTIGE P.4 human fingerprints): initials under a bench,
 // a stones-game tally by a gate — thin pale gouges on a transparent card.
 export function scratchTag({ name = 'scratchTag', kind = 'initials', color = '#cfc8b4' } = {}) {

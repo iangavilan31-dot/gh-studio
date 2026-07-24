@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-// K.1 first-ten-minutes capture: a PLAYER-STYLE session — the authored intro
-// hands off to a seeded wander that wanders the roads, stops at cold lights
-// and channels them, logging a timestamped event stream. The K question:
-// does any sim stretch go dead (no encounter, no event) for 20s+?
+// K.1 first-ten-minutes capture v3: the AUTHORED route — spawn, Beldam's
+// pointer, the bench lamp, the park lanterns, the east road past the
+// fingerpost, into Emberwick and its street lamps. Waypoint steering with
+// real held keys; channels each cold light it reaches. Logs a timestamped
+// event stream and dead-stretch gaps in SIM minutes.
 // Output: docs/build/k1capture.json
 
 import { spawn } from 'node:child_process'
@@ -38,51 +39,64 @@ const data = await page.evaluate(async () => {
   M.startNight()
   M.suppressNightEnd(true)
   const pois = M.pois
-  const events = []
   const kb = (type, code) => window.dispatchEvent(new KeyboardEvent(type, { code, bubbles: true }))
-  // deterministic wander (mulberry32) with kindle stops — a player, not a rig
-  let seed = 0x51ab1e
-  const rand = () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296 }
-  let yaw = 2.6, yawT = 0
+  // the authored opening route: park ritual → east road → Emberwick lamps
+  const villageLights = M.lights.filter((l) => l.zone === 'village').slice(0, 4).map((l) => ({ x: l.x, z: l.z, light: true }))
+  const route = [
+    { x: 4.2, z: -19.2, light: true },   // Beldam's bench lamp (her pointer)
+    { x: 17.7, z: 9.0, light: true },    // park lantern 1
+    { x: -17.7, z: 9.0, light: true },   // park lantern 2
+    { x: 24, z: 0 },                     // the fingerpost fork
+    { x: 40, z: 0 }, { x: 60, z: 0 },    // the east road (crumb country)
+    { x: 72, z: 1 }, { x: 88, z: 2 },    // into the street
+    ...villageLights,
+    { x: 137, z: 4 },                    // the gate landmark
+  ]
+  const events = []
+  let wp = 0, prev = null, channelStart = null
   const nt0 = M.state.nightT
-  let prev = null
-  let lastNotable = 0 // sim-min since start
+  let lastNotable = 0
   const gaps = []
-  let channelingSince = null
   kb('keydown', 'KeyW')
   while (true) {
     await new Promise((r) => setTimeout(r, 100))
     const s = M.state
     const nt = s.nightT - nt0
-    if (nt >= 10) break
-    yawT -= 0.1
-    if (yawT <= 0 && !channelingSince) { yawT = 2 + rand() * 3; yaw += (rand() - 0.5) * 2.0; M.setCamYaw(yaw) }
-    // events from state deltas
-    if (prev) {
-      if (s.zone !== prev.zone) events.push({ nt: +nt.toFixed(2), ev: 'zone', to: s.zone })
-      if (s.kindled.length > prev.kindled.length) events.push({ nt: +nt.toFixed(2), ev: 'kindle', id: s.kindled[s.kindled.length - 1], total: s.kindled.length })
-      if (s.fov > 57 && prev.fov <= 57) events.push({ nt: +nt.toFixed(2), ev: 'reveal', zone: s.zone })
-    }
-    // a cold light nearby? stop and channel it like a player would
-    const cold = M.lights.find((l) => !s.kindled.includes(l.id) && Math.hypot(l.x - s.playerPos[0], l.z - s.playerPos[2]) < 3.2)
-    if (cold && !channelingSince) {
-      kb('keyup', 'KeyW')
-      kb('keydown', 'KeyE')
-      channelingSince = nt
-    }
-    if (channelingSince != null) {
-      if (prev && s.kindled.length > prev.kindled.length) {
-        kb('keyup', 'KeyE')
-        kb('keydown', 'KeyW')
-        channelingSince = null
-      } else if (nt - channelingSince > 0.12) { // ~7s sim: not kindling (out of reach) — move on
-        kb('keyup', 'KeyE')
-        kb('keydown', 'KeyW')
-        channelingSince = null
+    if (nt >= 10 || wp >= route.length) break
+    const t = route[wp]
+    const dx = t.x - s.playerPos[0], dz = t.z - s.playerPos[2]
+    const d = Math.hypot(dx, dz)
+    if (!channelStart) M.setCamYaw(Math.atan2(-dx, -dz)) // steer toward the waypoint
+    if (d < 2.4) {
+      if (t.light && !channelStart) {
+        kb('keyup', 'KeyW')
+        kb('keydown', 'KeyE')
+        channelStart = nt
+      } else if (!t.light) {
+        events.push({ nt: +nt.toFixed(2), ev: 'waypoint', at: [t.x, t.z] })
+        wp++
       }
     }
-    // notable = event this tick OR any POI within 16m
-    let notable = events.length && Math.abs(events[events.length - 1].nt - nt) < 0.02
+    if (channelStart != null) {
+      if (prev && s.kindled.length > prev.kindled) {
+        kb('keyup', 'KeyE')
+        kb('keydown', 'KeyW')
+        channelStart = null
+        wp++
+      } else if (nt - channelStart > 0.2) { // ~12s sim without a kindle: move on
+        kb('keyup', 'KeyE')
+        kb('keydown', 'KeyW')
+        channelStart = null
+        wp++
+      }
+    }
+    if (prev) {
+      if (s.zone !== prev.zone) events.push({ nt: +nt.toFixed(2), ev: 'zone', to: s.zone })
+      if (s.kindled.length > prev.kindled) events.push({ nt: +nt.toFixed(2), ev: 'kindle', id: s.kindled[s.kindled.length - 1] })
+      if (s.fov > 57 && prev.fov <= 57) events.push({ nt: +nt.toFixed(2), ev: 'reveal', zone: s.zone })
+    }
+    // notable: an event this tick, or any POI inside 16m
+    let notable = events.length > 0 && Math.abs(events[events.length - 1].nt - nt) < 0.02
     if (!notable) {
       for (const poi of pois) {
         if (Math.hypot(poi.x - s.playerPos[0], poi.z - s.playerPos[2]) < 16) { notable = true; break }
@@ -93,24 +107,21 @@ const data = await page.evaluate(async () => {
       if (gap > 0.1) gaps.push({ gap: +gap.toFixed(2), atNt: +lastNotable.toFixed(2) })
       lastNotable = nt
     }
-    // stuck escape
-    if (prev && Math.hypot(s.playerPos[0] - prev.x, s.playerPos[2] - prev.z) < 0.02 && !channelingSince && s.speed < 0.2) {
-      yaw += Math.PI * (0.6 + rand() * 0.5); M.setCamYaw(yaw)
-    }
-    prev = { zone: s.zone, kindled: s.kindled, fov: s.fov, x: s.playerPos[0], z: s.playerPos[2] }
+    prev = { zone: s.zone, kindled: s.kindled.length, fov: s.fov }
   }
   kb('keyup', 'KeyW')
-  const tail = (M.state.nightT - nt0) - lastNotable
+  const endNt = M.state.nightT - nt0
+  const tail = endNt - lastNotable
   if (tail > 0.1) gaps.push({ gap: +tail.toFixed(2), atNt: +lastNotable.toFixed(2), tail: true })
   gaps.sort((a, b) => b.gap - a.gap)
-  return { events, gaps: gaps.slice(0, 8), simMinutes: +(M.state.nightT - nt0).toFixed(2), kindled: M.state.kindled.length, endZone: M.state.zone }
+  return { events, gaps: gaps.slice(0, 8), simMinutes: +endNt.toFixed(2), kindled: M.state.kindled.length, endZone: M.state.zone, waypointsReached: wp }
 })
 
 data.consoleIssues = issues.slice(0, 5)
 writeFileSync(resolve(root, 'docs/build/k1capture.json'), JSON.stringify(data, null, 1))
 const worst = data.gaps[0]?.gap ?? 0
-console.log(`walked ${data.simMinutes} sim minutes, ${data.events.length} events, ${data.kindled} lamps lit, ended in ${data.endZone}`)
-console.log('worst dead stretches (sim min):', data.gaps.map((g) => `${g.gap} @${g.atNt}`).join(' · '))
+console.log(`route: ${data.waypointsReached} waypoints, ${data.kindled} lamps, ${data.events.length} events over ${data.simMinutes} sim min, ended in ${data.endZone}`)
+console.log('worst stretches (sim min):', data.gaps.map((g) => `${g.gap} @${g.atNt}`).join(' · ') || 'none')
 console.log(worst <= 0.34 ? `K1 CAPTURE PASS — worst stretch ${(worst * 60).toFixed(0)}s <= 20s` : `K1 CAPTURE: worst stretch ${(worst * 60).toFixed(0)}s exceeds 20s`)
 console.log(issues.length === 0 ? 'console clean' : `console issues: ${issues.length}`)
 await browser.close()

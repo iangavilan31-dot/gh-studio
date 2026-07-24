@@ -39,7 +39,10 @@ const FRAG = /* glsl */ `
     vec4 tex = texture2D(uMap, vUv);
     float fogF = smoothstep(uFogNear, uFogFar, vFogDepth) * uFogInfluence;
     vec3 col = mix(tex.rgb * uColor, uFogColor, fogF);
-    gl_FragColor = vec4(col, tex.a * vAlpha * (1.0 - fogF * 0.6));
+    // near-camera fade: a raindrop half a meter from the lens otherwise
+    // becomes a full-frame translucent monolith (judge pass 3, finding 1)
+    float nearF = smoothstep(0.45, 2.0, vFogDepth);
+    gl_FragColor = vec4(col, tex.a * vAlpha * (1.0 - fogF * 0.6) * nearF);
   }
 `
 
