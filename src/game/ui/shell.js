@@ -11,7 +11,8 @@ import { sanitizeName } from '../net/coop.js'
 
 const SETTINGS_KEY = 'moonrest-settings-v1'
 export const SETTINGS_DEFAULTS = {
-  memoryMode: 'n64', resScale: 1, reducedMotion: false,
+  settingsV: 2, // v2: Restored replaces Clean and becomes the default (Part Q)
+  memoryMode: 'restored', resScale: 1, reducedMotion: false,
   volMusic: 0.8, volAmbience: 0.7, volSfx: 0.9, hiss: true,
   sensitivity: 1, invertY: false, holdToToggle: false, subtitles: true,
   cameraAssist: true,
@@ -19,7 +20,14 @@ export const SETTINGS_DEFAULTS = {
 }
 
 export function loadSettings() {
-  try { return { ...SETTINGS_DEFAULTS, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}') } }
+  try {
+    const raw = JSON.parse(localStorage.getItem(SETTINGS_KEY) ?? '{}')
+    // one-time migration: pre-Q saves keep their prefs but adopt the new
+    // default render mode (the old soft default is what read as "blurry")
+    if ((raw.settingsV ?? 1) < 2) { delete raw.memoryMode; raw.settingsV = 2 }
+    if (raw.memoryMode === 'clean') raw.memoryMode = 'restored'
+    return { ...SETTINGS_DEFAULTS, ...raw }
+  }
   catch { return { ...SETTINGS_DEFAULTS } }
 }
 
@@ -289,8 +297,8 @@ export class Shell {
     }
 
     section('video')
-    cycle('memory', 'memoryMode', ['n64', 'ps1', 'vhs', 'clean'], ['N64 (soft)', 'PS1 (jitter)', 'VHS (haunted)', 'Clean (crisp)'])
-    cycle('internal res', 'resScale', [0.5, 1, 1.5, 2], ['0.5×', '1×', '1.5×', '2×'])
+    cycle('memory', 'memoryMode', ['restored', 'n64', 'ps1', 'vhs'], ['Restored (crisp)', 'N64 (soft)', 'PS1 (jitter)', 'VHS (haunted)'])
+    cycle('retro res', 'resScale', [0.5, 1, 1.5, 2], ['0.5×', '1×', '1.5×', '2×'])
     cycle('reduced motion', 'reducedMotion', [false, true], ['off', 'on'])
     section('audio')
     slider('music', 'volMusic')

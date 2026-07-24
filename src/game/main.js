@@ -250,20 +250,24 @@ function startNight(fresh = false) {
   return true
 }
 
-// Memory dials (Part 8.6) + every other setting, applied in one place
+// Memory dials (Part 8.6 + PRESTIGE Part Q) + every other setting, in one place
 function applySettings(s) {
   const post = pipeline.postUniforms
-  let preset = { uSoftBlur: 0.6, uQuantize: 32, uDither: 0.5, uScanline: 0, uChroma: 0, uWobble: 0 } // N64
-  let snap = 0, affine = 0, hissBoost = 0, res = s.resScale
+  // Restored (default, Part Q.1): native res, no blur, dither as film grain
+  // (≤0.15), gentle luma sharpen, crisp mips via -0.5 LOD bias
+  let preset = { uSoftBlur: 0, uQuantize: 32, uDither: 0.15, uScanline: 0, uChroma: 0, uWobble: 0, uSharpen: 0.15 }
+  let snap = 0, affine = 0, hissBoost = 0, res = s.resScale, native = true, lodBias = -0.5
   // affine lean is gentle: 0.35 wobbles textures the era-authentic amount;
   // higher values collapse big near polys (the street melts — judge pass 1)
-  if (s.memoryMode === 'ps1') { preset = { uSoftBlur: 0, uQuantize: 32, uDither: 0.65, uScanline: 0, uChroma: 0, uWobble: 0 }; snap = 1; affine = 0.35 }
-  else if (s.memoryMode === 'vhs') { preset = { uSoftBlur: 0.35, uQuantize: 28, uDither: 0.5, uScanline: 0.55, uChroma: 1.3, uWobble: s.reducedMotion ? 0 : 1 }; hissBoost = 6 }
-  else if (s.memoryMode === 'clean') { preset = { uSoftBlur: 0, uQuantize: 0, uDither: 0, uScanline: 0, uChroma: 0, uWobble: 0 }; res = Math.max(res, 2) }
+  if (s.memoryMode === 'n64') { preset = { uSoftBlur: 0.6, uQuantize: 32, uDither: 0.5, uScanline: 0, uChroma: 0, uWobble: 0, uSharpen: 0 }; native = false; lodBias = 0 }
+  else if (s.memoryMode === 'ps1') { preset = { uSoftBlur: 0, uQuantize: 32, uDither: 0.65, uScanline: 0, uChroma: 0, uWobble: 0, uSharpen: 0 }; snap = 1; affine = 0.35; native = false; lodBias = 0 }
+  else if (s.memoryMode === 'vhs') { preset = { uSoftBlur: 0.35, uQuantize: 28, uDither: 0.5, uScanline: 0.55, uChroma: 1.3, uWobble: s.reducedMotion ? 0 : 1, uSharpen: 0 }; hissBoost = 6; native = false; lodBias = 0 }
   for (const [k, v] of Object.entries(preset)) post[k].value = v
   globalUniforms.uSnapEnable.value = snap
   globalUniforms.uAffineMix.value = affine
-  pipeline.setResScale(res)
+  globalUniforms.uLodBias.value = lodBias
+  pipeline.setNative(native)
+  if (!native) pipeline.setResScale(res)
   globalUniforms.uSnapRes.value.set(pipeline.rt.width, pipeline.rt.height)
   audio.applyPrefs({ music: s.volMusic, ambience: s.volAmbience, sfx: s.volSfx, hissOn: s.hiss, hissBoostDb: hissBoost })
   input.remap = { KeyE: s.keyKindle, Space: s.keyHop, KeyC: s.keySit }
@@ -320,7 +324,7 @@ function updatePhoto(dt) {
   camera.fov = photo.fov
   camera.updateProjectionMatrix()
   if (input.pressed('KeyF')) { // filter picker cycles the Memory dials
-    const modes = ['n64', 'ps1', 'vhs', 'clean']
+    const modes = ['restored', 'n64', 'ps1', 'vhs']
     shell.s.memoryMode = modes[(modes.indexOf(shell.s.memoryMode) + 1) % modes.length]
     shell.save(); applySettings(shell.s)
   }
@@ -333,10 +337,11 @@ function updatePhoto(dt) {
 const _pv = new THREE.Vector3()
 function capturePhoto() {
   const prev = pipeline.resScale
-  pipeline.setResScale(Math.max(2, prev)) // internal RT at 2× for the keepsake
+  // retro dials upscale the keepsake to 2×; Restored is already native res
+  if (!pipeline.native) pipeline.setResScale(Math.max(2, prev))
   pipeline.render(scene, camera, elapsed)
   const url = canvas.toDataURL('image/png')
-  pipeline.setResScale(prev)
+  if (!pipeline.native) pipeline.setResScale(prev)
   const a = document.createElement('a')
   a.href = url
   a.download = `moonrest-${Math.round(performance.now())}.png`
@@ -545,6 +550,8 @@ window.__MOONREST__ = {
         scanline: pipeline.postUniforms.uScanline.value, chroma: pipeline.postUniforms.uChroma.value,
         wobble: pipeline.postUniforms.uWobble.value, snap: globalUniforms.uSnapEnable.value,
         affine: globalUniforms.uAffineMix.value, rtW: pipeline.rt.width, rtH: pipeline.rt.height,
+        dither: pipeline.postUniforms.uDither.value, sharpen: pipeline.postUniforms.uSharpen.value,
+        native: pipeline.native, lodBias: globalUniforms.uLodBias.value,
       },
       menuItems: [...document.querySelectorAll('.shell .mi')].map((m) => m.textContent),
       fontsLoaded: !!document.fonts && [...document.fonts].some((f) => /IM Fell|Alegreya/i.test(f.family)),

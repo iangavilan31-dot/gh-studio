@@ -1,6 +1,8 @@
-// Retro render pipeline (MASTER_PROMPT 8.1/8.5): scene → 480×270 nearest RT →
-// single post shader (quantize → Bayer dither → vignette → mode extras → gamma)
-// → letterboxed canvas. Internal res scale 0.5×/1×/1.5×/2×.
+// Render pipeline. Default "Restored" mode (PRESTIGE_PASS Part Q, overrides
+// MASTER_PROMPT 8.1): scene → RT at native letterbox resolution (canvas × DPR,
+// cap 2) → post shader (luma sharpen → quantize → subtle dither → vignette →
+// gamma) → canvas 1:1, zero upscale blur. The retro dials (N64/PS1/VHS) keep
+// the old 480×270 nearest RT path with internal res scale 0.5×–2×.
 
 import * as THREE from 'three'
 
@@ -22,6 +24,7 @@ const POST_FRAG = /* glsl */ `
   uniform float uScanline;    // VHS
   uniform float uChroma;      // VHS chroma bleed px
   uniform float uWobble;      // VHS tracking wobble amount
+  uniform float uSharpen;     // Restored: gentle luma sharpen (Part Q.1)
   uniform float uTime;
 
   float bayer4(vec2 p) {
@@ -58,6 +61,15 @@ const POST_FRAG = /* glsl */ `
       vec3 l = texture2D(uScene, uv - vec2(o, 0.0)).rgb;
       vec3 r = texture2D(uScene, uv + vec2(o, 0.0)).rgb;
       col = mix(col, (col * 2.0 + l + r) * 0.25, uSoftBlur);
+    }
+    if (uSharpen > 0.0) {
+      vec2 px = 1.0 / uRes;
+      vec3 nb = texture2D(uScene, uv + vec2(0.0, px.y)).rgb
+              + texture2D(uScene, uv - vec2(0.0, px.y)).rgb
+              + texture2D(uScene, uv + vec2(px.x, 0.0)).rgb
+              + texture2D(uScene, uv - vec2(px.x, 0.0)).rgb;
+      col += (col - nb * 0.25) * uSharpen;
+      col = clamp(col, 0.0, 1.0);
     }
     if (uQuantize > 0.0) {
       float d = (bayer4(vUv * uRes) - 0.5) * uDither / uQuantize;
@@ -106,8 +118,10 @@ export class Pipeline {
       uScanline: { value: 0 },
       uChroma: { value: 0 },
       uWobble: { value: 0 },
+      uSharpen: { value: 0 },
       uTime: { value: 0 },
     }
+    this.native = false
     this.postScene = new THREE.Scene()
     this.postCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1)
     const quad = new THREE.Mesh(
@@ -136,9 +150,18 @@ export class Pipeline {
 
   setResScale(s) {
     this.resScale = s
+    if (this.native) return // Restored mode: RT tracks the viewport, not the dial
     const w = Math.round(BASE_W * s), h = Math.round(BASE_H * s)
     this.rt.setSize(w, h)
     this.postUniforms.uRes.value.set(w, h)
+  }
+
+  // Restored mode (Part Q.1): RT at the letterboxed viewport's device-pixel
+  // size — the post pass runs 1:1 onto the canvas, so texel edges stay razor.
+  setNative(on) {
+    this.native = on
+    if (on) this.resize()
+    else this.setResScale(this.resScale)
   }
 
   resize() {
@@ -157,6 +180,13 @@ export class Pipeline {
     let vw = pw, vh = pw / target
     if (vh > ph) { vh = ph; vw = ph * target }
     this.viewport = new THREE.Vector4((pw - vw) / 2, (ph - vh) / 2, vw, vh)
+    if (this.native) {
+      const nw = Math.max(2, Math.round(vw)), nh = Math.max(2, Math.round(vh))
+      if (this.rt.width !== nw || this.rt.height !== nh) {
+        this.rt.setSize(nw, nh)
+        this.postUniforms.uRes.value.set(nw, nh)
+      }
+    }
   }
 
   render(scene, camera, time) {
