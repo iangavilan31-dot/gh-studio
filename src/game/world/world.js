@@ -68,6 +68,7 @@ export class World {
     this.bakeVertexColors()
     this.bakeHallShowcase()
     this.mergeStaticInGroups()
+    this.buildPostcards()
   }
 
   // Part 7.2: merge each zone's static opaque meshes into one draw per material.
@@ -242,6 +243,16 @@ export class World {
     ensureVertexColors(pilot.geometry)
     pilot.position.set(x, y, z)
     pilot.renderOrder = 5
+    // a normal-blend ember heart inside the additive halo: additive orange
+    // over cobalt reads purple, so the core carries the true warm hue
+    if (!this.pilotCoreMat) {
+      this.pilotCoreMat = retroMaterial({ map: TEX.glowDot({ name: 'pilotcore', color: '#ff7a1e' }), transparent: true, depthWrite: false, opacity: 0.95, emissive: 0xe86612 })
+    }
+    const core = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.15), this.pilotCoreMat)
+    ensureVertexColors(core.geometry)
+    core.position.z = 0.01
+    core.renderOrder = 6
+    pilot.add(core)
     this.scene.add(pilot)
     light.pilot = pilot
   }
@@ -1600,13 +1611,44 @@ export class World {
           const d = Math.sqrt((v.x - cx2) ** 2 + (v.y - cy2) ** 2 * 0.35 + (v.z - cz2) ** 2)
           w += Math.max(0, 1 - d / 7.5)
         }
-        w = Math.min(1.1, w)
-        r *= 1 + w * 1.15
-        g *= 1 + w * 0.62
-        b *= 1 + w * 0.18
-        col.setXYZ(i, r * 0.9, g * 0.9, b * 0.95)
+        w = Math.min(1.15, w)
+        // E.6 boost: pools must READ as pools of candlelight — the showcase
+        // was measuring near-zero bright-warm pixels before this
+        r *= 1 + w * 2.0
+        g *= 1 + w * 1.05
+        b *= 1 + w * 0.22
+        // the vault above disappears into darkness
+        const vault = THREE.MathUtils.clamp((v.y - 5.2) / 3.4, 0, 1)
+        const fade = 1 - vault * 0.55
+        col.setXYZ(i, r * 0.9 * fade, g * 0.9 * fade, b * 0.95 * (1 - vault * 0.35))
       }
       col.needsUpdate = true
+    }
+    // E.6: layered floor mist (drifting) + high moon shafts + candle-vault air
+    {
+      const hy = heightAt(-110, 152)
+      const mistMat = retroMaterial({ map: TEX.glowDot({ name: 'hallmist', color: '#8a92a8' }), transparent: true, depthWrite: false, opacity: 0.055 })
+      mistMat.blending = THREE.AdditiveBlending
+      this.hallMist = []
+      for (let i = 0; i < 4; i++) {
+        const m2 = new THREE.Mesh(new THREE.PlaneGeometry(9.5, 4.6), mistMat)
+        ensureVertexColors(m2.geometry)
+        m2.rotation.x = -Math.PI / 2
+        m2.position.set(-110 + (i % 2 ? 2.1 : -2.1), hy + 0.32 + i * 0.09, 143 + i * 7)
+        m2.userData.dyn = true
+        this.scene.add(m2)
+        this.hallMist.push({ mesh: m2, baseX: m2.position.x, seed: i * 2.3 })
+      }
+      const shaftMat = retroMaterial({ map: TEX.glowDot({ name: 'hallshaft', color: '#9d97c2' }), transparent: true, depthWrite: false, opacity: 0.085 })
+      shaftMat.blending = THREE.AdditiveBlending
+      for (const z of [149, 161]) {
+        const sh = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 9.5), shaftMat)
+        ensureVertexColors(sh.geometry)
+        sh.position.set(-110 + 2.4, hy + 5.1, z)
+        sh.rotation.z = 0.42
+        sh.userData.dyn = true
+        this.scene.add(sh)
+      }
     }
   }
 
@@ -1752,6 +1794,33 @@ export class World {
     return null
   }
 
+  // PRESTIGE B.1: authored postcard views per zone — deliberately composed
+  // frames beyond the automated pose. Reachable via the debug surface
+  // (listPostcards / teleportPostcard) and shot by scripts/postcards.mjs.
+  buildPostcards() {
+    const hy = (x, z) => heightAt(x, z)
+    const kBase = hy(0, -152)
+    const hallY = hy(-110, 152)
+    this.postcards = [
+      // the Long Bench from the south lawn, path leading away, late moon
+      { zone: 'park', idx: 1, pos: [-2.4, hy(-2.4, -24.0) + 1.4, -24.0], look: [2.6, hy(2, -19.6) + 1.7, -19.6], minute: 33 },
+      // downhill from the top of Emberwick: lamps stepping down, moon low west
+      { zone: 'village', idx: 1, pos: [126, streetH(126) + 2.0, streetZ(126) + 2.0], look: [96, streetH(96) + 1.2, streetZ(96)], minute: 30 },
+      // Nib and his pine, moon behind the western roofline
+      { zone: 'rooftops', idx: 1, pos: [121.8, streetH(121.8) + 5.6 + 0.85, streetZ(121.8) - 8.9], look: [119.2, streetH(119.2) + 5.6 + 0.25, streetZ(119.2) - 11.2], minute: 31 },
+      // across the colonnade to the moonwell, moon in the southeast gap
+      { zone: 'ruins', idx: 1, pos: [-104, hy(-104, -7) + 1.5, -7], look: [-117, hy(-117, 5) + 2.4, 5], minute: 22 },
+      // castle silhouette across the moat water from the west bank
+      { zone: 'gloomspire', idx: 1, pos: [-96, hy(-96, 116) + 1.6, 116], look: [-114, hy(-114, 127) + 9.5, 127], minute: 16 },
+      // the album cover: throne steps, carpet, candle vault (E.6)
+      { zone: 'hall', idx: 1, pos: [-110, hallY + 1.15, 158], look: [-110, hallY + 2.8, 169.5], minute: 24 },
+      // under the arch looking back down the path, moon low over the trail
+      { zone: 'mosswood', idx: 1, pos: [82, hy(82, 109.5) + 1.6, 109.5], look: [58, hy(58, 111) + 2.8, 111], minute: 30 },
+      // keep-top vista: the best view of the moon in the game (E.8)
+      { zone: 'isle', idx: 1, pos: [0, kBase + 11.2, -150], look: [-14, kBase + 12.4, -177], minute: 38 },
+    ]
+  }
+
   update(dt, time) {
     // zone-distance culling (D6): fog hides what we skip drawing
     if (this.zoneGroups) {
@@ -1825,11 +1894,20 @@ export class World {
         c.mesh.rotation.y = time * 0.4 + c.seed
       }
     }
+    if (this.hallMist) {
+      for (const hm of this.hallMist) hm.mesh.position.x = hm.baseX + Math.sin(time * 0.1 + hm.seed) * 1.1
+    }
     if (this.moonStreak && this.moonDir) {
-      // strip runs from the isle shore toward the moon's azimuth across the sea
+      // the reflection lies between the VIEWER and the moon (it follows you,
+      // like the real thing): center the strip on the camera's azimuth line,
+      // clamped to open water
       const az = Math.atan2(this.moonDir.x, this.moonDir.z)
       this.moonStreak.rotation.z = -az
-      this.moonStreak.material.uniforms.uOpacity.value = 0.45 + Math.max(0, this.moonDir.y) * 0.25
+      const cam = this.camera.position
+      const cx = Math.max(-60, Math.min(60, cam.x + Math.sin(az) * 42))
+      const cz = Math.min(-52, cam.z + Math.cos(az) * 42)
+      this.moonStreak.position.set(cx, WATER_Y + 0.05, cz)
+      this.moonStreak.material.uniforms.uOpacity.value = 0.5 + Math.max(0, this.moonDir.y) * 0.25
     }
     if (this.greenWindows) {
       for (const gw of this.greenWindows) {

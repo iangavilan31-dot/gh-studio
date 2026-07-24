@@ -66,7 +66,7 @@ const VERT = /* glsl */ `
     float lac = 0.0;
     for (int i = 0; i < 4; i++) {
       float d = distance(wp, uLanternPos[i]);
-      float f = max(0.0, 1.0 - d / 7.0);
+      float f = max(0.0, 1.0 - d / 8.0);
       // near-field attenuation: the wearer gets a rim, not an orange bath —
       // the pool lands on the ground around them
       float nearAtt = 0.3 + 0.7 * smoothstep(0.35, 1.7, d);
@@ -114,6 +114,10 @@ const FRAG = /* glsl */ `
     // a faint violet-biased fill (AA.7) so the robe tint reads and the
     // silhouette never crushes into the background
     vec3 hemi = mix(uFogColor * 1.7, uSkyUp * 2.1, vHemi) + vec3(0.11, 0.09, 0.16);
+    // the zone tints characters but never owns them (AA.7): pull the tint
+    // 35% toward its own luminance so the robe's violet survives teal fog
+    float hl = dot(hemi, vec3(0.299, 0.587, 0.114));
+    hemi = mix(hemi, vec3(hl), 0.35);
     col *= hemi;
     #else
     col *= uAmbient;
@@ -121,7 +125,7 @@ const FRAG = /* glsl */ `
     col += uEmissive * tex.rgb;
     // carried lantern warmth (AA.2) — modulated by the texture so painted
     // detail stays legible inside the pool; applied before fog so fog wins
-    col += vec3(0.98, 0.62, 0.26) * vLantern * 0.38 * (tex.rgb * 0.75 + 0.25);
+    col += vec3(0.98, 0.62, 0.26) * vLantern * 0.6 * (tex.rgb * 0.7 + 0.3);
     float fogF = smoothstep(uFogNear, uFogFar, vFogDepth);
     #ifdef NO_FOG
     fogF = 0.0;

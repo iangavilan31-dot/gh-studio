@@ -135,3 +135,25 @@ tractable proxies instead: draw calls ≤120 (97), tris ≤150k (80.4k), bundle 
 (216KB), boot ≤3s (~0.4s). Reasoning for real hardware: 97 calls / 80k tris at 480×270
 with one pass + one post quad is far inside integrated-GPU headroom for 60fps. A human
 run on a 2020 laptop should confirm; flagged in the Morning Report.
+
+## Prestige pass decisions (2026-07-24, ranked by risk)
+
+1. **Hard gates are sequential-only.** Headless software rendering collapses
+   sim time under CPU contention; wander/perf/coop verdicts are only valid run
+   one-at-a-time on an idle box. Judge passes must run the suite serially
+   (risk if forgotten: false reds burn cycles — no player impact).
+2. **Behavior gates preseed the N64 pipeline.** They verify mechanics, not the
+   renderer; Restored is covered by shoot/hue/quarter/shell/perf. (Risk: a
+   Restored-only mechanics bug could hide; mitigated by shellcheck's Restored
+   assertions + all visual gates running Restored.)
+3. **Foglands ground quadrants pass by gradient, not edge content** — accepted
+   as fog-corridor intent (12m visibility IS the zone's identity; AA.4's
+   letter would fight Part 3.3's design). Documented rather than gamed.
+4. **Texture tier-up (Q.1 128–256px) deferred**: native-res rendering delivered
+   the de-blur; per-recipe repaint is high-touch for marginal texel gain. The
+   judge loop will veto if texel chunk reads wrong at 1080p.
+5. **Reviewer-A finding "AA.2 accept vs unkindled reel"**: pilots ARE the
+   warm accent in fresh-night shots; additive orange over cobalt read purple,
+   fixed with normal-blend ember cores. If the judge still reads rooftops as
+   warmth-free, the pose gets a pre-kindled chimney lantern (breadcrumb-style,
+   set dressing) rather than a threshold tweak.
