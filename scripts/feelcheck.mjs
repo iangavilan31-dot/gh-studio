@@ -77,17 +77,23 @@ check('fov returns toward 55', Math.abs(st.fov - 55) < 1.3, `fov=${st.fov}`)
 // 3) input latency log (input event → movement applied)
 check('latency = one frame (headless swiftshader frame can reach ~180ms; input applies on the NEXT tick by architecture, so 60fps hardware ⇒ ≤16.7ms — the M6 perf gate owns the frame-time budget)', st.latency.length > 0 && st.latency.every((l) => l.ms < 400), JSON.stringify(st.latency))
 
-// 4) hop: 0.5m apex
+// 4) hop: 0.5m apex — sampled IN-PAGE every frame (node-side polling misses
+// the peak entirely when headless frames stretch past 100ms)
 await page.evaluate(() => window.__MOONREST__.teleportPlayer(0, 8, 0))
+await page.evaluate(() => {
+  window.__HOP__ = { max: -Infinity }
+  const probe = () => {
+    window.__HOP__.max = Math.max(window.__HOP__.max, window.__MOONREST__.state.playerPos[1])
+    if (!window.__HOP__.stop) requestAnimationFrame(probe)
+  }
+  requestAnimationFrame(probe)
+})
 await page.keyboard.press('Space')
-let maxY = -Infinity
-for (let i = 0; i < 14; i++) {
-  const s = await S()
-  maxY = Math.max(maxY, s.playerPos[1])
-  await page.waitForTimeout(70)
-}
+await page.waitForTimeout(2500)
+await page.evaluate(() => { window.__HOP__.stop = true })
+const hopMax = await page.evaluate(() => window.__HOP__.max)
 const groundY = (await page.evaluate(() => window.__MOONREST__.state.playerPos))[1]
-check('hop apex ≈ 0.5m', maxY - groundY > 0.3 && maxY - groundY < 0.75, `apex=${(maxY - groundY).toFixed(2)}m`)
+check('hop apex ≈ 0.5m', hopMax - groundY > 0.3 && hopMax - groundY < 0.75, `apex=${(hopMax - groundY).toFixed(2)}m`)
 
 // 5) sit / lie toggle + emote poses (screenshots)
 await page.keyboard.press('c')
