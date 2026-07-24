@@ -457,3 +457,15 @@ ten-minute capture, C.2 reveal capture evidence, O.1 atmosphere items,
 Q.3 first-person, D.1 night signature.
 If context is lost: re-read MASTER_PROMPT.md Part 0 + PLAN.md, then this
 entry; the gate runner script is scratchpad/gates.sh (sequential only).
+
+## Pass 3 batch 1 landed (POLISH-57..59)
+Movement weight (landing settle + jog lag), opening hold beat + ignition
+ember, C.4 gust/nod, F.2 positional bell+organ (pancheck PASS), P.4 8/8
+fingerprints, Q.3 first-person (fpcheck PASS), D.1 night signature (rigs
+pin seed 42). Ledger flips: E6, C2, F2, Q3, D1 → 110/115.
+IN FLIGHT: k1capture v2 (player-style 10-sim-min walk; v1 recorded the
+teleporting autopilot — useless, rewritten), reviewer E (visual reel),
+reviewer F (code diff 9b4ad57..HEAD). NEXT: apply reviewer findings,
+full reshoot + sequential gates as the pass-3 record, score pass 3 in
+POLISH_JUDGE.md (needs avg >= 9.0 AND opening/movement/atmosphere/
+production >= 9, audio >= 8.5, no category < 8).
