@@ -434,6 +434,15 @@ export class NPCSystem {
         const cat = this.ghostCat
         if (cat.state === 'lap') {
           cat.rig.body.scale.y = 0.6 + Math.sin(t * 1.2) * 0.03
+        } else if (cat.state === 'follow' && this.catNetTarget) {
+          // co-op client: the cat is host-owned (6.4) — glide to the host's cat
+          const g = cat.rig.group
+          const [tx, , tz] = this.catNetTarget
+          const d = Math.hypot(tx - g.position.x, tz - g.position.z)
+          if (d > 8) g.position.set(tx, 0, tz)
+          else { g.position.x += (tx - g.position.x) * Math.min(1, dt * 6); g.position.z += (tz - g.position.z) * Math.min(1, dt * 6) }
+          if (d > 0.1) g.rotation.y = Math.atan2(tx - g.position.x, tz - g.position.z)
+          g.position.y = this.world.heightAt(g.position.x, g.position.z)
         } else if (cat.state === 'follow' && player) {
           // global follower (6.4): follow-at-2m, teleport if >20m, purr sometimes
           const g = cat.rig.group
@@ -462,7 +471,7 @@ export class NPCSystem {
     garg.group.position.copy(gp)
     garg.group.rotation.y = Math.PI // watches the causeway approach
     this.scene.add(garg.group)
-    this.gargoyle = { rig: garg, bold: false }
+    this.gargoyle = { rig: garg, bold: false, waveT: 0 }
     this.npcs.push({
       kind: 'gargoyle',
       update: (dt, t, player, camera) => {
@@ -470,6 +479,21 @@ export class NPCSystem {
         // watching IT (Part 3.2.5). Snap back when observed.
         const g = this.gargoyle
         const head = g.rig.headBone
+        // the wave-back (co-op moment): one wing lifts and waves ~2s, then it
+        // SNAPS back to being a statue like nothing happened
+        if (g.waveT > 0) {
+          g.waveT -= dt
+          const w = g.rig.wingR
+          if (w) {
+            if (g.waveT <= 0) { w.rotation.set(0, 0, 0) } // caught nothing. statue.
+            else {
+              const f = Math.min(1, (2.0 - g.waveT) * 4)
+              w.rotation.z = -f * 0.9 + Math.sin(t * 10) * 0.25 * f
+              w.rotation.x = -f * 0.3
+            }
+          }
+          return
+        }
         if (!player || !camera) { return }
         const gp = g.rig.group.position
         const pd = Math.hypot(player.pos.x - gp.x, player.pos.z - gp.z)
@@ -621,13 +645,7 @@ export class NPCSystem {
       this.gargoyle.bold = true // it pretends a little less carefully now
     } else if (zone === 'hall') {
       // the ghost cat wakes — and only the cat (Part 3.2.6)
-      this.ghostCat.state = 'follow'
-      const wp = this.ghostCat.rig.group.getWorldPosition(new THREE.Vector3())
-      this.king.group.remove(this.ghostCat.rig.group)
-      this.ghostCat.rig.group.position.copy(wp)
-      this.scene.add(this.ghostCat.rig.group)
-      catPurr(2.2)
-      this.hud.say('The ghost cat stretches, hops down, and decides you are warm.', 5)
+      this.wakeGhostCat(false)
     } else if (zone === 'mosswood') {
       this.moteStir = 8
       this.hud.say('Mote: Through the gate is the same forest. It’s always the same forest. That’s the secret. Goodnight.', 7.5)
@@ -727,11 +745,68 @@ export class NPCSystem {
     }
   }
 
+  // Wake the ghost cat off the Pale King's lap (hall completion, or a late-join
+  // snapshot that says the night already got that far — then quiet=true)
+  wakeGhostCat(quiet = false) {
+    if (this.ghostCat.state === 'follow') return
+    this.ghostCat.state = 'follow'
+    const wp = this.ghostCat.rig.group.getWorldPosition(new THREE.Vector3())
+    this.king.group.remove(this.ghostCat.rig.group)
+    this.ghostCat.rig.group.position.copy(wp)
+    this.scene.add(this.ghostCat.rig.group)
+    if (!quiet) {
+      catPurr(2.2)
+      this.hud.say('The ghost cat stretches, hops down, and decides you are warm.', 5)
+    }
+  }
+
+  // Mount a chicken on a player's head (Part 3.2.2 co-op moment) — applied
+  // identically on every client from the same event (chIdx + playerId).
+  mountChicken(chIdx, playerId) {
+    const ch = this.chickens[chIdx]
+    const p = (this.playersProvider ? this.playersProvider() : []).find((x) => x.id === playerId)
+    if (!ch || !p || ch.state === 'mount') return false
+    ch.state = 'mount'
+    const g = ch.rig.group
+    g.parent?.remove(g)
+    p.rig.bones.head.add(g)
+    g.position.set(0, 0.42, 0.02)
+    g.rotation.set(0, 0, 0)
+    cluck(false)
+    return true
+  }
+
   updateChickens(dt, t, player) {
+    // full lobby (local + remotes) for follow-detection and mounting
+    const lobby = this.playersProvider ? this.playersProvider() : (player ? [{ id: 0, rig: null, pos: player.pos }] : [])
     for (const ch of this.chickens) {
       const g = ch.rig.group
       ch.t -= dt
       ch.cluckT -= dt
+
+      if (ch.state === 'mount') {
+        // riding: gentle head-settle bob, occasional content cluck
+        ch.rig.headBone.rotation.x = Math.sin(t * 2.4) * 0.06
+        if (ch.cluckT <= 0) { ch.cluckT = this.rng.range(7, 15); cluck(false) }
+        continue
+      }
+
+      // "followed" (3.2.2): a player keeping gentle company — inside 4m but
+      // outside flee range — for 8s earns a head-rider. Authority-side only.
+      let follower = null
+      for (const p of lobby) {
+        const d = Math.hypot(p.pos.x - g.position.x, p.pos.z - g.position.z)
+        if (d > 2.1 && d < 4) { follower = p; break }
+      }
+      if (follower && (!this.chickenAuthority || this.chickenAuthority())) {
+        ch.followT = (ch.followBy === follower.id ? (ch.followT ?? 0) : 0) + dt
+        ch.followBy = follower.id
+        if (ch.followT > 8 && this.onChickenMount) {
+          ch.followT = -999 // one shot; the event mounts it
+          this.onChickenMount(this.chickens.indexOf(ch), follower.id)
+        }
+      } else if (!follower) { ch.followT = 0; ch.followBy = null }
+
       const pd = player ? Math.hypot(player.pos.x - g.position.x, player.pos.z - g.position.z) : 99
 
       // flee takes priority: player within 2m → run away, then forget

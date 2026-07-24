@@ -25,6 +25,7 @@ export class Ambience {
     this.mist = new ParticleSystem(scene, { tex: TEX.puff({ name: 'hallmist', color: '#5a5a68' }), max: 30, additive: false, fogInfluence: 0 })
     this.rainW = 0
     this.rainAcc = 0
+    this.rainSoftT = 0
     this.leafAcc = 0
     this.smokeAcc = 0
     this.pAcc = 0
@@ -77,12 +78,16 @@ export class Ambience {
     })
   }
 
+  rainSoften(seconds = 45) { this.rainSoftT = seconds }
+
   update(dt, camera, zoneId, time) {
     const rng = this.rng
     const world = this.world
 
     // — rain: Park only (Part 3.2.1), eased in/out —
-    const rainTarget = zoneId === 'park' ? 1 : 0
+    // shared bench rest (co-op moment) softens the rain for a while
+    if (this.rainSoftT > 0) this.rainSoftT -= dt
+    const rainTarget = (zoneId === 'park' ? 1 : 0) * (this.rainSoftT > 0 ? 0.3 : 1)
     this.rainW += (rainTarget - this.rainW) * (1 - Math.exp(-dt / 1.5))
     if (this.rainW > 0.05) {
       this.rainAcc += dt * 90 * this.rainW

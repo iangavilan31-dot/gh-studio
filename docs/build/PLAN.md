@@ -12,8 +12,8 @@ Protocol: docs/MASTER_PROMPT.md Part 12. Status: `[ ]` todo · `[~]` in progress
 - [x] **M4 — Art pass I.** Park, Village, Rooftops full art + Beldam/chickens/Nib; hue-match check.
 - [x] **M5 — Art pass II.** Ruins, Gloomspire, Hall (vertex-light showcase), Mosswood, Isle; water, nebula; 8-shot reel.
 - [x] **M6 — Systems complete.** All cold lights, stirs, trinkets, brews, ghost cat, gargoyle, Night's End, attract, persist; autopilot night passes.
-- [~] **M7 — Co-op.** PeerJS host/join/sync/late-join/disconnect; all co-op moments; two-context automated test.
-- [ ] **M8 — Shell & polish.** Title, menus, settings, Memory dials, photo mode, a11y, meta, error boundary.
+- [x] **M7 — Co-op.** PeerJS host/join/sync/late-join/disconnect; all co-op moments; two-context automated test.
+- [~] **M8 — Shell & polish.** Title, menus, settings, Memory dials, photo mode, a11y, meta, error boundary.
 - [ ] **M9 — Judge loops.** Hard gates + rubric passes until exit condition (12.4.6). Minimum 3 passes.
 - [ ] **M10 — Ship.** Final build, README, Morning Report, push + PR, `SHIP`.
 

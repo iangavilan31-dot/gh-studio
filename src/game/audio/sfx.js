@@ -217,6 +217,30 @@ export function bellToll(deep = true) {
   }
 }
 
+// The throne-foot lullaby (Part 3.2.6): a tiny music box — bright, slightly
+// detuned tine plucks walking a slow descending figure. Once per night.
+export function musicBox() {
+  if (!audio.started) return
+  const ctx = audio.ctx
+  const t0 = ctx.currentTime
+  const root = KEYS['D'] + 36 // high tines
+  const figure = [0, 4, 7, 4, 2, 0, -3, 0, 4, 2, 0, -1, 0] // gentle, resolving
+  figure.forEach((semi, i) => {
+    const t = t0 + i * 0.42
+    for (const [ratio, amp] of [[1, 0.12], [3.98, 0.045], [7.1, 0.02]]) {
+      const o = ctx.createOscillator()
+      o.type = 'sine'
+      o.frequency.value = midiHz(root + semi) * ratio * (1 + (i % 3) * 0.0007) // tine detune
+      const g = ctx.createGain()
+      g.gain.setValueAtTime(0, t)
+      g.gain.linearRampToValueAtTime(amp, t + 0.004)
+      g.gain.setTargetAtTime(0, t + 0.004, 0.55)
+      o.connect(g); g.connect(audio.buses.sfx); g.connect(audio.reverbSend)
+      o.start(t); o.stop(t + 3)
+    }
+  })
+}
+
 // bottle pickup "hmm!" — happy little formant blip
 export function brewHum() {
   if (!audio.started) return
