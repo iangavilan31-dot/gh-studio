@@ -710,6 +710,22 @@ window.__MOONREST__ = {
   },
   startNight(fresh = false) { shell.clear(); return startNight(fresh) },
   skipIntro() { endIntro(true); return true },
+  // PRESTIGE B.1 debug commands
+  listPostcards() { return (world.postcards ?? []).map((p) => `${p.zone}-${p.idx}`) },
+  teleportPostcard(zone, idx = 1) {
+    const p = (world.postcards ?? []).find((x) => x.zone === zone && x.idx === idx)
+    if (!p) return false
+    endIntro(true)
+    if (mode === 'title') { shell.clear(); mode = 'game' }
+    cinematic = true
+    hud.hidePrompt(); hud.clearSubtitle()
+    camera.position.set(...p.pos)
+    camera.lookAt(...p.look)
+    if (p.minute != null) night.skipTo(p.minute)
+    zoneLight.update(p.look[0], p.look[2], 10, p.pos[1])
+    ambience.snapZone(zoneLight.currentZoneId)
+    return true
+  },
   shellDebug() {
     return {
       mode, screen: shell.screen, blocking: shell.blocking, photo: photo.on,

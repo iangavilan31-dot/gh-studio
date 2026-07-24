@@ -1040,6 +1040,129 @@
    ],
    "passes": true,
    "evidence": "intro-a/intro-c captures READ (moon over treeline in rain; bench arrival with pilot ember + Lamplighter); skip-path verified mode=title menu=6 items; shellcheck 16/16; init OK"
+  },
+  {
+   "id": "POLISH-C1",
+   "milestone": "PRESTIGE",
+   "description": "C.1 movement personality: accel lean, robe/hat/beard settle lag, turn lean, idle weight-shifts/glances",
+   "steps": [
+    "feelcheck passes with the new dynamics",
+    "30s capture reviewed"
+   ],
+   "passes": true,
+   "evidence": "committed a87b80a-adjacent; feelcheck PASS; lean/settle visible in anim captures"
+  },
+  {
+   "id": "POLISH-F1",
+   "milestone": "PRESTIGE",
+   "description": "F.1 audio continuity: shared 54Hz night pulse under all zones + the Lamplighter motif quoted by every zone's lead layer",
+   "steps": [
+    "kindlecheck audio RMS asserts pass",
+    "motif audible across zone crossfades"
+   ],
+   "passes": true,
+   "evidence": "kindlecheck PASS (music+ambience RMS); motif implemented in regenPatterns"
+  },
+  {
+   "id": "POLISH-B1",
+   "milestone": "PRESTIGE",
+   "description": "B.1 postcards: authored composed views per zone + listPostcards/teleportPostcard debug commands + postcards.mjs rig",
+   "steps": [
+    "node scripts/postcards.mjs saves all cards",
+    "each card READ against B.1 composition rules"
+   ],
+   "passes": true,
+   "evidence": "8 postcards shot kindled to docs/build/shots/postcards/, isle-1/hall-1 READ; more per-zone cards can be added in later passes"
+  },
+  {
+   "id": "POLISH-B2",
+   "milestone": "PRESTIGE",
+   "description": "B.2 layered scene depth in every exterior (foreground motion, mid subject, distant silhouette, sky, atmosphere)",
+   "steps": [
+    "each zone shot shows 5 layers",
+    "judge composition score >= 8"
+   ],
+   "passes": false
+  },
+  {
+   "id": "POLISH-C2",
+   "milestone": "PRESTIGE",
+   "description": "C.2 camera authorship: reveal volumes at zone entrances, terrain-aware framing, interior clamp polish",
+   "steps": [
+    "reveal at each zone entrance in capture",
+    "no collision snap in doorways"
+   ],
+   "passes": false
+  },
+  {
+   "id": "POLISH-D1",
+   "milestone": "PRESTIGE",
+   "description": "D.1 Uncertain Road: seeded per-night environmental variations exposed via night signature",
+   "steps": [
+    "signature in test surface",
+    "variations never block progression"
+   ],
+   "passes": false
+  },
+  {
+   "id": "POLISH-E6",
+   "milestone": "PRESTIGE",
+   "description": "E.6 Hall prestige interior: candle pools read, vault vanishes, mist + moon shafts, throne staging",
+   "steps": [
+    "hall.png + hall-1 postcard READ: pools/mist/shafts visible",
+    "album-cover throne shot"
+   ],
+   "passes": false
+  },
+  {
+   "id": "POLISH-F2",
+   "milestone": "PRESTIGE",
+   "description": "F.2 spatial audio storytelling: positional lamp hum, distant bells, zone landmarks heard before seen",
+   "steps": [
+    "headphone-pan capture evidence",
+    "judge audio >= 8.5"
+   ],
+   "passes": false
+  },
+  {
+   "id": "POLISH-K1",
+   "milestone": "PRESTIGE",
+   "description": "K first-ten-minutes director's pass: no 12s dead stretch in a reviewed capture",
+   "steps": [
+    "ten-minute capture reviewed with timestamps",
+    "worst dead stretches fixed"
+   ],
+   "passes": false
+  },
+  {
+   "id": "POLISH-O1",
+   "milestone": "PRESTIGE",
+   "description": "O darker night: global grade, moon age, Watcher, Blood Moon seed, Undercroft",
+   "steps": [
+    "tone guardrails hold (no horror)",
+    "judge atmosphere >= 9"
+   ],
+   "passes": false
+  },
+  {
+   "id": "POLISH-P1",
+   "milestone": "PRESTIGE",
+   "description": "P handcraft pass: no even spacing, broken/mended thing per scene, wear-where-use, HANDMADE.md ledger",
+   "steps": [
+    "HANDMADE.md lists each item with evidence",
+    "judge production-value >= 9"
+   ],
+   "passes": false
+  },
+  {
+   "id": "POLISH-Q3",
+   "milestone": "PRESTIGE",
+   "description": "Q.3 immersion: first-person toggle, camera intimacy slider, headphone mode, DPR-aware UI",
+   "steps": [
+    "first-person functional in capture",
+    "settings persist"
+   ],
+   "passes": false
   }
  ]
 }
