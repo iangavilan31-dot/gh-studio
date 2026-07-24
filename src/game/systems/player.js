@@ -82,7 +82,10 @@ export class PlayerController {
     let dy = this.targetYaw - this.yaw
     while (dy > Math.PI) dy -= Math.PI * 2
     while (dy < -Math.PI) dy += Math.PI * 2
-    this.yaw += dy * (1 - Math.exp(-(Math.PI / 0.09) * dt))
+    const yawStep = dy * (1 - Math.exp(-(Math.PI / 0.09) * dt))
+    this.yaw += yawStep
+    // smoothed yaw rate feeds the C.1 turn lean
+    if (dt > 0) this.anim.yawRate += ((yawStep / dt) * 0.25 - this.anim.yawRate) * Math.min(1, dt * 7)
 
     // integrate
     this.pos.x += this.vel.x * dt
