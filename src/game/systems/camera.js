@@ -23,6 +23,31 @@ export class OrbitCamera {
     this.sensitivity = 0.0026
   }
 
+  // place the camera in clear air at a scene entrance: probe yaws around the
+  // preferred one and take the most open — the spawn bench sits under a big
+  // tree that otherwise pins the opening shot point-blank against bark
+  autoPlace(playerPos, preferYaw = Math.PI) {
+    _pivot.set(playerPos.x, playerPos.y + 1.25, playerPos.z)
+    const free = (yaw) => {
+      const cp = Math.cos(-0.14)
+      _dir.set(Math.sin(yaw) * cp, -Math.sin(-0.14), Math.cos(yaw) * cp)
+      for (let i = 1; i <= 10; i++) {
+        const t = (i / 10) * this.dist
+        if (this.world.cameraBlocked(_pivot.x + _dir.x * t, _pivot.y + _dir.y * t, _pivot.z + _dir.z * t, 0.25)) return ((i - 1) / 10) * this.dist
+      }
+      return this.dist
+    }
+    let best = preferYaw, bestFree = free(preferYaw)
+    for (const off of [0.5, -0.5, 1.0, -1.0, 1.5, -1.5, 2.2, -2.2, Math.PI]) {
+      if (bestFree >= 3.2) break
+      const f = free(preferYaw + off)
+      if (f > bestFree) { bestFree = f; best = preferYaw + off }
+    }
+    this.yaw = this.smoothYaw = best
+    this.pitch = this.smoothPitch = -0.14
+    this.curDist = Math.max(1.5, bestFree)
+  }
+
   update(playerPos, playerYaw, jogging, lookDelta, dt, interactables = []) {
     this.yaw -= lookDelta[0] * this.sensitivity
     // comfortable bounds: never top-down, never under the floor — extreme

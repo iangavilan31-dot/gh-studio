@@ -245,6 +245,7 @@ function startNight(fresh = false) {
   }
   mode = 'game'
   cinematic = false
+  orbit.autoPlace(player.pos, Math.PI) // wake up with the night in view, not bark
   nightflow.noteInput()
   return true
 }
@@ -556,6 +557,24 @@ window.__MOONREST__ = {
   releaseCam() { cinematic = false },
   setCamYaw(y) { orbit.yaw = orbit.smoothYaw = y; return true },
   setAction(a) { player.setAction(a); return true },
+  viewportDebug() {
+    const v4 = new THREE.Vector4()
+    pipeline.renderer.getViewport(v4)
+    return {
+      rendererViewportCSS: v4.toArray(),
+      pixelRatio: pipeline.renderer.getPixelRatio(),
+      letterboxDevice: pipeline.viewport.toArray(),
+      canvasBacking: [canvas.width, canvas.height],
+      canvasCSS: [canvas.style.width, canvas.style.height],
+      inner: [window.innerWidth, window.innerHeight],
+    }
+  },
+  collidersNear(x, z, r = 8) {
+    return {
+      colliders: world.colliders.filter((c) => Math.hypot(c.x - x, c.z - z) < r).map((c) => ({ x: +c.x.toFixed(1), z: +c.z.toFixed(1), r: +c.r.toFixed(2), h: +(c.h ?? 0).toFixed(2), ground: +world.heightAt(c.x, c.z).toFixed(2) })),
+      aabbs: world.aabbs.filter((b) => x > b.minX - r && x < b.maxX + r && z > b.minZ - r && z < b.maxZ + r).map((b) => ({ minX: b.minX, maxX: b.maxX, minZ: b.minZ, maxZ: b.maxZ, y0: b.y0, h: b.h })),
+    }
+  },
   worldDebug() {
     return {
       greenWindows: world.greenWindows?.length ?? -1,
