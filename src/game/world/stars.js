@@ -38,7 +38,7 @@ const FRAG = /* glsl */ `
 `
 
 export class Stars {
-  constructor(scene, count = 650) {
+  constructor(scene, count = 950) { // rooftops must be the DENSEST sky in the game (Part 3)
     const rng = worldRNG.fork('stars')
     const base = new THREE.PlaneGeometry(1, 1)
     const geo = new THREE.InstancedBufferGeometry()
@@ -125,10 +125,10 @@ export class Stars {
   // density per zone id (rooftops densest, interiors none)
   static densityFor(zoneId) {
     if (zoneId === 'rooftops') return 1.0
-    if (zoneId === 'village') return 0.8
+    if (zoneId === 'village') return 0.55
     if (zoneId === 'hall') return 0.0
-    if (zoneId?.startsWith('fogland')) return 0.25
-    return 0.5
+    if (zoneId?.startsWith('fogland')) return 0.17
+    return 0.34
   }
 
   update(dt, time, camera, zoneId) {

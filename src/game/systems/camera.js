@@ -21,6 +21,16 @@ export class OrbitCamera {
     this.fov = 55
     this.autoFrame = true
     this.sensitivity = 0.0026
+    this.revealT = 0 // C.2 reveal volume: >0 while a zone entrance widens the frame
+    this.revealTarget = null
+  }
+
+  // C.2: a zone entrance may borrow the camera for 1–3s — widen, lift, bias
+  // yaw toward the landmark — WITHOUT removing player control (bias only)
+  reveal(target, dur = 2.6) {
+    this.revealT = dur
+    this.revealDur = dur
+    this.revealTarget = target
   }
 
   // place the camera in clear air at a scene entrance: probe yaws around the
@@ -71,6 +81,22 @@ export class OrbitCamera {
       }
     }
 
+    // C.2 reveal: eased bell over the duration — yaw drifts toward the
+    // landmark (player look input still applies above), distance and FOV widen
+    let revealAmt = 0
+    if (this.revealT > 0) {
+      this.revealT = Math.max(0, this.revealT - dt)
+      const x = 1 - this.revealT / this.revealDur
+      revealAmt = Math.sin(Math.min(1, x * 1.15) * Math.PI) // ease in, hold, ease out
+      if (this.revealTarget && lookDelta[0] === 0) {
+        const want = Math.atan2(playerPos.x - this.revealTarget[0], playerPos.z - this.revealTarget[1])
+        let dyr = want - this.yaw
+        while (dyr > Math.PI) dyr -= Math.PI * 2
+        while (dyr < -Math.PI) dyr += Math.PI * 2
+        this.yaw += dyr * Math.min(1, dt * 1.6) * revealAmt
+      }
+    }
+
     // 0.12s orbit smoothing
     const k = 1 - Math.exp(-dt / 0.12)
     let dy = this.yaw - this.smoothYaw
@@ -87,14 +113,15 @@ export class OrbitCamera {
       -Math.sin(this.smoothPitch),
       Math.cos(this.smoothYaw) * Math.cos(this.smoothPitch)
     )
-    _desired.copy(_pivot).addScaledVector(_dir, this.dist)
+    const wantDist = this.dist + revealAmt * 2.1
+    _desired.copy(_pivot).addScaledVector(_dir, wantDist)
     _desired.y = Math.max(_desired.y, this.world.heightAt(_desired.x, _desired.z) + 0.3)
 
     // collision: march along pivot→desired, pull in at first obstruction (0.25s recovery)
-    let targetDist = this.dist
+    let targetDist = wantDist
     const steps = 10
     for (let i = 1; i <= steps; i++) {
-      const t = (i / steps) * this.dist
+      const t = (i / steps) * wantDist
       const px = _pivot.x + _dir.x * t
       const py = _pivot.y + _dir.y * t
       const pz = _pivot.z + _dir.z * t
@@ -106,8 +133,8 @@ export class OrbitCamera {
     this.camera.position.copy(_pivot).addScaledVector(_dir, this.curDist)
     this.camera.lookAt(_pivot)
 
-    // FOV: 55 (+4 while jogging), eased
-    const targetFov = jogging ? 59 : 55
+    // FOV: 55 (+4 while jogging), eased; reveals widen further (C.2)
+    const targetFov = (jogging ? 59 : 55) + revealAmt * 5
     this.fov += (targetFov - this.fov) * (1 - Math.exp(-dt / 0.3))
     if (Math.abs(this.camera.fov - this.fov) > 0.01) {
       this.camera.fov = this.fov

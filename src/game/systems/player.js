@@ -26,6 +26,11 @@ export class PlayerController {
     this._pendingLatency = null
   }
 
+  // C.4: glance back at a point for a moment (freshly lit lamps deserve it)
+  lookBack(x, z, dur = 2.5) {
+    this._lookBack = { x, z, t: dur }
+  }
+
   setAction(a) {
     this.anim.action = a
     this.anim.actionT = 0
@@ -123,6 +128,27 @@ export class PlayerController {
       this.latencyLog.push({ code: this._pendingLatency.code, ms: Math.round(ms * 10) / 10 })
       if (this.latencyLog.length > 20) this.latencyLog.shift()
       this._pendingLatency = null
+    }
+
+    // C.1: ground slope ahead feeds uphill lean / careful downhill steps
+    const aheadX = this.pos.x + Math.sin(this.yaw) * 0.9
+    const aheadZ = this.pos.z + Math.cos(this.yaw) * 0.9
+    const slopeRaw = (this.world.heightAt(aheadX, aheadZ) - this.pos.y) / 0.9
+    this.anim.slope = (this.anim.slope ?? 0) + (Math.max(-1, Math.min(1, slopeRaw)) - (this.anim.slope ?? 0)) * Math.min(1, dt * 5)
+
+    // C.4 look-back: head turns toward the remembered point, then lets go
+    if (this._lookBack) {
+      this._lookBack.t -= dt
+      if (this._lookBack.t <= 0) { this._lookBack = null; this.anim.headLook = 0 }
+      else {
+        const want = Math.atan2(this._lookBack.x - this.pos.x, this._lookBack.z - this.pos.z) - this.yaw
+        let dyl = want
+        while (dyl > Math.PI) dyl -= Math.PI * 2
+        while (dyl < -Math.PI) dyl += Math.PI * 2
+        const clamped = Math.max(-1.0, Math.min(1.0, dyl))
+        const env = Math.min(1, this._lookBack.t / 0.5) // ease out at the end
+        this.anim.headLook = (this.anim.headLook ?? 0) + (clamped * env - (this.anim.headLook ?? 0)) * Math.min(1, dt * 4)
+      }
     }
 
     // drive rig
