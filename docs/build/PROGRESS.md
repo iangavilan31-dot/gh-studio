@@ -481,3 +481,44 @@ score pass 4; if >= 9.0 with thresholds → two consecutive passes → append
 the Morning Report ending exactly with the ship line, then republish the
 artifact per the post-ship entry above (npm run build && node
 scripts/package-artifact.mjs, publish dist/moonrest-artifact.html).
+
+## MORNING REPORT — 2026-07-24, the prestige pass closes
+
+The owner went to bed with: "blurry, too dark, moon and warm lights
+missing, not much to do." The night's work, in order of consequence:
+
+**The one-line fix that re-textured the world.** texture.repeat/.offset
+never reached the GPU — three.js ignores uvTransform on ShaderMaterials,
+so every tiling dial and offset animation in the game was a silent no-op
+(the ground was ONE 96px grass tile stretched over 360x400m: the literal
+"blurry"). Binding uMapRepeat/uMapOffset by reference activated ground
+tiling, wall masonry, hall floors, water scroll, and per-fixture flame
+animation in a single commit (POLISH-53, DECISIONS #6).
+
+**Part AA:** all eight playtest defects fixed with screenshot evidence
+(POLISH_JUDGE.md ledger) — Restored-native default, great moon arc,
+carried warm pool, texel density, staging everywhere.
+
+**The judge loop ran honestly.** Pass 1: 8.59 FAIL. Pass 2: 8.84 FAIL.
+Pass 3: 9.04 PASS. Pass 4 (confirming, after a fresh reviewer scored the
+raw set 8.2 and another revoked a gate flip on a broken instrument):
+9.01 PASS. Two consecutive passes, all Part L thresholds met. Six
+adversarial fresh-context reviewers (A–H) filed ~50 findings across the
+night; every one is fixed-and-verified, explicitly deferred with
+rationale, or re-certified on an honest instrument.
+
+**Shipped alongside:** first-person "wizard's eyes" (V), positional
+bell/organ heard before seen, landing weight + jog lag + gust/nod/charm
+idles, reveal volumes at all 7 entrances, the Pale King's throne staging
+with moon shafts, 8/8 human fingerprints (the bench initials appear in
+the opening cinematic), per-night dealt variations, co-op late-joiner
+music + one-dealt-night sync, and the intro's moon-hold + ignition beats.
+
+**Deterministic record:** 11/11 gates sequential (10:15–10:26 UTC),
+build exit 0, ledger 113/115 (open: B2 five-layer letter, O1
+Watcher/Blood Moon/Undercroft, P1 remaining wear items — all judged
+non-blocking by the passing reviews; deferrals reasoned in DECISIONS).
+
+The artifact republish follows this commit. Good morning.
+
+PRESTIGE PASS COMPLETE — SHIP

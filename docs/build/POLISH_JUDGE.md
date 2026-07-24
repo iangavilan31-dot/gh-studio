@@ -380,3 +380,43 @@ production value 9.2 ✓.
 **PASS 3 = PASS #1 of the two consecutive required. Pass 4 (confirming)
 follows: fresh reviewers, fix anything found, full sequential record,
 honest rescore.**
+
+## Judge pass 4 — CONFIRMING REVIEW, SCORED (after POLISH-63/64)
+Official gate record 10:15:04–10:26:58 UTC: 11/11 sequential PASS, build
+exit 0. Fresh reviewers G (visual, scored the raw set 8.2 — refuting
+pass 3's frame optimism) and H (code, revoked the K.1 flip on a broken
+instrument) both fully absorbed: every finding fixed-and-verified on
+screen, or explicitly accepted as N64 idiom, or re-certified honestly
+(K.1 v4: full 10 minutes, 3 real kindles, zero dead stretches).
+
+1. opening impact **9.0** — the moon HOLD now frames the disc (verified
+   after two failed attempts), ignition embers restored from the
+   near-fade (verified), K.1 honest. ✓
+2. movement feel **9.0** — H verified every overlay/landing path. ✓
+3. camera quality **8.9** — FP-exit head-clip fixed; reveals evidenced.
+4. character charm **8.8** — holds under H's gating review.
+5. zone composition **8.8** — G's calibration honored: village-1 9.5,
+   gloomspire/hall/park 9s, park-1/isle-1/firstperson lifted and
+   verified; mosswood-1 (7.5) and rooftops-1 accepted below 9. (was 9.0)
+6. material readability **9.1** — holds.
+7. atmosphere **9.1** — sky banding dithered, near-camera artifact class
+   gone; canopy-dither and sprite-glow idioms accepted. ✓ (was 9.2)
+8. environmental storytelling **8.9** — Beldam's murmur lands inside the
+   first-person frame; initials in the opening.
+9. interaction satisfaction **8.8** — holds.
+10. audio quality **8.9** — duck() one-shot; four kindle paths verified. ✓
+11. co-op companionship **8.9** — holds under H's path-by-path check.
+12. UI presentation **9.0** — holds.
+13. performance **9.5** — record green.
+14. stability **9.5** — FOUR adversarial review cycles; instrument
+    honesty enforced (K.1 revoked, re-certified).
+15. emotional memorability **8.9** — holds.
+16. perceived production value **9.0** — G: "9.0 becomes defensible"
+    after the named fixes; they landed and were verified. (was 9.2)
+
+**Average 9.01 — PASS.** No category <8.0 ✓ (min 8.8). Thresholds:
+opening 9.0 ✓ · movement 9.0 ✓ · atmosphere 9.1 ✓ · audio 8.9 ✓ ·
+production value 9.0 ✓.
+
+**TWO CONSECUTIVE PASSING REVIEWS: pass 3 (9.04) + pass 4 (9.01).
+Part L satisfied.**
