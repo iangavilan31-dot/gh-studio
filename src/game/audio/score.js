@@ -141,6 +141,16 @@ export class Score {
       }
       return steps
     })
+    // F.1: the Lamplighter's motif — one melodic cell every zone quotes in its
+    // own key and mode at each regeneration. The same small duty, wherever the
+    // night finds you. Ends off the root: it never resolves (Soule's rule).
+    const MOTIF = [[0, 0], [2, 2], [3, 4], [4, 3], [6, 6]] // [eighth-step, scale degree]
+    const isLead = (inst) => !/^(pad|drone|choir|organ|bass|sub)/.test(inst) && inst !== 'bellDeep'
+    let leadIdx = cfg.layers.findIndex(isLead)
+    if (leadIdx < 0) leadIdx = 0
+    const lead = this.patterns[leadIdx]
+    for (let s = 0; s < 8; s++) lead[s] = null
+    for (const [s, deg] of MOTIF) lead[s] = root + scale[deg]
   }
 
   schedule() {
