@@ -228,13 +228,18 @@ export class Net {
       this.peer.on('open', () => {
         const conn = this.peer.connect('moonrest-' + this.code.toLowerCase(), { reliable: true, serialization: 'json' })
         this.hostConn = conn
-        conn.on('open', () => conn.send({ t: 'hello', name: this.myName }))
+        conn.on('open', () => { this._joined = true; conn.send({ t: 'hello', name: this.myName }) })
         conn.on('data', (m) => {
           if (m.t === 'snap') { this._joinReject = null; this._applySnap(m); resolve(m.you) }
           else this._clientData(m)
         })
-        conn.on('close', () => this._hostLost())
-        conn.on('error', () => this._hostLost())
+        // ICE can emit non-fatal error events mid-negotiation while the channel
+        // still comes up — only CLOSE means the host is really gone
+        conn.on('close', () => {
+          if (this._joined) this._hostLost()
+          else { this.role = null; this._joinReject?.(new Error('could not reach the night')); this._joinReject = null }
+        })
+        conn.on('error', (e) => this.log.push({ ev: 'conn-error', type: e?.type ?? String(e).slice(0, 60) }))
       })
     })
   }
@@ -266,7 +271,7 @@ export class Net {
       }
     })
     conn.on('close', () => this._drop(conn._mrId))
-    conn.on('error', () => this._drop(conn._mrId))
+    conn.on('error', (e) => this.log.push({ ev: 'conn-error', id: conn._mrId, type: e?.type ?? String(e).slice(0, 60) }))
   }
 
   _hostValidate(from, m) {
@@ -314,7 +319,7 @@ export class Net {
 
   // client → host request (host applies its own actions directly via broadcastEvent)
   request(ev) {
-    if (this.role === 'client') this.hostConn?.send({ t: 'req', ...ev })
+    if (this.role === 'client') { if (this.hostConn?.open) this.hostConn.send({ t: 'req', ...ev }) }
     else if (this.role === 'host') {
       if (ev.ev === 'chan') {
         if (ev.on) this.channeling.set(0, ev.id)
@@ -420,7 +425,7 @@ export class Net {
       this._acc = 0
       const L = this.h.getLocal()
       const m = { t: 'tr', p: [+L.pos.x.toFixed(2), +L.pos.y.toFixed(2), +L.pos.z.toFixed(2)], yaw: +L.yaw.toFixed(2), g: L.gait, a: L.action }
-      if (this.role === 'client') this.hostConn?.send(m)
+      if (this.role === 'client') { if (this.hostConn?.open) this.hostConn.send(m) }
       else {
         // the ghost cat rides along on the host transform (host-owned, 6.4)
         const cp = this.h.getCatPos?.()

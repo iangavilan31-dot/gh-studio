@@ -182,3 +182,42 @@ pipeline, judge in pass 2); Nib texture flatness (A8); sea-plane far-edge seam
 EAFNOSUPPORT crash was still claiming port 9101 and silently poisoned two
 coopcheck runs (client "host-lost" seconds after join). Kill stale brokers
 before blaming the netcode.
+
+---
+
+## M9 — JUDGE PASS 2 (2026-07-24 ~13:20 UTC)
+
+### Step 1 — hard gates on the final fix build
+init smoke ✓ · feel 12/12 · kindle 13/13 · traverse 11/11 · moments 12/12 ·
+hue 8/8 · autopilot 14/14 · perf 97 calls / 80.4k tris / 216KB gz ·
+coop 17/17 (twice, consecutively) · shell 16/16 · build exit 0.
+
+### Step 2 — reel regenerated + read after every fix
+park/village/rooftops (stars restored — modelMatrix fix verified in-frame),
+ruins, gloomspire, hall (chandeliers read), mosswood (arch spans), isle
+(causeway landmark), sea (horizon seam GONE — plane extended past far plane),
+foglands (breadcrumb), nib (painted plaster texels + snore-Z), 4 memory modes
+(PS1 intact), coop pair, title/pause/vhs.
+
+### Step 3 — scores
+- (a) palette fidelity: **9** — hue 8/8; every zone reads its 2.1 field by eye now.
+- (b) silhouette/composition: **8** — arch/foglands/isle/rooftops fixed; soft spots:
+  gloomspire castle under half-frame, Nib absent from the rooftops wide (nib.png covers).
+- (c) atmosphere: **8.5** — full starfields everywhere + all particle layers; the AIR
+  side now matched by ambience beds.
+- (d) character feel: **8.5** — gates green; emote wheel real; staff pulses with strides.
+- (e) audio: **8.5** — beds fill the once-silent bus, 6s zone crossfades, hall vault
+  reverb, Night's End swell + picardy; kindle layer/RMS asserts green.
+- (f) co-op: **9** — 17/17 twice; host reach validation; full-lobby fiction; the
+  join-race flake was root-caused (non-fatal ICE 'error' events + pre-open sends).
+- (g) performance: **9** — 97/80.4k/216KB, boot ~0.4s; p95 waiver documented (D19).
+- (h) UX shell: **9** — 16/16; controls reference; camera-assist toggle; full a11y row.
+- (i) stability: **9** — all gates console-clean; net teardown now only on real closes.
+- (j) reference-likeness: **8** — the reel reads like the reference footage
+  consistently; isle/foglands are honest scenes now rather than empty frames.
+
+**Average 8.65, no dimension < 7 → pass 2 MEETS the exit bar (1st of 2 needed).**
+
+### Step 5 — defects carried to pass 3 (minor)
+- Gloomspire pose: castle could fill more frame / moat in shot.
+- Rooftops wide could include Nib himself (nib.png currently carries him).

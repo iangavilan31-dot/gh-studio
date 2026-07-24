@@ -70,7 +70,7 @@ try {
   const dA = await A.page.evaluate(() => window.__MOONREST__.netDebug())
   check('host sees 1 peer with runic name', dA.peers === 1 && dA.remotes[0]?.name === 'bertie', JSON.stringify({ peers: dA.peers, name: dA.remotes[0]?.name }))
   const dB = await B.page.evaluate(() => window.__MOONREST__.netDebug())
-  check('client role/tint assigned', dB.role === 'client' && dB.myId === 1 && dB.roster.length === 2, JSON.stringify({ role: dB.role, myId: dB.myId }))
+  check('client role/tint assigned', dB.role === 'client' && dB.myId === 1 && dB.roster.length === 2, JSON.stringify({ role: dB.role, myId: dB.myId, log: dB.log }))
 
   // — transform sync: B moves, A's remote avatar follows within 1.5m —
   await B.page.evaluate(() => window.__MOONREST__.teleportPlayer(6, -21, 0.6))

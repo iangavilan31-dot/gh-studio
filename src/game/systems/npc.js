@@ -114,7 +114,8 @@ export function buildCat() {
 
 // ——— Nib the garden gnome: red hat, spread-eagle asleep on the moss ———
 export function buildGnome() {
-  const mat = retroMaterial({ map: TEX.white(), hemi: true })
+  // painted texels, not flat fills (Rule 8) — plaster carries brushed wear
+  const mat = retroMaterial({ map: TEX.plaster(), hemi: true })
   const g = new THREE.Group()
   const body = M(new THREE.SphereGeometry(0.14, 8, 6), mat, [0.25, 0.35, 0.5])
   body.scale.set(1, 0.7, 1.3)
@@ -132,7 +133,7 @@ export function buildGnome() {
   g.add(hatBone)
   // the hat is the zone's warm accent: plain ambient + faint ember emissive so
   // the cobalt hemisphere light can't crush the red to maroon
-  const hatMat = retroMaterial({ map: TEX.white(), emissive: '#2a0805' })
+  const hatMat = retroMaterial({ map: TEX.plaster(), emissive: '#2a0805' })
   const hat = M(new THREE.ConeGeometry(0.1, 0.32, 7), hatMat, [0.95, 0.2, 0.13])
   hat.rotation.x = Math.PI / 2.6
   hat.position.set(0, 0.05, 0.08)

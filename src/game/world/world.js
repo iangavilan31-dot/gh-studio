@@ -321,12 +321,14 @@ export class World {
   buildWater() {
     // the northern sea
     const seaTex = TEX.water()
-    seaTex.repeat.set(50, 24)
+    seaTex.repeat.set(70, 42)
     const seaMat = retroMaterial({ map: seaTex, ripple: true })
-    const sea = new THREE.Mesh(new THREE.PlaneGeometry(360, 170, 60, 30), seaMat)
+    // big enough that its far edge sits beyond the 220m far plane from any
+    // shore camera — the horizon is fog, never a visible plane edge (Rule 3)
+    const sea = new THREE.Mesh(new THREE.PlaneGeometry(520, 300, 60, 30), seaMat)
     ensureVertexColors(sea.geometry)
     sea.rotation.x = -Math.PI / 2
-    sea.position.set(0, WATER_Y, -125)
+    sea.position.set(0, WATER_Y, -160)
     this.scene.add(sea)
     this.waterMats.push({ tex: seaTex, sx: 0.004, sy: 0.002 })
     // gloomspire moat
