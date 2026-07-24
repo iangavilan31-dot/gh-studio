@@ -124,6 +124,14 @@ export class Pipeline {
     this.postScene.add(quad)
     this.resize()
     window.addEventListener('resize', () => this.resize())
+    // embedded viewers (artifact iframes) can size the frame after load or
+    // without firing window resize — track the document's real box directly
+    if (window.ResizeObserver) {
+      new ResizeObserver(() => this.resize()).observe(document.documentElement)
+    }
+    window.visualViewport?.addEventListener('resize', () => this.resize())
+    // and re-measure a few beats after boot — hosts settle their layout late
+    for (const ms of [150, 500, 1500]) setTimeout(() => this.resize(), ms)
   }
 
   setResScale(s) {
@@ -134,7 +142,12 @@ export class Pipeline {
   }
 
   resize() {
-    const w = window.innerWidth, h = window.innerHeight
+    // the smallest honest answer wins: layout viewport, document box, and the
+    // visual viewport can disagree inside embeds — overshooting means the game
+    // renders into space the host has clipped away
+    const de = document.documentElement
+    const w = Math.min(window.innerWidth, de.clientWidth || Infinity, Math.ceil(window.visualViewport?.width ?? Infinity))
+    const h = Math.min(window.innerHeight, de.clientHeight || Infinity, Math.ceil(window.visualViewport?.height ?? Infinity))
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
     this.renderer.setPixelRatio(dpr)
     this.renderer.setSize(w, h, true)
