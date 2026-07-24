@@ -134,3 +134,24 @@ docs/build/PLAN.md, then the tail of this file. Never re-derive the plan from me
 - Windows must be on street-facing walls to serve Rule 2; face selection by house side matters.
 - The corrupted-hex-literal glitch (0x + garbage) struck 4×: use '#rrggbb' STRING color literals everywhere; THREE.Color accepts them.
 - Cinematic rigs need zone-weather snapping AND subtitle clearing or shots inherit the player's zone state.
+
+---
+
+## 2026-07-24 ~05:30 UTC — M5 COMPLETE: art pass II (Ruins, Gloomspire, Hall, Mosswood, Isle)
+
+**Done:**
+- NPC cast completed (`systems/npc.js`): Curator ghost (translucent lathe, 5-waypoint colonnade patrol w/ dusting arm sweeps, bows to players once all 4 sconces burn, subtitled line), Pale King (ghost robe, tilted gold crown w/ non-hemi material, head-slump breathing) + ghost cat on his lap, gargoyle (horns/wings/perch, statue — head-turn logic in M6), Mote the moss tortoise (table-sized, shell breath, snore-z), seabird colony (6, tucked heads), cove hammock sailors (D9).
+- Gloomspire: 13 luminous green windows (noFog emissive panes + additive noFog halos — fog-proof glow, the reference look), 6 violet nebula billboards, 4 lazy bats.
+- Hall showcase (8.4): bakeHallShowcase() — every interior vertex painted: cold vault above, warm chandelier pools below (19 meshes; carpet/runner keep their dyes).
+- Mosswood: 3 parallax ground-fog cards (drift + opacity breathing); Ruins: 70-bloom flower meadow, 4 bobbing mote crystals, half-buried owl statue; Isle: foam ribbon (scrolling), sea vertex ripple (USE_RIPPLE), moon streak aimed at live moon azimuth.
+- Ambience additions: violet petals, arcane motes (moonwell-gated), spores + canopy drips, sea sparkle glints, hall floor mist.
+- Gates stabilized: huecheck multi-frame sampling (6× max-accent/mean-hue); feelcheck timing bounds documented for dt-clamped headless sim.
+
+**Evidence read:** HUE GATE PASS 8/8 (numbers + tolerances in JUDGE.md M5 entry); kindlecheck PASS; traversecheck PASS; feelcheck PASS. Shots REVIEWED (reel verdicts in JUDGE.md): ruins w/ drifting Curator, gloomspire w/ green windows + nebula, hall vertex-light pools, mosswood fog cards + arch, isle + sea (streak, foam, causeway lamps), park/village/rooftops re-verified.
+
+**Next action:** M6 — systems complete: light→zone completion wiring (stirs, trinkets), 12 Moon Brews, ghost cat follower, gargoyle watch logic, moon clock beats (30/38/40min), real lunar phase, Night's End + attract, persistence, autopilot, dev overlay, perf gate (incl. D6 draw-call work: zone visibility culling + merge).
+
+**Learnings:**
+- Fog eats distant emissives — glowing set-dressing needs noFog on BOTH pane and halo to read like the reference; check saturation loss from additive-over-fog compositing when gating on color.
+- Single-frame color gates flake on flicker/sway phase — sample several frames; max for presence metrics, mean for hue.
+- dt clamp (0.1s) makes sim time lag wall time on slow renderers — scale test waits, never assert wall-clock decay.

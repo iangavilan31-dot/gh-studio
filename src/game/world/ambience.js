@@ -17,10 +17,17 @@ export class Ambience {
     this.smoke = new ParticleSystem(scene, { tex: TEX.puff(), max: 60, additive: false, fogInfluence: 0.8 })
     this.moths = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#d8cfae' }), max: 48, additive: true })
     this.zzz = new ParticleSystem(scene, { tex: TEX.zGlyph(), max: 14, additive: false })
+    this.petals = new ParticleSystem(scene, { tex: TEX.leaf({ name: 'petal', color: '#b56ec0' }), max: 36, additive: false })
+    this.arcane = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#7fd4d4' }), max: 50, additive: true })
+    this.spores = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#7fa878' }), max: 44, additive: true })
+    this.drips = new ParticleSystem(scene, { tex: TEX.streak({ name: 'drip', color: '#8fb8a8' }), max: 30, additive: false, stretchY: 2 })
+    this.sparkle = new ParticleSystem(scene, { tex: TEX.star(), max: 60, additive: true })
+    this.mist = new ParticleSystem(scene, { tex: TEX.puff({ name: 'hallmist', color: '#5a5a68' }), max: 30, additive: false, fogInfluence: 0 })
     this.rainW = 0
     this.rainAcc = 0
     this.leafAcc = 0
     this.smokeAcc = 0
+    this.pAcc = 0
   }
 
   // cinematic teleports snap weather to the viewed zone (no cross-zone leakage)
@@ -160,11 +167,100 @@ export class Ambience {
       }
     }
 
+    // — zone flavor particles (Rule 4 across every zone) —
+    this.pAcc += dt
+    const every = (interval) => { if (this.pAcc >= interval) { return true } return false }
+    if (this.pAcc >= 0.25) {
+      this.pAcc = 0
+      // Ruins: violet petal drift + arcane motes when the moonwell burns
+      if (zoneId === 'ruins') {
+        if (this.petals.data.length < 30) {
+          this.petals.spawn({
+            pos: new THREE.Vector3(rng.range(-126, -94), rng.range(2, 5) + 1, rng.range(-10, 20)),
+            vel: new THREE.Vector3(rng.range(-0.3, 0.3), -0.28, rng.range(-0.2, 0.2)),
+            maxLife: rng.range(7, 11), size: rng.range(0.1, 0.16), seed: rng.next(),
+            update(p, dt2) {
+              p.pos.x += (p.vel.x + Math.sin(p.life * 2 + p.seed * 9) * 0.4) * dt2
+              p.pos.z += p.vel.z * dt2
+              p.pos.y += p.vel.y * dt2
+            },
+          })
+        }
+        const well = world.lights.find((l) => l.id === 'ruins-moonwell')
+        if (well?.kindled && this.arcane.data.length < 40) {
+          this.arcane.spawn({
+            pos: new THREE.Vector3(well.x + rng.range(-1.6, 1.6), world.heightAt(well.x, well.z) + 0.9, well.z + rng.range(-1.6, 1.6)),
+            vel: new THREE.Vector3(0, rng.range(0.35, 0.7), 0),
+            maxLife: rng.range(2.5, 4), size: rng.range(0.05, 0.1), seed: rng.next(),
+          })
+        }
+      }
+      // Mosswood: spore motes + canopy drips
+      if (zoneId === 'mosswood') {
+        if (this.spores.data.length < 36) {
+          this.spores.spawn({
+            pos: new THREE.Vector3(camera.position.x + rng.range(-14, 14), world.heightAt(camera.position.x, camera.position.z) + rng.range(0.4, 3.4), camera.position.z + rng.range(-14, 14)),
+            vel: new THREE.Vector3(rng.range(-0.1, 0.1), rng.range(-0.05, 0.08), rng.range(-0.1, 0.1)),
+            maxLife: rng.range(5, 9), size: rng.range(0.04, 0.08), alpha: 0.5, seed: rng.next(),
+            update(p, dt2) {
+              p.pos.x += (p.vel.x + Math.sin(p.life * 1.4 + p.seed * 8) * 0.1) * dt2
+              p.pos.y += p.vel.y * dt2
+              p.pos.z += p.vel.z * dt2
+            },
+          })
+        }
+        if (rng.chance(0.5)) {
+          const dx2 = camera.position.x + rng.range(-10, 10), dz2 = camera.position.z + rng.range(-10, 10)
+          this.drips.spawn({
+            pos: new THREE.Vector3(dx2, world.heightAt(dx2, dz2) + rng.range(5, 9), dz2),
+            vel: new THREE.Vector3(0, -6.5, 0),
+            maxLife: 1.4, size: 0.07, alpha: 0.5, seed: rng.next(),
+            groundY: world.heightAt(dx2, dz2),
+            update(p, dt2) { p.pos.y += p.vel.y * dt2; if (p.pos.y < p.groundY) p.life = p.maxLife },
+          })
+        }
+      }
+      // Isle: sea sparkle glints on the water
+      if (zoneId === 'isle' || zoneId === 'foglandPI') {
+        if (this.sparkle.data.length < 50) {
+          const sx2 = camera.position.x + rng.range(-30, 30), sz2 = camera.position.z + rng.range(-35, 10)
+          if (world.heightAt(sx2, sz2) < -1.5) {
+            this.sparkle.spawn({
+              pos: new THREE.Vector3(sx2, -1.05, sz2),
+              vel: new THREE.Vector3(),
+              maxLife: rng.range(0.8, 1.6), size: rng.range(0.08, 0.16), seed: rng.next(),
+              update(p) { p.alpha = Math.sin((p.life / p.maxLife) * Math.PI) * 0.8 },
+            })
+          }
+        }
+      }
+      // Hall: floor mist sheets + dust motes in the high moonbeams
+      if (zoneId === 'hall') {
+        if (this.mist.data.length < 24) {
+          this.mist.spawn({
+            pos: new THREE.Vector3(-110 + rng.range(-5.5, 5.5), 1.65, rng.range(140, 170)),
+            vel: new THREE.Vector3(rng.range(-0.1, 0.1), 0, rng.range(-0.08, 0.08)),
+            maxLife: rng.range(6, 10), size: rng.range(1.4, 2.4), alpha: 0.16, seed: rng.next(),
+            update(p, dt2) {
+              p.pos.addScaledVector(p.vel, dt2)
+              p.alpha = 0.16 * Math.sin((p.life / p.maxLife) * Math.PI)
+            },
+          })
+        }
+      }
+    }
+
     this.rain.update(dt, camera)
     this.rings.update(dt, camera)
     this.leaves.update(dt, camera)
     this.smoke.update(dt, camera)
     this.moths.update(dt, camera)
     this.zzz.update(dt, camera)
+    this.petals.update(dt, camera)
+    this.arcane.update(dt, camera)
+    this.spores.update(dt, camera)
+    this.drips.update(dt, camera)
+    this.sparkle.update(dt, camera)
+    this.mist.update(dt, camera)
   }
 }

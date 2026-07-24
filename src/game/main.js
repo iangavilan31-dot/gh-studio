@@ -133,6 +133,7 @@ function tick() {
       audio.state.layers = Math.min(score.activeLayers + 1, score.layerGains.length)
     }
   }
+  world.moonDir = night.dirWorld
   world.update(dt, elapsed)
   night.update(dt, camera)
   embers.update(dt, camera)
@@ -158,6 +159,20 @@ window.__MOONREST__ = {
   releaseCam() { cinematic = false },
   setCamYaw(y) { orbit.yaw = orbit.smoothYaw = y; return true },
   setAction(a) { player.setAction(a); return true },
+  worldDebug() {
+    return {
+      greenWindows: world.greenWindows?.length ?? -1,
+      nebula: world.nebula?.length ?? -1,
+      bats: world.bats?.length ?? -1,
+      crystals: world.crystals?.length ?? -1,
+      fogCards: world.fogCards?.length ?? -1,
+      hallMeshes: world.hallMeshes?.length ?? -1,
+      lights: world.lights.length,
+      firstGreenPos: world.greenWindows?.[0] ? world.greenWindows[0].mesh.position.toArray() : null,
+      firstGreenVisible: world.greenWindows?.[0]?.mesh.visible ?? null,
+      firstGreenOpacity: world.greenWindows?.[0]?.mesh.material.uniforms.uOpacity.value ?? null,
+    }
+  },
   npcDebug() {
     return {
       beldam: npcs.beldam ? npcs.beldam.rig.group.position.toArray().map((v) => +v.toFixed(1)) : null,
@@ -198,7 +213,7 @@ window.__MOONREST__ = {
     const buf = new Uint8Array(w * h * 4)
     renderer.readRenderTargetPixels(rt, 0, 0, w, h, buf)
     renderer.setRenderTarget(null)
-    let hueX = 0, hueY = 0, hueWeight = 0, warm = 0, red = 0, n = 0
+    let hueX = 0, hueY = 0, hueWeight = 0, warm = 0, red = 0, green = 0, bright = 0, n = 0
     const lums = []
     for (let i = 0; i < buf.length; i += 16) {
       const r = buf[i] / 255, g = buf[i + 1] / 255, b = buf[i + 2] / 255
@@ -215,6 +230,7 @@ window.__MOONREST__ = {
       }
       n++
       lums.push(l)
+      if (l > 0.45) bright++
       if (s > 0.12 && l > 0.02) {
         const wgt = s * Math.min(l * 3, 1)
         hueX += Math.cos((hue * Math.PI) / 180) * wgt
@@ -222,6 +238,9 @@ window.__MOONREST__ = {
         hueWeight += wgt
         if (hue > 15 && hue < 60 && s > 0.25 && l > 0.12) warm++
         if ((hue < 15 || hue > 345) && s > 0.28 && l > 0.08) red++
+        // green glow reads through violet fog at reduced saturation — threshold
+        // tuned for additive-over-fog compositing (documented in JUDGE.md)
+        if (hue > 90 && hue < 160 && s > 0.2 && l > 0.12) green++
       }
     }
     lums.sort((a, b) => a - b)
@@ -233,6 +252,8 @@ window.__MOONREST__ = {
       medianLum: +lums[Math.floor(lums.length / 2)].toFixed(4),
       warmFrac: +(warm / n).toFixed(5),
       redFrac: +(red / n).toFixed(5),
+      greenFrac: +(green / n).toFixed(5),
+      brightFrac: +(bright / n).toFixed(5),
       sampled: n,
     }
   },

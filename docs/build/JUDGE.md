@@ -32,3 +32,38 @@ Known composition notes for M9 judges: Nib reads only in the close `nib` pose
 (garden-gnome scale — by design, but the wide shot leans on the lantern);
 under-canopy AO bake is subtle at night ambient; feelcheck hop-apex assert is
 timing-flaky under swiftshader (passed on rerun).
+
+---
+
+## M5 reel review (all 8 zones, side-by-side — 12.1 M5)
+
+Hue gate PASS 8/8 (6-frame sampling: accent fields take max across frames since
+flames flicker and lanterns sway; hue is the mean). Zone-accent literalism per
+Part 2.1: gloomspire checks GREEN presence (>0.001, s>0.2/l>0.12 tuned for
+additive-over-fog compositing), isle checks moon-glow brightness (l>0.45 frac
+>0.004), hall counts carpet red as warmth, ruins asserts no warm requirement
+(cold cyan accent by spec).
+
+Shot verdicts (all REVIEWED this pass):
+- park.png — teal night; kindled lamp + warm vertex pool; rain streaks; Beldam on
+  the Long Bench; moon + halo; stars; fences/mushrooms/birdbath present. STRONG.
+- village.png — indigo; S-curve cobble street uphill (Rule 9); amber crossbar
+  windows (hearth-breathing); 4 kindled posts recede; spire w/ handless clock. STRONG.
+- rooftops.png — cobalt sky dominant; kindled hook-lantern vignette + moths;
+  pine; Nib close-up in nib.png (red hat reads). GOOD (wide shot leans on lantern).
+- ruins.png — violet; Curator ghost drifting the colonnade (translucent, dusting
+  patrol); petals; cyan glyph + sconce glints; moon violet-cast. STRONG.
+- gloomspire.png — luminous toxic-green windows through fog (noFog emissive panes
+  + halos); nebula billboards; warm causeway lanterns; red door; moat. STRONG.
+- hall.png — 100% vertex-lit showcase: warm chandelier pools on columns/floor,
+  cold vault, red carpet + emerald runner, lit sconces; mist sheets spawn. GOOD
+  (chandelier rings themselves read weakly — M9 candidate).
+- mosswood.png — deepest fog; layered fog cards w/ parallax; colossal trunks
+  vignette; kindled arch + trail lanterns; spores/drips systems live. STRONG.
+- isle.png + sea.png — keep + crenellations; palm; moon + cross-flare; kindled
+  causeway lamps; sea w/ ripple + scrolling wavelets + moon streak (faint but
+  present); foam ribbon; seabirds + cove hammock sailors (snore-z). GOOD.
+
+Defect candidates carried to M9: chandelier ring readability; moon streak
+strength; Mote/gargoyle only visible up close (no dedicated poses yet); draw-call
+budget still unmerged (D6).

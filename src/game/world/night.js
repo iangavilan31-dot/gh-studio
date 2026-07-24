@@ -122,5 +122,6 @@ export class Night {
     this.group.position.copy(camera.position).addScaledVector(_dir, this.dist)
     this.face.lookAt(camera.position)
     this.flare.lookAt(camera.position)
+    this.dirWorld = _dir // shared with the water moon-streak
   }
 }

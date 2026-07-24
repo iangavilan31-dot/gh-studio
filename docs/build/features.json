@@ -390,7 +390,7 @@
         "ruins.png hue-check vs 2.1 row 5",
         "sconces kindle cyan not warm (screenshot)"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m5-curator",
@@ -399,7 +399,7 @@
       "steps": [
         "capture: patrol + dusting; bow after kindles; subtitle shown"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m5-gloomspire-art",
@@ -409,7 +409,7 @@
         "gloomspire.png hue-check vs 2.1 row 6",
         "nebula drift + window flicker across frames"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m5-hall-art",
@@ -419,7 +419,7 @@
         "hall.png hue-check vs 2.1 row 7",
         "vertex-light pools visible; renderer light count == 0"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m5-mosswood-art",
@@ -429,7 +429,7 @@
         "mosswood.png hue-check vs 2.1 row 4",
         "fog card parallax across frames"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m5-isle-art",
@@ -439,7 +439,7 @@
         "isle.png hue-check vs 2.1 row 8",
         "palm sway + sea shimmer across frames"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m5-water",
@@ -448,7 +448,7 @@
       "steps": [
         "screenshot: moon streak points at moon; ripple animates across frames"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m5-reel-review",
@@ -457,7 +457,7 @@
       "steps": [
         "JUDGE.md entry lists all 8 with verdicts; gate exits 0 for all 8"
       ],
-      "passes": false
+      "passes": true
     },
     {
       "id": "m6-lights-all",

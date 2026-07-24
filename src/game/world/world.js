@@ -39,6 +39,7 @@ export class World {
     this.buildIsle()
     this.buildFoglands()
     this.bakeVertexColors()
+    this.bakeHallShowcase()
   }
 
   // Build-time vertex bake (MASTER_PROMPT 8.4): painted-AO heuristics into the
@@ -249,8 +250,8 @@ export class World {
     // the northern sea
     const seaTex = TEX.water()
     seaTex.repeat.set(50, 24)
-    const seaMat = retroMaterial({ map: seaTex })
-    const sea = new THREE.Mesh(new THREE.PlaneGeometry(360, 170), seaMat)
+    const seaMat = retroMaterial({ map: seaTex, ripple: true })
+    const sea = new THREE.Mesh(new THREE.PlaneGeometry(360, 170, 60, 30), seaMat)
     ensureVertexColors(sea.geometry)
     sea.rotation.x = -Math.PI / 2
     sea.position.set(0, WATER_Y, -125)
@@ -766,6 +767,55 @@ export class World {
       drum.position.set(dx, heightAt(dx, dz) + 0.55, dz)
       this.scene.add(drum)
     }
+    // purple flower meadow (north-east quarter) — magenta cross-quads
+    const meadowRng = worldRNG.fork('meadow')
+    const flowerMat = retroMaterial({ map: TEX.white(), hemi: true, side: THREE.DoubleSide })
+    const meadow = new THREE.Group()
+    for (let i = 0; i < 70; i++) {
+      const fx = meadowRng.range(-124, -96), fz = meadowRng.range(6, 20)
+      if (Math.abs(fz) < 4) continue
+      const col = meadowRng.chance(0.5) ? [0.78, 0.53, 0.82] : [0.71, 0.43, 0.75]
+      for (let k = 0; k < 2; k++) {
+        const q = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.22), flowerMat)
+        ensureVertexColors(q.geometry, col)
+        q.position.set(fx, heightAt(fx, fz) + 0.11, fz)
+        q.rotation.y = k * Math.PI / 2 + meadowRng.range(-0.3, 0.3)
+        meadow.add(q)
+      }
+    }
+    this.scene.add(meadow)
+    // floating mote crystals (bobbing, faint cyan)
+    this.crystals = []
+    const crysMat = retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.7, emissive: '#0e2a2a' })
+    for (let i = 0; i < 4; i++) {
+      const cxr = meadowRng.range(-126, -100), czr = meadowRng.range(-8, 14)
+      const cry = new THREE.Mesh(new THREE.OctahedronGeometry(0.16), crysMat)
+      ensureVertexColors(cry.geometry, [0.5, 0.83, 0.83])
+      cry.position.set(cxr, heightAt(cxr, czr) + meadowRng.range(0.8, 1.6), czr)
+      this.scene.add(cry)
+      this.crystals.push({ mesh: cry, baseY: cry.position.y, seed: meadowRng.range(0, 10) })
+    }
+    // half-buried owl statue
+    const owl = new THREE.Group()
+    const owlMat = retroMaterial({ map: TEX.stoneBlock({ name: 'owlstone', base: '#7a7284' }) })
+    const owlBody = new THREE.Mesh(new THREE.SphereGeometry(0.55, 8, 6), owlMat)
+    ensureVertexColors(owlBody.geometry)
+    owlBody.scale.set(0.9, 1.1, 0.8)
+    owl.add(owlBody)
+    for (const sx of [-1, 1]) {
+      const tuft = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.3, 5), owlMat)
+      ensureVertexColors(tuft.geometry)
+      tuft.position.set(sx * 0.3, 0.55, 0)
+      owl.add(tuft)
+      const eye = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.03, 8), owlMat)
+      ensureVertexColors(eye.geometry, [0.6, 0.56, 0.66])
+      eye.rotation.x = Math.PI / 2
+      eye.position.set(sx * 0.2, 0.25, 0.42)
+      owl.add(eye)
+    }
+    owl.position.set(-99, heightAt(-99, -9) - 0.25, -9) // half-buried
+    owl.rotation.z = 0.35
+    this.scene.add(owl)
     this.poses.ruins = { pos: [-91, heightAt(-91, 2.5) + 1.6, 2.5], look: [-132, heightAt(-132, 0) + 3.5, 0] }
   }
 
@@ -797,21 +847,36 @@ export class World {
       this.scene.add(cone)
       this.colliders.push({ x: tx, z: tz, r: 3, h: th })
     }
-    // toxic green windows (pre-lit set dressing, flickered in update)
+    // toxic green windows — EVERY window glows green (Part 3.2.5); pre-lit set
+    // dressing with gentle flicker, plus additive halos so they read in fog
     this.greenWindows = []
-    const winMat = () => {
-      const m = retroMaterial({ map: TEX.white(), emissive: 0x58e050, transparent: true, opacity: 0.85, depthWrite: false })
-      return m
-    }
-    for (let i = 0; i < 9; i++) {
-      const wxr = cx + rng.range(-7, 7)
-      const wyr = heightAt(cx, cz) + rng.range(3, 10)
-      const win = new THREE.Mesh(new THREE.PlaneGeometry(0.7, 1.1), winMat())
+    const addGreenWindow = (x, y, z, ry = Math.PI) => {
+      // noFog: emissive window surfaces glow through the mist (Rule 6 treatment
+      // for light sources — the reference has every window luminous green)
+      const win = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.5), retroMaterial({ map: TEX.window({ name: 'greenwin', green: true }), transparent: true, opacity: 0.9, depthWrite: false, emissive: '#3a8a34', noFog: true }))
       ensureVertexColors(win.geometry)
-      win.position.set(wxr, wyr, cz - 3.05)
-      win.rotation.y = Math.PI
+      win.position.set(x, y, z)
+      win.rotation.y = ry
       this.scene.add(win)
-      this.greenWindows.push({ mesh: win, seed: rng.range(0, 10) })
+      // noFog: kindled glow blooms THROUGH the mist (the reference look)
+      const haloMat = retroMaterial({ map: TEX.glowDot({ color: '#58e050' }), transparent: true, depthWrite: false, opacity: 0.72, noFog: true })
+      haloMat.blending = THREE.AdditiveBlending
+      const halo = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 3.0), haloMat)
+      ensureVertexColors(halo.geometry)
+      halo.position.set(x, y, z + (ry === Math.PI ? -0.05 : 0.05))
+      halo.rotation.y = ry
+      this.scene.add(halo)
+      this.greenWindows.push({ mesh: win, halo, seed: rng.range(0, 10) })
+    }
+    for (let i = 0; i < 8; i++) {
+      const wxr = cx + rng.range(-6.5, 6.5)
+      const wyr = heightAt(cx, cz) + rng.range(3, 10)
+      addGreenWindow(wxr, wyr, cz - 3.05)
+    }
+    // tower windows
+    for (const [tx, tz, th] of towerDefs) {
+      addGreenWindow(tx, heightAt(cx, cz) + th * 0.7, tz - 2.85)
+      if (th > 14) addGreenWindow(tx, heightAt(cx, cz) + th * 0.45, tz - 2.85)
     }
     // the one dark red door (leads to the Hall behind)
     const door = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3.6), retroMaterial({ map: TEX.white() }))
@@ -842,11 +907,46 @@ export class World {
     this.scene.add(gateTop)
     this.addAABB(gx - 3.7, gx - 1.5, gz - 1.5, gz + 1.5, 6, gy)
     this.addAABB(gx + 1.5, gx + 3.7, gz - 1.5, gz + 1.5, 6, gy)
-    // gargoyle perch stub (M5 art)
+    // gargoyle perch
     const perch = new THREE.Mesh(new THREE.BoxGeometry(1, 0.6, 1), darkStone)
     ensureVertexColors(perch.geometry)
     perch.position.set(gx + 2.8, heightAt(gx, gz) + 6.3, gz)
     this.scene.add(perch)
+    this.gargoylePos = new THREE.Vector3(gx + 2.8, heightAt(gx, gz) + 6.62, gz)
+
+    // nebula billboard clouds behind the castle (additive, slow drift — Part 3.2.5)
+    this.nebula = []
+    const nebRng = worldRNG.fork('nebula')
+    for (let i = 0; i < 6; i++) {
+      const mat = retroMaterial({ map: TEX.puff({ name: 'nebulaPuff' + (i % 2), color: i % 2 ? '#4b14ac' : '#53287c' }), transparent: true, depthWrite: false, opacity: nebRng.range(0.3, 0.5), noFog: true })
+      mat.blending = THREE.AdditiveBlending
+      const puffMesh = new THREE.Mesh(new THREE.PlaneGeometry(nebRng.range(26, 44), nebRng.range(14, 22)), mat)
+      ensureVertexColors(puffMesh.geometry)
+      puffMesh.position.set(cx + nebRng.range(-30, 30), heightAt(cx, cz) + nebRng.range(14, 30), cz + nebRng.range(14, 26))
+      puffMesh.renderOrder = -80
+      this.scene.add(puffMesh)
+      this.nebula.push({ mesh: puffMesh, speed: nebRng.range(0.1, 0.3), seed: nebRng.range(0, 10) })
+    }
+
+    // bats: 3–5 lazy loops around the towers, strictly non-scary (Rule 11)
+    this.bats = []
+    const batRng = worldRNG.fork('bats')
+    const batMat = retroMaterial({ map: TEX.white(), hemi: true })
+    for (let i = 0; i < 4; i++) {
+      const bat = new THREE.Group()
+      const bBody = new THREE.Mesh(new THREE.SphereGeometry(0.07, 5, 4), batMat)
+      ensureVertexColors(bBody.geometry, [0.2, 0.16, 0.24])
+      bat.add(bBody)
+      for (const sx of [-1, 1]) {
+        const wing = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.1), batMat)
+        ensureVertexColors(wing.geometry, [0.22, 0.18, 0.26])
+        wing.position.x = sx * 0.13
+        bat.add(wing)
+        if (sx === 1) bat.userData.wingR = wing; else bat.userData.wingL = wing
+      }
+      this.scene.add(bat)
+      this.bats.push({ mesh: bat, cx: cx + batRng.range(-8, 8), cz: cz + batRng.range(-4, 8), cy: heightAt(cx, cz) + batRng.range(9, 15), r: batRng.range(5, 10), speed: batRng.range(0.25, 0.45), seed: batRng.range(0, 10) })
+    }
 
     // cold lights: 4 causeway lanterns (2 pairs) + gatehouse brazier
     const cyz = [93, 99]
@@ -874,6 +974,7 @@ export class World {
     const cx = -110
     const y0 = 1.3
     const zA = 138, zB = 172
+    this.hallMeshes = [] // baked by bakeHallShowcase (carpet/runner keep their dyes)
     // floor is terrain (flat 1.3); walls
     const wallH = 9
     const mkWall = (minX, maxX, minZ, maxZ) => {
@@ -882,6 +983,7 @@ export class World {
       w.position.set((minX + maxX) / 2, y0 + wallH / 2, (minZ + maxZ) / 2)
       this.scene.add(w)
       this.addAABB(minX, maxX, minZ, maxZ, wallH, y0)
+      this.hallMeshes.push(w)
     }
     mkWall(cx - 7.5, cx - 6.5, zA, zB)          // west wall
     mkWall(cx + 6.5, cx + 7.5, zA, zB)          // east wall
@@ -893,6 +995,7 @@ export class World {
     ensureVertexColors(ceil.geometry)
     ceil.position.set(cx, y0 + wallH + 0.5, (zA + zB) / 2)
     this.scene.add(ceil)
+    this.hallMeshes.push(ceil)
     // columns both sides
     for (let z = zA + 5; z < zB - 4; z += 6) {
       for (const sx of [-4.6, 4.6]) {
@@ -901,6 +1004,7 @@ export class World {
         col.position.set(cx + sx, y0 + wallH / 2, z)
         this.scene.add(col)
         this.colliders.push({ x: cx + sx, z, r: 0.7, h: wallH })
+        this.hallMeshes.push(col)
       }
     }
     // stone floor over the terrain (the global ground is grass — interiors need their own)
@@ -911,6 +1015,7 @@ export class World {
     floor.rotation.x = -Math.PI / 2
     floor.position.set(cx, y0 + 0.015, (zA + zB) / 2)
     this.scene.add(floor)
+    this.hallMeshes.push(floor)
     // red carpet + emerald runner (dark VERTEX colors — emissive over white
     // texture washes out to ambient beige, learned the hard way)
     const carpet = new THREE.Mesh(new THREE.PlaneGeometry(2.6, zB - zA - 2), retroMaterial({ map: TEX.white() }))
@@ -928,10 +1033,12 @@ export class World {
     ensureVertexColors(dais.geometry)
     dais.position.set(cx, y0 + 0.5, zB - 3)
     this.scene.add(dais)
+    this.hallMeshes.push(dais)
     const throne = new THREE.Mesh(new THREE.BoxGeometry(1.6, 3, 1), retroMaterial({ map: TEX.plank() }))
     ensureVertexColors(throne.geometry)
     throne.position.set(cx, y0 + 2.5, zB - 3.5)
     this.scene.add(throne)
+    this.hallMeshes.push(throne)
     this.colliders.push({ x: cx, z: zB - 3, r: 2.4, h: 2 })
     // 3 pre-lit chandeliers (rings of candle glow, always on)
     const mats = sharedMats()
@@ -1005,6 +1112,19 @@ export class World {
       this.place(lamp.group, lx, 107.4)
       this.registerLight(`mosswood-trail-${lx}`, 'mosswood', lamp, lx, 107.4)
     }
+    // 3 layered ground-fog cards across the path (parallax in update — Part 3.2.7)
+    this.fogCards = []
+    const fogTex = TEX.glowDot({ color: '#3c5748' })
+    for (const [fx, fw, fo] of [[70, 26, 0.22], [77, 30, 0.28], [83, 34, 0.34]]) {
+      const mat = retroMaterial({ map: fogTex, transparent: true, depthWrite: false, opacity: fo })
+      const card = new THREE.Mesh(new THREE.PlaneGeometry(fw, 5), mat)
+      ensureVertexColors(card.geometry)
+      card.position.set(fx, heightAt(fx, 110) + 1.2, 110)
+      card.rotation.y = -Math.PI / 2
+      card.scale.y = 0.55
+      this.scene.add(card)
+      this.fogCards.push({ mesh: card, baseX: fx, seed: fx * 0.7 })
+    }
     this.poses.mosswood = { pos: [63, heightAt(63, 110) + 1.5, 110.5], look: [84, heightAt(84, 110) + 3.5, 110] }
   }
 
@@ -1071,7 +1191,65 @@ export class World {
     this.scene.add(keepBrazier.group)
     this.registerLight('isle-keep-brazier', 'isle', keepBrazier, kx, kz, kBase + 9.9)
 
+    // foam edge along the cove (scrolling pale strip)
+    const foamTex = TEX.streak({ name: 'foam', color: '#b8ccd4' })
+    foamTex.wrapS = foamTex.wrapT = THREE.RepeatWrapping
+    foamTex.repeat.set(14, 1)
+    const foamMat = retroMaterial({ map: foamTex, transparent: true, depthWrite: false, opacity: 0.4 })
+    const foamPts = []
+    for (let i = 0; i <= 20; i++) {
+      const a = -0.9 + (i / 20) * 2.2
+      foamPts.push([kx + Math.cos(a) * 31, kz + Math.sin(a) * 26])
+    }
+    const foam = new THREE.Mesh(ribbonGeometry(foamPts, 1.4), foamMat)
+    foam.position.y = WATER_Y - heightAt(foamPts[0][0], foamPts[0][1]) + 0.12
+    this.scene.add(foam)
+    this.waterMats.push({ tex: foamTex, sx: 0.01, sy: 0 })
+
+    // moon streak on the sea: long additive strip aimed at the moon azimuth
+    const streakMat = retroMaterial({ map: TEX.glowDot({ color: '#c8d4f0' }), transparent: true, depthWrite: false, opacity: 0.4, noFog: true })
+    streakMat.blending = THREE.AdditiveBlending
+    this.moonStreak = new THREE.Mesh(new THREE.PlaneGeometry(9, 95), streakMat)
+    ensureVertexColors(this.moonStreak.geometry)
+    this.moonStreak.rotation.x = -Math.PI / 2
+    this.moonStreak.position.set(0, WATER_Y + 0.05, -95)
+    this.scene.add(this.moonStreak)
+
     this.poses.isle = { pos: [13, 1.7, -101], look: [-7, kBase + 6, -155] }
+    // sea view for the water/moon-streak evidence (m5-water)
+    this.poses.sea = { pos: [4, 2.2, -50], look: [-30, 10, -130] }
+  }
+
+  // The Hall's baked-vertex-light showcase (Part 3.2.6 / 8.4): NO lights at all —
+  // warm pools under the pre-lit chandeliers, cold vault above, painted into
+  // every interior vertex.
+  bakeHallShowcase() {
+    if (!this.hallMeshes) return
+    const chandeliers = [[-110, 6.9, 146], [-110, 6.9, 155], [-110, 6.9, 164]]
+    const v = new THREE.Vector3()
+    for (const mesh of this.hallMeshes) {
+      mesh.updateMatrixWorld()
+      const pos = mesh.geometry.getAttribute('position')
+      const col = mesh.geometry.getAttribute('color')
+      for (let i = 0; i < pos.count; i++) {
+        v.fromBufferAttribute(pos, i).applyMatrix4(mesh.matrixWorld)
+        // cold vault: darker + bluer with height
+        const coldF = THREE.MathUtils.clamp((v.y - 3.2) / 6, 0, 1)
+        let r = 1 - coldF * 0.45, g = 1 - coldF * 0.38, b = 1 - coldF * 0.2
+        // warm candle pools
+        let w = 0
+        for (const [cx2, cy2, cz2] of chandeliers) {
+          const d = Math.sqrt((v.x - cx2) ** 2 + (v.y - cy2) ** 2 * 0.35 + (v.z - cz2) ** 2)
+          w += Math.max(0, 1 - d / 7.5)
+        }
+        w = Math.min(1.1, w)
+        r *= 1 + w * 1.15
+        g *= 1 + w * 0.62
+        b *= 1 + w * 0.18
+        col.setXYZ(i, r * 0.9, g * 0.9, b * 0.95)
+      }
+      col.needsUpdate = true
+    }
   }
 
   buildFoglands() {
@@ -1153,9 +1331,45 @@ export class World {
       w.tex.offset.x = (w.tex.offset.x + w.sx * dt) % 1
       w.tex.offset.y = (w.tex.offset.y + w.sy * dt) % 1
     }
+    // nebula drift + bat loops + fog-card parallax + crystal bob + moon streak
+    if (this.nebula) {
+      for (const n of this.nebula) {
+        n.mesh.position.x += Math.sin(time * 0.05 + n.seed) * n.speed * dt
+        n.mesh.lookAt(this.camera.position)
+      }
+    }
+    if (this.bats) {
+      for (const b of this.bats) {
+        const a = time * b.speed + b.seed
+        b.mesh.position.set(b.cx + Math.cos(a) * b.r, b.cy + Math.sin(time * 0.7 + b.seed) * 0.8, b.cz + Math.sin(a) * b.r * 0.7)
+        b.mesh.rotation.y = -a
+        const flap = Math.sin(time * 7 + b.seed) * 0.6
+        if (b.mesh.userData.wingL) { b.mesh.userData.wingL.rotation.z = flap; b.mesh.userData.wingR.rotation.z = -flap }
+      }
+    }
+    if (this.fogCards) {
+      for (const f of this.fogCards) {
+        f.mesh.position.x = f.baseX + Math.sin(time * 0.14 + f.seed) * 1.6
+        f.mesh.material.uniforms.uOpacity.value = (0.22 + 0.06 * Math.sin(time * 0.4 + f.seed)) * (f.baseX - 60) / 20
+      }
+    }
+    if (this.crystals) {
+      for (const c of this.crystals) {
+        c.mesh.position.y = c.baseY + Math.sin(time * 0.8 + c.seed) * 0.12
+        c.mesh.rotation.y = time * 0.4 + c.seed
+      }
+    }
+    if (this.moonStreak && this.moonDir) {
+      // strip runs from the isle shore toward the moon's azimuth across the sea
+      const az = Math.atan2(this.moonDir.x, this.moonDir.z)
+      this.moonStreak.rotation.z = -az
+      this.moonStreak.material.uniforms.uOpacity.value = 0.45 + Math.max(0, this.moonDir.y) * 0.25
+    }
     if (this.greenWindows) {
       for (const gw of this.greenWindows) {
-        gw.mesh.material.uniforms.uOpacity.value = 0.7 + Math.sin(time * 2.2 + gw.seed * 7) * 0.12 + Math.sin(time * 5.7 + gw.seed * 3) * 0.06
+        const f = 0.75 + Math.sin(time * 2.2 + gw.seed * 7) * 0.12 + Math.sin(time * 5.7 + gw.seed * 3) * 0.06
+        gw.mesh.material.uniforms.uOpacity.value = f
+        if (gw.halo) gw.halo.material.uniforms.uOpacity.value = 0.3 * f
       }
     }
     if (this.warmWindows) {
