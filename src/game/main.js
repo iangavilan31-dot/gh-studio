@@ -393,6 +393,9 @@ function teleport(poseName) {
   hud.clearSubtitle()
   camera.position.set(...p.pos)
   camera.lookAt(...p.look)
+  // poses may pin the night minute (AA.1): each zone's shot catches the moon
+  // where its authored framing honestly crosses the descending arc
+  if (p.minute != null) night.skipTo(p.minute)
   // atmosphere follows the viewed zone, not the parked player
   // (XZ from the look target; Y from the camera, so elevation-gated zones
   //  like the rooftops only claim shots taken from up there)

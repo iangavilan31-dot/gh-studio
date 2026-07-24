@@ -21,12 +21,13 @@ function moonFaceTexture() {
     ctx.beginPath()
     ctx.arc(64, 64, 56, 0, Math.PI * 2)
     ctx.fill()
-    // painted maria blotches
-    for (let i = 0; i < 14; i++) {
+    // painted maria blotches — strong enough to survive the halo (AA.1), and
+    // arranged with a faint worn, watchful cast (O.1) that reads at a glance
+    for (let i = 0; i < 18; i++) {
       const a = rng.range(0, Math.PI * 2)
-      const d = rng.range(0, 40)
-      ctx.fillStyle = rgb(mix(face, shadow, rng.range(0.25, 0.6)))
-      ctx.globalAlpha = rng.range(0.3, 0.6)
+      const d = rng.range(0, 42)
+      ctx.fillStyle = rgb(mix(face, shadow, rng.range(0.45, 0.85)))
+      ctx.globalAlpha = rng.range(0.45, 0.75)
       ctx.beginPath()
       ctx.ellipse(64 + Math.cos(a) * d, 64 + Math.sin(a) * d, rng.range(5, 16), rng.range(4, 12), rng.range(0, 3), 0, Math.PI * 2)
       ctx.fill()
@@ -56,8 +57,9 @@ function moonFaceTexture() {
 function crossFlareTexture() {
   const c = canvasOf(128, (ctx) => {
     ctx.clearRect(0, 0, 128, 128)
+    // core kept faint so the painted face reads through the halo (AA.1)
     const g = ctx.createRadialGradient(64, 64, 2, 64, 64, 64)
-    g.addColorStop(0, 'rgba(232,228,255,0.55)')
+    g.addColorStop(0, 'rgba(232,228,255,0.26)')
     g.addColorStop(0.4, 'rgba(180,170,230,0.12)')
     g.addColorStop(1, 'rgba(180,170,230,0)')
     ctx.fillStyle = g
@@ -98,14 +100,14 @@ export class Night {
     this.warmBias = 0
     this.setPhase(lunarAge())
 
-    const faceMat = retroMaterial({ map: moonFaceTexture(), emissive: 0x8a86a8, alphaTest: 0.3, noFog: true, depthWrite: false })
-    this.face = new THREE.Mesh(new THREE.PlaneGeometry(26, 26), faceMat)
+    const faceMat = retroMaterial({ map: moonFaceTexture(), emissive: 0x9d97c2, alphaTest: 0.3, noFog: true, depthWrite: false })
+    this.face = new THREE.Mesh(new THREE.PlaneGeometry(34, 34), faceMat)
     ensureVertexColors(this.face.geometry)
     this.face.renderOrder = -90
 
     const flareMat = retroMaterial({ map: crossFlareTexture(), emissive: 0xffffff, transparent: true, noFog: true, depthWrite: false })
     flareMat.blending = THREE.AdditiveBlending
-    this.flare = new THREE.Mesh(new THREE.PlaneGeometry(64, 64), flareMat)
+    this.flare = new THREE.Mesh(new THREE.PlaneGeometry(84, 84), flareMat)
     ensureVertexColors(this.flare.geometry)
     this.flare.renderOrder = -89
 
@@ -124,17 +126,20 @@ export class Night {
     this.illum = 0.5 * (1 - Math.cos(age * Math.PI * 2)) // 0 new → 1 full
     this.fogTight = 1 - 0.15 * (1 - this.illum)
     if (this.face) {
-      this.face.material.uniforms.uEmissive.value.set('#8a86a8').multiplyScalar(0.45 + 0.75 * this.illum)
+      this.face.material.uniforms.uEmissive.value.set('#9d97c2').multiplyScalar(0.5 + 0.75 * this.illum)
       this.flare.material.uniforms.uOpacity.value = 0.35 + 0.65 * this.illum
     }
   }
 
   update(dt, camera) {
     if (!this.paused) this.minutes = Math.min(NIGHT_MINUTES, this.minutes + dt / 60) // the night starts with play, not the title (6.2)
-    // great arc: zenith-ish (t=0) → western horizon fog (t=40)
+    // great arc (AA.1): rises high in the ESE, sweeps the whole sky, sets in
+    // the western fog — every zone's framing crosses it at some minute, and
+    // it stays low enough to live inside frames (MM's looming moon, not a
+    // zenith dot)
     const t = this.minutes / NIGHT_MINUTES
-    const elev = THREE.MathUtils.lerp(1.15, 0.03, t)        // radians above horizon
-    const azim = THREE.MathUtils.lerp(-2.35, -1.75, t)      // drifting toward due west
+    const elev = THREE.MathUtils.lerp(0.68, 0.04, t)        // radians above horizon
+    const azim = THREE.MathUtils.lerp(1.95, -2.85, t)       // ESE → over the western fog
     _dir.set(
       Math.sin(azim) * Math.cos(elev),
       Math.sin(elev),

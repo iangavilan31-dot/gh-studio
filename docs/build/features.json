@@ -946,7 +946,8 @@
     "READ each PNG: moon disc + halo present in frame or its glow direction visible",
     "hue/position asserted programmatically where pose faces sky"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "shots READ 2026-07-24: park, village, rooftops, ruins, gloomspire, mosswood, isle, sea, foglands all contain the painted moon + cross halo (per-pose arc minutes); face maria/expression read through weakened flare core; hall exempt (interior)"
   },
   {
    "id": "POLISH-AA2",
