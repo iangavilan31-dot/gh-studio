@@ -329,7 +329,7 @@ export class Net {
     } else if (m.ev === 'chan') {
       if (m.on) this.channeling.set(from, m.id)
       else { this.channeling.delete(from); this.recentChan.set(from, { id: m.id, t: performance.now() }) }
-      this._broadcast({ t: 'ev', ev: 'chan', on: m.on, id: m.id, from }, from)
+      this._broadcast({ t: 'ev', ev: 'chan', on: m.on, id: m.id, h: m.h, from }, from)
     } else if (m.ev === 'emote') {
       this._broadcast({ t: 'ev', ev: 'emote', id: m.id, from }, from)
     }
@@ -363,7 +363,7 @@ export class Net {
       if (ev.ev === 'chan') {
         if (ev.on) this.channeling.set(0, ev.id)
         else { this.channeling.delete(0); this.recentChan.set(0, { id: ev.id, t: performance.now() }) }
-        this._broadcast({ t: 'ev', ev: 'chan', on: ev.on, id: ev.id, from: 0 })
+        this._broadcast({ t: 'ev', ev: 'chan', on: ev.on, id: ev.id, h: ev.h, from: 0 })
         return
       }
       this._hostValidate(0, ev)

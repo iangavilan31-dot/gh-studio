@@ -78,13 +78,16 @@ function crossFlareTexture() {
     ctx.translate(64, 64); ctx.rotate(Math.PI / 2); ctx.translate(-64, -64)
     streak(110, 2.5)
     ctx.restore()
-    // fine deterministic grain breaks the radial gradient's quantize rings (J.2)
+    // fine deterministic grain breaks the radial gradient's quantize rings
+    // (J.2) — faded toward the rim so the grain disc has no visible edge
     const grng = worldRNG.fork('tex/flaregrain')
     for (let i = 0; i < 900; i++) {
       const a = grng.range(0, Math.PI * 2), r = Math.sqrt(grng.next()) * 62
-      ctx.fillStyle = grng.chance(0.5) ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+      ctx.globalAlpha = 0.05 * Math.min(1, (1 - r / 62) * 2.2)
+      ctx.fillStyle = grng.chance(0.5) ? '#ffffff' : '#000000'
       ctx.fillRect(64 + Math.cos(a) * r, 64 + Math.sin(a) * r, 1, 1)
     }
+    ctx.globalAlpha = 1
   })
   const t = toTexture(c)
   t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
@@ -103,18 +106,20 @@ export class Night {
   constructor(scene) {
     this.minutes = 0 // 0..40
     this.group = new THREE.Group()
-    this.dist = 165
+    // beyond every terrain silhouette (far plane 220): hills and headlands
+    // must occlude the moon, never the reverse
+    this.dist = 205
     this.warmBias = 0
     this.setPhase(lunarAge())
 
     const faceMat = retroMaterial({ map: moonFaceTexture(), emissive: 0x9d97c2, alphaTest: 0.3, noFog: true, depthWrite: false })
-    this.face = new THREE.Mesh(new THREE.PlaneGeometry(34, 34), faceMat)
+    this.face = new THREE.Mesh(new THREE.PlaneGeometry(42, 42), faceMat)
     ensureVertexColors(this.face.geometry)
     this.face.renderOrder = -90
 
     const flareMat = retroMaterial({ map: crossFlareTexture(), emissive: 0xffffff, transparent: true, noFog: true, depthWrite: false })
     flareMat.blending = THREE.AdditiveBlending
-    this.flare = new THREE.Mesh(new THREE.PlaneGeometry(84, 84), flareMat)
+    this.flare = new THREE.Mesh(new THREE.PlaneGeometry(104, 104), flareMat)
     ensureVertexColors(this.flare.geometry)
     this.flare.renderOrder = -89
 

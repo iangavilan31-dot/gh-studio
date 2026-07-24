@@ -93,7 +93,8 @@ export function applyPose(rig, st, time) {
   // C.4 cold idle: after long stillness, the free hand drifts toward the
   // lantern's warmth for a moment (discovered, not performed)
   const charmPhase = (st.idleShiftT % 34) / 34
-  const charm = charmPhase > 0.82 && charmPhase < 0.94 ? Math.sin(((charmPhase - 0.82) / 0.12) * Math.PI) * (1 - m) : 0
+  // never during an action: a sleeper's arm must not drift to the lantern
+  const charm = !st.action && charmPhase > 0.82 && charmPhase < 0.94 ? Math.sin(((charmPhase - 0.82) / 0.12) * Math.PI) * (1 - m) : 0
   b.armL.rotation.x = Math.sin(ph + Math.PI) * 0.5 * m - charm * 0.85
   b.armL.rotation.z = 0.12 + Math.sin(st.breatheT * 0.7) * 0.02 - charm * 0.35
   b.armR.rotation.x = -0.35 + Math.sin(ph) * 0.16 * m // staff held forward

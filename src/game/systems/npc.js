@@ -189,8 +189,18 @@ export function buildCurator() {
 
 // ——— The Pale King: asleep on his throne, crown tilted ———
 export function buildPaleKing() {
-  const mat = ghostMaterial(0.42)
+  // brighter than the wandering ghosts: he is the hall's centerpiece and must
+  // read from the doorway — cold pale against the candelabra's warm bake
+  const mat = ghostMaterial(0.5)
+  mat.uniforms.uEmissive.value.set('#243a44')
   const g = new THREE.Group()
+  // faint cold aura between king and throne back — silhouette lift, not a lamp
+  const auraMat = retroMaterial({ map: TEX.glowDot({ name: 'kingaura', color: '#6f8fa0' }), transparent: true, depthWrite: false, opacity: 0.2 })
+  auraMat.blending = THREE.AdditiveBlending
+  const aura = new THREE.Mesh(new THREE.PlaneGeometry(2.1, 2.5), auraMat)
+  ensureVertexColors(aura.geometry)
+  aura.position.set(0, 0.85, -0.28)
+  g.add(aura)
   const robePts = []
   for (const [r, y] of [[0.4, 0], [0.36, 0.3], [0.3, 0.6], [0.24, 0.85]]) robePts.push(new THREE.Vector2(r, y))
   const body = M(new THREE.LatheGeometry(robePts, 9), mat, [0.75, 0.78, 0.85])
