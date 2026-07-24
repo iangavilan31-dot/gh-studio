@@ -1027,6 +1027,19 @@
    ],
    "passes": true,
    "evidence": "shots/park.png+village.png (hard texel edges at 1920x1080), pause.png (DPR-sharp menu text), aa8-before-old-default.png side-by-side READ; shellcheck 16/16 asserts native RT 1920x1080 dither .15 sharpen .15; perfgate pass"
+  },
+  {
+   "id": "POLISH-H1",
+   "milestone": "PRESTIGE",
+   "description": "H.1 opening sequence: rain-black -> moon reveal -> fog descent to the cold lamp -> Beldam/Lamplighter beat -> lantern ignites -> seamless blend onto the title diorama orbit; menu keys blocked while held; any input skips; loop-reset reload goes straight to menu; rigs skip instantly",
+   "steps": [
+    "boot page: sequence plays over the LIVE world (rain/moon/flames)",
+    "any key skips -> title menu appears, mode stays title",
+    "rigs (teleport/startNight/skipIntro) bypass instantly",
+    "shellcheck 16/16 + init smoke pass"
+   ],
+   "passes": true,
+   "evidence": "intro-a/intro-c captures READ (moon over treeline in rain; bench arrival with pilot ember + Lamplighter); skip-path verified mode=title menu=6 items; shellcheck 16/16; init OK"
   }
  ]
 }

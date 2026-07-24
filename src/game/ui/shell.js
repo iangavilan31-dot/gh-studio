@@ -70,9 +70,13 @@ export class Shell {
       this.showError()
     })
 
-    window.addEventListener('keydown', (e) => this.onKey(e))
+    // H.1: while the opening sequence holds the menu, no key reaches it —
+    // the first press belongs to the skip
+    window.addEventListener('keydown', (e) => { if (!this.introHeld()) this.onKey(e) })
     this.showTitle()
   }
+
+  introHeld() { return this.root.classList.contains('introhold') }
 
   save() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(this.s)) } catch { /* private mode */ } }
 
@@ -107,7 +111,7 @@ export class Shell {
     li.tabIndex = 0
     li.addEventListener('mouseenter', () => { uiTick(); this.focusItem(li) })
     li.addEventListener('click', () => { uiConfirm(); this.h.bootAudio(); fn() })
-    li.addEventListener('keydown', (e) => { if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); uiConfirm(); this.h.bootAudio(); fn() } })
+    li.addEventListener('keydown', (e) => { if (this.introHeld()) return; if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); uiConfirm(); this.h.bootAudio(); fn() } })
     return li
   }
 
@@ -197,7 +201,7 @@ export class Shell {
           .catch(() => this.toast('no night answers to that code.'))
       })
     }
-    input.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { uiConfirm(); this.h.bootAudio(); go() } })
+    input.addEventListener('keydown', (e) => { if (this.introHeld()) return; e.stopPropagation(); if (e.key === 'Enter') { uiConfirm(); this.h.bootAudio(); go() } })
     this.menuItem(list, 'Join', go)
     this.menuItem(list, 'Back', () => this.showTitle())
     setTimeout(() => input.focus(), 50)
@@ -269,7 +273,7 @@ export class Shell {
         this.save(); this.h.applySettings(this.s); show()
       }
       v.addEventListener('click', advance)
-      v.addEventListener('keydown', (e) => { if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); advance() } })
+      v.addEventListener('keydown', (e) => { if (this.introHeld()) return; if (e.code === 'Enter' || e.code === 'Space') { e.preventDefault(); advance() } })
     }
     const slider = (label, key) => {
       const r = row(label)

@@ -47,6 +47,7 @@ page.on('pageerror', (e) => issues.push('pageerror: ' + e.message))
 try {
   await page.goto(`http://localhost:${PORT}/`)
   await page.waitForFunction(() => window.__MOONREST__?.ready)
+  await page.evaluate(() => window.__MOONREST__.skipIntro()) // the rig tests the menu, not the ritual
   await page.waitForTimeout(1500)
 
   // — title over live diorama —
