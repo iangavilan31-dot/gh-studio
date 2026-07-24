@@ -9,6 +9,17 @@ export class AudioEngine {
     this.ctx = null
     this.started = false
     this.state = { layers: 0, zoneKey: 'D', muted: false } // inspectable via __MOONREST__
+    // Part 10 settings — stored pre-start, applied at start() and live after
+    this.prefs = { music: 0.8, ambience: 0.7, sfx: 0.9, hissOn: true, hissBoostDb: 0 }
+  }
+
+  applyPrefs(patch = {}) {
+    Object.assign(this.prefs, patch)
+    if (!this.started) return
+    this.buses.music.gain.value = this.prefs.music
+    this.buses.ambience.gain.value = this.prefs.ambience
+    this.buses.sfx.gain.value = this.prefs.sfx
+    this.hissGain.gain.value = this.prefs.hissOn ? dB(-42 + this.prefs.hissBoostDb) : 0
   }
 
   // Called on first user gesture (autoplay policy).
@@ -82,6 +93,8 @@ export class AudioEngine {
     hissFilter.connect(this.hissGain)
     this.hissGain.connect(this.master)
     hiss.start()
+
+    this.applyPrefs() // settings chosen before the first gesture land now
 
     // tab-blur graceful mute (1s fade)
     document.addEventListener('visibilitychange', () => {

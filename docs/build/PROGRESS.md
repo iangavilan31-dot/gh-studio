@@ -193,3 +193,22 @@ docs/build/PLAN.md, then the tail of this file. Never re-derive the plan from me
 - Simultaneity validation ("all must be channeling") needs a grace window: each client's own stop message arrives before its completion request.
 - The peerjs CLI binds `::` (IPv6) — use the `PeerServer` API with an explicit IPv4 host in containers.
 - pkill -f from a compound shell command can match the invoking shell itself; run cleanup separately.
+
+## 2026-07-24 ~10:20 UTC — M8 COMPLETE: the studio shell
+
+**Done:**
+- `ui/shell.js`: title over the LIVE Park diorama (slow orbit behind the logo, attract reel at 90s idle), menu Continue/New/Host/Join/Settings/Credits (Continue only when a save exists), IM Fell English + Alegreya npm-bundled; join screen with a 4-letter code field (never prompt()); pause = the only counters surface (lights x/37, brews x/12, night code, keepsake shelf) over dim+desaturate while the world keeps breathing; settings schema (video/audio/controls/a11y) persisted to `moonrest-settings-v1`; credits honest about inspirations + MIT-style note (D16); in-fiction error boundary; 300ms fog-fade transitions; toasts.
+- Memory dials via uniforms only (no shader recompiles): N64 soft-blur default; PS1 vertex snap + affine-lean (uSnapEnable/uSnapRes/uAffineMix on the shared retro shader); VHS scanlines+chroma+tracking wobble+hiss +6dB; Clean 2× RT + quantize off.
+- Settings plumbing: Input remap/sensitivity/invertY + gamepad polling (sticks + A/B/X/LB/Start), interact hold→toggle, hud subtitle gate, audio applyPrefs (3 sliders + hiss), reduced motion kills VHS wobble.
+- Photo mode (P): free-fly + roll + FOV wheel, F filter cycle, H UI hide, Enter saves PNG with the RT at 2×.
+- Meta: moon favicon, OG tags + og.png from the shoot rig, theme-color.
+- Rigs auto-enter the night on teleport (D17) — all earlier gates unchanged.
+
+**Evidence read:** SHELL CHECK PASS 15/15 (incl. static no-alert/confirm/prompt scan). Shots READ: title.png (logo over drifting diorama), pause.png (counters/shelf over a dimmed, still-living park — Beldam snoring behind the card), vhs.png (scanlines + chroma fringing + moon halo). Full regression suite green post-shell: feel 12/12, kindle 13/13, traverse 11/11, hue 8/8, autopilot 14/14, perf 97 calls / 214KB gz, coop 17/17, moments 12/12.
+
+**Next action:** M9 — judge loops: run hard gates + score rubric a–j in JUDGE.md, spawn two competitive fresh-eyes reviewer subagents, fix worst defects, iterate to (avg ≥8.5, none <7) × 2 consecutive (min 3 passes). Carried candidates in JUDGE.md: chandelier readability, moon streak strength, Mote/gargoyle poses, hop-apex flake.
+
+**Learnings:**
+- Uniform-driven mode switches beat define-driven: zero recompile hitches and one global toggle.
+- Comment-stripping belongs in static banned-API scanners; docs mention the banned word.
+- Auto-exiting the title from rig entry points keeps a growing test fleet stable without touching every script.

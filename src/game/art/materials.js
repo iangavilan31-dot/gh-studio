@@ -13,6 +13,11 @@ export const globalUniforms = {
   uAmbient: { value: new THREE.Color('#ffffff') },
   uSkyUp: { value: new THREE.Color('#4a6a72') },   // hemisphere: from above
   uTime: { value: 0 },
+  // PS1 Memory dial (Part 8.6): uniform-driven so ONE toggle hits every
+  // material without recompiling shaders
+  uSnapEnable: { value: 0 },                        // 0/1 vertex snap
+  uSnapRes: { value: new THREE.Vector2(240, 135) }, // snap grid (half internal res)
+  uAffineMix: { value: 0 },                         // 0..1 affine-interpolation blend
 }
 
 const VERT = /* glsl */ `
@@ -23,9 +28,9 @@ const VERT = /* glsl */ `
   varying float vHemi;
   uniform float uTime;
   uniform float uWindAmp;
-  #ifdef USE_VERTEX_SNAP
+  uniform float uSnapEnable;
   uniform vec2 uSnapRes;
-  #endif
+  uniform float uAffineMix;
   void main() {
     vUv = uv;
     vColor = color;
@@ -45,11 +50,17 @@ const VERT = /* glsl */ `
     vec3 wn = normalize(mat3(modelMatrix) * normal);
     vHemi = wn.y * 0.5 + 0.5; // hemisphere blend factor (sky above / fog below)
     vec4 clip = projectionMatrix * mv;
-    #ifdef USE_VERTEX_SNAP
-    clip.xyz /= clip.w;
-    clip.xy = floor(clip.xy * uSnapRes) / uSnapRes;
-    clip.xyz *= clip.w;
-    #endif
+    if (uSnapEnable > 0.5) {
+      // PS1: snap vertices to a coarse screen grid...
+      float w = clip.w;
+      clip.xyz /= w;
+      clip.xy = floor(clip.xy * uSnapRes + 0.5) / uSnapRes;
+      // ...and lean the divisor toward 1 so varyings interpolate closer to
+      // screen-space linear (the affine texture warp of the era)
+      float wa = mix(w, 1.0, uAffineMix);
+      clip.xyz *= wa;
+      clip.w = wa;
+    }
     gl_Position = clip;
   }
 `
@@ -125,6 +136,9 @@ export function retroMaterial({
       uAmbient: globalUniforms.uAmbient,
       uSkyUp: globalUniforms.uSkyUp,
       uTime: globalUniforms.uTime,
+      uSnapEnable: globalUniforms.uSnapEnable,
+      uSnapRes: globalUniforms.uSnapRes,
+      uAffineMix: globalUniforms.uAffineMix,
     },
   })
   return mat
