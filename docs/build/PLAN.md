@@ -14,8 +14,8 @@ Protocol: docs/MASTER_PROMPT.md Part 12. Status: `[ ]` todo · `[~]` in progress
 - [x] **M6 — Systems complete.** All cold lights, stirs, trinkets, brews, ghost cat, gargoyle, Night's End, attract, persist; autopilot night passes.
 - [x] **M7 — Co-op.** PeerJS host/join/sync/late-join/disconnect; all co-op moments; two-context automated test.
 - [x] **M8 — Shell & polish.** Title, menus, settings, Memory dials, photo mode, a11y, meta, error boundary.
-- [~] **M9 — Judge loops.** Hard gates + rubric passes until exit condition (12.4.6). Minimum 3 passes.
-- [ ] **M10 — Ship.** Final build, README, Morning Report, push + PR, `SHIP`.
+- [x] **M9 — Judge loops.** Hard gates + rubric passes until exit condition (12.4.6). Minimum 3 passes.
+- [~] **M10 — Ship.** Final build, README, Morning Report, push + PR, `SHIP`.
 
 ## Re-planning notes
 

@@ -67,7 +67,7 @@ export class Moments {
     }
   }
 
-  update(dt, elapsed) {
+  update(dt, elapsed, detect = true) {
     const { world, npcs, camera } = this.c
 
     // — continuous visuals every client runs from synced positions —
@@ -88,8 +88,8 @@ export class Moments {
       n.rig.bones.hat.rotation.x += Math.sin((n.t / 1.2) * Math.PI * 2) * 0.28 * dt * 10
     }
 
-    // — detection is authority-only —
-    if (!this.isAuthority()) return
+    // — detection is authority-only, and pauses during cinematics/title —
+    if (!detect || !this.isAuthority()) return
     const lobby = this.lobby()
     const n = lobby.length
 

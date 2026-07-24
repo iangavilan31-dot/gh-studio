@@ -18,6 +18,7 @@ const POST_FRAG = /* glsl */ `
   uniform float uWarm;        // 0..1 resting warmth
   uniform float uGamma;
   uniform float uSoftBlur;    // N64 soft 1px horizontal blur 0..1
+  uniform vec3 uFloor;        // Rule 1 black floor (fog-tinted, set per zone)
   uniform float uScanline;    // VHS
   uniform float uChroma;      // VHS chroma bleed px
   uniform float uWobble;      // VHS tracking wobble amount
@@ -71,6 +72,9 @@ const POST_FRAG = /* glsl */ `
     float vig = smoothstep(0.85, 0.35, length(vc) * (1.2 - uVignette * 0.2));
     vec3 vigCol = mix(vec3(0.0), uVignetteTint, uWarm);
     col = mix(vigCol, col, mix(1.0 - uVignette, 1.0, vig));
+    // Rule 1: darkness is a saturated cool color, never black-black — a
+    // fog-tinted floor (set per zone) lifts anything quantize crushed to zero
+    col = max(col, uFloor);
     col = pow(col, vec3(1.0 / uGamma));
     gl_FragColor = vec4(col, 1.0);
   }
@@ -98,6 +102,7 @@ export class Pipeline {
       uWarm: { value: 0 },
       uGamma: { value: 1.12 },
       uSoftBlur: { value: 0.6 },   // N64 default: stable but soft
+      uFloor: { value: new THREE.Color('#04060c') },
       uScanline: { value: 0 },
       uChroma: { value: 0 },
       uWobble: { value: 0 },

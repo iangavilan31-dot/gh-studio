@@ -768,6 +768,7 @@ export class NPCSystem {
     const p = (this.playersProvider ? this.playersProvider() : []).find((x) => x.id === playerId)
     if (!ch || !p || ch.state === 'mount') return false
     ch.state = 'mount'
+    ch.riderId = playerId
     const g = ch.rig.group
     g.parent?.remove(g)
     p.rig.bones.head.add(g)
@@ -775,6 +776,26 @@ export class NPCSystem {
     g.rotation.set(0, 0, 0)
     cluck(false)
     return true
+  }
+
+  // a departing rider (disconnect fade) sets their chicken down, unharmed
+  rescueChickens(rig) {
+    for (const ch of this.chickens) {
+      if (ch.state !== 'mount') continue
+      let p = ch.rig.group.parent, riding = false
+      while (p) { if (p === rig.group) { riding = true; break } p = p.parent }
+      if (!riding) continue
+      const wp = ch.rig.group.getWorldPosition(new THREE.Vector3())
+      ch.rig.group.parent.remove(ch.rig.group)
+      ch.rig.group.position.set(wp.x, this.world.heightAt(wp.x, wp.z), wp.z)
+      ch.rig.group.rotation.set(0, this.rng.range(0, Math.PI * 2), 0)
+      this.scene.add(ch.rig.group)
+      ch.state = 'idle'
+      ch.t = 1.5
+      ch.riderId = null
+      ch.followT = 0
+      cluck(true) // indignant, briefly
+    }
   }
 
   updateChickens(dt, t, player) {
