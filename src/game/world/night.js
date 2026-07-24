@@ -82,11 +82,21 @@ function crossFlareTexture() {
   return t
 }
 
+// Real lunar phase (6.2, Lunacid's trick): full nights are brightest, new-moon
+// nights are the spookiest and the fog closes ~15% tighter.
+const SYNODIC_MS = 29.530588 * 86400000
+const NEW_MOON_EPOCH = Date.UTC(2000, 0, 6, 18, 14)
+export function lunarAge(dateMs = Date.now()) {
+  return (((dateMs - NEW_MOON_EPOCH) % SYNODIC_MS) + SYNODIC_MS) % SYNODIC_MS / SYNODIC_MS
+}
+
 export class Night {
   constructor(scene) {
     this.minutes = 0 // 0..40
     this.group = new THREE.Group()
     this.dist = 165
+    this.warmBias = 0
+    this.setPhase(lunarAge())
 
     const faceMat = retroMaterial({ map: moonFaceTexture(), emissive: 0x8a86a8, alphaTest: 0.3, noFog: true, depthWrite: false })
     this.face = new THREE.Mesh(new THREE.PlaneGeometry(26, 26), faceMat)
@@ -102,10 +112,21 @@ export class Night {
     this.group.add(this.face)
     this.group.add(this.flare)
     scene.add(this.group)
+    this.setPhase(this.phaseAge ?? lunarAge()) // faces exist now — apply
   }
 
   skipTo(min) {
     this.minutes = Math.max(0, Math.min(NIGHT_MINUTES, min))
+  }
+
+  setPhase(age) {
+    this.phaseAge = age
+    this.illum = 0.5 * (1 - Math.cos(age * Math.PI * 2)) // 0 new → 1 full
+    this.fogTight = 1 - 0.15 * (1 - this.illum)
+    if (this.face) {
+      this.face.material.uniforms.uEmissive.value.set('#8a86a8').multiplyScalar(0.45 + 0.75 * this.illum)
+      this.flare.material.uniforms.uOpacity.value = 0.35 + 0.65 * this.illum
+    }
   }
 
   update(dt, camera) {

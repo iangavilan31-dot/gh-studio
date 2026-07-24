@@ -47,8 +47,12 @@ await page.goto(`http://localhost:${PORT}/`)
 await page.waitForFunction(() => window.__MOONREST__?.ready)
 await page.waitForTimeout(1000)
 await page.evaluate(() => window.__MOONREST__.skipTo(24))
-// kindle every light so the warm accents are present (the lived-in night)
-await page.evaluate(() => window.__MOONREST__.lights.forEach((l) => window.__MOONREST__.kindle(l.id)))
+// kindle every light so the warm accents are present (the lived-in night);
+// suppress the keep-brazier finale — the gate shoots the world, not the reel
+await page.evaluate(() => {
+  window.__MOONREST__.suppressNightEnd(true)
+  window.__MOONREST__.lights.forEach((l) => window.__MOONREST__.kindle(l.id))
+})
 await page.waitForTimeout(2600) // blooms settle
 
 let fails = 0

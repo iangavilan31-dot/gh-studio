@@ -89,6 +89,36 @@ export class Stars {
     this.rng = rng
   }
 
+  // Nib's constellation show (Part 3.2.3): faint line-figures draw themselves.
+  showConstellations(bright = false) {
+    if (!this.constellations) {
+      const figures = [
+        // "the Ladle" — original figure, not a real-sky copy
+        [[-0.5, 0.72, -0.2], [-0.42, 0.78, -0.15], [-0.33, 0.76, -0.1], [-0.27, 0.68, -0.08], [-0.35, 0.63, -0.14], [-0.42, 0.66, -0.18], [-0.5, 0.72, -0.2]],
+        // "the Lantern"
+        [[0.2, 0.8, 0.25], [0.28, 0.86, 0.2], [0.36, 0.8, 0.16], [0.3, 0.72, 0.2], [0.2, 0.8, 0.25]],
+        // "the Tortoise"
+        [[0.55, 0.6, -0.3], [0.65, 0.66, -0.28], [0.75, 0.62, -0.24], [0.7, 0.54, -0.28], [0.6, 0.53, -0.32], [0.55, 0.6, -0.3]],
+      ]
+      const positions = []
+      for (const fig of figures) {
+        for (let i = 0; i < fig.length - 1; i++) {
+          const a = new THREE.Vector3(...fig[i]).normalize().multiplyScalar(172)
+          const b = new THREE.Vector3(...fig[i + 1]).normalize().multiplyScalar(172)
+          positions.push(a.x, a.y, a.z, b.x, b.y, b.z)
+        }
+      }
+      const geo = new THREE.BufferGeometry()
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3))
+      this.constellationMat = new THREE.LineBasicMaterial({ color: '#aab8e8', transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false })
+      this.constellations = new THREE.LineSegments(geo, this.constellationMat)
+      this.constellations.frustumCulled = false
+      this.constellations.renderOrder = -93
+      this.mesh.add(this.constellations) // rides the camera-following star shell
+    }
+    this.constellationTarget = bright ? 0.65 : 0.3
+  }
+
   // density per zone id (rooftops densest, interiors none)
   static densityFor(zoneId) {
     if (zoneId === 'rooftops') return 1.0
@@ -103,6 +133,9 @@ export class Stars {
     const target = Stars.densityFor(zoneId)
     this.uniforms.uDensity.value += (target - this.uniforms.uDensity.value) * (1 - Math.exp(-dt / 2))
     this.mesh.position.copy(camera.position)
+    if (this.constellationMat && this.constellationTarget !== undefined) {
+      this.constellationMat.opacity += (this.constellationTarget - this.constellationMat.opacity) * (1 - Math.exp(-dt / 2.5))
+    }
 
     // occasional slow meteor (strictly gentle — Rule 11)
     this.meteorT += dt

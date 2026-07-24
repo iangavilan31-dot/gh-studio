@@ -17,6 +17,8 @@ import { ParticleSystem, emberBurst } from './world/particles.js'
 import { Stars } from './world/stars.js'
 import { Ambience } from './world/ambience.js'
 import { NPCSystem } from './systems/npc.js'
+import { Progress } from './systems/progress.js'
+import { NightFlow } from './systems/nightflow.js'
 import { audio } from './audio/engine.js'
 import { score } from './audio/score.js'
 import { footstep, kindleChime } from './audio/sfx.js'
@@ -53,7 +55,31 @@ player.yaw = player.targetYaw = 0
 const orbit = new OrbitCamera(camera, world)
 orbit.yaw = orbit.smoothYaw = Math.PI // camera behind, facing the park
 const interact = new InteractSystem(world, player, hud)
-const npcs = new NPCSystem(scene, world, hud, ambience)
+const npcs = new NPCSystem(scene, world, hud, ambience, stars)
+
+const zoneKindlesEarly = (zone) => world.lights.filter((l) => l.zone === zone && l.kindled).length
+const progress = new Progress(world, npcs, hud, score, zoneKindlesEarly)
+
+let winkT = 0
+let giggleUntil = 0
+progress.onWink = () => { winkT = 1; giggleUntil = elapsed + 60 }
+world.onBrew = (b) => progress.onBrew(b)
+
+const nightflow = new NightFlow(night, world, hud, camera, {
+  setCinematic: (v) => { cinematic = v; if (v) { hud.hidePrompt(); hud.clearSubtitle() } },
+  getStats: () => ({
+    lights: world.kindledCount,
+    lightsTotal: world.lights.length,
+    brews: world.brewCount,
+    trinkets: progress.trinkets.filter((t) => t !== 'archstone').length,
+    friends: 0, // peers land in M7
+  }),
+  onNightEnd: () => {
+    progress.save()
+    try { localStorage.setItem('moonrest-night-ended', '1') } catch (e) {}
+    location.reload() // back to dusk on the bench — the night is a loop (6.5)
+  },
+})
 
 // footsteps synced to stride (Part 4.2)
 player.onFootstep = (surface, vol) => footstep(surface, vol)
@@ -66,6 +92,9 @@ world.onKindle = (light) => {
   emberBurst(embers, light.x, light.y, light.z, worldRNG.fork('embers' + light.id))
   if (light.zone === score.zone) score.setLayers(zoneKindles(light.zone))
   npcs.onKindle(light)
+  progress.onKindle(light)
+  if (light.id === 'park-firefly-jar') ambience.releaseFireflies()
+  if (light.id === 'isle-keep-brazier' && !window.__SUPPRESS_NIGHT_END__) nightflow.startNightsEnd('keep-brazier')
 }
 
 // audio boots on first real gesture (autoplay policy)
@@ -113,15 +142,30 @@ function tick() {
   frameTimes.push(dt)
   if (frameTimes.length > 90) frameTimes.shift()
 
+  const inputActive = input.keys.size > 0 || input.justPressed.size > 0
+  if (inputActive) nightflow.noteInput()
+
   if (!cinematic) {
     const jogging = input.down('ShiftLeft', 'ShiftRight') && player.anim.speed > 2
     player.update(input, orbit.smoothYaw, dt, elapsed)
     orbit.update(player.pos, player.yaw, jogging, input.consumeLook(), dt, world.interactables)
     interact.update(input, dt)
+    // the woozy wink (4.1): warm bloom + gentle camera roll, then it passes
+    if (winkT > 0) {
+      winkT = Math.max(0, winkT - dt * 0.4)
+      camera.rotateZ(Math.sin(winkT * Math.PI) * 0.12)
+      pipeline.postUniforms.uWarm.value = Math.sin(winkT * Math.PI) * 0.7
+    } else if (pipeline.postUniforms.uWarm.value > 0) {
+      pipeline.postUniforms.uWarm.value = Math.max(0, pipeline.postUniforms.uWarm.value - dt)
+    }
   } else {
     // world keeps breathing behind fixed cameras; player idles in place
     player.update({ moveAxis: () => [0, 0], pressed: () => false, down: () => false, endFrame: () => {} }, orbit.smoothYaw, dt, elapsed)
   }
+  nightflow.update(dt, inputActive)
+  // clock-driven atmosphere: min-30 warmth ease + lunar-phase fog tightening
+  zoneLight.warmBias = (zoneLight.warmBias ?? 0) + ((night.warmBias ?? 0) - (zoneLight.warmBias ?? 0)) * (1 - Math.exp(-dt / 8))
+  zoneLight.fogTight = night.fogTight
   if (!cinematic) {
     world.applyWorldRules(player)
     zoneLight.update(player.pos.x, player.pos.z, dt, player.pos.y)
@@ -139,7 +183,8 @@ function tick() {
   embers.update(dt, camera)
   stars.update(dt, elapsed, camera, zoneLight.currentZoneId)
   ambience.update(dt, camera, zoneLight.currentZoneId, elapsed)
-  npcs.update(dt, elapsed, player)
+  npcs.update(dt, elapsed, player, camera)
+  updateOverlay(dt)
   input.endFrame()
   pipeline.render(scene, camera, elapsed)
 }
@@ -191,7 +236,14 @@ window.__MOONREST__ = {
   },
   kindle(id) { return world.kindle(id) },
   skipTo(min) { night.skipTo(min); return true },
-  autopilot: () => false, // M6
+  autopilot() { return autopilot() },
+  setPhase(age) { night.setPhase(age); return true },
+  suppressNightEnd(v) { window.__SUPPRESS_NIGHT_END__ = !!v; return true }, // screenshot rigs only
+  takeBrew(id) { return world.takeBrew(id) },
+  get beats() { return progress.beats },
+  get nightLog() { return nightflow.log },
+  get stirLog() { return npcs.stirLog ?? [] },
+  get trinkets() { return progress.trinkets },
   bootAudio() { bootAudio(); return audio.started },
   get lights() { return world.lights.map((l) => ({ id: l.id, kindled: l.kindled, x: l.x, z: l.z })) },
   get interactLog() { return interact.log },
@@ -281,6 +333,12 @@ window.__MOONREST__ = {
       },
       fps: Math.round(fps),
       fov: +camera.fov.toFixed(1),
+      brews: world.brewCount,
+      trinketCount: progress.trinkets.length,
+      moonPhase: +night.illum.toFixed(3),
+      nightEnded: nightflow.ending,
+      attract: nightflow.attract,
+      giggleUnlocked: elapsed < giggleUntil,
       latency: player.latencyLog.slice(-5),
       triCountAvatar: rig.triCount,
       drawCalls: pipeline.lastInfo?.calls ?? 0,
@@ -289,6 +347,61 @@ window.__MOONREST__ = {
       textureGenMs: Math.round(TEX.textureGenMs),
     }
   },
+}
+
+// ——— F3 dev overlay (Part 11): fps, calls, tris, zone, nightT — dev only ———
+const overlay = document.createElement('div')
+overlay.className = 'devoverlay'
+document.getElementById('ui').appendChild(overlay)
+let overlayOn = false
+let overlayAcc = 0
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'F3') {
+    e.preventDefault()
+    overlayOn = !overlayOn
+    overlay.classList.toggle('on', overlayOn)
+  }
+})
+function updateOverlay(dt) {
+  if (!overlayOn) return
+  overlayAcc += dt
+  if (overlayAcc < 0.25) return
+  overlayAcc = 0
+  const s = window.__MOONREST__.state
+  overlay.textContent = `fps ${s.fps} · calls ${s.drawCalls} · tris ${s.triangles} · ${s.zone} · nightT ${s.nightT}`
+}
+
+// ——— Debug autopilot (12.1 M6): teleport-hop the full night, kindle all 37,
+// collect all 12 brews, finish on the keep brazier → Night's End ———
+async function autopilot() {
+  if (window.__AUTOPILOT_RUNNING__) return false
+  window.__AUTOPILOT_RUNNING__ = true
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms))
+  const M = window.__MOONREST__
+  const zonesFirst = ['park', 'village', 'rooftops', 'ruins', 'gloomspire', 'hall', 'mosswood']
+  for (const zone of zonesFirst) {
+    for (const l of world.lights.filter((x) => x.zone === zone)) {
+      M.teleportPlayer(l.x + 1.2, l.z, 0)
+      await wait(110)
+      world.kindle(l.id)
+      await wait(110)
+    }
+  }
+  for (const b of world.brews) {
+    if (b.taken) continue
+    M.teleportPlayer(b.x + 0.5, b.z, 0)
+    await wait(90)
+    world.takeBrew(b.id)
+    await wait(70)
+  }
+  // the isle last — its keep-top brazier is the night's final light
+  for (const l of world.lights.filter((x) => x.zone === 'isle')) {
+    M.teleportPlayer(l.x + 1.2, l.z, 0)
+    await wait(110)
+    world.kindle(l.id)
+    await wait(140)
+  }
+  return true
 }
 
 const BOOT_MS = performance.now() - BOOT_T0

@@ -155,3 +155,22 @@ docs/build/PLAN.md, then the tail of this file. Never re-derive the plan from me
 - Fog eats distant emissives — glowing set-dressing needs noFog on BOTH pane and halo to read like the reference; check saturation loss from additive-over-fog compositing when gating on color.
 - Single-frame color gates flake on flicker/sway phase — sample several frames; max for presence metrics, mean for hue.
 - dt clamp (0.1s) makes sim time lag wall time on slow renderers — scale test waits, never assert wall-clock decay.
+
+## 2026-07-24 ~07:40 UTC — M6 COMPLETE: systems complete (the whole night runs)
+
+**Done:**
+- `systems/progress.js`: zone completion → scripted stir + trinket (8, incl. D11 hen feather), 12 brews w/ woozy wink (camera roll + warm bloom + giggle unlock), Beldam gilds at 12, localStorage save `moonrest-save-v1`, beat log.
+- `systems/nightflow.js`: 40-min moon clock (min30 warm bias, min38 bell toll, min40 or keep-brazier → Night's End: 6s/zone authored dolly reel over kindled zones → title card w/ night stats → reset), attract mode at 180s idle (cancelled by any input), real lunar phase (lunarAge, 29.53d synodic).
+- NPC behaviors: gargoyle watches-only-when-unwatched (camera dot 0.75), ghost cat wakes at 6 hall sconces (follow-at-2m, teleport >20m, 30Hz AM purr), Mote one-eye stir, Nib sky constellations (line figures on the star shell).
+- `autopilot()`: full-night self-play — teleport-hops all 37 lights zones-first, 12 brews, isle keep brazier last.
+- D6 resolved — perf work: per-zone visibility groups (`grouped()`, culled at dist−r<95), `mergeStaticInGroups()` per-material merge with `userData.dyn` exemptions, window panes+halos merged into 3 flicker groups/kind, `mergeDirectChildren()` NPC bodies, fog-prop culling. 296 → 97 draw calls.
+- Rig hygiene: `suppressNightEnd()` hook — kindle-all rigs no longer trigger the finale reel mid-screenshot (autopilot keeps the real trigger); `hud.sayLater()` so teleport's `clearSubtitle()` also cancels queued trinket lines.
+
+**Evidence read:** AUTOPILOT CHECK PASS 14/14 (37 kindles, 8 zone-completes, 8 stirs, 8 trinkets, 12 brews, reel→card→reset, persistence through reload, console clean) — rerun green after the suppress guard landed. PERF GATE PASS (97 calls ≤120, 80,406 tris ≤150k, 177KB gz ≤1.2MB, p95 118ms software-GL baseline documented in JUDGE.md). HUE GATE PASS 8/8 post-merge. hall.png + gloomspire.png re-read: real framing, no HUD pollution. kindlecheck 13/13, traversecheck 11/11, feelcheck 12/12.
+
+**Next action:** M7 — co-op: PeerJS host/join (4-letter codes), 10Hz transforms w/ 150ms interp, host-relayed kindle/brew events, nightT heartbeat, late-join snapshot, disconnect firefly fade, rune names, all 8 co-op moments, `scripts/coop-test.mjs` two-context gate.
+
+**Learnings:**
+- Test rigs that mutate global state (kindle-all) can trip real narrative triggers — every irreversible game event needs a rig-suppression path that the shipped game never sets.
+- Delayed subtitles (setTimeout) escape a clear-current-subtitle call; route delayed says through the HUD so one clear cancels the queue too.
+- Draw-call work that pays: distance-culled zone groups first (free wins), then per-material merges inside groups; keep dynamic meshes out via explicit markers, never by name matching.

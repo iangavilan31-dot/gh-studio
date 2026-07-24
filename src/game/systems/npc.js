@@ -3,12 +3,13 @@
 // NPCs in the game and must be impeccable.
 
 import * as THREE from 'three'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { buildWizard } from '../art/characters.js'
 import { retroMaterial, ensureVertexColors } from '../art/materials.js'
 import * as TEX from '../art/textures.js'
 import { worldRNG } from '../core/rng.js'
 import { applyPose, makeAnimState } from './anim.js'
-import { cluck, snore } from '../audio/sfx.js'
+import { cluck, snore, catPurr } from '../audio/sfx.js'
 import { sharedMats } from '../art/meshes.js'
 
 function M(geo, mat, tint) {
@@ -17,6 +18,27 @@ function M(geo, mat, tint) {
 }
 
 function sharedNpcMats() { return sharedMats() }
+
+// Merge a group's DIRECT child meshes that share a material into one mesh each
+// (bones/nested groups untouched). Cuts NPC draw calls ~4× (Part 7.2 spirit).
+function mergeDirectChildren(group) {
+  const byMat = new Map()
+  const toRemove = []
+  for (const o of [...group.children]) {
+    if (!o.isMesh) continue
+    o.updateMatrix()
+    const geo = o.geometry.clone().applyMatrix4(o.matrix)
+    if (!byMat.has(o.material)) byMat.set(o.material, [])
+    byMat.get(o.material).push(geo)
+    toRemove.push(o)
+  }
+  if (toRemove.length < 2) return
+  for (const o of toRemove) group.remove(o)
+  for (const [mat, geos] of byMat) {
+    const merged = mergeGeometries(geos, false)
+    if (merged) group.add(new THREE.Mesh(merged, mat))
+  }
+}
 
 // ——— Chicken: the most load-bearing ~200 triangles in the game (7.2) ———
 export function buildChicken() {
@@ -59,6 +81,8 @@ export function buildChicken() {
     foot.position.set(sx * 0.06, 0.035, 0.045)
     g.add(foot)
   }
+  mergeDirectChildren(g)        // body/wings/legs → 1 draw
+  mergeDirectChildren(headBone) // head/beak/comb/wattle → 1 draw
   return { group: g, headBone, tail }
 }
 
@@ -83,7 +107,9 @@ export function buildCat() {
   tail.rotation.x = -Math.PI / 2
   tail.position.set(0, 0.045, -0.02)
   g.add(tail)
-  return { group: g, body }
+  mergeDirectChildren(g)
+  const loaf = g.children.find((o) => o.isMesh)
+  return { group: g, body: loaf ?? g }
 }
 
 // ——— Nib the garden gnome: red hat, spread-eagle asleep on the moss ———
@@ -125,6 +151,7 @@ export function buildGnome() {
     boot.position.set(sx * 0.22, 0.05, -0.22)
     g.add(boot)
   }
+  mergeDirectChildren(g) // body parts → 1 draw (hat stays on its bone)
   return { group: g, hatBone }
 }
 
@@ -282,6 +309,8 @@ export function buildMote() {
     leg.position.set(sx, 0.12, sz)
     g.add(leg)
   }
+  mergeDirectChildren(g)
+  mergeDirectChildren(headBone)
   return { group: g, headBone }
 }
 
@@ -319,11 +348,12 @@ export function buildBottle({ scale = 1 } = {}) {
 // ——— NPC behavior wrappers ———
 
 export class NPCSystem {
-  constructor(scene, world, hud, ambience) {
+  constructor(scene, world, hud, ambience, stars) {
     this.scene = scene
     this.world = world
     this.hud = hud
     this.ambience = ambience
+    this.stars = stars
     this.rng = worldRNG.fork('npc')
     this.npcs = []
     this.stirred = new Set()
@@ -398,10 +428,31 @@ export class NPCSystem {
     king.group.add(gcat.group)
     this.ghostCat = { rig: gcat, state: 'lap' } // follower behavior lands in M6
     this.npcs.push({
-      kind: 'king', update: (dt, t) => {
+      kind: 'king', update: (dt, t, player) => {
         this.king.head.position.y = 1.0 + Math.sin(t * 0.45) * 0.015
         this.king.head.rotation.x = 0.3 + Math.sin(t * 0.45) * 0.03
-        if (this.ghostCat.state === 'lap') this.ghostCat.rig.body.scale.y = 0.6 + Math.sin(t * 1.2) * 0.03
+        const cat = this.ghostCat
+        if (cat.state === 'lap') {
+          cat.rig.body.scale.y = 0.6 + Math.sin(t * 1.2) * 0.03
+        } else if (cat.state === 'follow' && player) {
+          // global follower (6.4): follow-at-2m, teleport if >20m, purr sometimes
+          const g = cat.rig.group
+          const dx = player.pos.x - g.position.x, dz = player.pos.z - g.position.z
+          const d = Math.hypot(dx, dz)
+          if (d > 20) {
+            g.position.set(player.pos.x - (dx / d) * 2, player.pos.y, player.pos.z - (dz / d) * 2)
+          } else if (d > 2) {
+            const sp = Math.min(3.4, 1.4 + (d - 2) * 0.6)
+            g.position.x += (dx / d) * sp * dt
+            g.position.z += (dz / d) * sp * dt
+            g.rotation.y = Math.atan2(dx, dz)
+            g.position.y = this.world.heightAt(g.position.x, g.position.z) + Math.abs(Math.sin(t * 6)) * 0.06
+          } else {
+            g.position.y = this.world.heightAt(g.position.x, g.position.z)
+          }
+          cat.purrT = (cat.purrT ?? 8) - dt
+          if (cat.purrT <= 0 && d < 3.5) { cat.purrT = this.rng.range(9, 16); catPurr(1.8) }
+        }
       },
     })
 
@@ -411,8 +462,40 @@ export class NPCSystem {
     garg.group.position.copy(gp)
     garg.group.rotation.y = Math.PI // watches the causeway approach
     this.scene.add(garg.group)
-    this.gargoyle = { rig: garg, watchT: 0 }
-    this.npcs.push({ kind: 'gargoyle', update: () => {} }) // head-turn logic lands in M6
+    this.gargoyle = { rig: garg, bold: false }
+    this.npcs.push({
+      kind: 'gargoyle',
+      update: (dt, t, player, camera) => {
+        // very obviously pretending to be a statue: it watches whoever isn't
+        // watching IT (Part 3.2.5). Snap back when observed.
+        const g = this.gargoyle
+        const head = g.rig.headBone
+        if (!player || !camera) { return }
+        const gp = g.rig.group.position
+        const pd = Math.hypot(player.pos.x - gp.x, player.pos.z - gp.z)
+        let watching = false
+        if (pd < 40) {
+          // is the camera looking at the gargoyle?
+          _v.set(gp.x - camera.position.x, 0, gp.z - camera.position.z).normalize()
+          _v2.set(0, 0, -1).applyQuaternion(camera.quaternion)
+          _v2.y = 0
+          _v2.normalize()
+          const looked = _v.dot(_v2) > 0.75 // within ~40°
+          if (!looked) {
+            // slowly turn the head toward the player
+            const want = Math.atan2(player.pos.x - gp.x, player.pos.z - gp.z) - g.rig.group.rotation.y
+            head.rotation.y += (want - head.rotation.y) * Math.min(1, dt * (g.bold ? 1.2 : 0.5))
+            watching = true
+          } else {
+            // caught! ease back to statue pose (a touch too quickly)
+            head.rotation.y += (0 - head.rotation.y) * Math.min(1, dt * 6)
+          }
+        } else {
+          head.rotation.y += (0 - head.rotation.y) * Math.min(1, dt * 2)
+        }
+        g.watching = watching
+      },
+    })
 
     // — Mote the mossy tortoise beside the Mosswood path —
     const mote = buildMote()
@@ -423,6 +506,15 @@ export class NPCSystem {
     this.npcs.push({
       kind: 'mote', update: (dt, t) => {
         mote.group.scale.y = 1 + Math.sin(t * 0.5) * 0.015 // slow tortoise breath
+        if (this.moteStir > 0) {
+          // one eye opens, head lifts a little, then back to sleep (3.2.7)
+          this.moteStir -= dt
+          const f = Math.sin(Math.min(1, (8 - this.moteStir) / 1.5) * Math.PI * 0.5)
+          mote.headBone.position.y = 0.28 + f * 0.22
+          mote.headBone.rotation.x = -f * 0.25
+          return
+        }
+        mote.headBone.position.y = Math.max(0.28, mote.headBone.position.y - dt * 0.1)
         this.mote.snoreT -= dt
         if (this.mote.snoreT <= 0) {
           this.mote.snoreT = this.rng.range(5, 9)
@@ -502,6 +594,46 @@ export class NPCSystem {
       this.stirred.add('beldam')
       this.beldam.stirT = 7
       this.hud.say('...ah. The Lamplighter’s up. Roads are dark, friend. The moon won’t wait... zzz', 6.5)
+    }
+  }
+
+  // scripted stirs on zone completion (6.1/6.4) — one per night, logged
+  onZoneComplete(zone) {
+    if (this.stirred.has('zone:' + zone)) return
+    this.stirred.add('zone:' + zone)
+    this.stirLog = this.stirLog || []
+    this.stirLog.push({ zone, t: performance.now() })
+    if (zone === 'park' && !this.stirred.has('beldam')) {
+      this.stirred.add('beldam')
+      this.beldam.stirT = 7
+      this.hud.say('...ah. The Lamplighter’s up. Roads are dark, friend. The moon won’t wait... zzz', 6.5)
+    } else if (zone === 'village') {
+      // the chickens approve, briefly and impeccably
+      for (const ch of this.chickens) { ch.cluckT = this.rng.range(0.1, 1.2) }
+    } else if (zone === 'rooftops') {
+      this.nibTalk = 3
+      this.nibTalkT = 0
+      if (this.stars) this.stars.showConstellations(false)
+      this.hud.say('Nib (asleep): ...the Ladle... the Lantern... the old Tortoise, right where I left them...', 7)
+    } else if (zone === 'ruins') {
+      this.hud.say('The Curator inclines her head as she drifts past.', 4)
+    } else if (zone === 'gloomspire') {
+      this.gargoyle.bold = true // it pretends a little less carefully now
+    } else if (zone === 'hall') {
+      // the ghost cat wakes — and only the cat (Part 3.2.6)
+      this.ghostCat.state = 'follow'
+      const wp = this.ghostCat.rig.group.getWorldPosition(new THREE.Vector3())
+      this.king.group.remove(this.ghostCat.rig.group)
+      this.ghostCat.rig.group.position.copy(wp)
+      this.scene.add(this.ghostCat.rig.group)
+      catPurr(2.2)
+      this.hud.say('The ghost cat stretches, hops down, and decides you are warm.', 5)
+    } else if (zone === 'mosswood') {
+      this.moteStir = 8
+      this.hud.say('Mote: Through the gate is the same forest. It’s always the same forest. That’s the secret. Goodnight.', 7.5)
+    } else if (zone === 'isle') {
+      // seabirds shuffle their feathers; the keep brazier owns the finale
+      for (const b of this.seabirds) b.group.rotation.y += this.rng.range(-0.4, 0.4)
     }
   }
 
@@ -655,9 +787,15 @@ export class NPCSystem {
     }
   }
 
-  update(dt, t, player) {
-    for (const n of this.npcs) n.update(dt, t, player)
+  update(dt, t, player, camera) {
+    for (const n of this.npcs) n.update(dt, t, player, camera)
+    // Nib's sleep-talk pacing
+    if (this.nibTalk > 0) {
+      this.nibTalkT = (this.nibTalkT ?? 0) + dt
+      if (this.nibTalkT > 8 && this.nibTalk === 3) { this.nibTalk = 0 }
+    }
   }
 }
 
 const _v = new THREE.Vector3()
+const _v2 = new THREE.Vector3()

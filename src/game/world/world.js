@@ -3,9 +3,25 @@
 // + AABBs), the cold-light registry, animated bits, and shoot-rig poses.
 
 import * as THREE from 'three'
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 import { retroMaterial, ensureVertexColors } from '../art/materials.js'
 import * as TEX from '../art/textures.js'
 import { tree, lampPost, bench, fireflyJar, brazier, sconce, hangingLantern, sharedMats } from '../art/meshes.js'
+
+// small blue Moon Brew bottle (world pickup form)
+function brewBottleMesh() {
+  const mat = retroMaterial({ map: TEX.white(), hemi: true, transparent: true, opacity: 0.92 })
+  const g = new THREE.Group()
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.2, 7), mat)
+  ensureVertexColors(body.geometry, [0.3, 0.48, 0.75])
+  body.position.y = 0.1
+  g.add(body)
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.034, 0.1, 6), mat)
+  ensureVertexColors(neck.geometry, [0.3, 0.48, 0.75])
+  neck.position.y = 0.25
+  g.add(neck)
+  return g
+}
 import { worldRNG } from '../core/rng.js'
 import { heightAt, surfaceAt, streetZ, streetH, roofInfo, WATER_Y, BOUNDS, MOSSWOOD_ARCH } from './layout.js'
 
@@ -14,6 +30,7 @@ const _wp = new THREE.Vector3()
 export class World {
   constructor(scene, camera) {
     this.scene = scene
+    this.realScene = scene
     this.camera = camera
     this.colliders = []      // { x, z, r, h } circles
     this.aabbs = []          // { minX, maxX, minZ, maxZ, h, y0 }
@@ -29,17 +46,60 @@ export class World {
     this.treePads = []       // { x, z, r } canopy shadows for the AO bake
     this.buildGround()
     this.buildWater()
-    this.buildPark()
-    this.buildVillage()
-    this.buildRooftops()
-    this.buildRuins()
-    this.buildGloomspire()
-    this.buildHall()
-    this.buildMosswood()
-    this.buildIsle()
-    this.buildFoglands()
+    // Per-zone visibility groups (D6): each builder's scene-adds land in its
+    // group; update() hides groups beyond fog reach. Minimal-diff retrofit:
+    // this.scene is swapped to the group for the duration of each builder.
+    this.zoneGroups = []
+    const grouped = (id, cx, cz, r, fn) => {
+      const g = new THREE.Group()
+      this.realScene.add(g)
+      this.zoneGroups.push({ g, cx, cz, r })
+      this.scene = g
+      fn()
+      this.scene = this.realScene
+    }
+    grouped('park', 0, 0, 45, () => this.buildPark())
+    grouped('village', 116, 0, 55, () => { this.buildVillage(); this.buildRooftops() })
+    grouped('ruins', -110, 0, 50, () => this.buildRuins())
+    grouped('gloomspire', -110, 132, 62, () => { this.buildGloomspire(); this.buildHall() })
+    grouped('mosswood', 60, 110, 50, () => this.buildMosswood())
+    grouped('isle', 0, -140, 70, () => this.buildIsle())
+    grouped('foglands', 0, 0, 9999, () => this.buildFoglands()) // corridors span the map — never culled
     this.bakeVertexColors()
     this.bakeHallShowcase()
+    this.mergeStaticInGroups()
+  }
+
+  // Part 7.2: merge each zone's static opaque meshes into one draw per material.
+  // Dynamic parts (flames, halos, glass, sways, movers) are marked userData.dyn
+  // or transparent and stay unmerged. Runs AFTER the bakes (colors are final).
+  mergeStaticInGroups() {
+    for (const zg of this.zoneGroups) {
+      zg.g.updateWorldMatrix(true, true)
+      const byMat = new Map()
+      const toRemove = []
+      zg.g.traverse((o) => {
+        if (!o.isMesh || o.userData.dyn) return
+        if (o.material.transparent) return
+        let p = o.parent, dyn = false
+        while (p && p !== zg.g) {
+          if (p.userData.dyn || p.userData.sway || this.sways.includes(p)) { dyn = true; break }
+          p = p.parent
+        }
+        if (dyn) return
+        const geo = o.geometry.clone().applyMatrix4(o.matrixWorld)
+        if (!byMat.has(o.material)) byMat.set(o.material, [])
+        byMat.get(o.material).push(geo)
+        toRemove.push(o)
+      })
+      for (const o of toRemove) o.parent.remove(o)
+      for (const [mat, geos] of byMat) {
+        const merged = mergeGeometries(geos, false)
+        if (!merged) continue
+        const m = new THREE.Mesh(merged, mat)
+        zg.g.add(m)
+      }
+    }
   }
 
   // Build-time vertex bake (MASTER_PROMPT 8.4): painted-AO heuristics into the
@@ -174,6 +234,16 @@ export class World {
   get kindledCount() { return this.lights.filter((l) => l.kindled).length }
   get kindledIds() { return this.lights.filter((l) => l.kindled).map((l) => l.id) }
 
+  takeBrew(id) {
+    const b = this.brews?.find((x) => x.id === id)
+    if (!b || b.taken) return false
+    b.taken = true
+    b.group.visible = false
+    if (this.onBrew) this.onBrew(b)
+    return true
+  }
+  get brewCount() { return this.brews?.filter((b) => b.taken).length ?? 0 }
+
   kindle(id) {
     const light = this.lights.find((l) => l.id === id)
     if (!light || light.kindled) return false
@@ -305,6 +375,39 @@ export class World {
     this.place(jar.group, -9, -11, 0.6)
     this.registerLight('park-firefly-jar', 'park', jar, -9, -11)
 
+    // — the 12 Moon Brew bottles (6.3), hidden across the world —
+    this.brews = []
+    const brewSpots = [
+      ['brew-bench', 1.2, -21.6],
+      ['brew-jarstump', -10.2, -11.8],
+      ['brew-fork', 24.5, 2.2],
+      ['brew-bakery', 127.5, streetZ(127.5) - 13.2],
+      ['brew-roofgarden', 114.6, streetZ(114.6) - 8.6, () => streetH(114.6) + 5.6],
+      ['brew-shrine', -114, -17.6],
+      ['brew-moonwell', -118, 12],
+      ['brew-gatehouse', -105.6, 101],
+      ['brew-throne', -110, 170.6, () => 2.3],
+      ['brew-mote', 64.6, 104.9],
+      ['brew-cove', 9.4, -135.4],
+      ['brew-causeway', 3.4, -70],
+    ]
+    for (const [id, bx, bz, yFn] of brewSpots) {
+      const g = new THREE.Group()
+      g.add(brewBottleMesh())
+      const haloMat = retroMaterial({ map: TEX.glowDot({ color: '#7fa8e8' }), transparent: true, depthWrite: false, opacity: 0.35 })
+      haloMat.blending = THREE.AdditiveBlending
+      const halo = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), haloMat)
+      ensureVertexColors(halo.geometry)
+      halo.position.y = 0.15
+      g.add(halo)
+      const y = yFn ? yFn() : heightAt(bx, bz)
+      g.position.set(bx, y, bz)
+      this.realScene.add(g) // tiny; exempt from zone culling
+      this.halos.push(halo)
+      this.brews.push({ id, x: bx, z: bz, group: g, taken: false })
+      this.interactables.push({ id, x: bx, z: bz, kind: 'brew' })
+    }
+
     // — park props (Part 3.2.1): stumps, mushrooms, birdbath, low fences —
     const mats = sharedMats()
     for (let i = 0; i < 4; i++) {
@@ -415,19 +518,18 @@ export class World {
       this.addAABB(hd.x - hd.w / 2, hd.x + hd.w / 2, z - hd.d / 2, z + hd.d / 2, wallH, baseH)
       if (hd.bakery) this.bakeryPos = { x: hd.x, z, baseH }
       // pre-lit amber windows on the street face (Rule 5: lit windows imply
-      // life; Rule 2: window amber IS this zone's warm accent)
-      if (!this.warmWindows) this.warmWindows = []
+      // life; Rule 2: window amber IS this zone's warm accent). Panes are
+      // collected and merged into 3 flicker groups (draw-call budget).
+      if (!this.warmWindowGeos) this.warmWindowGeos = [[], [], []]
       const faceZ = hd.side === -1 ? z + hd.d / 2 + 0.03 : z - hd.d / 2 - 0.03
       const nWin = rng.int(1, 2)
       for (let wi = 0; wi < nWin; wi++) {
         const wx2 = hd.x + (nWin === 1 ? rng.range(-1, 1) : (wi === 0 ? -hd.w / 4 : hd.w / 4))
-        const winMat = retroMaterial({ map: TEX.window(), transparent: true, opacity: 0.95, depthWrite: false, emissive: '#5a3c14' })
-        const pane = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 1.05), winMat)
-        ensureVertexColors(pane.geometry)
-        pane.position.set(wx2, baseH + rng.range(1.6, 2.6), faceZ)
-        if (hd.side === 1) pane.rotation.y = Math.PI
-        this.scene.add(pane)
-        this.warmWindows.push({ mesh: pane, seed: rng.range(0, 10), base: 0.95 })
+        const geo = new THREE.PlaneGeometry(0.85, 1.05)
+        ensureVertexColors(geo)
+        if (hd.side === 1) geo.rotateY(Math.PI)
+        geo.translate(wx2, baseH + rng.range(1.6, 2.6), faceZ)
+        this.warmWindowGeos[rng.int(0, 2)].push(geo)
       }
     }
 
@@ -584,6 +686,17 @@ export class World {
       this.scene.add(halo)
       pane.visible = halo.visible = false
       this.registerLight('village-bakery-window', 'village', { glass: pane, halo, flame: null, pool: null, flameH: 1.6 }, bp.x - 1.5, bp.z + 4.1, bp.baseH)
+    }
+
+    // merge collected window panes into 3 hearth-flicker groups
+    this.warmWindows = []
+    for (const geos of this.warmWindowGeos) {
+      if (!geos.length) continue
+      const winMat = retroMaterial({ map: TEX.window(), transparent: true, opacity: 0.95, depthWrite: false, emissive: '#5a3c14' })
+      const mesh = new THREE.Mesh(mergeGeometries(geos, false), winMat)
+      mesh.userData.dyn = true
+      this.scene.add(mesh)
+      this.warmWindows.push({ mesh, seed: worldRNG.range(0, 10), base: 0.95 })
     }
 
     this.poses.village = { pos: [90, streetH(90) + 1.5, streetZ(90) + 1.4], look: [132, streetH(132) + 3.5, streetZ(132)] }
@@ -755,7 +868,17 @@ export class World {
     wellGlow.position.set(wx2, heightAt(wx2, wz2) + 0.85, wz2)
     this.scene.add(wellGlow)
     wellGlow.visible = false
-    this.registerLight('ruins-moonwell', 'ruins', { glass: null, halo: wellGlow, flame: null, pool: null, flameH: 0.85 }, wx2, wz2, heightAt(wx2, wz2))
+    // kindling FILLS the well: glowing water surface fades in (6.1/3.2.4)
+    const wellWaterTex = TEX.water({ name: 'moonwellwater', base: '#2a6a72', light: '#7fd4d4' })
+    wellWaterTex.repeat.set(3, 3)
+    const wellWater = new THREE.Mesh(new THREE.CircleGeometry(2.05, 16), retroMaterial({ map: wellWaterTex, transparent: true, opacity: 0.9, emissive: '#0e3038' }))
+    ensureVertexColors(wellWater.geometry)
+    wellWater.rotation.x = -Math.PI / 2
+    wellWater.position.set(wx2, heightAt(wx2, wz2) + 0.78, wz2)
+    this.scene.add(wellWater)
+    wellWater.visible = false
+    this.waterMats.push({ tex: wellWaterTex, sx: 0.006, sy: 0.004 })
+    this.registerLight('ruins-moonwell', 'ruins', { glass: wellWater, halo: wellGlow, flame: null, pool: null, flameH: 0.85 }, wx2, wz2, heightAt(wx2, wz2))
     // fallen drums
     for (let i = 0; i < 5; i++) {
       const dx = rng.range(-130, -92), dz = rng.range(-10, 12)
@@ -849,24 +972,23 @@ export class World {
     }
     // toxic green windows — EVERY window glows green (Part 3.2.5); pre-lit set
     // dressing with gentle flicker, plus additive halos so they read in fog
-    this.greenWindows = []
+    // Panes + halos merge into 3 flicker groups each (draw-call budget, D6);
+    // noFog on both: the glow blooms THROUGH the mist (the reference look).
+    const gwPanes = [[], [], []]
+    const gwHalos = [[], [], []]
+    let gwI = 0
     const addGreenWindow = (x, y, z, ry = Math.PI) => {
-      // noFog: emissive window surfaces glow through the mist (Rule 6 treatment
-      // for light sources — the reference has every window luminous green)
-      const win = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 1.5), retroMaterial({ map: TEX.window({ name: 'greenwin', green: true }), transparent: true, opacity: 0.9, depthWrite: false, emissive: '#3a8a34', noFog: true }))
-      ensureVertexColors(win.geometry)
-      win.position.set(x, y, z)
-      win.rotation.y = ry
-      this.scene.add(win)
-      // noFog: kindled glow blooms THROUGH the mist (the reference look)
-      const haloMat = retroMaterial({ map: TEX.glowDot({ color: '#58e050' }), transparent: true, depthWrite: false, opacity: 0.72, noFog: true })
-      haloMat.blending = THREE.AdditiveBlending
-      const halo = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 3.0), haloMat)
-      ensureVertexColors(halo.geometry)
-      halo.position.set(x, y, z + (ry === Math.PI ? -0.05 : 0.05))
-      halo.rotation.y = ry
-      this.scene.add(halo)
-      this.greenWindows.push({ mesh: win, halo, seed: rng.range(0, 10) })
+      const paneGeo = new THREE.PlaneGeometry(1.0, 1.5)
+      ensureVertexColors(paneGeo)
+      paneGeo.rotateY(ry)
+      paneGeo.translate(x, y, z)
+      gwPanes[gwI % 3].push(paneGeo)
+      const haloGeo = new THREE.PlaneGeometry(3.0, 3.0)
+      ensureVertexColors(haloGeo)
+      haloGeo.rotateY(ry)
+      haloGeo.translate(x, y, z + (ry === Math.PI ? -0.05 : 0.05))
+      gwHalos[gwI % 3].push(haloGeo)
+      gwI++
     }
     for (let i = 0; i < 8; i++) {
       const wxr = cx + rng.range(-6.5, 6.5)
@@ -877,6 +999,19 @@ export class World {
     for (const [tx, tz, th] of towerDefs) {
       addGreenWindow(tx, heightAt(cx, cz) + th * 0.7, tz - 2.85)
       if (th > 14) addGreenWindow(tx, heightAt(cx, cz) + th * 0.45, tz - 2.85)
+    }
+    this.greenWindows = []
+    for (let gi = 0; gi < 3; gi++) {
+      if (!gwPanes[gi].length) continue
+      const win = new THREE.Mesh(mergeGeometries(gwPanes[gi], false), retroMaterial({ map: TEX.window({ name: 'greenwin', green: true }), transparent: true, opacity: 0.9, depthWrite: false, emissive: '#3a8a34', noFog: true }))
+      win.userData.dyn = true
+      this.scene.add(win)
+      const haloMat = retroMaterial({ map: TEX.glowDot({ color: '#58e050' }), transparent: true, depthWrite: false, opacity: 0.72, noFog: true })
+      haloMat.blending = THREE.AdditiveBlending
+      const halo = new THREE.Mesh(mergeGeometries(gwHalos[gi], false), haloMat)
+      halo.userData.dyn = true
+      this.scene.add(halo)
+      this.greenWindows.push({ mesh: win, halo, seed: rng.range(0, 10) })
     }
     // the one dark red door (leads to the Hall behind)
     const door = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3.6), retroMaterial({ map: TEX.white() }))
@@ -944,6 +1079,7 @@ export class World {
         bat.add(wing)
         if (sx === 1) bat.userData.wingR = wing; else bat.userData.wingL = wing
       }
+      bat.traverse((o) => { o.userData.dyn = true })
       this.scene.add(bat)
       this.bats.push({ mesh: bat, cx: cx + batRng.range(-8, 8), cz: cz + batRng.range(-4, 8), cy: heightAt(cx, cz) + batRng.range(9, 15), r: batRng.range(5, 10), speed: batRng.range(0.25, 0.45), seed: batRng.range(0, 10) })
     }
@@ -1270,15 +1406,33 @@ export class World {
       ensureVertexColors(post.geometry)
       post.position.y = 1.3
       g.add(post)
-      pd.labels.forEach((_, i) => {
+      pd.labels.forEach((label, i) => {
         const board = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.3, 0.06), mats.plank)
         ensureVertexColors(board.geometry)
         board.position.set(0.5, 2.2 - i * 0.45, 0)
         board.rotation.y = i * 0.5
         g.add(board)
+        // carved label (readable on approach — 3.3)
+        const c = document.createElement('canvas')
+        c.width = 128; c.height = 24
+        const ctx = c.getContext('2d')
+        ctx.clearRect(0, 0, 128, 24)
+        ctx.font = 'bold 15px Georgia, serif'
+        ctx.textAlign = 'center'
+        ctx.fillStyle = '#d8cfae'
+        ctx.fillText(label, 64, 17)
+        const t = new THREE.CanvasTexture(c)
+        t.magFilter = t.minFilter = THREE.NearestFilter
+        t.generateMipmaps = false
+        const txt = new THREE.Mesh(new THREE.PlaneGeometry(1.42, 0.26), retroMaterial({ map: t, transparent: true, emissive: '#4a4436' }))
+        ensureVertexColors(txt.geometry)
+        txt.position.set(0, 0, 0.036) // child of the board → rides its rotation
+        board.add(txt)
       })
       g.userData.collider = { r: 0.2, h: 2.6 }
       this.place(g, pd.x, pd.z, rng.range(0, Math.PI * 2))
+      if (!this.fogProps) this.fogProps = []
+      this.fogProps.push({ g, x: pd.x, z: pd.z })
       this.interactables.push({ id: `sign-${pd.x}-${pd.z}`, x: pd.x, z: pd.z, kind: 'sign', labels: pd.labels })
     }
     // breadcrumb lanterns along corridors (pre-kindled, flickering — not objectives)
@@ -1293,6 +1447,8 @@ export class World {
       const lamp = lampPost({ lit: false, height: 2.2 })
       this.place(lamp.group, cx, cz)
       this.litLamp(lamp, cx, cz)
+      if (!this.fogProps) this.fogProps = []
+      this.fogProps.push({ g: lamp.group, x: cx, z: cz })
     }
     this.poses.foglands = { pos: [30, heightAt(30, 2) + 1.4, 2.5], look: [52, heightAt(52, 0) + 1, 0] }
   }
@@ -1312,6 +1468,19 @@ export class World {
   }
 
   update(dt, time) {
+    // zone-distance culling (D6): fog hides what we skip drawing
+    if (this.zoneGroups) {
+      const cam = this.camera.position
+      for (const zg of this.zoneGroups) {
+        if (zg.r > 999) continue
+        zg.g.visible = Math.hypot(cam.x - zg.cx, cam.z - zg.cz) - zg.r < 95
+      }
+      if (this.fogProps) {
+        for (const fp of this.fogProps) {
+          fp.g.visible = Math.hypot(cam.x - fp.x, cam.z - fp.z) < 75
+        }
+      }
+    }
     for (const f of this.flames) {
       if (!f.mesh.visible) continue
       f.acc += dt

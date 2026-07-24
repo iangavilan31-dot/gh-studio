@@ -30,6 +30,31 @@ export class Ambience {
     this.pAcc = 0
   }
 
+  // Kindling the firefly jar releases them for good (Part 3.2.1)
+  releaseFireflies() {
+    if (this.firefliesOut) return
+    this.firefliesOut = true
+    if (!this.fireflies) this.fireflies = new ParticleSystem(this.rain.mesh.parent, { tex: TEX.glowDot({ color: '#d8e858' }), max: 30, additive: true })
+    for (let i = 0; i < 26; i++) {
+      const a = this.rng.range(0, Math.PI * 2), r = this.rng.range(4, 22)
+      this.fireflies.spawn({
+        pos: new THREE.Vector3(Math.cos(a) * r, 0, Math.sin(a) * r),
+        vel: new THREE.Vector3(),
+        maxLife: 9e9,
+        size: this.rng.range(0.05, 0.09),
+        seed: this.rng.next(),
+        world: this.world,
+        update(p, dt2) {
+          const t = p.life * (0.5 + p.seed * 0.5) + p.seed * 30
+          p.pos.x += Math.sin(t * 0.9) * 0.5 * dt2 * 2
+          p.pos.z += Math.cos(t * 0.7) * 0.5 * dt2 * 2
+          p.pos.y = p.world.heightAt(p.pos.x, p.pos.z) + 0.6 + Math.sin(t * 1.3) * 0.35
+          p.alpha = 0.4 + 0.6 * Math.max(0, Math.sin(t * 2.1)) // firefly blink
+        },
+      })
+    }
+  }
+
   // cinematic teleports snap weather to the viewed zone (no cross-zone leakage)
   snapZone(zoneId) {
     this.rainW = zoneId === 'park' ? 1 : 0
@@ -250,6 +275,7 @@ export class Ambience {
       }
     }
 
+    if (this.fireflies) this.fireflies.update(dt, camera)
     this.rain.update(dt, camera)
     this.rings.update(dt, camera)
     this.leaves.update(dt, camera)

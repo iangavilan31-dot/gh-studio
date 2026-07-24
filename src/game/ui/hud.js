@@ -26,6 +26,7 @@ export class HUD {
     this.subtitle.className = 'subtitle'
     ui.appendChild(this.subtitle)
     this.subtitleTimer = null
+    this.pendingSays = new Set()
   }
 
   showPrompt(verb) {
@@ -49,6 +50,15 @@ export class HUD {
   clearSubtitle() {
     this.subtitle.classList.remove('on')
     clearTimeout(this.subtitleTimer)
+    for (const id of this.pendingSays) clearTimeout(id)
+    this.pendingSays.clear()
+  }
+
+  // delayed subtitle that clearSubtitle() can still cancel (teleport rigs
+  // must not inherit queued trinket lines — 12.5 anti-pattern)
+  sayLater(text, delaySeconds, seconds = 4) {
+    const id = setTimeout(() => { this.pendingSays.delete(id); this.say(text, seconds) }, delaySeconds * 1000)
+    this.pendingSays.add(id)
   }
 
   say(text, seconds = 4) {
