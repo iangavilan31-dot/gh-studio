@@ -285,3 +285,46 @@ PASS · perfgate PASS · autopilotcheck PASS · coopcheck PASS · shellcheck
 PASS — 11/11, npm run build exit 0. Reel note: zone shots are consistent
 with this build (hall/rooftops/postcards reshot on it; other zones
 untouched by POLISH-54..56 diffs).
+
+## Judge pass 3 — reviewer reports and outcomes
+
+### Reviewer E (visual, fresh context) — median verdict 6.5, none at 9
+1. player.png translucent column (4/10) → ROOT-CAUSED: a raindrop <0.5m
+   from the lens fills the frame (bisect captures in shots/anim/col-*.png);
+   FIXED with a 0.45–2m near-camera particle fade. Class eliminated.
+2. rooftops-1 floor-stare (2/10) → REPOSED as roof-edge street canyon
+   (warm windows, cobbles, chicken, moon in frame at minute 33). Verified.
+3. firstperson.png dither/no-moon/no-pool (3/10) → capture now runs
+   Restored (dither 0.15), minute 34 western moon centered, carried pool
+   at frame bottom. Verified.
+4. cross-glare erases the moon face (global) → streak 0.5→0.26, core
+   0.26→0.18: face reads in sea/village-1/gloomspire-1/firstperson reads.
+5. sea.png zero warm accent; gloomspire-1 no moon → rowboat stern
+   lantern (verified); gloomspire-1 reposed to minute 3 (moon due east
+   behind the towers — verified).
+6. sorting artifacts → near-fade fixes the class of (i); flare cut helps
+   (ii); fingerpost/fence barcode banding FIXED with woodPost vertical
+   grain. Lantern-glow detachment (iii) accepted as N64 sprite idiom for
+   this pass (glows sit at flame seats; pools appear when lit).
+7. mosswood illegible → ambient/skyUp one step up, fog=horizon kept.
+   Verified legible.
+8. park-1 black trunk → pilot embers +20% (bench lamp reads warmer).
+9. village-1 8/10 → dolly 3m forward: now the reel's anchor frame.
+
+### Reviewer F (code, fresh context) — 11 findings, all addressed
+HIGH co-op self-kindle marked remote (C.4 feedback dead in MP) → FIXED
+  (remote: ev.from !== net.myId).
+HIGH intro ember guarded on nonexistent rig.staffLantern → FIXED
+  (rig.bones.staffLantern).
+MED cues freeze in cinematics → duck(); windGust zeroed parked.
+MED rig/autopilot kindles inflate nod/lookBack → remote-flagged.
+MED landing dust alpha pop → fade-out update fn.
+LOW fp eye height in sit/lie → blended fpEyeTarget.
+LOW gust/nod in actions → gated (!action).
+LOW KeyV vs rebinds → yields to bound verbs.
+LOW nightSignature co-op divergence → seed in snapshot.
+LOW comment/dead-code → cleaned (quartercheck pin, nod comment, camera).
+(Bell timer page-lifetime: accepted, matches nightPulse pattern.)
+F's checked-and-clean list covers: by-reference uniform binding, FP mode
+isolation, overlay replication, signature determinism, cue title-leak,
+chan h relay, input repeat, world builds, late-joiner score.

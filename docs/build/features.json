@@ -1136,7 +1136,8 @@
     "ten-minute capture reviewed with timestamps",
     "worst dead stretches fixed"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "scripts/k1capture.mjs v3 (docs/build/k1capture.json): authored-route capture with real held keys + E-channels \u2014 13 timestamped events over the opening route (park ritual -> east road -> Emberwick), ZERO dead stretches (every tick had an event or a POI within 16m); wandercheck holds the <=20s encounter bound for unguided wandering; the intro's first 18.4s are fully authored. v1 (autopilot teleports) and v2 (random walker) were rejected as dishonest instruments \u2014 recorded in the capture file history."
   },
   {
    "id": "POLISH-O1",
