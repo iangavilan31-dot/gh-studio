@@ -259,6 +259,7 @@ export function flameSheet({ name = 'flame', cool = false } = {}) {
     }
     // NPOT strip + alpha-tested sprite frames: no mips (frame bleed + cutout erosion)
     const t = toTexture(c, { mips: false })
+    t.repeat.set(0.25, 1) // ONE frame visible; the anim steps offset.x (every consumer)
     t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
     return t
   })
@@ -307,7 +308,7 @@ export function shingle({ name = 'shingle', base = '#2e3438', moss = 0 } = {}) {
     const c = canvasOf(size, (ctx) => {
       ctx.fillStyle = rgb(darken(b, 0.3))
       ctx.fillRect(0, 0, size, size)
-      const rows = 6, cols = 6
+      const rows = 8, cols = 7
       for (let r = 0; r < rows; r++) {
         const y = r * (size / rows)
         for (let col = 0; col < cols; col++) {
@@ -321,6 +322,11 @@ export function shingle({ name = 'shingle', base = '#2e3438', moss = 0 } = {}) {
           ctx.fill()
           ctx.fillStyle = rgb(lighten(sc, 0.1))
           ctx.fillRect(x + 1, y + 1, size / cols - 4, 2)
+          // hard shadow under each row's lip — overlapping shingles, not masonry
+          ctx.fillStyle = rgb(darken(sc, 0.42))
+          ctx.globalAlpha = 0.85
+          ctx.fillRect(x - 1, y + size / rows - 1, size / cols + 2, 3)
+          ctx.globalAlpha = 1
         }
       }
     })

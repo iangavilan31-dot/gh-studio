@@ -577,7 +577,7 @@ export class World {
     // AA.2 evidence pose: the player alone in open dark — only the staff
     // lantern's traveling pool lights the ground
     this.poses.lanternpool = { pos: [-8.8, heightAt(-8.8, -24.4) + 1.7, -24.4], look: [-5.6, heightAt(-5.6, -28) + 1.0, -28], minute: 20, player: [-5.6, -28, 0.8] }
-    this.poses.player = { pos: [4.8, 1.1, -16.2], look: [2.6, 0.9, -18.4] }
+    this.poses.player = { pos: [-7.6, heightAt(-7.6, -25.4) + 1.3, -25.4], look: [-5.6, heightAt(-5.6, -28) + 1.05, -28], minute: 20, player: [-5.6, -28, 2.4] }
   }
 
   buildVillage() {
@@ -953,7 +953,7 @@ export class World {
     // subject, moss roofs leading left, moon low over the western roofline
     // shot along the prop line from the NE: Nib's pine + lantern + chimneys
     // + clothesline, the low moon dead ahead over the western roofline
-    this.poses.rooftops = { pos: [128.6, roofH(128.6) + 0.7, streetZ(128.6) - 5.9], look: [118.8, roofH(118.8) + 1.05, streetZ(118.8) - 9.9], minute: 31 }
+    this.poses.rooftops = { pos: [121.4, roofH(121.4) + 0.75, streetZ(121.4) - 8.6], look: [118.9, roofH(118.9) + 0.35, streetZ(118.9) - 10.9], minute: 33 }
     // close on Nib for the sleeper evidence shots
     this.poses.nib = { pos: [119.6, roofH(119.6) + 0.55, streetZ(119.6) - 11.1], look: [118.2, roofH(118.2) + 0.2, streetZ(118.2) - 10.0] }
   }
@@ -1147,10 +1147,20 @@ export class World {
 
   buildGloomspire() {
     const rng = worldRNG.fork('gloomspire')
+    {
+      const moatTex = TEX.water({ name: 'moatwater', base: '#141024', light: '#2a2344' })
+      moatTex.repeat.set(10, 10)
+      const moat = new THREE.Mesh(new THREE.CircleGeometry(31, 28), retroMaterial({ map: moatTex, ripple: true }))
+      ensureVertexColors(moat.geometry)
+      moat.rotation.x = -Math.PI / 2
+      moat.position.set(-110, -0.9, 125)
+      this.scene.add(moat)
+      this.waterMats.push({ tex: moatTex, sx: 0.004, sy: 0.006 })
+    }
     const gloomTex = TEX.stoneBlock({ name: 'gloomstone', base: '#2c2436' })
     gloomTex.repeat.set(3, 3)
     const darkStone = retroMaterial({ map: gloomTex })
-    const greenTex = TEX.shingle({ name: 'greenroof', base: '#1d4635' })
+    const greenTex = TEX.shingle({ name: 'greenroof', base: '#2a5c44', moss: 0.5 })
     greenTex.repeat.set(2, 2)
     const greenShingle = retroMaterial({ map: greenTex })
     const cx = -110, cz = 125
@@ -1379,6 +1389,31 @@ export class World {
     this.scene.add(throne)
     this.hallMeshes.push(throne)
     this.colliders.push({ x: cx, z: zB - 3, r: 2.4, h: 2 })
+    // E.6: candelabra pair flanking the throne — pre-lit staging so the Pale
+    // King reads from the hall (set dressing, never objectives)
+    {
+      const candMat = retroMaterial({ map: TEX.plank({ name: 'candelabrawood' }) })
+      const glowMat = retroMaterial({ map: TEX.glowDot({ name: 'thronewarm', color: '#ffb45e' }), transparent: true, depthWrite: false, opacity: 0.65 })
+      glowMat.blending = THREE.AdditiveBlending
+      for (const sx of [-2.4, 2.4]) {
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, 1.6, 6), candMat)
+        ensureVertexColors(pole.geometry, [0.35, 0.3, 0.24])
+        pole.position.set(cx + sx, y0 + 1.8, zB - 2.2)
+        this.scene.add(pole)
+        const glow = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.7), glowMat)
+        ensureVertexColors(glow.geometry)
+        glow.position.set(cx + sx, y0 + 2.75, zB - 2.2)
+        glow.userData.dyn = true
+        this.scene.add(glow)
+        this.halos.push(glow)
+        const pool = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 3.4), glowMat)
+        ensureVertexColors(pool.geometry)
+        pool.rotation.x = -Math.PI / 2
+        pool.position.set(cx + sx, y0 + 1.06, zB - 2.4)
+        pool.userData.dyn = true
+        this.scene.add(pool)
+      }
+    }
     // where a keeper sits for the lullaby moment (Part 3.2.6): the dais foot
     this.thronePos = new THREE.Vector3(cx, y0, zB - 5.6)
     // 3 pre-lit chandeliers (rings of candle glow, always on)
@@ -1794,7 +1829,7 @@ export class World {
     }
     // the corridor itself: stand at the first breadcrumb, the next one is
     // already half-swallowed by the fog wall
-    this.poses.foglands = { pos: [29.6, heightAt(29.6, 2.2) + 1.15, 2.2], look: [44, heightAt(44, -1) + 3.2, -1.3], minute: 5 }
+    this.poses.foglands = { pos: [22.0, heightAt(22.0, 1.2) + 1.2, 1.2], look: [33.5, heightAt(33.5, 1.4) + 2.2, 1.4], minute: 4 }
   }
 
   // world rules applied after player movement (mosswood loop-through)
@@ -1830,7 +1865,7 @@ export class World {
       // castle silhouette across the moat water from the west bank
       { zone: 'gloomspire', idx: 1, pos: [-140, hy(-140, 114) + 2.2, 114], look: [-112, hy(-112, 126) + 8.5, 126], minute: 16 },
       // the album cover: throne steps, carpet, candle vault (E.6)
-      { zone: 'hall', idx: 1, pos: [-110, hallY + 1.15, 158], look: [-110, hallY + 2.8, 169.5], minute: 24 },
+      { zone: 'hall', idx: 1, pos: [-110, hallY + 1.3, 162.5], look: [-110, hallY + 2.6, 169.8], minute: 24 },
       // under the arch looking back down the path, moon low over the trail
       { zone: 'mosswood', idx: 1, pos: [82, hy(82, 109.5) + 1.6, 109.5], look: [58, hy(58, 111) + 2.8, 111], minute: 30 },
       // keep-top vista: the best view of the moon in the game (E.8)

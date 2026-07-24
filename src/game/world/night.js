@@ -78,6 +78,13 @@ function crossFlareTexture() {
     ctx.translate(64, 64); ctx.rotate(Math.PI / 2); ctx.translate(-64, -64)
     streak(110, 2.5)
     ctx.restore()
+    // fine deterministic grain breaks the radial gradient's quantize rings (J.2)
+    const grng = worldRNG.fork('tex/flaregrain')
+    for (let i = 0; i < 900; i++) {
+      const a = grng.range(0, Math.PI * 2), r = Math.sqrt(grng.next()) * 62
+      ctx.fillStyle = grng.chance(0.5) ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)'
+      ctx.fillRect(64 + Math.cos(a) * r, 64 + Math.sin(a) * r, 1, 1)
+    }
   })
   const t = toTexture(c)
   t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
