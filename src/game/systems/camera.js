@@ -25,7 +25,9 @@ export class OrbitCamera {
 
   update(playerPos, playerYaw, jogging, lookDelta, dt, interactables = []) {
     this.yaw -= lookDelta[0] * this.sensitivity
-    this.pitch = THREE.MathUtils.clamp(this.pitch - lookDelta[1] * this.sensitivity, -1.15, 0.5)
+    // comfortable bounds: never top-down, never under the floor — extreme
+    // pitches made the whole world read as a wall of ground
+    this.pitch = THREE.MathUtils.clamp(this.pitch - lookDelta[1] * this.sensitivity, -0.72, 0.38)
 
     // auto-frame assist: bias yaw toward nearest interactable within 6m (max 2°/s)
     if (this.autoFrame && lookDelta[0] === 0) {
@@ -71,7 +73,7 @@ export class OrbitCamera {
       const px = _pivot.x + _dir.x * t
       const py = _pivot.y + _dir.y * t
       const pz = _pivot.z + _dir.z * t
-      if (this.world.cameraBlocked(px, py, pz, 0.25)) { targetDist = Math.max(0.6, t - 0.3); break }
+      if (this.world.cameraBlocked(px, py, pz, 0.25)) { targetDist = Math.max(1.5, t - 0.3); break } // floor keeps the wizard in frame
     }
     if (targetDist < this.curDist) this.curDist = targetDist // snap in (never clip)
     else this.curDist += (targetDist - this.curDist) * (1 - Math.exp(-dt / 0.25)) // ease out
