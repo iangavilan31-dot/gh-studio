@@ -1629,9 +1629,12 @@ export class World {
   // every interior vertex.
   bakeHallShowcase() {
     if (!this.hallMeshes) return
-    const chandeliers = [[-110, 6.9, 146], [-110, 6.9, 155], [-110, 6.9, 164],
-      // throne candelabra (tighter pools): the Pale King's end must READ
-      ...(this.throneCandles ?? [])]
+    // throne candelabra join the bake at a tighter radius and lower gain —
+    // full chandelier weight right on the dais turned it into lava brick
+    const warmPoints = [
+      ...[[-110, 6.9, 146], [-110, 6.9, 155], [-110, 6.9, 164]].map((p) => ({ p, r: 7.5, gain: 1 })),
+      ...(this.throneCandles ?? []).map((p) => ({ p, r: 5.5, gain: 0.4 })),
+    ]
     const v = new THREE.Vector3()
     for (const mesh of this.hallMeshes) {
       mesh.updateMatrixWorld()
@@ -1644,9 +1647,9 @@ export class World {
         let r = 1 - coldF * 0.45, g = 1 - coldF * 0.38, b = 1 - coldF * 0.2
         // warm candle pools
         let w = 0
-        for (const [cx2, cy2, cz2] of chandeliers) {
+        for (const { p: [cx2, cy2, cz2], r: wr, gain } of warmPoints) {
           const d = Math.sqrt((v.x - cx2) ** 2 + (v.y - cy2) ** 2 * 0.35 + (v.z - cz2) ** 2)
-          w += Math.max(0, 1 - d / 7.5)
+          w += Math.max(0, 1 - d / wr) * gain
         }
         w = Math.min(1.15, w)
         // E.6 boost: pools must READ as pools of candlelight — the showcase
