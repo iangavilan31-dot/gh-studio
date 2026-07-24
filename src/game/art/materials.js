@@ -110,8 +110,10 @@ const FRAG = /* glsl */ `
     if (tex.a < uAlphaTest) discard;
     vec3 col = tex.rgb * vColor;
     #ifdef USE_HEMI
-    // characters: sky color from above, fog color from below (Part 8.2)
-    vec3 hemi = mix(uFogColor * 1.7, uSkyUp * 2.1, vHemi);
+    // characters: sky color from above, fog color from below (Part 8.2), plus
+    // a faint violet-biased fill (AA.7) so the robe tint reads and the
+    // silhouette never crushes into the background
+    vec3 hemi = mix(uFogColor * 1.7, uSkyUp * 2.1, vHemi) + vec3(0.11, 0.09, 0.16);
     col *= hemi;
     #else
     col *= uAmbient;

@@ -52,4 +52,9 @@ counts until all eight AA items carry screenshot evidence here.
 ### AA.4 — density: pending
 ### AA.5 — fun floor: pending
 ### AA.6 — content completeness: pending
-### AA.7 — player readability: pending
+### AA.7 — player readability ✅ 2026-07-24
+- Character hemisphere gains a violet-biased fill so the #4B3B6E robe tint and
+  silhouette never crush to black; carried-lantern rim (AA.2) warms the hat
+  brim and shoulders. Evidence READ: player.png (hat + head + beard clearly
+  identifiable beside the bench), lanternpool.png (plum-violet robe, halo rim,
+  full silhouette against open dark).

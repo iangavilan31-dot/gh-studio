@@ -1010,7 +1010,8 @@
     "in every shot containing the player, silhouette + hat identifiable at a glance",
     "programmatic: robe pixels not near-black, hue in violet family"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "player.png + lanternpool.png READ: hat silhouette separates cleanly, warm lantern rim on head/shoulders, robe reads plum-violet in lantern light, deep navy-violet (not black) in open night; hemi fill (0.11,0.09,0.16) prevents crush"
   },
   {
    "id": "POLISH-AA8",
