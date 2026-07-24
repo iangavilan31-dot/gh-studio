@@ -852,6 +852,7 @@ window.__MOONREST__ = {
     for (const c of world.crumbs ?? []) out.push({ kind: 'crumb', x: c[0], z: c[1] })
     for (const sp of world.signposts ?? []) out.push({ kind: 'sign', x: sp.x, z: sp.z })
     for (const b of world.benches ?? []) out.push({ kind: 'bench', x: b[0], z: b[1] })
+    for (const m of world.memorials ?? []) out.push({ kind: 'memorial', x: m[0], z: m[1] })
     for (const s of npcs.anchors ?? []) out.push({ kind: 'sleeper', x: s.x, z: s.z })
     return out
   },

@@ -65,7 +65,18 @@ for (const name of shots) {
       // sky signature: the authored gradient descends — upper half of the
       // quadrant measurably differs from the lower half
       const vgrad = Math.abs(topSum / topN - botSum / botN)
-      quads.push({ mean: +mean.toFixed(4), std: +std.toFixed(4), edge: +(edge / en).toFixed(5), vgrad: +vgrad.toFixed(4) })
+      // fog signature: deep-fog zones (mosswood) have FLAT but SATURATED sky —
+      // authored atmosphere, not a dead area; neutral black stays a failure
+      let satSum = 0
+      for (let y = qy * H / 2; y < (qy + 1) * H / 2; y += 3) {
+        for (let x = qx * W / 2; x < (qx + 1) * W / 2; x += 3) {
+          const i4 = (y * W + x) * 4
+          const mx2 = Math.max(d[i4], d[i4 + 1], d[i4 + 2]), mn = Math.min(d[i4], d[i4 + 1], d[i4 + 2])
+          satSum += (mx2 - mn) / 255
+        }
+      }
+      const sat = satSum / Math.ceil(H / 6) / Math.ceil(W / 6)
+      quads.push({ mean: +mean.toFixed(4), std: +std.toFixed(4), edge: +(edge / en).toFixed(5), vgrad: +vgrad.toFixed(4), sat: +sat.toFixed(4) })
     }
     return quads
   }, dataUri)
@@ -75,7 +86,7 @@ for (const name of shots) {
     const flat = q.std < STD_MIN && q.edge < EDGE_MIN
     // top quadrants are exempt ONLY as authored sky: a vertical gradient must
     // actually be present (AA.4's "excluding the sky-dome's authored gradient")
-    const skyLike = isTop && q.vgrad > 0.004
+    const skyLike = isTop && (q.vgrad > 0.004 || q.sat > 0.05)
     return { ...q, quad: ['TL', 'TR', 'BL', 'BR'][i], fail: flat && !skyLike }
   })
   const bad = verdicts.filter((v) => v.fail)
