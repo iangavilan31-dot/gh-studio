@@ -621,7 +621,8 @@
       "steps": [
         "two headless contexts: join by code succeeds; 5th join rejected (sim)"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "coopcheck: 4-letter safe-alphabet code, join resolves id 1, roster syncs; local broker via __PEER_OPTS__, prod = public cloud"
     },
     {
       "id": "m7-transform-sync",
@@ -630,7 +631,8 @@
       "steps": [
         "two-context test: host moves, client sees smooth motion within tolerance (positions logged)"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "coopcheck: remote lands within 1.5m after teleport (10Hz + 150ms hermite interp); remotes animate by interpolated speed"
     },
     {
       "id": "m7-event-sync",
@@ -639,7 +641,8 @@
       "steps": [
         "two-context: client kindles, host sees light + music layer; invalid channel rejected (log)"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "coopcheck: kindle host+client sync, chan events feed brazier law, moment events (bench) rebroadcast; deterministic consequences via world.kindle on every client"
     },
     {
       "id": "m7-moon-heartbeat",
@@ -648,7 +651,8 @@
       "steps": [
         "two-context: client nightT converges after artificial offset (log)"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "coopcheck: host skipTo(30) -> client slews to 30.08 within 6.5s"
     },
     {
       "id": "m7-late-join",
@@ -657,7 +661,8 @@
       "steps": [
         "two-context: host kindles 3 then client joins and sees all 3 lit (state + screenshot)"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "coopcheck: third context joins mid-night, snapshot delivers kindled lights + nightT (30.24) + roster/tints"
     },
     {
       "id": "m7-disconnect",
@@ -666,7 +671,8 @@
       "steps": [
         "two-context: kill client, host sees firefly fade (screenshot); kill host, client gets card (screenshot)"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "coopcheck: clean leave (pagehide hook) -> roster drops, avatar fades to fireflies; host loss -> subtitle + soft return (role null)"
     },
     {
       "id": "m7-names",
@@ -675,7 +681,8 @@
       "steps": [
         "two-context screenshot shows rune name over remote"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "coopcheck: sanitized 6-char names; procedural stroked rune plates (no font dependence) visible in coop shots"
     },
     {
       "id": "m7-coop-presence",
@@ -684,7 +691,8 @@
       "steps": [
         "two-context: remote kindle triggers local layer add (log)"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "remote staff flame/halo registered in world light lists (visible in coop-host.png), remote footsteps at 0.4 vol within 24m, kindles bloom layers via shared onKindle, sit warmth vignette"
     },
     {
       "id": "m7-moment-bench",
@@ -693,7 +701,8 @@
       "steps": [
         "two-context: both sit, rest state fires both sides (log + screenshots)"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "coopcheck: two sitters by Beldam -> bench moment on both clients, rainSoftT=45"
     },
     {
       "id": "m7-moment-chicken",
@@ -702,7 +711,8 @@
       "steps": [
         "capture: mount occurs; second context sees it"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "momentscheck: sustained 3m company 8s -> chicken mounts head (state mount), synced as moment event"
     },
     {
       "id": "m7-moment-constellation",
@@ -711,7 +721,8 @@
       "steps": [
         "two-context: both lie, show fires (screenshot)"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "momentscheck: all players lying near Nib -> full constellation show"
     },
     {
       "id": "m7-moment-glyphs",
@@ -720,7 +731,8 @@
       "steps": [
         "two-context: both on glyphs => beam (screenshot)"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "momentscheck: glyph occupancy brightens (lit>0.5), full lobby -> sky beam envelope live"
     },
     {
       "id": "m7-moment-gargoyle",
@@ -729,7 +741,8 @@
       "steps": [
         "two-context: synced wave => wave-back (log + frames)"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "momentscheck: all wave within 18m -> wingR wave 2s then snap to statue"
     },
     {
       "id": "m7-moment-lullaby",
@@ -738,7 +751,8 @@
       "steps": [
         "log: stem plays once, second attempt same night does nothing"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "momentscheck: cat awake + keeper seated at throne foot -> musicBox once per night"
     },
     {
       "id": "m7-moment-arch",
@@ -747,7 +761,8 @@
       "steps": [
         "two-context: both under arch => bell + trinket (log)"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "momentscheck: all under arch -> deep bell + archstone trinket; autopilot earns it too (trinketCount 9)"
     },
     {
       "id": "m7-moment-brazier",
@@ -756,7 +771,8 @@
       "steps": [
         "two-context: solo channel fails, joint channel kindles (log)"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "coopcheck: lone channel DENIED, all-keepers channel (2.5s grace) -> kindles on both"
     },
     {
       "id": "m7-coop-gate",
@@ -765,7 +781,8 @@
       "steps": [
         "node scripts/coop-test.mjs exits 0 with assertions printed"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "scripts/coopcheck.mjs PASS 17/17 + momentscheck.mjs PASS 12/12; both-perspective PNGs read"
     },
     {
       "id": "m8-title",

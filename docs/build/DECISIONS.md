@@ -76,3 +76,33 @@ require merging across texture atlases for marginal gain.
 village. The village's zone character (bakery, chickens, hearth-lit street) implies it;
 the hen feather follows the pattern (small, warm, animal-adjacent). Also: 'gatewalkers'
 trinket id is reserved for the M7 arch co-op moment per Part 7.
+
+## D12 — Co-op gate runs against a LOCAL PeerJS broker; production uses the public cloud
+**Risk: MEDIUM (the one component tests can't fully cover).** `scripts/coopcheck.mjs`
+starts a local signaling server (`peer` devDependency, IPv4 bind — container has no
+IPv6) and injects `window.__PEER_OPTS__` before hosting; the SHIPPED code path is
+`new Peer(id)` → public PeerJS cloud, which this sandbox cannot reach. Every line of
+client netcode (host/join/transforms/events/snapshot/disconnect) is exercised against
+a real PeerServer over real WebRTC; only the public broker's availability is taken on
+faith. If the cloud broker misbehaves in production, point `__PEER_OPTS__`-style config
+at any self-hosted PeerServer.
+
+## D13 — Moon Brews are per-keeper (not synced)
+**Risk: LOW.** Part 5.2's reliable-event list (kindle, emote, chickenMount,
+channelStart/Stop, trinket, nightEnd) deliberately omits brews, so each player finds
+their own twelve — kinder in co-op (no bottle-sniping) and consistent with brews being
+a personal wooziness. Trinkets from zone completion also arrive per-client via the
+deterministic kindle stream rather than a trinket event; the explicit trinket/moment
+event is used only for the arch-stone.
+
+## D14 — "All players" moments count the PRESENT lobby, including a lobby of one
+**Risk: LOW.** Part 3's co-op moments (constellation, glyphs, gargoyle, arch, brazier)
+say "all players"; solo, that is one keeper, so every moment fires alone (bench alone
+excepted — it needs 2+ sitters by spec). This keeps the whole moment system testable
+single-context and means a solo night can still be complete. Side effect: the autopilot
+walks under the arch and legitimately earns the Gatewalkers arch-stone (trinket count 9).
+
+## D15 — Host/Join UI entry lands with the M8 title screen
+**Risk: LOW.** M7 ships the full co-op stack + `hostNight/joinNight` surface; the
+title-screen "Host Night / Join Night" buttons and the pause-menu room code are M8
+shell work where the spec places them (Part 10).

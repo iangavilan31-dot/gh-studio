@@ -19,6 +19,8 @@ import { Ambience } from './world/ambience.js'
 import { NPCSystem } from './systems/npc.js'
 import { Progress } from './systems/progress.js'
 import { NightFlow } from './systems/nightflow.js'
+import { Moments } from './systems/moments.js'
+import { Net } from './net/coop.js'
 import { audio } from './audio/engine.js'
 import { score } from './audio/score.js'
 import { footstep, kindleChime } from './audio/sfx.js'
@@ -40,8 +42,8 @@ const embers = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#ffb45e' }
 const stars = new Stars(scene)
 const ambience = new Ambience(scene, world)
 
-// player
-const rig = buildWizard({ tint: PLAYER_TINTS[0] })
+// player (rig is swappable: co-op assigns tints by join order — Part 5)
+let rig = buildWizard({ tint: PLAYER_TINTS[0] })
 scene.add(rig.group)
 // the player's lantern is a real light source: animate flame, billboard halo
 if (rig.staffFlame) world.flames.push({ mesh: rig.staffFlame, tex: rig.staffFlame.material.uniforms.uMap.value, frame: 1, acc: 0 })
@@ -72,7 +74,7 @@ const nightflow = new NightFlow(night, world, hud, camera, {
     lightsTotal: world.lights.length,
     brews: world.brewCount,
     trinkets: progress.trinkets.filter((t) => t !== 'archstone').length,
-    friends: 0, // peers land in M7
+    friends: net.peerCount,
   }),
   onNightEnd: () => {
     progress.save()
@@ -83,6 +85,106 @@ const nightflow = new NightFlow(night, world, hud, camera, {
 
 // footsteps synced to stride (Part 4.2)
 player.onFootstep = (surface, vol) => footstep(surface, vol)
+
+// ——— Co-op (Part 5): host-authority PeerJS, remote lamplighters, moments ———
+function swapLocalTint(idx) {
+  const old = rig
+  const nr = buildWizard({ tint: PLAYER_TINTS[idx % PLAYER_TINTS.length] })
+  scene.remove(old.group)
+  const fi = world.flames.findIndex((f) => f.mesh === old.staffFlame)
+  if (fi >= 0) world.flames.splice(fi, 1)
+  const hi = world.halos.indexOf(old.staffHalo)
+  if (hi >= 0) world.halos.splice(hi, 1)
+  rig = nr
+  scene.add(rig.group)
+  if (rig.staffFlame) world.flames.push({ mesh: rig.staffFlame, tex: rig.staffFlame.material.uniforms.uMap.value, frame: 1, acc: 0 })
+  if (rig.staffHalo) world.halos.push(rig.staffHalo)
+  player.rig = rig
+  rig.group.position.copy(player.pos)
+  rig.group.rotation.y = player.yaw
+}
+
+// the whole lobby (local + live remotes) — moments, chickens, gargoyle all
+// reason about "all players" through this one lens
+const lobbyProvider = () => {
+  const list = [{ id: net.myId ?? 0, rig, pos: player.pos, action: player.anim.action }]
+  for (const [id, rp] of net.remotes) if (!rp.fading) list.push({ id, rig: rp.rig, pos: rp.pos, action: rp.action })
+  return list
+}
+
+function applyNetEvent(ev) {
+  if (ev.ev === 'kindle') {
+    world.kindle(ev.id) // full consequences run deterministically on every client
+  } else if (ev.ev === 'emote' || ev.ev === 'chan') {
+    const rp = net.remotes.get(ev.from)
+    if (rp) {
+      const a = ev.ev === 'chan' ? (ev.on ? 'channel' : null) : ev.id
+      rp.action = a; rp.anim.action = a; rp.anim.actionT = 0
+    }
+  } else if (ev.ev === 'moment') {
+    moments.apply(ev)
+  } else if (ev.ev === 'nightEnd') {
+    if (!nightflow.ending && !window.__SUPPRESS_NIGHT_END__) nightflow.startNightsEnd('keeper')
+  }
+}
+
+const net = new Net({
+  scene, world, night,
+  getLocal: () => ({
+    pos: player.pos, yaw: player.yaw,
+    gait: player.anim.speed > 2.2 ? 'jog' : player.anim.speed > 0.1 ? 'walk' : 'idle',
+    action: player.anim.action, channelTarget: interact.channelTarget,
+  }),
+  applyEvent: applyNetEvent,
+  snapshot: () => ({
+    kindled: world.kindledIds, nightT: night.minutes, phase: night.phaseAge ?? null,
+    catAwake: npcs.ghostCat?.state === 'follow', momentsDone: [...moments.done],
+  }),
+  applySnapshot: (s) => {
+    if (s.you != null) swapLocalTint(s.you) // join order picks your robe
+    for (const id of s.kindled ?? []) world.kindle(id, { quiet: true })
+    if (s.nightT != null) { night.minutes = s.nightT; night.targetMinutes = s.nightT }
+    if (s.phase != null) night.setPhase(s.phase)
+    if (s.catAwake) npcs.wakeGhostCat(true)
+    moments.done = new Set(s.momentsDone ?? [])
+    if (audio.started) { score.activeLayers = zoneKindles(score.zone); audio.state.layers = Math.min(score.activeLayers + 1, score.layerGains.length) }
+  },
+  getCatPos: () => (npcs.ghostCat?.state === 'follow' ? npcs.ghostCat.rig.group.position.toArray().map((v) => +v.toFixed(2)) : null),
+  setCatTarget: (arr) => { npcs.catNetTarget = arr },
+  onPeerJoin: () => hud.say('another lantern joins the night.', 3.5),
+  onPeerLeave: () => hud.say('a lantern drifts away, fireflies now.', 3.5),
+  onHostLost: () => {
+    hud.say('the night drifts on without its keeper.', 5)
+    if (!window.__SUPPRESS_NIGHT_END__) setTimeout(() => location.reload(), 5200) // soft return (title lands in M8)
+  },
+  onDeny: (reason) => {
+    if (reason === 'brazier') hud.say('this flame wants every keeper. channel it together.', 4)
+  },
+  spawnFireflies: (x, y, z) => emberBurst(embers, x, y, z, worldRNG.fork('fade' + Math.round(x * 7 + z * 3))),
+  remoteFootstep: (surface, vol) => footstep(surface, vol),
+})
+
+const moments = new Moments({
+  world, npcs, player, hud, stars, progress, ambience, net,
+  warmPulse: (v) => { pipeline.postUniforms.uWarm.value = Math.max(pipeline.postUniforms.uWarm.value, v) },
+  playerRigs: lobbyProvider,
+})
+
+npcs.playersProvider = lobbyProvider
+npcs.chickenAuthority = () => !net.active || net.role === 'host'
+npcs.onChickenMount = (chIdx, playerId) => {
+  const ev = { ev: 'moment', id: 'chicken', chIdx, player: playerId }
+  if (net.active && net.role === 'host') net.broadcastEvent(ev)
+  else if (!net.active) moments.apply(ev)
+}
+
+// kindles route through the authority; channel state feeds the brazier law
+interact.requestKindle = (id) => (net.active ? net.requestKindle(id) : world.kindle(id))
+interact.onChannelState = (id, on) => { if (net.active) net.request({ ev: 'chan', id, on }) }
+let neSent = false // host tells clients when the min-40 clock ends the night
+// a closing tab says goodbye properly, so peers see the firefly fade at once
+// instead of waiting out a dead connection
+window.addEventListener('pagehide', () => { if (net.active) net.leave() })
 
 const zoneKindles = (zone) => world.lights.filter((l) => l.zone === zone && l.kindled).length
 
@@ -155,6 +257,10 @@ function tick() {
       winkT = Math.max(0, winkT - dt * 0.4)
       camera.rotateZ(Math.sin(winkT * Math.PI) * 0.12)
       pipeline.postUniforms.uWarm.value = Math.sin(winkT * Math.PI) * 0.7
+    } else if (player.anim.action === 'sit') {
+      // sitting keepers get the idle candle-warmth vignette (5.3)
+      const u = pipeline.postUniforms.uWarm
+      u.value += (0.12 - u.value) * Math.min(1, dt * 1.5)
     } else if (pipeline.postUniforms.uWarm.value > 0) {
       pipeline.postUniforms.uWarm.value = Math.max(0, pipeline.postUniforms.uWarm.value - dt)
     }
@@ -184,6 +290,9 @@ function tick() {
   stars.update(dt, elapsed, camera, zoneLight.currentZoneId)
   ambience.update(dt, camera, zoneLight.currentZoneId, elapsed)
   npcs.update(dt, elapsed, player, camera)
+  net.update(dt, camera)
+  moments.update(dt, elapsed)
+  if (net.role === 'host' && nightflow.ending && !neSent) { neSent = true; net.broadcastEvent({ ev: 'nightEnd' }) }
   updateOverlay(dt)
   input.endFrame()
   pipeline.render(scene, camera, elapsed)
@@ -234,12 +343,45 @@ window.__MOONREST__ = {
       legLx: +rig.bones.legL.rotation.x.toFixed(2),
     }
   },
-  kindle(id) { return world.kindle(id) },
+  kindle(id) { return net.active ? net.requestKindle(id) : world.kindle(id) },
   skipTo(min) { night.skipTo(min); return true },
   autopilot() { return autopilot() },
   setPhase(age) { night.setPhase(age); return true },
   suppressNightEnd(v) { window.__SUPPRESS_NIGHT_END__ = !!v; return true }, // screenshot rigs only
   takeBrew(id) { return world.takeBrew(id) },
+  // — co-op test surface (Part 5 / 12.1 M7) —
+  hostNight(name) { return net.host(name) },
+  joinNight(code, name) { return net.join(code, name) },
+  leaveNight() { net.leave(); return true },
+  netDebug() {
+    return {
+      role: net.role, code: net.code, myId: net.myId, peers: net.peerCount,
+      roster: [...net.roster].map(([id, r]) => ({ id, ...r })),
+      remotes: [...net.remotes].map(([id, rp]) => ({
+        id, name: rp.name, action: rp.action, fading: rp.fading > 0,
+        pos: rp.pos.toArray().map((v) => +v.toFixed(2)),
+        visible: rp.rig.group.visible, scale: +rp.rig.group.scale.x.toFixed(2),
+      })),
+      channeling: [...net.channeling],
+      log: net.log,
+    }
+  },
+  momentsDebug() {
+    return {
+      done: [...moments.done],
+      log: moments.log,
+      glyphs: world.ruinsGlyphs?.map((g) => ({ x: +g.x.toFixed(1), z: +g.z.toFixed(1), occupied: !!g.occupied, visible: g.mesh.visible, lit: +g.lit.toFixed(2) })),
+      beamT: +moments.beamT.toFixed(2),
+      gargoyleWaveT: +(npcs.gargoyle?.waveT ?? 0).toFixed(2),
+      gargoylePos: npcs.gargoyle ? npcs.gargoyle.rig.group.position.toArray().map((v) => +v.toFixed(1)) : null,
+      benchPos: world.benchPos.toArray().map((v) => +v.toFixed(1)),
+      thronePos: world.thronePos ? world.thronePos.toArray().map((v) => +v.toFixed(1)) : null,
+      catState: npcs.ghostCat?.state,
+      chickenStates: npcs.chickens.map((c) => c.state),
+      rainSoftT: +ambience.rainSoftT.toFixed(1),
+    }
+  },
+  netChan(id, on) { net.request({ ev: 'chan', id, on }); return true }, // co-op gate only
   get beats() { return progress.beats },
   get nightLog() { return nightflow.log },
   get stirLog() { return npcs.stirLog ?? [] },
@@ -324,7 +466,9 @@ window.__MOONREST__ = {
       fogFar: +zoneLight.fogFar.toFixed(1),
       nightT: +night.minutes.toFixed(2),
       kindled: world.kindledIds,
-      peers: 0,
+      peers: net.peerCount,
+      netRole: net.role,
+      roomCode: net.code,
       audio: {
         started: audio.started,
         layers: audio.state.layers,

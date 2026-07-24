@@ -174,3 +174,22 @@ docs/build/PLAN.md, then the tail of this file. Never re-derive the plan from me
 - Test rigs that mutate global state (kindle-all) can trip real narrative triggers — every irreversible game event needs a rig-suppression path that the shipped game never sets.
 - Delayed subtitles (setTimeout) escape a clear-current-subtitle call; route delayed says through the HUD so one clear cancels the queue too.
 - Draw-call work that pays: distance-culled zone groups first (free wins), then per-material merges inside groups; keep dynamic meshes out via explicit markers, never by name matching.
+
+## 2026-07-24 ~09:10 UTC — M7 COMPLETE: co-op (the night is shareable)
+
+**Done:**
+- `net/coop.js`: PeerJS host-authority — 4-letter wordless-safe room codes (`moonrest-<code>` peer id), max 4 players, reliable JSON channel; 10Hz transforms {pos,yaw,gait,emote} with 150ms hermite interpolation buffer + >3m snap; host-relayed validated events; 5s nightT heartbeat with client slew; late-join full snapshot (kindled/nightT/phase/cat/moments, quiet kindles — no chime replay); disconnect → firefly fade, removed after 10s; host loss → "the night drifts on without its keeper" + soft return; `pagehide` clean-leave so peers see fades immediately. Names: sanitized 6-char, rendered as PROCEDURAL stroked rune plates (deterministic per letter, no font dependence).
+- RemotePlayer: full wizard rig per peer (tint by join order, local rig swaps on join), staff flame/halo registered as real world lights, stride-synced quieter footsteps, gait/emote-driven anim via shared anim.js.
+- `systems/moments.js`: all 8 co-op moments, host-detected + event-broadcast + deterministically applied — bench shared rest (2+, rain softens/warm vignette/hat nods), chicken head-riding (follow 8s), Nib constellation full-bright, ruins well glyphs (2–4 scale to lobby, per-player brightening, full lobby → sky beam), gargoyle wave-back (waves one wing, snaps to statue), throne lullaby (procedural music box, cat present), Mosswood arch (deep bell + Gatewalkers arch-stone), keep brazier all-channel law (2.5s completion grace window — each keeper's stop precedes their own request).
+- Brazier law host-side validation with deny subtitle; `world.kindle(id, {quiet})`; ghost cat host-owned (rides the host transform, clients glide); sit → candle-warmth vignette (5.3).
+- Gates: `scripts/coopcheck.mjs` (17 asserts, two/three real WebRTC contexts against a local PeerServer — D12) and `scripts/momentscheck.mjs` (12 asserts, solo lobby).
+
+**Evidence read:** COOP CHECK PASS 17/17 (code format, join id, roster, transform ≤1.5m, emote, synced kindle, bench sync + rainSoftT=45, clock slew 30.08, both-perspective PNGs — READ: two wizards + rune plates + kindled lamp from each side, brazier deny + all-channel success, late-join snapshot, lobby of 3, disconnect fade, host loss, consoles clean). MOMENTS CHECK PASS 12/12. Regressions rerun: feel 12/12, kindle 13/13, traverse 11/11, autopilot 14/14 (trinkets now 9 — arch-stone earned en route, D14), hue 8/8, perf 97 calls / 80.4k tris / 208KB gz (peerjs +31KB).
+
+**Next action:** M8 — studio shell: title screen (Park diorama + IM Fell English/Alegreya, Host/Join UI — D15), pause menu (counters, trinket shelf, room code), settings (video/audio/controls/a11y → localStorage), 4 Memory modes (N64/PS1/VHS/Clean), photo mode, transitions, error boundary, meta/OG/README.
+
+**Learnings:**
+- WebRTC teardown detection is slow on abrupt page close — a `pagehide` clean-goodbye makes disconnects feel instant; keep the timeout path as fallback.
+- Simultaneity validation ("all must be channeling") needs a grace window: each client's own stop message arrives before its completion request.
+- The peerjs CLI binds `::` (IPv6) — use the `PeerServer` API with an explicit IPv4 host in containers.
+- pkill -f from a compound shell command can match the invoking shell itself; run cleanup separately.

@@ -244,7 +244,9 @@ export class World {
   }
   get brewCount() { return this.brews?.filter((b) => b.taken).length ?? 0 }
 
-  kindle(id) {
+  kindle(id, { quiet = false } = {}) {
+    // quiet: late-join snapshot application (Part 5.1) — light the world without
+    // chimes/embers/stirs replaying a night that already happened
     const light = this.lights.find((l) => l.id === id)
     if (!light || light.kindled) return false
     light.kindled = true
@@ -254,7 +256,7 @@ export class World {
     if (p.halo) { p.halo.visible = true; p.halo.material.uniforms.uOpacity.value = 0 }
     if (p.pool) { p.pool.visible = true; p.pool.material.uniforms.uOpacity.value = 0 }
     if (p.glass) { p.glass.visible = true; p.glass.material.uniforms.uOpacity.value = 0 }
-    if (this.onKindle) this.onKindle(light)
+    if (!quiet && this.onKindle) this.onKindle(light)
     return true
   }
 
@@ -879,6 +881,31 @@ export class World {
     wellWater.visible = false
     this.waterMats.push({ tex: wellWaterTex, sx: 0.006, sy: 0.004 })
     this.registerLight('ruins-moonwell', 'ruins', { glass: wellWater, halo: wellGlow, flame: null, pool: null, flameH: 0.85 }, wx2, wz2, heightAt(wx2, wz2))
+    // co-op floor glyphs (Part 3.2.4): 2–4 shown scaled to lobby (Moments decides
+    // visibility); stand on one to brighten the well, full lobby → sky beam
+    this.ruinsGlyphs = []
+    const glyphTex = TEX.ring({ name: 'wellglyph', color: '#9fe8e8' })
+    for (let gi = 0; gi < 4; gi++) {
+      const ga = Math.PI * 0.25 + gi * (Math.PI * 0.5)
+      const gxx = wx2 + Math.cos(ga) * 4.6, gzz = wz2 + Math.sin(ga) * 4.6
+      const gm = retroMaterial({ map: glyphTex, transparent: true, depthWrite: false, opacity: 0.2, emissive: '#123434' })
+      gm.blending = THREE.AdditiveBlending
+      const gMesh = new THREE.Mesh(new THREE.CircleGeometry(0.85, 12), gm)
+      ensureVertexColors(gMesh.geometry)
+      gMesh.rotation.x = -Math.PI / 2
+      gMesh.position.set(gxx, heightAt(gxx, gzz) + 0.06, gzz)
+      this.scene.add(gMesh)
+      this.ruinsGlyphs.push({ x: gxx, z: gzz, mesh: gMesh, lit: 0 })
+    }
+    // the sky beam over the well (hidden until the full lobby stands the glyphs)
+    const beamMat = retroMaterial({ map: TEX.glowDot({ color: '#bff4f0' }), transparent: true, depthWrite: false, opacity: 0, noFog: true })
+    beamMat.blending = THREE.AdditiveBlending
+    beamMat.side = THREE.DoubleSide
+    this.wellBeam = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 2.0, 60, 10, 1, true), beamMat)
+    ensureVertexColors(this.wellBeam.geometry)
+    this.wellBeam.position.set(wx2, heightAt(wx2, wz2) + 30, wz2)
+    this.wellBeam.visible = false
+    this.scene.add(this.wellBeam)
     // fallen drums
     for (let i = 0; i < 5; i++) {
       const dx = rng.range(-130, -92), dz = rng.range(-10, 12)
@@ -1176,6 +1203,8 @@ export class World {
     this.scene.add(throne)
     this.hallMeshes.push(throne)
     this.colliders.push({ x: cx, z: zB - 3, r: 2.4, h: 2 })
+    // where a keeper sits for the lullaby moment (Part 3.2.6): the dais foot
+    this.thronePos = new THREE.Vector3(cx, y0, zB - 5.6)
     // 3 pre-lit chandeliers (rings of candle glow, always on)
     const mats = sharedMats()
     for (let i = 0; i < 3; i++) {

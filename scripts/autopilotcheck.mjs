@@ -42,7 +42,7 @@ const st1 = await page.evaluate(() => window.__MOONREST__.state)
 check('night ended (keep brazier finale)', st1.nightEnded === true, `nightEnded=${st1.nightEnded}`)
 check('all 37 lights kindled', st1.kindled.length === 37, `${st1.kindled.length}/37`)
 check('all 12 brews collected', st1.brews === 12, `${st1.brews}/12`)
-check('8 zone trinkets granted', st1.trinketCount === 8, `${st1.trinketCount}`)
+check('8 zone trinkets + Gatewalkers arch-stone granted', st1.trinketCount === 9, `${st1.trinketCount}`) // the route walks under the arch
 
 const beats = await page.evaluate(() => window.__MOONREST__.beats)
 const stirs = await page.evaluate(() => window.__MOONREST__.stirLog)
@@ -67,7 +67,7 @@ await page.waitForTimeout(1500)
 const st2 = await page.evaluate(() => window.__MOONREST__.state)
 check('new night: lights reset cold', st2.kindled.length === 0, `${st2.kindled.length}`)
 check('persist: brews stay collected (12)', st2.brews === 12, `${st2.brews}`)
-check('persist: trinkets survive (8)', st2.trinketCount === 8, `${st2.trinketCount}`)
+check('persist: trinkets survive (9)', st2.trinketCount === 9, `${st2.trinketCount}`)
 
 check('console clean', issues.length === 0, issues.slice(0, 3).join(' | '))
 console.log(fails === 0 ? 'AUTOPILOT CHECK PASS' : `AUTOPILOT CHECK: ${fails} FAILURES`)

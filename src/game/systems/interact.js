@@ -17,7 +17,13 @@ export class InteractSystem {
     this.channeling = false
     this.channelSound = null
     this.log = [] // for verification: {id, event, t}
+    // co-op indirection (Part 5.2): kindles route through the authority;
+    // channel start/stop is announced so the host can validate the brazier law
+    this.requestKindle = (id) => this.world.kindle(id)
+    this.onChannelState = null
   }
+
+  get channelTarget() { return this.channeling ? this.target?.id ?? null : null }
 
   losBlocked(x1, z1, x2, z2, y) {
     // sample the segment against colliders (skip endpoints' own space)
@@ -68,6 +74,7 @@ export class InteractSystem {
       if (!stillValid) {
         // interrupted
         this.log.push({ id: this.target?.id, event: 'channel-interrupt', t: this.channel })
+        this.onChannelState?.(this.target?.id, false)
         this.channeling = false
         this.channel = 0
         this.channelSound?.stop(false)
@@ -84,7 +91,8 @@ export class InteractSystem {
         this.channelSound?.stop(true)
         this.channelSound = null
         this.player.setAction(null)
-        this.world.kindle(this.target.id)
+        this.onChannelState?.(this.target.id, false)
+        this.requestKindle(this.target.id)
         this.log.push({ id: this.target.id, event: 'kindled' })
         this.hud.setProgress(0)
       }
@@ -95,6 +103,7 @@ export class InteractSystem {
       this.player.setAction('channel')
       this.channelSound = kindleChannelStart()
       this.log.push({ id: best.id, event: 'channel-start' })
+      this.onChannelState?.(best.id, true)
     }
   }
 }
