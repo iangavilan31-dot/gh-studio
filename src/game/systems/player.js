@@ -104,7 +104,14 @@ export class PlayerController {
     if (!this.grounded) {
       this.vy += GRAV * dt
       this.pos.y += this.vy * dt
-      if (this.pos.y <= groundY) { this.pos.y = groundY; this.grounded = true; this.vy = 0 }
+      if (this.pos.y <= groundY) {
+        // landing settle (C.1): the body compresses for a beat and the dust
+        // acknowledges the ground — weight, not teleportation
+        const impact = Math.min(1, -this.vy / 5)
+        this.pos.y = groundY; this.grounded = true; this.vy = 0
+        this.anim.landT = 0.38 * (0.5 + 0.5 * impact)
+        this.onLand?.(impact)
+      }
     } else {
       // slope check: >40° slides gently
       const g = 0.5

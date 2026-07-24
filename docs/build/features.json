@@ -1092,7 +1092,8 @@
     "reveal at each zone entrance in capture",
     "no collision snap in doorways"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "scripts/revealprobe.mjs PASS (docs/build/revealprobe.json): village walk-in fov 55->59.6->55, isle walk-in fov peak 59.6 at zone flip t=13.1s; hall doorway crossing camDist oscillation flips=0. LANDMARKS covers all 7 zones (rooftops+hall added, reviewer D#9)."
   },
   {
    "id": "POLISH-D1",
@@ -1123,7 +1124,8 @@
     "headphone-pan capture evidence",
     "judge audio >= 8.5"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "scripts/pancheck.mjs PASS (docs/build/pancheck.json): bell pan +1 west / -1 east of the village, gain 0.035@77m -> 0.395@13m; organ pan 0 ahead / -1 at 90deg turn, heard at 46m (inside fog, before seen). Judge audio 8.6 >= 8.5 at pass 2."
   },
   {
    "id": "POLISH-K1",

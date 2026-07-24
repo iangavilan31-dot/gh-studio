@@ -590,3 +590,45 @@ export function white() {
     return toTexture(c)
   })
 }
+
+// Scratched marks (PRESTIGE P.4 human fingerprints): initials under a bench,
+// a stones-game tally by a gate — thin pale gouges on a transparent card.
+export function scratchTag({ name = 'scratchTag', kind = 'initials', color = '#cfc8b4' } = {}) {
+  return make(name, (rng) => {
+    const c = canvasOf(64, (ctx) => {
+      ctx.clearRect(0, 0, 64, 64)
+      ctx.strokeStyle = color
+      ctx.lineWidth = 2.4
+      ctx.lineCap = 'round'
+      const jig = (x, y) => [x + rng.range(-1.5, 1.5), y + rng.range(-1.5, 1.5)]
+      const stroke = (pts) => {
+        ctx.beginPath()
+        ctx.moveTo(...jig(pts[0][0], pts[0][1]))
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(...jig(pts[i][0], pts[i][1]))
+        ctx.stroke()
+      }
+      if (kind === 'initials') {
+        // "N + B", scratched by somebody young, long ago
+        ctx.globalAlpha = 0.85
+        stroke([[8, 44], [8, 20], [20, 44], [20, 20]])                 // N
+        stroke([[28, 32], [38, 32]]); stroke([[33, 27], [33, 37]])     // +
+        stroke([[46, 44], [46, 20], [55, 24], [46, 31], [56, 38], [46, 44]]) // B
+        ctx.globalAlpha = 0.5
+        stroke([[24, 52], [32, 58], [40, 50]])                         // the underline flourish
+      } else {
+        // stones-game tally: groups of four gates and a slash, uneven
+        ctx.globalAlpha = 0.8
+        for (let g = 0; g < 3; g++) {
+          const x0 = 8 + g * 18
+          for (let i = 0; i < 4; i++) stroke([[x0 + i * 3.4, 18], [x0 + i * 3.4, 34]])
+          if (g < 2) stroke([[x0 - 2, 32], [x0 + 12, 20]])
+        }
+        stroke([[10, 44], [22, 44]]) // the score line nobody finished
+      }
+      ctx.globalAlpha = 1
+    })
+    const t = toTexture(c, { mips: false })
+    t.wrapS = t.wrapT = THREE.ClampToEdgeWrapping
+    return t
+  })
+}

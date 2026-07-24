@@ -81,6 +81,10 @@ export class OrbitCamera {
       }
     }
 
+    // C.1 jog lag: the camera trails an extra beat at a run and eases back
+    // when the keeper slows — speed you can feel in the frame
+    this.jogLag = (this.jogLag ?? 0) + ((jogging ? 0.45 : 0) - (this.jogLag ?? 0)) * (1 - Math.exp(-dt / 0.5))
+
     // C.2 reveal: eased bell over the duration — the FRAME drifts toward the
     // landmark as a presentation-only yaw offset (movement basis untouched,
     // so control is influenced, never taken), distance and FOV widen
@@ -121,7 +125,7 @@ export class OrbitCamera {
       -Math.sin(this.smoothPitch),
       Math.cos(viewYaw) * Math.cos(this.smoothPitch)
     )
-    const wantDist = this.dist + revealAmt * 2.1
+    const wantDist = this.dist + revealAmt * 2.1 + this.jogLag
     _desired.copy(_pivot).addScaledVector(_dir, wantDist)
     _desired.y = Math.max(_desired.y, this.world.heightAt(_desired.x, _desired.z) + 0.3)
 

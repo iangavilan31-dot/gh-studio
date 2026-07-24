@@ -35,6 +35,8 @@ export function advanceAnim(st, dt, speed, airborne) {
   const moving = speed > 0.05
   st.moveBlend = damp(st.moveBlend, moving ? 1 : 0, 10, dt)
   st.jogBlend = damp(st.jogBlend, speed > 2.2 ? 1 : 0, 8, dt)
+  if (st.landT > 0) st.landT = Math.max(0, st.landT - dt)   // landing settle decay
+  if (st.nod > 0) st.nod = Math.max(0, st.nod - dt / 1.1)   // proud-nod decay
   // C.1: careful downhill steps — the stride shortens on descents
   let stride = lerp(1.1, 1.5, st.jogBlend)
   if ((st.slope ?? 0) < -0.16) stride *= 0.86
@@ -51,7 +53,9 @@ export function applyPose(rig, st, time) {
   // — root bob: idle breathe + gait bounce —
   const gaitBob = Math.abs(Math.sin(ph)) * lerp(0.02, 0.05, j) * m
   const hopY = st.airborne ? 0.04 : 0
-  b.hips.position.y = 0.46 + breathe * 0.008 * (1 - m) + gaitBob + hopY
+  // landing settle: instant compression that eases back out (C.1 weight)
+  const landF = !st.action && st.landT > 0 ? (st.landT / 0.38) ** 2 : 0
+  b.hips.position.y = 0.46 + breathe * 0.008 * (1 - m) + gaitBob + hopY - landF * 0.06
 
   // C.1: visible acceleration through body lean; letting go of speed makes
   // the robe and hat settle a beat later (the body stops, the cloth doesn't)
@@ -60,7 +64,7 @@ export function applyPose(rig, st, time) {
 
   // — spine lean: forward with speed + acceleration + uphill effort —
   const uphill = Math.max(0, st.slope ?? 0) * 0.32 * m
-  b.spine.rotation.x = lerp(0, 0.14 + j * 0.1, m) + lean + uphill
+  b.spine.rotation.x = lerp(0, 0.14 + j * 0.1, m) + lean + uphill + landF * 0.1
   b.spine.rotation.z = Math.sin(ph) * 0.045 * m + turnLean
   b.spine.rotation.y = Math.sin(ph) * 0.03 * m
 
@@ -71,18 +75,22 @@ export function applyPose(rig, st, time) {
   b.spine.rotation.z += idleShift * 0.03 * (1 - m)
 
   // — head: gentle counter-tilt, looks ahead; idle glances wander —
-  b.head.rotation.x = -b.spine.rotation.x * 0.5 + breathe * 0.015 * (1 - m)
+  // C.4 proud nod: one dip-and-return after a kindle streak
+  const nodF = (st.nod ?? 0) > 0 ? Math.sin((1 - st.nod) * Math.PI * 2) * 0.14 * st.nod : 0
+  b.head.rotation.x = -b.spine.rotation.x * 0.5 + breathe * 0.015 * (1 - m) + nodF
   b.head.rotation.z = -b.spine.rotation.z * 0.6
   b.head.rotation.y = idleShift * 0.14 + Math.sin(st.idleShiftT * 0.31) * 0.05 * (1 - m) + (st.headLook ?? 0)
 
   // — hat: counter-bobs the breathe; brim-flap while jogging; tip lags the lean —
+  // C.4: a mosswood gust tugs the brim and drags the beard for a moment
+  const gust = st.windGust ?? 0
   b.hat.position.y = 0.24 - breathe * 0.006 * (1 - m) - gaitBob * 0.35
-  b.hat.rotation.x = Math.sin(ph * 2) * 0.05 * j - lean * 0.8
-  b.hat.rotation.z = Math.sin(st.breatheT * 0.6) * 0.02 - turnLean * 0.7
+  b.hat.rotation.x = Math.sin(ph * 2) * 0.05 * j - lean * 0.8 + Math.sin(st.breatheT * 11) * 0.055 * gust
+  b.hat.rotation.z = Math.sin(st.breatheT * 0.6) * 0.02 - turnLean * 0.7 + (0.1 + Math.sin(st.breatheT * 7.3) * 0.05) * gust
 
   // — beard sway (lags the body, drags on acceleration) —
   b.beard.rotation.x = 0.06 + Math.sin(ph - 0.9) * 0.07 * m + breathe * 0.01 - lean * 1.1
-  b.beard.rotation.z = Math.sin(ph * 0.5 + 0.4) * 0.03 * m
+  b.beard.rotation.z = Math.sin(ph * 0.5 + 0.4) * 0.03 * m + Math.sin(st.breatheT * 9) * 0.04 * gust
 
   // — legs: stride swing —
   const legAmp = lerp(0.5, 0.85, j) * m

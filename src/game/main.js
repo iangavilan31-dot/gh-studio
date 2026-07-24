@@ -23,6 +23,7 @@ import { Moments } from './systems/moments.js'
 import { Net } from './net/coop.js'
 import { Shell, loadSettings } from './ui/shell.js'
 import { audio } from './audio/engine.js'
+import { cues } from './audio/cues.js'
 import { score } from './audio/score.js'
 import { beds } from './audio/beds.js'
 import { footstep, kindleChime } from './audio/sfx.js'
@@ -90,6 +91,21 @@ const nightflow = new NightFlow(night, world, hud, camera, {
 // footsteps synced to stride (Part 4.2) + the lantern glow pulses with steps (4.1)
 let staffPulse = 0
 player.onFootstep = (surface, vol) => { footstep(surface, vol); staffPulse = Math.min(1, staffPulse + 0.55) }
+// C.1 landing: a soft thump and a puff of dust acknowledge the ground
+player.onLand = (impact) => {
+  footstep(player.surface, 0.5 + impact * 0.5)
+  const drng = worldRNG.fork('dust' + Math.round(elapsed * 10))
+  for (let i = 0; i < 5; i++) {
+    ambience.smoke.spawn({
+      pos: new THREE.Vector3(player.pos.x + drng.range(-0.2, 0.2), player.pos.y + 0.06, player.pos.z + drng.range(-0.2, 0.2)),
+      vel: new THREE.Vector3(drng.range(-0.5, 0.5), drng.range(0.2, 0.5), drng.range(-0.5, 0.5)),
+      maxLife: drng.range(0.4, 0.8),
+      size: drng.range(0.1, 0.2) * (0.6 + impact * 0.6),
+      alpha: 0.28,
+      seed: drng.next(),
+    })
+  }
+}
 
 // ——— emote wheel (Part 4.2): hold Tab/Y, aim, release ———
 let wheelOpen = false
@@ -289,7 +305,10 @@ function updateIntro(dt) {
   // beats: high moon gaze → descend through the fog to the cold lamp →
   // Beldam asleep → the player's lantern flares → pull out to the orbit
   const beats = [
-    { a: 0.0, b: 7.0, p0: [-8, 9.5, -30], p1: [-5, 7.5, -27], l0: [32, 32, -22], l1: [30, 26, -21] },
+    // drift up to the moon…
+    { a: 0.0, b: 4.6, p0: [-8, 9.5, -30], p1: [-5.6, 7.9, -27.6], l0: [32, 32, -22], l1: [30.4, 27.2, -21.2] },
+    // …and HOLD on it — a breath, not a pan (the reveal needs a beat to land)
+    { a: 4.6, b: 7.0, p0: [-5.6, 7.9, -27.6], p1: [-5, 7.5, -27], l0: [30.4, 27.2, -21.2], l1: [30, 26, -21] },
     { a: 7.0, b: 12.0, p0: [-5, 7.5, -27], p1: [4.6, ty + 1.9, -14.8], l0: [30, 26, -21], l1: [4.2, ty + 2.5, -19.2] },
     { a: 12.0, b: 15.5, p0: [4.6, ty + 1.9, -14.8], p1: [3.1, ty + 1.5, -17.5], l0: [4.2, ty + 2.5, -19.2], l1: [1.6, ty + 1.3, -19.6] },
     { a: 15.5, b: 17.5, p0: [3.1, ty + 1.5, -17.5], p1: [4.5, ty + 1.45, -17.0], l0: [1.6, ty + 1.3, -19.6], l1: [2.6, ty + 1.15, -18.2] },
@@ -309,6 +328,14 @@ function updateIntro(dt) {
     }
   }
   if (t >= 15.8 && t < 17.5) staffPulse = Math.min(1, staffPulse + dt * 3) // the lantern ignites
+  if (!intro.embered && t >= 15.85) {
+    // ignition punch: one ember burst off the staff lantern the moment it takes
+    intro.embered = true
+    if (rig.staffLantern) {
+      rig.staffLantern.getWorldPosition(_iv)
+      emberBurst(embers, _iv.x, _iv.y, _iv.z, worldRNG.fork('introember'), 16)
+    }
+  }
   if (t >= 17.5) {
     // blend onto the live orbit so the menu fades in without a cut
     const f = ss(17.5, 19.5, t)
@@ -453,6 +480,7 @@ canvas.addEventListener('wheel', (e) => {
 const zoneKindles = (zone) => world.lights.filter((l) => l.zone === zone && l.kindled).length
 
 // kindle consequences: chime in zone key, ember burst, next music layer (6.1)
+let kindleStreak = 0, lastKindleT = -999
 world.onKindle = (light, remote) => {
   if (audio.started && !score.playing) score.start() // F.3: the first flame wakes the music
   if (!remote) {
@@ -460,6 +488,10 @@ world.onKindle = (light, remote) => {
     // across the map must not yank the local head or buzz the pad
     player.lookBack(light.x, light.z, 2.6)
     input.rumble(0.3, 0.6, 140) // controller ping (4.2) — no-op without a pad
+    // C.4 proud nod: the third lamp inside a minute earns a small dip of the head
+    kindleStreak = elapsed - lastKindleT < 60 ? kindleStreak + 1 : 1
+    lastKindleT = elapsed
+    if (kindleStreak >= 3) { player.anim.nod = 1; kindleStreak = 0 }
   }
   kindleChime(light.zone)
   emberBurst(embers, light.x, light.y, light.z, worldRNG.fork('embers' + light.id))
@@ -479,6 +511,7 @@ function bootAudio() {
   // only rain and wind. The first flame starts the score.
   if (world.kindledCount > 0) score.start()
   beds.start()
+  cues.start() // F.2: the bell and the organ take their places in the world
   beds.setZone(zoneLight.audioZone ?? 'park', 1)
   audio.setHallAcoustics(zoneLight.audioZone === 'hall')
 }
@@ -625,6 +658,12 @@ function tick() {
   if (!cinematic && mode !== 'title' && !photo.on) {
     world.applyWorldRules(player)
     zoneLight.update(player.pos.x, player.pos.z, dt, player.pos.y)
+    // C.4: a mosswood/foglands gust tugs the hat for a few seconds at a time
+    const gustEnv = Math.max(0, Math.sin(elapsed * 0.23) - 0.82) / 0.18
+    player.anim.windGust = (zoneLight.currentZoneId === 'mosswood' || zoneLight.currentZoneId === 'foglands')
+      ? gustEnv * (0.55 + 0.45 * Math.sin(elapsed * 1.7)) : 0
+    // F.2: positional landmark cues track the listener every frame
+    if (audio.started) cues.update(player.pos.x, player.pos.z, orbit.smoothYaw + (orbit.revealYawOff ?? 0))
     // music + ambience beds + room acoustics follow the atmosphere's zone
     if (zoneLight.audioZone !== score.zone && audio.started) {
       score.zone = zoneLight.audioZone
@@ -950,9 +989,12 @@ window.__MOONREST__ = {
         layers: audio.state.layers,
         muted: audio.state.muted,
         rms: audio.started ? { music: +audio.rms('music').toFixed(4), sfx: +audio.rms('sfx').toFixed(4), ambience: +audio.rms('ambience').toFixed(4) } : null,
+        cues: cues.started ? { bell: cues.bell?.debug, organ: cues.organ?.debug } : null, // F.2 pan/gain evidence
       },
       fps: Math.round(fps),
       fov: +camera.fov.toFixed(1),
+      camDist: +orbit.curDist.toFixed(2), // C.2 doorway-snap evidence
+
       brews: world.brewCount,
       trinketCount: progress.trinkets.length,
       moonPhase: +night.illum.toFixed(3),

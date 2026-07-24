@@ -39,14 +39,24 @@ Status per tell, with evidence. Open items carry to the next judge pass.
 - The moon's painted cross-glow is the only flare in the game ✓.
 
 ## P.4 The human fingerprint (one per zone, never referenced by any system)
-- Rooftops: **the odd sock** on the clothesline ✓ (implemented).
-- Park: initials scratched under the Long Bench — OPEN.
-- Village: chipped mug abandoned on the well — OPEN.
-- Ruins: a dropped dust-cloth folded too neatly by a column — OPEN.
-- Gloomspire: tally of games of stones scratched by the gatehouse — OPEN.
-- Hall: the Pale King's pressed-flower bookmark on the throne arm — OPEN.
-- Mosswood: a child-sized boot print set in old dried mud — OPEN.
-- Isle: a message bottle, corked, wedged in the cove rocks — OPEN.
+
+- Park: initials "N + B" scratched under the Long Bench seat (scratchTag
+  card, world.js buildPark) — PLACED.
+- Village: chipped mug on a stool by the bakery door (glazed teal, dark
+  rim notch; the well lives in the ruins, so the mug waits where the
+  baker left it) — PLACED.
+- Rooftops: the clothesline's lonely odd sock — PLACED (earlier cycle).
+- Ruins: a child's five-pebble tower balanced at a colonnade base
+  (replaces the dust-cloth idea; stone reads better at N64 texel scale)
+  — PLACED.
+- Gloomspire: stones-game tally scratched beside the gate (three gates of
+  four and an unfinished score line) — PLACED.
+- Hall: the Pale King's book on the dais with a pressed-flower bookmark
+  — PLACED.
+- Mosswood: a faded red ribbon tied around the south arch pillar, knot
+  still hanging (replaces the boot print; reads at distance) — PLACED.
+- Isle: a corked message bottle half-buried at the causeway landfall —
+  PLACED.
 
 ## P.5 Runtime tells
 - No console noise (hard-gated in every rig) ✓. No TODO/lorem in UI strings ✓.

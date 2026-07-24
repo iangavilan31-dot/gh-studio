@@ -431,6 +431,17 @@ export class World {
     this.place(benchLamp.group, 4.2, -19.2)
     this.registerLight('park-bench-lamp', 'park', benchLamp, 4.2, -19.2)
 
+    // P.4 fingerprint (park): initials scratched under the bench seat —
+    // somebody young, long before the lamps went cold
+    {
+      const tag = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.16),
+        retroMaterial({ map: TEX.scratchTag({ name: 'benchinitials', kind: 'initials' }), alphaTest: 0.3 }))
+      ensureVertexColors(tag.geometry, [0.9, 0.88, 0.8])
+      tag.position.set(2.3, heightAt(2, -19.6) + 0.3, -19.32)
+      tag.rotation.x = -0.3
+      this.scene.add(tag)
+    }
+
     for (const a of [Math.PI * 0.55, Math.PI * 1.25]) {
       const b = bench({})
       this.place(b, Math.cos(a) * 16, Math.sin(a) * 16, -a + Math.PI / 2)
@@ -632,6 +643,30 @@ export class World {
         geo.translate(wx2, baseH + rng.range(1.6, 2.6), faceZ)
         this.warmWindowGeos[rng.int(0, 2)].push(geo)
       }
+    }
+
+    // P.4 fingerprint (village): a chipped mug abandoned on a stool by the
+    // bakery door — the baker meant to come back for it
+    if (this.bakeryPos) {
+      const glaze = retroMaterial({ map: TEX.white() })
+      const stool = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 0.48, 7), mats.plank)
+      ensureVertexColors(stool.geometry, [0.55, 0.48, 0.4])
+      const mx = this.bakeryPos.x - 2.3, mz = this.bakeryPos.z + 4.55
+      stool.position.set(mx, this.bakeryPos.baseH + 0.24, mz)
+      this.scene.add(stool)
+      const mug = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.09, 8), glaze)
+      ensureVertexColors(mug.geometry, [0.34, 0.55, 0.54])
+      mug.position.set(mx + 0.03, this.bakeryPos.baseH + 0.48 + 0.045, mz)
+      this.scene.add(mug)
+      const handle = new THREE.Mesh(new THREE.TorusGeometry(0.032, 0.011, 5, 8, Math.PI), glaze)
+      ensureVertexColors(handle.geometry, [0.34, 0.55, 0.54])
+      handle.position.set(mx + 0.03 + 0.06, this.bakeryPos.baseH + 0.48 + 0.05, mz)
+      handle.rotation.z = -Math.PI / 2
+      this.scene.add(handle)
+      const chip = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.02, 0.02), glaze)
+      ensureVertexColors(chip.geometry, [0.16, 0.2, 0.2]) // the dark notch in the rim
+      chip.position.set(mx + 0.03 - 0.045, this.bakeryPos.baseH + 0.48 + 0.085, mz + 0.02)
+      this.scene.add(chip)
     }
 
     // the spire tower with a handless clock face (landmark), east end
@@ -1137,6 +1172,24 @@ export class World {
     owl.position.set(-99, heightAt(-99, -9) - 0.25, -9) // half-buried
     owl.rotation.z = 0.35
     this.scene.add(owl)
+    // P.4 fingerprint (ruins): a child's pebble tower at a colonnade base —
+    // five stones balanced in a place nobody has played in a long time
+    {
+      const pebMat = retroMaterial({ map: TEX.stoneBlock({ name: 'pebbletower', base: '#5a5462' }) })
+      let py = heightAt(-104.6, 3.4)
+      const prng = worldRNG.fork('pebbletower')
+      for (let i = 0; i < 5; i++) {
+        const r = 0.09 - i * 0.014
+        const peb = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), pebMat)
+        ensureVertexColors(peb.geometry, [0.72 + i * 0.03, 0.7 + i * 0.03, 0.76])
+        peb.scale.y = 0.7
+        peb.position.set(-104.6 + prng.range(-0.012, 0.012), py + r * 0.7, 3.4 + prng.range(-0.012, 0.012))
+        peb.rotation.y = prng.range(0, Math.PI)
+        this.scene.add(peb)
+        py += r * 1.15
+      }
+    }
+
     this.poses.ruins = { pos: [-91, heightAt(-91, 2.5) + 1.6, 2.5], look: [-132, heightAt(-132, 0) + 3.5, 0], minute: 29 }
   }
 
@@ -1165,6 +1218,17 @@ export class World {
     ensureVertexColors(keep.geometry)
     keep.position.set(cx, heightAt(cx, cz) + 6, cz + 2)
     this.scene.add(keep)
+
+    // P.4 fingerprint (gloomspire): a stones-game tally scratched beside the
+    // gate — the watch played to pass the years, and nobody kept the score
+    {
+      const tally = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5),
+        retroMaterial({ map: TEX.scratchTag({ name: 'gatetally', kind: 'tally', color: '#9a9284' }), alphaTest: 0.3 }))
+      ensureVertexColors(tally.geometry, [0.85, 0.82, 0.75])
+      tally.position.set(cx - 3.4, heightAt(cx, cz - 3) + 1.35, cz - 3.03)
+      tally.rotation.y = Math.PI
+      this.scene.add(tally)
+    }
     this.addAABB(cx - 8, cx + 8, cz - 3, cz + 7, 12, heightAt(cx, cz))
     const towerDefs = [[cx - 7, cz - 2, 15], [cx + 7, cz - 2, 13], [cx - 6.5, cz + 7, 18]] // keep the door corridor clear
     for (const [tx, tz, th] of towerDefs) {
@@ -1411,6 +1475,21 @@ export class World {
         this.scene.add(pool)
       }
     }
+    // P.4 fingerprint (hall): the Pale King's bookmark — a pressed flower in
+    // a small book left on the dais, marking a page he never finished
+    {
+      const book = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.035, 0.12), retroMaterial({ map: TEX.plank({ name: 'kingbook' }) }))
+      ensureVertexColors(book.geometry, [0.42, 0.3, 0.26])
+      book.position.set(cx + 1.05, y0 + 1.02, zB - 3.1)
+      book.rotation.y = 0.5
+      this.scene.add(book)
+      const flower = new THREE.Mesh(new THREE.CircleGeometry(0.045, 5), retroMaterial({ map: TEX.white() }))
+      ensureVertexColors(flower.geometry, [0.85, 0.6, 0.68]) // pressed pale pink
+      flower.position.set(cx + 1.05 + 0.07, y0 + 1.04, zB - 3.1 - 0.05)
+      flower.rotation.x = -Math.PI / 2
+      this.scene.add(flower)
+    }
+
     // where a keeper sits for the lullaby moment (Part 3.2.6): the dais foot
     this.thronePos = new THREE.Vector3(cx, y0, zB - 5.6)
     // 3 pre-lit chandeliers (rings of candle glow, always on)
@@ -1464,6 +1543,21 @@ export class World {
       pillar.position.set(ax, heightAt(ax, az + sz) + 3.5, az + sz)
       this.scene.add(pillar)
       this.colliders.push({ x: ax, z: az + sz, r: 1.1, h: 7 })
+    }
+    // P.4 fingerprint (mosswood): a faded ribbon tied around the south arch
+    // pillar with a hanging knot — someone marked the way out, once
+    {
+      const ribMat = retroMaterial({ map: TEX.white() })
+      const belt = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.09, 1.72), ribMat)
+      ensureVertexColors(belt.geometry, [0.56, 0.24, 0.22])
+      belt.position.set(ax, heightAt(ax, az - 3) + 1.3, az - 3)
+      belt.rotation.y = 0.06
+      this.scene.add(belt)
+      const knot = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.34, 0.025), ribMat)
+      ensureVertexColors(knot.geometry, [0.5, 0.21, 0.2])
+      knot.position.set(ax - 0.5, heightAt(ax, az - 3) + 1.1, az - 3 - 0.88)
+      knot.rotation.z = 0.18
+      this.scene.add(knot)
     }
     const archTop = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.7, 6, 10, Math.PI), mossStone)
     ensureVertexColors(archTop.geometry)
@@ -1620,6 +1714,24 @@ export class World {
 
     // across the water (Part 3.2.8): on the causeway itself — lamp chain ahead,
     // sea flanking, keep beyond, moon high in frame
+    // P.4 fingerprint (isle): a corked message bottle half-buried where the
+    // causeway meets the shore — never opened, never sent
+    {
+      const glassMat = retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.82 })
+      const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.24, 8), glassMat)
+      ensureVertexColors(bottle.geometry, [0.4, 0.62, 0.56])
+      const bx = 1.3, bz = -133.6
+      const by = heightAt(bx, bz)
+      bottle.position.set(bx, by + 0.05, bz)
+      bottle.rotation.set(1.35, 0, 0.5)
+      this.scene.add(bottle)
+      const cork = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.032, 0.05, 6), retroMaterial({ map: TEX.white() }))
+      ensureVertexColors(cork.geometry, [0.56, 0.44, 0.3])
+      cork.position.set(bx + Math.sin(0.5) * 0.13, by + 0.05 + Math.cos(1.35) * 0.14, bz - Math.sin(1.35) * 0.13)
+      cork.rotation.set(1.35, 0, 0.5)
+      this.scene.add(cork)
+    }
+
     this.poses.isle = { pos: [2.2, 2.3, -86], look: [-20, kBase + 13, -152], minute: 37 }
     // sea view for the water/moon-streak evidence (m5-water)
     this.poses.sea = { pos: [1.5, 2.1, -85], look: [-40, 1.2, -111], minute: 37 }
