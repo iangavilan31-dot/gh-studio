@@ -54,3 +54,10 @@ the M9 judges flag it, add per-gap fall-through then.
 among 5 cold lights; 8 individual objectives would make the zone 9. Read the intent
 as 5 objectives (4 causeway lanterns arranged as 2 flanking pairs + brazier), keeping
 the world total at the spec's 37.
+
+## D9 — Sleeping sailors: hammocks at the cove instead of inside the keep
+**Risk: LOW.** Part 3.2.8 puts hammock sailors "inside the keep"; the blockout keep
+is a solid cylinder (no interior). Two hammocks (posts + sagging cloth + blanket
+lump + snore-z) sleep under the stars at the cove instead — same beat (sleeping
+sailors near the keep-top finale), zero extra interior geometry. If M9 judges want
+the interior, hollowing the keep is a contained change.

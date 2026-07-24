@@ -36,6 +36,10 @@ const VERT = /* glsl */ `
     pos.x += sin(uTime * 0.9 + position.y * 0.35 + position.x * 0.1) * w;
     pos.z += cos(uTime * 0.7 + position.x * 0.3) * w * 0.6;
     #endif
+    #ifdef USE_RIPPLE
+    // slow water swell (Part 8.7)
+    pos.z += (sin(uTime * 0.9 + position.x * 0.18) + cos(uTime * 0.7 + position.y * 0.22)) * 0.07;
+    #endif
     vec4 mv = modelViewMatrix * vec4(pos, 1.0);
     vFogDepth = -mv.z;
     vec3 wn = normalize(mat3(modelMatrix) * normal);
@@ -101,6 +105,7 @@ export function retroMaterial({
   if (hemi) defines.USE_HEMI = ''
   if (wind > 0) defines.USE_WIND = ''
   if (noFog) defines.NO_FOG = ''
+  if (arguments[0]?.ripple) defines.USE_RIPPLE = ''
   const mat = new THREE.ShaderMaterial({
     vertexShader: VERT,
     fragmentShader: FRAG,

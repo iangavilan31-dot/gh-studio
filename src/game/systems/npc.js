@@ -9,11 +9,14 @@ import * as TEX from '../art/textures.js'
 import { worldRNG } from '../core/rng.js'
 import { applyPose, makeAnimState } from './anim.js'
 import { cluck, snore } from '../audio/sfx.js'
+import { sharedMats } from '../art/meshes.js'
 
 function M(geo, mat, tint) {
   ensureVertexColors(geo, tint)
   return new THREE.Mesh(geo, mat)
 }
+
+function sharedNpcMats() { return sharedMats() }
 
 // ——— Chicken: the most load-bearing ~200 triangles in the game (7.2) ———
 export function buildChicken() {
@@ -125,6 +128,178 @@ export function buildGnome() {
   return { group: g, hatBone }
 }
 
+// Shared ghost material: translucent, softly self-lit, never scary (Rule 10).
+function ghostMaterial(opacity = 0.38) {
+  return retroMaterial({ map: TEX.white(), transparent: true, opacity, depthWrite: false, emissive: '#16282e' })
+}
+
+// ——— The Curator: translucent Highborne ghost, drifting her patrol ———
+export function buildCurator() {
+  const mat = ghostMaterial(0.4)
+  const g = new THREE.Group()
+  const robePts = []
+  for (const [r, y] of [[0.34, 0], [0.3, 0.35], [0.22, 0.8], [0.2, 1.1], [0.13, 1.35]]) robePts.push(new THREE.Vector2(r, y))
+  const robe = M(new THREE.LatheGeometry(robePts, 9), mat, [0.6, 0.85, 0.9])
+  g.add(robe)
+  const head = M(new THREE.SphereGeometry(0.14, 8, 6), mat, [0.7, 0.9, 0.95])
+  head.position.y = 1.52
+  g.add(head)
+  const hair = M(new THREE.ConeGeometry(0.15, 0.5, 7), mat, [0.5, 0.8, 0.85])
+  hair.rotation.x = Math.PI
+  hair.position.set(0, 1.45, -0.1)
+  g.add(hair)
+  const armBoneL = new THREE.Group(); armBoneL.position.set(-0.2, 1.15, 0); g.add(armBoneL)
+  const armBoneR = new THREE.Group(); armBoneR.position.set(0.2, 1.15, 0); g.add(armBoneR)
+  for (const [bone, sx] of [[armBoneL, -1], [armBoneR, 1]]) {
+    const arm = M(new THREE.CylinderGeometry(0.045, 0.055, 0.5, 6), mat, [0.6, 0.85, 0.9])
+    arm.position.y = -0.25
+    bone.add(arm)
+  }
+  const spine = g // bow by rotating the whole drift body
+  return { group: g, armL: armBoneL, armR: armBoneR, spine }
+}
+
+// ——— The Pale King: asleep on his throne, crown tilted ———
+export function buildPaleKing() {
+  const mat = ghostMaterial(0.42)
+  const g = new THREE.Group()
+  const robePts = []
+  for (const [r, y] of [[0.4, 0], [0.36, 0.3], [0.3, 0.6], [0.24, 0.85]]) robePts.push(new THREE.Vector2(r, y))
+  const body = M(new THREE.LatheGeometry(robePts, 9), mat, [0.75, 0.78, 0.85])
+  g.add(body)
+  const head = M(new THREE.SphereGeometry(0.16, 8, 6), mat, [0.8, 0.82, 0.88])
+  head.position.y = 1.0
+  g.add(head)
+  const beard = M(new THREE.ConeGeometry(0.12, 0.35, 6), mat, [0.85, 0.87, 0.92])
+  beard.rotation.x = Math.PI
+  beard.scale.z = 0.6
+  beard.position.set(0, 0.82, 0.1)
+  g.add(beard)
+  // tilted crown — gold must not be crushed by the dark (plain ambient + ember)
+  const crownMat = retroMaterial({ map: TEX.white(), emissive: '#2a1e06' })
+  const crown = new THREE.Group()
+  const band = M(new THREE.CylinderGeometry(0.13, 0.13, 0.07, 8, 1, true), crownMat, [0.85, 0.7, 0.3])
+  crown.add(band)
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2
+    const spike = M(new THREE.ConeGeometry(0.025, 0.09, 4), crownMat, [0.85, 0.7, 0.3])
+    spike.position.set(Math.cos(a) * 0.12, 0.07, Math.sin(a) * 0.12)
+    crown.add(spike)
+  }
+  crown.position.set(0.05, 1.14, 0)
+  crown.rotation.z = -0.28 // the tilt
+  g.add(crown)
+  return { group: g, head, crown }
+}
+
+// ——— Ghost cat (the Hall follower-to-be) ———
+export function buildGhostCat() {
+  const mat = ghostMaterial(0.45)
+  const g = new THREE.Group()
+  const body = M(new THREE.SphereGeometry(0.13, 8, 6), mat, [0.7, 0.9, 0.9])
+  body.scale.set(1, 0.6, 1.3)
+  body.position.y = 0.08
+  g.add(body)
+  const head = M(new THREE.SphereGeometry(0.08, 7, 6), mat, [0.75, 0.92, 0.92])
+  head.position.set(0, 0.12, 0.14)
+  g.add(head)
+  for (const sx of [-1, 1]) {
+    const ear = M(new THREE.ConeGeometry(0.025, 0.045, 4), mat, [0.75, 0.92, 0.92])
+    ear.position.set(sx * 0.045, 0.18, 0.12)
+    g.add(ear)
+  }
+  const tail = M(new THREE.TorusGeometry(0.11, 0.02, 5, 10, Math.PI), mat, [0.7, 0.9, 0.9])
+  tail.rotation.x = -Math.PI / 2
+  tail.position.set(0, 0.05, -0.05)
+  g.add(tail)
+  return { group: g, body }
+}
+
+// ——— Gargoyle: very obviously pretending to be a statue ———
+export function buildGargoyle() {
+  const mat = retroMaterial({ map: TEX.stoneBlock({ name: 'gargstone', base: '#3a3444' }), hemi: true })
+  const g = new THREE.Group()
+  const body = M(new THREE.SphereGeometry(0.3, 8, 6), mat, [0.9, 0.9, 0.95])
+  body.scale.set(0.9, 0.8, 1.05)
+  body.position.y = 0.32
+  g.add(body)
+  const headBone = new THREE.Group()
+  headBone.position.set(0, 0.62, 0.12)
+  g.add(headBone)
+  const head = M(new THREE.SphereGeometry(0.17, 7, 6), mat, [0.9, 0.9, 0.95])
+  headBone.add(head)
+  for (const sx of [-1, 1]) {
+    const horn = M(new THREE.ConeGeometry(0.04, 0.14, 5), mat, [0.85, 0.85, 0.9])
+    horn.position.set(sx * 0.1, 0.15, 0)
+    horn.rotation.z = -sx * 0.35
+    headBone.add(horn)
+    const wingBone = new THREE.Group()
+    wingBone.position.set(sx * 0.26, 0.45, -0.08)
+    g.add(wingBone)
+    const wing = M(new THREE.BoxGeometry(0.34, 0.5, 0.05), mat, [0.82, 0.82, 0.88])
+    wing.position.set(sx * 0.15, 0.05, 0)
+    wing.rotation.z = sx * 0.5
+    wingBone.add(wing)
+    if (sx === 1) g.userData.wingR = wingBone
+    const claw = M(new THREE.SphereGeometry(0.07, 5, 4), mat, [0.85, 0.85, 0.9])
+    claw.position.set(sx * 0.16, 0.05, 0.22)
+    g.add(claw)
+  }
+  const snout = M(new THREE.ConeGeometry(0.06, 0.12, 5), mat, [0.88, 0.88, 0.92])
+  snout.rotation.x = Math.PI / 2
+  snout.position.set(0, -0.02, 0.2)
+  headBone.add(snout)
+  return { group: g, headBone, wingR: g.userData.wingR }
+}
+
+// ——— Mote: a moss-covered tortoise the size of a table ———
+export function buildMote() {
+  const shellMat = retroMaterial({ map: TEX.grass({ name: 'moteMoss', a: '#2c4432', b: '#4a6e50' }), hemi: true })
+  const skinMat = retroMaterial({ map: TEX.white(), hemi: true })
+  const g = new THREE.Group()
+  const shell = M(new THREE.SphereGeometry(0.9, 10, 7, 0, Math.PI * 2, 0, Math.PI / 2), shellMat, [0.85, 0.95, 0.85])
+  shell.scale.set(1, 0.62, 1.15)
+  shell.position.y = 0.22
+  g.add(shell)
+  const rim = M(new THREE.CylinderGeometry(0.92, 0.98, 0.14, 12), shellMat, [0.7, 0.8, 0.7])
+  rim.scale.z = 1.15
+  rim.position.y = 0.2
+  g.add(rim)
+  const headBone = new THREE.Group()
+  headBone.position.set(0, 0.28, 1.1)
+  g.add(headBone)
+  const head = M(new THREE.SphereGeometry(0.22, 8, 6), skinMat, [0.55, 0.58, 0.42])
+  head.scale.set(0.85, 0.8, 1.1)
+  headBone.add(head)
+  // closed eyes: painted as dark slits via tiny boxes
+  for (const sx of [-1, 1]) {
+    const eye = M(new THREE.BoxGeometry(0.06, 0.012, 0.02), skinMat, [0.2, 0.2, 0.16])
+    eye.position.set(sx * 0.1, 0.06, 0.16)
+    headBone.add(eye)
+  }
+  for (const [sx, sz] of [[-0.6, 0.6], [0.6, 0.6], [-0.6, -0.6], [0.6, -0.6]]) {
+    const leg = M(new THREE.CylinderGeometry(0.14, 0.17, 0.24, 7), skinMat, [0.5, 0.53, 0.4])
+    leg.position.set(sx, 0.12, sz)
+    g.add(leg)
+  }
+  return { group: g, headBone }
+}
+
+// ——— Seabird: tucked-head loaf ———
+export function buildSeabird() {
+  const mat = retroMaterial({ map: TEX.white(), hemi: true })
+  const g = new THREE.Group()
+  const body = M(new THREE.SphereGeometry(0.09, 7, 5), mat, [0.88, 0.88, 0.9])
+  body.scale.set(1, 0.85, 1.25)
+  body.position.y = 0.07
+  g.add(body)
+  const tail = M(new THREE.ConeGeometry(0.04, 0.09, 4), mat, [0.6, 0.62, 0.66])
+  tail.rotation.x = -Math.PI / 2.4
+  tail.position.set(0, 0.09, -0.11)
+  g.add(tail)
+  return { group: g, body }
+}
+
 // Blue bottle for Beldam's lap (and the Moon Brew model later).
 export function buildBottle({ scale = 1 } = {}) {
   const mat = retroMaterial({ map: TEX.white(), hemi: true, transparent: true, opacity: 0.92 })
@@ -201,6 +376,115 @@ export class NPCSystem {
     this.cat = cat
     this.npcs.push({ kind: 'cat', update: (dt, t) => { this.cat.body.scale.y = 0.62 + Math.sin(t * 1.4) * 0.02 } })
 
+    // — The Curator drifting her colonnade patrol (Ruins) —
+    const curator = buildCurator()
+    this.scene.add(curator.group)
+    this.curator = {
+      rig: curator,
+      waypoints: [[-96, 3], [-112, 6.5], [-126, 2.5], [-121, -7], [-104, -5.5]],
+      wp: 0, pauseT: 0, bowT: 0, bowedFor: new Set(), saidLine: false,
+    }
+    curator.group.position.set(-96, w.heightAt(-96, 3) + 0.25, 3)
+    this.npcs.push({ kind: 'curator', update: (dt, t, player) => this.updateCurator(dt, t, player) })
+
+    // — The Pale King asleep on his throne + ghost cat on his lap (Hall) —
+    const king = buildPaleKing()
+    king.group.position.set(-110, 2.3, 168.2)
+    king.group.rotation.y = Math.PI // faces down the hall (−z)
+    this.scene.add(king.group)
+    this.king = king
+    const gcat = buildGhostCat()
+    gcat.group.position.set(0.05, 0.55, 0.3)
+    king.group.add(gcat.group)
+    this.ghostCat = { rig: gcat, state: 'lap' } // follower behavior lands in M6
+    this.npcs.push({
+      kind: 'king', update: (dt, t) => {
+        this.king.head.position.y = 1.0 + Math.sin(t * 0.45) * 0.015
+        this.king.head.rotation.x = 0.3 + Math.sin(t * 0.45) * 0.03
+        if (this.ghostCat.state === 'lap') this.ghostCat.rig.body.scale.y = 0.6 + Math.sin(t * 1.2) * 0.03
+      },
+    })
+
+    // — The gargoyle on the gatehouse (statue... allegedly) (Gloomspire) —
+    const garg = buildGargoyle()
+    const gp = w.gargoylePos ?? new THREE.Vector3(-107.2, w.heightAt(-110, 103) + 6.6, 103)
+    garg.group.position.copy(gp)
+    garg.group.rotation.y = Math.PI // watches the causeway approach
+    this.scene.add(garg.group)
+    this.gargoyle = { rig: garg, watchT: 0 }
+    this.npcs.push({ kind: 'gargoyle', update: () => {} }) // head-turn logic lands in M6
+
+    // — Mote the mossy tortoise beside the Mosswood path —
+    const mote = buildMote()
+    mote.group.position.set(66, w.heightAt(66, 106.5), 106.5)
+    mote.group.rotation.y = -0.5
+    this.scene.add(mote.group)
+    this.mote = { rig: mote, snoreT: this.rng.range(3, 7) }
+    this.npcs.push({
+      kind: 'mote', update: (dt, t) => {
+        mote.group.scale.y = 1 + Math.sin(t * 0.5) * 0.015 // slow tortoise breath
+        this.mote.snoreT -= dt
+        if (this.mote.snoreT <= 0) {
+          this.mote.snoreT = this.rng.range(5, 9)
+          this.ambience.spawnZ(mote.group.position.x, mote.group.position.y + 0.9, mote.group.position.z + 1)
+        }
+      },
+    })
+
+    // — Seabird colony, heads tucked (Isle cove) —
+    this.seabirds = []
+    for (let i = 0; i < 6; i++) {
+      const bird = buildSeabird()
+      const a = this.rng.range(-0.6, 1.2)
+      const bx = 12 + Math.cos(a) * this.rng.range(2, 7)
+      const bz = -137 + Math.sin(a) * this.rng.range(2, 6)
+      bird.group.position.set(bx, w.heightAt(bx, bz), bz)
+      bird.group.rotation.y = this.rng.range(0, Math.PI * 2)
+      this.scene.add(bird.group)
+      this.seabirds.push(bird)
+    }
+    this.npcs.push({
+      kind: 'seabirds', update: (dt, t) => {
+        this.seabirds.forEach((b, i) => { b.body.scale.y = 0.85 + Math.sin(t * 1.3 + i * 2) * 0.03 })
+      },
+    })
+
+    // — Sleeping sailors in hammocks at the cove (adapted from keep interior — D9) —
+    this.hammocks = []
+    for (const [hx, hz, ry] of [[6, -141, 0.5], [17, -133, -0.8]]) {
+      const hg = new THREE.Group()
+      const mats = sharedNpcMats()
+      for (const sx of [-1, 1]) {
+        const post = M(new THREE.CylinderGeometry(0.06, 0.08, 1.4, 6), mats.plank, [1, 1, 1])
+        post.position.set(sx * 1.1, 0.7, 0)
+        hg.add(post)
+      }
+      const cloth = M(new THREE.CylinderGeometry(0.42, 0.42, 2.0, 8, 1, true, Math.PI, Math.PI), mats.plank, [0.75, 0.72, 0.6])
+      cloth.rotation.z = Math.PI / 2
+      cloth.position.y = 0.82
+      cloth.scale.y = 0.5
+      hg.add(cloth)
+      const lump = M(new THREE.SphereGeometry(0.3, 7, 5), mats.plank, [0.5, 0.42, 0.5])
+      lump.scale.set(1, 0.5, 1.9)
+      lump.position.y = 0.86
+      hg.add(lump)
+      hg.position.set(hx, w.heightAt(hx, hz), hz)
+      hg.rotation.y = ry
+      this.scene.add(hg)
+      this.hammocks.push({ group: hg, snoreT: this.rng.range(2, 8) })
+    }
+    this.npcs.push({
+      kind: 'sailors', update: (dt) => {
+        for (const h of this.hammocks) {
+          h.snoreT -= dt
+          if (h.snoreT <= 0) {
+            h.snoreT = this.rng.range(4, 9)
+            this.ambience.spawnZ(h.group.position.x, h.group.position.y + 1.3, h.group.position.z)
+          }
+        }
+      },
+    })
+
     // — Nib on the rooftop garden, in the lantern's glow (his red hat is the accent) —
     const nib = buildGnome()
     const nx = 118.3, nz = (this.world.streetZAt ? this.world.streetZAt(118.3) : 0) - 10.2
@@ -243,6 +527,60 @@ export class NPCSystem {
         snore()
       }
     }
+  }
+
+  updateCurator(dt, t, player) {
+    const c = this.curator
+    const g = c.rig.group
+    // drift bob, always
+    g.position.y = this.world.heightAt(g.position.x, g.position.z) + 0.25 + Math.sin(t * 0.9) * 0.06
+
+    // bow to passing players once the sconces burn (Part 3.2.4)
+    const sconcesLit = this.world.lights.filter((l) => l.id.startsWith('ruins-sconce') && l.kindled).length === 4
+    if (c.bowT > 0) {
+      c.bowT -= dt
+      c.rig.spine.rotation.x = Math.sin(Math.min(1, (2 - c.bowT) / 0.6) * Math.PI * 0.5) * 0.5
+      if (c.bowT <= 0) c.rig.spine.rotation.x = 0
+      return
+    }
+    if (sconcesLit && player) {
+      const pd = Math.hypot(player.pos.x - g.position.x, player.pos.z - g.position.z)
+      const key = Math.floor(t / 20) // at most one bow per 20s window
+      if (pd < 3.5 && !c.bowedFor.has(key)) {
+        c.bowedFor.add(key)
+        c.bowT = 2
+        if (!c.saidLine) {
+          c.saidLine = true
+          this.hud.say('The party ended ten thousand years ago. The cleaning, however...', 5.5)
+        }
+        return
+      }
+    }
+
+    if (c.pauseT > 0) {
+      // dusting: gentle alternating arm sweeps over the fallen stones
+      c.pauseT -= dt
+      c.rig.armL.rotation.x = -0.9 + Math.sin(t * 2.2) * 0.35
+      c.rig.armR.rotation.x = -0.7 + Math.sin(t * 2.2 + Math.PI) * 0.35
+      return
+    }
+    c.rig.armL.rotation.x = -0.25
+    c.rig.armR.rotation.x = -0.25
+    const [wx, wz] = c.waypoints[c.wp]
+    const dx = wx - g.position.x, dz = wz - g.position.z
+    const d = Math.hypot(dx, dz)
+    if (d < 0.4) {
+      c.wp = (c.wp + 1) % c.waypoints.length
+      c.pauseT = this.rng.range(2.5, 4.5)
+      return
+    }
+    const want = Math.atan2(dx, dz)
+    let dy = want - g.rotation.y
+    while (dy > Math.PI) dy -= Math.PI * 2
+    while (dy < -Math.PI) dy += Math.PI * 2
+    g.rotation.y += dy * Math.min(1, dt * 3)
+    g.position.x += (dx / d) * 0.55 * dt
+    g.position.z += (dz / d) * 0.55 * dt
   }
 
   updateNib(dt, t) {

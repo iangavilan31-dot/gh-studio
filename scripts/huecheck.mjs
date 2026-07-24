@@ -24,10 +24,12 @@ const ZONE_EXPECT = {
   // hat+lantern vignette in a huge cobalt sky (Rule 2: scarce = precious)
   rooftops: { hue: [210, 260], warmAfterKindle: true, redCounts: true, minWarm: 0.0006 },
   ruins: { hue: [255, 330], warmAfterKindle: false }, // violet; accent is COLD cyan
-  gloomspire: { hue: [240, 310], warmAfterKindle: true },
-  hall: { hue: [10, 60], warmAfterKindle: true, lumMax: 0.32 }, // candle warmth in the dark
+  // Part 2.1 accent literalism: Gloomspire's accent IS window toxic green;
+  // the Hall's is carpet red + candleflame; the Isle's is the cool moon glow.
+  gloomspire: { hue: [240, 310], accent: 'green' },
+  hall: { hue: [0, 60], warmAfterKindle: true, redCounts: true, lumMax: 0.32 },
   mosswood: { hue: [110, 180], warmAfterKindle: true },
-  isle: { hue: [160, 230], warmAfterKindle: true },
+  isle: { hue: [160, 230], accent: 'moonglow' },
 }
 const M4_ZONES = ['park', 'village', 'rooftops']
 const asked = process.argv.slice(2).filter((a) => !a.startsWith('-'))
@@ -55,14 +57,32 @@ for (const z of zones) {
   if (!exp) { console.log(`SKIP ${z}: no expectation defined`); continue }
   await page.evaluate((zz) => window.__MOONREST__.teleport(zz), z)
   await page.waitForTimeout(700)
-  const s = await page.evaluate(() => window.__MOONREST__.samplePalette())
-  const hueOK = s.avgHue >= exp.hue[0] && s.avgHue <= exp.hue[1]
+  // flames/halos flicker and lanterns sway — sample 6 frames; accent fields
+  // take the max (accent presence = present in any frame), hue the mean
+  const samples = []
+  for (let k = 0; k < 6; k++) {
+    samples.push(await page.evaluate(() => window.__MOONREST__.samplePalette()))
+    await page.waitForTimeout(300)
+  }
+  const s = samples[0]
+  for (const f of ['warmFrac', 'redFrac', 'greenFrac', 'brightFrac']) s[f] = Math.max(...samples.map((x) => x[f]))
+  s.avgHue = +(samples.reduce((a, x) => a + x.avgHue, 0) / samples.length).toFixed(1)
+  // avgHue is circular: accept wrap for windows starting at 0
+  let hue = s.avgHue
+  if (exp.hue[0] === 0 && hue > 345) hue -= 360
+  const hueOK = hue >= exp.hue[0] && hue <= exp.hue[1]
   const lumOK = s.medianLum < (exp.lumMax ?? 0.28)
-  const warmth = s.warmFrac + (exp.redCounts ? s.redFrac : 0)
-  const warmOK = !exp.warmAfterKindle || warmth > (exp.minWarm ?? 0.0015)
-  const ok = hueOK && lumOK && warmOK
+  let accentOK = true, accentNote = ''
+  if (exp.accent === 'green') { accentOK = s.greenFrac > 0.001; accentNote = ` greenFrac=${s.greenFrac} (>0.001)` }
+  else if (exp.accent === 'moonglow') { accentOK = s.brightFrac > 0.004; accentNote = ` brightFrac=${s.brightFrac} (>0.004)` }
+  else if (exp.warmAfterKindle) {
+    const warmth = s.warmFrac + (exp.redCounts ? s.redFrac : 0)
+    accentOK = warmth > (exp.minWarm ?? 0.0015)
+    accentNote = ` warmth=${warmth.toFixed(5)} (>${exp.minWarm ?? 0.0015})`
+  }
+  const ok = hueOK && lumOK && accentOK
   if (!ok) fails++
-  console.log(`${ok ? 'PASS' : 'FAIL'} ${z}: avgHue=${s.avgHue} (want ${exp.hue[0]}–${exp.hue[1]}), medianLum=${s.medianLum} (<${exp.lumMax ?? 0.28}), warmth=${warmth.toFixed(5)}${exp.warmAfterKindle ? ' (>0.0015)' : ' (n/a)'} hueStrength=${s.hueStrength}`)
+  console.log(`${ok ? 'PASS' : 'FAIL'} ${z}: avgHue=${s.avgHue} (want ${exp.hue[0]}–${exp.hue[1]}), medianLum=${s.medianLum} (<${exp.lumMax ?? 0.28})${accentNote} hueStrength=${s.hueStrength}`)
 }
 console.log(fails === 0 ? 'HUE GATE PASS' : `HUE GATE: ${fails} FAILURES`)
 await browser.close()
