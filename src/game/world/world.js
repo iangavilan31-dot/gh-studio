@@ -478,7 +478,7 @@ export class World {
     fence(-6, -27, -13, -23)
     fence(8, -28, 14, -24)
 
-    this.poses.park = { pos: [7.5, 1.3, -13.5], look: [1.5, 1.1, -20.2] }
+    this.poses.park = { pos: [7.5, 1.3, -13.5], look: [1.5, 1.9, -20.2], minute: 33 }
     this.poses.player = { pos: [4.8, 1.1, -16.2], look: [2.6, 0.9, -18.4] }
   }
 
@@ -704,7 +704,7 @@ export class World {
       this.warmWindows.push({ mesh, seed: worldRNG.range(0, 10), base: 0.95 })
     }
 
-    this.poses.village = { pos: [90, streetH(90) + 1.5, streetZ(90) + 1.4], look: [132, streetH(132) + 3.5, streetZ(132)] }
+    this.poses.village = { pos: [90, streetH(90) + 1.5, streetZ(90) + 1.4], look: [132, streetH(132) + 6.5, streetZ(132)], minute: 6 }
   }
 
   buildRooftops() {
@@ -782,7 +782,7 @@ export class World {
     // low over the moss at Nib, cobalt sky filling the frame (Part 3.2.3)
     // on the roof itself, looking west along the strip: hook lantern + Nib's
     // pine mid-frame, the village spire and open cobalt sky beyond
-    this.poses.rooftops = { pos: [122.8, roofH(122.8) + 0.7, streetZ(122.8) - 9.6], look: [117.8, roofH(117.8) + 1.0, streetZ(117.8) - 10.2] }
+    this.poses.rooftops = { pos: [122.8, roofH(122.8) + 0.7, streetZ(122.8) - 9.6], look: [117.8, roofH(117.8) + 1.6, streetZ(117.8) - 10.2], minute: 29 }
     // close on Nib for the sleeper evidence shots
     this.poses.nib = { pos: [119.6, roofH(119.6) + 0.55, streetZ(119.6) - 11.1], look: [118.2, roofH(118.2) + 0.2, streetZ(118.2) - 10.0] }
   }
@@ -971,7 +971,7 @@ export class World {
     owl.position.set(-99, heightAt(-99, -9) - 0.25, -9) // half-buried
     owl.rotation.z = 0.35
     this.scene.add(owl)
-    this.poses.ruins = { pos: [-91, heightAt(-91, 2.5) + 1.6, 2.5], look: [-132, heightAt(-132, 0) + 3.5, 0] }
+    this.poses.ruins = { pos: [-91, heightAt(-91, 2.5) + 1.6, 2.5], look: [-132, heightAt(-132, 0) + 3.5, 0], minute: 29 }
   }
 
   buildGloomspire() {
@@ -1131,7 +1131,7 @@ export class World {
     this.scene.add(gb.group)
     this.registerLight('gloomspire-gatehouse-brazier', 'gloomspire', gb, gx - 2.6, gz - 2.5)
 
-    this.poses.gloomspire = { pos: [-112, heightAt(-112, 80) + 3.2, 80], look: [-110, heightAt(-110, 125) + 9, 125] }
+    this.poses.gloomspire = { pos: [-112, heightAt(-112, 80) + 3.2, 80], look: [-110, heightAt(-110, 125) + 9, 125], minute: 16 }
   }
 
   buildHall() {
@@ -1296,7 +1296,7 @@ export class World {
       this.scene.add(card)
       this.fogCards.push({ mesh: card, baseX: fx, seed: fx * 0.7 })
     }
-    this.poses.mosswood = { pos: [63, heightAt(63, 110) + 1.5, 110.5], look: [84, heightAt(84, 110) + 3.5, 110] }
+    this.poses.mosswood = { pos: [63, heightAt(63, 110) + 1.5, 110.5], look: [84, heightAt(84, 110) + 5.5, 110], minute: 6 }
   }
 
   buildIsle() {
@@ -1388,9 +1388,9 @@ export class World {
 
     // across the water (Part 3.2.8): on the causeway itself — lamp chain ahead,
     // sea flanking, keep beyond, moon high in frame
-    this.poses.isle = { pos: [2.2, 2.3, -86], look: [-20, kBase + 13, -152] }
+    this.poses.isle = { pos: [2.2, 2.3, -86], look: [-20, kBase + 13, -152], minute: 37 }
     // sea view for the water/moon-streak evidence (m5-water)
-    this.poses.sea = { pos: [4, 2.2, -50], look: [-30, 10, -130] }
+    this.poses.sea = { pos: [4, 2.2, -50], look: [-30, 10, -130], minute: 37 }
   }
 
   // The Hall's baked-vertex-light showcase (Part 3.2.6 / 8.4): NO lights at all —
@@ -1489,7 +1489,7 @@ export class World {
     }
     // the corridor itself: stand at the first breadcrumb, the next one is
     // already half-swallowed by the fog wall
-    this.poses.foglands = { pos: [28.5, heightAt(28.5, 2.8) + 1.3, 2.8], look: [46, heightAt(46, -1) + 0.6, -1.2] }
+    this.poses.foglands = { pos: [28.5, heightAt(28.5, 2.8) + 1.3, 2.8], look: [46, heightAt(46, -1) + 4.0, -1.2], minute: 5 }
   }
 
   // world rules applied after player movement (mosswood loop-through)

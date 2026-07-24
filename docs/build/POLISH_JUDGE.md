@@ -17,7 +17,17 @@ counts until all eight AA items carry screenshot evidence here.
 - Gates: shellcheck 16/16 (asserts rtW 1920, dither ≤0.15, sharpen >0);
   perfgate PASS (96 calls / 80.4k tris / 218KB gz vs Q.4 budgets 150/250k/1.4MB).
 
-### AA.1 — moon: pending
+### AA.1 — moon ✅ 2026-07-24
+- Arc reauthored: ESE rise → whole-sky sweep → sets in western fog (elev 0.68→0.04,
+  azim 1.95→-2.85); each zone pose pins the night minute where its authored framing
+  honestly crosses the arc. Face 34u + halo 84u; maria contrast up; flare core
+  0.55→0.26 so the painted face reads; emissive #9d97c2.
+- Evidence READ: all 9 exterior poses contain the moon (park through trees,
+  village over the street, gloomspire crowning the castle, ruins behind the
+  façade + Curator, isle/sea low over the water, mosswood over the arch,
+  foglands beside the breadcrumb lantern, rooftops high in the cobalt sky).
+- Known follow-ups logged for AA.4: rooftops pose lost its subject; mosswood
+  snore-Z clips frame edge; foglands sky band too dark (AA.3 scope).
 ### AA.2 — warm light: pending
 ### AA.3 — saturated darkness: pending
 ### AA.4 — density: pending
