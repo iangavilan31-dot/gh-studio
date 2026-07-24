@@ -1136,8 +1136,8 @@
     "ten-minute capture reviewed with timestamps",
     "worst dead stretches fixed"
    ],
-   "passes": false,
-   "evidence": "REVOKED by pass-4 reviewer H: the v3 instrument was broken (lights getter lacked zone -> village leg empty; stop distance 2.4 > interact range 2.0; run ended at 2.66 sim min). Instrument fixed (zone exposed, 1.8m stops, 20-waypoint route incl. return leg, full 10 min); re-run pending \u2014 flip only on honest PASS."
+   "passes": true,
+   "evidence": "scripts/k1capture.mjs v4 (docs/build/k1capture.json): FULL 10 sim minutes on the authored route with the fixed instrument (zone-filtered lights, 1.8m stops inside interact range) \u2014 3 lamps kindled by real E-holds, 11 timestamped events, ZERO stretches without an event or POI within 16m, console clean, exit 0. v3's broken run was revoked by reviewer H and re-certified on this one."
   },
   {
    "id": "POLISH-O1",
