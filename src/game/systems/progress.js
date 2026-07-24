@@ -58,6 +58,21 @@ export class Progress {
     this.beats.push({ kind, detail, t: Math.round(performance.now()) })
   }
 
+  // Late join (Part 5.1): a snapshot arrives with zones already complete — the
+  // sleepers stirred before this keeper arrived, but the keepsakes are theirs
+  // too. Quiet: one shelf, no subtitle spam.
+  syncCompletedZones() {
+    for (const [zone, t] of Object.entries(TRINKETS)) {
+      if (zone === 'gatewalkers') continue // arch moment syncs via momentsDone
+      const zl = this.world.lights.filter((l) => l.zone === zone)
+      if (zl.length && zl.every((l) => l.kindled) && !this.trinkets.includes(t.id)) {
+        this.trinkets.push(t.id)
+        this.logBeat('trinket', t.id)
+      }
+    }
+    this.save()
+  }
+
   onKindle(light) {
     this.logBeat('kindle', light.id)
     const zoneLights = this.world.lights.filter((l) => l.zone === light.zone)

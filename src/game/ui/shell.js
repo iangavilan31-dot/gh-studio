@@ -14,6 +14,7 @@ export const SETTINGS_DEFAULTS = {
   memoryMode: 'n64', resScale: 1, reducedMotion: false,
   volMusic: 0.8, volAmbience: 0.7, volSfx: 0.9, hiss: true,
   sensitivity: 1, invertY: false, holdToToggle: false, subtitles: true,
+  cameraAssist: true,
   keyKindle: 'KeyE', keyHop: 'Space', keySit: 'KeyC',
 }
 
@@ -22,10 +23,11 @@ export function loadSettings() {
   catch { return { ...SETTINGS_DEFAULTS } }
 }
 
+// keys MUST match the ids granted in systems/progress.js TRINKETS
 const TRINKET_NAMES = {
-  cork: 'Beldam’s cork', telescope: 'Nib’s tiny telescope', dustcloth: 'a Curator’s dust-cloth',
-  greenshard: 'a green window-glass shard', catbell: 'the Pale King’s cat’s bell',
-  mossbutton: 'Mote’s moss button', sailorknot: 'a sailor’s knot', henfeather: 'a warm hen feather',
+  cork: 'Beldam’s cork', telescope: 'Nib’s tiny telescope', dustcloth: 'the Curator’s dust-cloth',
+  glassshard: 'a green window-glass shard', catbell: 'the ghost cat’s bell',
+  mossbutton: 'Mote’s moss button', sailorknot: 'a sailor’s knot', feather: 'a warm hen feather',
   archstone: 'the Gatewalkers’ arch-stone',
 }
 
@@ -192,6 +194,8 @@ export class Shell {
     const shelf = this.el('div', 'shelf', null, card)
     if (!st.trinkets.length) this.el('div', 'shelfempty', 'nothing yet — the sleepers are still dreaming', shelf)
     for (const t of st.trinkets) this.el('div', 'trinket', TRINKET_NAMES[t] ?? t, shelf)
+    this.el('div', 'h2', 'the keeper’s hands', card)
+    this.el('div', 'hint', 'WASD walk · Shift jog · mouse look · E kindle (hold) · Tab emote wheel · C sit/lie · Space hop · P photo · F3 lantern-keeper’s ledger', card)
     const list = this.el('div', 'menu', null, card)
     this.menuItem(list, 'Back to the Night', () => this.closeToNight())
     this.menuItem(list, 'Settings', () => this.showSettings('pause'))
@@ -275,6 +279,7 @@ export class Shell {
     section('controls')
     cycle('look sensitivity', 'sensitivity', [0.5, 0.75, 1, 1.5, 2], ['0.5×', '0.75×', '1×', '1.5×', '2×'])
     cycle('invert look Y', 'invertY', [false, true], ['off', 'on'])
+    cycle('camera auto-frame', 'cameraAssist', [true, false], ['on', 'off'])
     rebind('kindle', 'keyKindle')
     rebind('hop', 'keyHop')
     rebind('sit / lie', 'keySit')

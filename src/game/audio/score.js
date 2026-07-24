@@ -54,16 +54,55 @@ export class Score {
 
   buildZone() {
     const cfg = ZONE_MUSIC[this.zone]
-    // one gain node per layer, faded by kindle count (4s fades)
-    for (const g of this.layerGains) g.disconnect()
+    // Part 9.2: zones crossfade ~6s on travel — the old zone rings down while
+    // the new one blooms in; never chop a sounding note (12.5 anti-pattern)
+    const old = this.layerGains
+    if (old.length && audio.started) {
+      const t = audio.ctx.currentTime
+      for (const g of old) { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0, t, 1.6) }
+      setTimeout(() => { for (const g of old) g.disconnect() }, 7000)
+    }
     this.layerGains = cfg.layers.map((_, i) => {
       const g = audio.ctx.createGain()
-      g.gain.value = i < this.activeLayers + 1 ? 1 : 0
+      const target = i < this.activeLayers + 1 ? 1 : 0
+      if (audio.started && old.length) {
+        g.gain.value = 0
+        g.gain.setTargetAtTime(target, audio.ctx.currentTime, 2)
+      } else g.gain.value = target
       g.connect(audio.buses.music)
       g.connect(audio.reverbSend)
       return g
     })
     this.regenPatterns()
+  }
+
+  // Night's End (9.2): every layer swells for the reel...
+  finale() {
+    if (!this.playing) return
+    const t = audio.ctx.currentTime
+    this.layerGains.forEach((g) => { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(1, t, 2.5) })
+    audio.state.layers = this.layerGains.length
+  }
+
+  // ...and the title card lands on a picardy third — the night resolves warm
+  picardy() {
+    if (!audio.started) return
+    const cfg = ZONE_MUSIC[this.zone]
+    const root = KEYS[cfg.key] + 12
+    const t = audio.ctx.currentTime + 0.2
+    for (const [semi, amp] of [[0, 0.16], [4, 0.13], [7, 0.11], [12, 0.08]]) { // major 3rd
+      for (const [ratio, pa] of [[1, 1], [2, 0.28]]) {
+        const o = audio.ctx.createOscillator()
+        o.type = 'sine'
+        o.frequency.value = midiHz(root + semi) * ratio
+        const g = audio.ctx.createGain()
+        g.gain.setValueAtTime(0, t)
+        g.gain.linearRampToValueAtTime(amp * pa, t + 0.4)
+        g.gain.setTargetAtTime(0, t + 2.2, 2.4)
+        o.connect(g); g.connect(audio.buses.music); g.connect(audio.reverbSend)
+        o.start(t); o.stop(t + 12)
+      }
+    }
   }
 
   setLayers(n) {

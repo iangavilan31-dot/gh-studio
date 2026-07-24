@@ -20,6 +20,7 @@ export class Input {
     this._padPrev = new Set()
 
     window.addEventListener('keydown', (e) => {
+      if (e.code === 'Tab') e.preventDefault() // Tab is the emote wheel, not focus
       if (e.repeat) return
       this.keys.add(e.code)
       this.justPressed.add(e.code)
@@ -55,11 +56,13 @@ export class Input {
     if (!gp) return
     const held = new Set()
     const b = (i) => gp.buttons[i]?.pressed
-    if (b(0)) held.add('Space')      // A: hop
-    if (b(1)) held.add('KeyC')       // B: sit/lie
-    if (b(2) || b(5) || b(7)) held.add('KeyE') // X / RB / RT: kindle (hold)
+    // Part 4.2 table: E/A interact · Space/B hop · C/D-pad-down sit · Tab/Y emote
+    if (b(0)) held.add('KeyE')       // A: kindle (hold)
+    if (b(1)) held.add('Space')      // B: hop
+    if (b(13)) held.add('KeyC')      // D-pad down: sit/lie
+    if (b(3)) held.add('Tab')        // Y: emote wheel
     if (b(9)) held.add('Escape')     // start: menu
-    if (b(4) || b(6)) held.add('ShiftLeft') // LB/LT: jog
+    if (b(4) || b(6) || b(5) || b(7)) held.add('ShiftLeft') // shoulders: jog
     for (const code of held) {
       if (!this._padPrev.has(code)) { this.justPressed.add(code); this.pressTimes.set(code, performance.now()) }
       this.keys.add(code)
@@ -92,6 +95,11 @@ export class Input {
     const d = [this.lookDX * this.sensitivity, this.lookDY * this.sensitivity * (this.invertY ? -1 : 1)]
     this.lookDX = 0; this.lookDY = 0
     return d
+  }
+
+  // controller rumble ping (Part 4.2) — quietly does nothing without a pad
+  rumble(strong = 0.3, weak = 0.6, ms = 130) {
+    try { this.pad?.vibrationActuator?.playEffect('dual-rumble', { duration: ms, strongMagnitude: strong, weakMagnitude: weak }) } catch (e) { /* no actuator */ }
   }
 
   endFrame() { this.justPressed.clear() }

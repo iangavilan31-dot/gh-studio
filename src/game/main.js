@@ -24,6 +24,7 @@ import { Net } from './net/coop.js'
 import { Shell, loadSettings } from './ui/shell.js'
 import { audio } from './audio/engine.js'
 import { score } from './audio/score.js'
+import { beds } from './audio/beds.js'
 import { footstep, kindleChime } from './audio/sfx.js'
 import * as TEX from './art/textures.js'
 import { worldRNG } from './core/rng.js'
@@ -77,6 +78,8 @@ const nightflow = new NightFlow(night, world, hud, camera, {
     trinkets: progress.trinkets.filter((t) => t !== 'archstone').length,
     friends: net.peerCount,
   }),
+  onReelStart: () => score.finale(),
+  onTitleCard: () => score.picardy(),
   onNightEnd: () => {
     progress.save()
     try { localStorage.setItem('moonrest-night-ended', '1') } catch (e) {}
@@ -84,8 +87,42 @@ const nightflow = new NightFlow(night, world, hud, camera, {
   },
 })
 
-// footsteps synced to stride (Part 4.2)
-player.onFootstep = (surface, vol) => footstep(surface, vol)
+// footsteps synced to stride (Part 4.2) + the lantern glow pulses with steps (4.1)
+let staffPulse = 0
+player.onFootstep = (surface, vol) => { footstep(surface, vol); staffPulse = Math.min(1, staffPulse + 0.55) }
+
+// ——— emote wheel (Part 4.2): hold Tab/Y, aim, release ———
+let wheelOpen = false
+let wheelVec = [0, 0]
+function doEmote(id) {
+  player.setAction(id)
+  if (net.active) net.request({ ev: 'emote', id })
+}
+function handleEmoteWheel() {
+  if (input.down('Tab')) {
+    if (!wheelOpen) { wheelOpen = true; wheelVec = [0, 0]; hud.showEmoteWheel(elapsed < giggleUntil) }
+    const [lx, ly] = input.consumeLook()
+    wheelVec[0] += lx; wheelVec[1] += ly
+    if (Math.hypot(wheelVec[0], wheelVec[1]) > 12) {
+      const ang = Math.atan2(wheelVec[1], wheelVec[0]) // screen space: +y is down
+      let sel
+      if (ang > -2.36 && ang < -0.79) sel = 0        // up — wave
+      else if (ang >= -0.79 && ang <= 0.79) sel = 1  // right — point
+      else if (ang > 0.79 && ang < 2.36) sel = 2     // down — giggle (brew-locked)
+      else sel = 3                                    // left — sleep
+      if (sel === 2 && elapsed >= giggleUntil) sel = hud.wheelSel ?? -1
+      if (sel >= 0) hud.highlightEmote(sel)
+    }
+    // number keys pick directly (works without pointer lock; kinder to remaps)
+    for (let k = 0; k < 4; k++) {
+      if (input.pressed('Digit' + (k + 1)) && (k !== 2 || elapsed < giggleUntil)) hud.highlightEmote(k)
+    }
+  } else if (wheelOpen) {
+    wheelOpen = false
+    const emote = hud.hideEmoteWheel()
+    if (emote) doEmote(emote)
+  }
+}
 
 // ——— Co-op (Part 5): host-authority PeerJS, remote lamplighters, moments ———
 function swapLocalTint(idx) {
@@ -147,7 +184,11 @@ const net = new Net({
     if (s.nightT != null) { night.minutes = s.nightT; night.targetMinutes = s.nightT }
     if (s.phase != null) night.setPhase(s.phase)
     if (s.catAwake) npcs.wakeGhostCat(true)
+    progress.syncCompletedZones() // zones done before we arrived still grant keepsakes
     moments.done = new Set(s.momentsDone ?? [])
+    if (moments.done.has('arch') && !progress.trinkets.includes('archstone')) {
+      progress.trinkets.push('archstone'); progress.save()
+    }
     if (audio.started) { score.activeLayers = zoneKindles(score.zone); audio.state.layers = Math.min(score.activeLayers + 1, score.layerGains.length) }
   },
   getCatPos: () => (npcs.ghostCat?.state === 'follow' ? npcs.ghostCat.rig.group.position.toArray().map((v) => +v.toFixed(2)) : null),
@@ -160,6 +201,7 @@ const net = new Net({
   },
   onDeny: (reason) => {
     if (reason === 'brazier') hud.say('this flame wants every keeper. channel it together.', 4)
+    else if (reason === 'full') hud.say('that night already carries four lanterns.', 4)
   },
   spawnFireflies: (x, y, z) => emberBurst(embers, x, y, z, worldRNG.fork('fade' + Math.round(x * 7 + z * 3))),
   remoteFootstep: (surface, vol) => footstep(surface, vol),
@@ -225,6 +267,7 @@ function applySettings(s) {
   input.invertY = s.invertY
   interact.holdToToggle = s.holdToToggle
   hud.subtitlesOn = s.subtitles
+  orbit.autoFrame = s.cameraAssist !== false // Part 4.3: assist has an off switch
   window.__REDUCED_MOTION__ = s.reducedMotion
 }
 
@@ -305,6 +348,7 @@ const zoneKindles = (zone) => world.lights.filter((l) => l.zone === zone && l.ki
 
 // kindle consequences: chime in zone key, ember burst, next music layer (6.1)
 world.onKindle = (light) => {
+  input.rumble(0.3, 0.6, 140) // controller ping (4.2) — no-op without a pad
   kindleChime(light.zone)
   emberBurst(embers, light.x, light.y, light.z, worldRNG.fork('embers' + light.id))
   if (light.zone === score.zone) score.setLayers(zoneKindles(light.zone))
@@ -320,6 +364,9 @@ function bootAudio() {
   audio.start()
   audio.state.zoneKey = 'D'
   score.start()
+  beds.start()
+  beds.setZone(zoneLight.audioZone ?? 'park', 1)
+  audio.setHallAcoustics(zoneLight.audioZone === 'hall')
 }
 window.addEventListener('keydown', bootAudio, { once: false })
 window.addEventListener('mousedown', bootAudio, { once: false })
@@ -342,12 +389,17 @@ function teleport(poseName) {
   //  like the rooftops only claim shots taken from up there)
   zoneLight.update(p.look[0], p.look[2], 10, p.pos[1])
   ambience.snapZone(zoneLight.currentZoneId)
+  if (audio.started) {
+    beds.setZone(zoneLight.currentZoneId, 0.5)
+    audio.setHallAcoustics(zoneLight.currentZoneId === 'hall')
+  }
   return true
 }
 
 // ——— Loop ———
 let lastNow = performance.now()
 let elapsed = 0
+let rainWasSoft = false
 const frameTimes = []
 
 function tick() {
@@ -366,6 +418,8 @@ function tick() {
 
   // photo mode toggle (in the night, no menu up)
   if (mode === 'game' && !shell.screen && !cinematic && input.pressed('KeyP')) togglePhoto(!photo.on)
+
+  night.paused = mode === 'title' // the 40 minutes belong to the walk, not the menu
 
   if (mode === 'title') {
     // live Park diorama drifts behind the title (Part 10)
@@ -386,8 +440,9 @@ function tick() {
   } else if (!cinematic && !shell.blocking) {
     const jogging = input.down('ShiftLeft', 'ShiftRight') && player.anim.speed > 2
     player.update(input, orbit.smoothYaw, dt, elapsed)
-    orbit.update(player.pos, player.yaw, jogging, input.consumeLook(), dt, world.interactables)
-    interact.update(input, dt)
+    handleEmoteWheel() // consumes the look while open, so the camera holds still
+    orbit.update(player.pos, player.yaw, jogging, wheelOpen ? [0, 0] : input.consumeLook(), dt, world.interactables)
+    if (!wheelOpen) interact.update(input, dt)
     // the woozy wink (4.1): warm bloom + gentle camera roll, then it passes
     if (winkT > 0) {
       winkT = Math.max(0, winkT - dt * 0.4)
@@ -405,6 +460,11 @@ function tick() {
     if (shell.blocking && !cinematic) hud.hidePrompt()
     player.update(NULL_INPUT, orbit.smoothYaw, dt, elapsed)
   }
+  // staff-lantern glow pulses with footsteps (4.1), settling between strides
+  if (rig.staffHalo) {
+    staffPulse = Math.max(0, staffPulse - dt * 2.2)
+    rig.staffHalo.material.uniforms.uOpacity.value = (rig.staffHaloBase ?? (rig.staffHaloBase = rig.staffHalo.material.uniforms.uOpacity.value)) + staffPulse * 0.22
+  }
   nightflow.update(dt, inputActive)
   // clock-driven atmosphere: min-30 warmth ease + lunar-phase fog tightening
   zoneLight.warmBias = (zoneLight.warmBias ?? 0) + ((night.warmBias ?? 0) - (zoneLight.warmBias ?? 0)) * (1 - Math.exp(-dt / 8))
@@ -412,13 +472,20 @@ function tick() {
   if (!cinematic && mode !== 'title' && !photo.on) {
     world.applyWorldRules(player)
     zoneLight.update(player.pos.x, player.pos.z, dt, player.pos.y)
-    // music follows the atmosphere's zone
+    // music + ambience beds + room acoustics follow the atmosphere's zone
     if (zoneLight.audioZone !== score.zone && audio.started) {
       score.zone = zoneLight.audioZone
       score.activeLayers = zoneKindles(score.zone)
       score.buildZone()
       audio.state.layers = Math.min(score.activeLayers + 1, score.layerGains.length)
+      beds.setZone(zoneLight.audioZone)
+      audio.setHallAcoustics(zoneLight.audioZone === 'hall')
     }
+  }
+  // shared bench rest softens the rain's sound as well as its particles
+  if ((ambience.rainSoftT > 0) !== rainWasSoft) {
+    rainWasSoft = ambience.rainSoftT > 0
+    beds.soften(rainWasSoft ? 0.35 : 1)
   }
   world.moonDir = night.dirWorld
   world.update(dt, elapsed)

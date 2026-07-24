@@ -56,6 +56,7 @@ export class NightFlow {
     this.ending = true
     this.log.push({ event: 'nights-end', reason, minutes: +this.night.minutes.toFixed(2) })
     this.hooks.setCinematic(true)
+    this.hooks.onReelStart?.() // the score swells — every layer combines (9.2)
     this.reel = { shots: this.buildReel(), i: 0, t: 0, phase: 'reel' }
   }
 
@@ -131,6 +132,7 @@ export class NightFlow {
             friends this night&nbsp; ${s.friends}
           </div>`
         this.card.classList.add('on')
+        this.hooks.onTitleCard?.() // the picardy third lands here (9.2)
         this.log.push({ event: 'title-card', stats: s })
       }
     } else if (this.ending && this.reel?.phase === 'card') {

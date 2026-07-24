@@ -54,6 +54,39 @@ export class HUD {
     this.pendingSays.clear()
   }
 
+  // ——— emote wheel (Part 4.2): hold Tab/Y, aim, release ———
+  ensureWheel() {
+    if (this.wheel) return
+    this.wheel = document.createElement('div')
+    this.wheel.className = 'emotewheel'
+    this.wheelItems = []
+    const defs = [['wave', 'wave'], ['point', 'point'], ['giggle', 'giggle'], ['sleep', 'sleep']]
+    defs.forEach(([id, label], i) => {
+      const d = document.createElement('div')
+      d.className = 'ew-item ew-' + i
+      d.textContent = label
+      this.wheel.appendChild(d)
+      this.wheelItems.push({ id, el: d })
+    })
+    document.getElementById('ui').appendChild(this.wheel)
+  }
+  showEmoteWheel(giggleUnlocked) {
+    this.ensureWheel()
+    this.wheelItems[2].el.classList.toggle('locked', !giggleUnlocked)
+    this.wheel.classList.add('on')
+    this.wheelSel = -1
+  }
+  highlightEmote(i) {
+    this.wheelSel = i
+    this.wheelItems?.forEach((w, k) => w.el.classList.toggle('sel', k === i))
+  }
+  hideEmoteWheel() {
+    this.wheel?.classList.remove('on')
+    const sel = this.wheelSel ?? -1
+    this.wheelSel = -1
+    return sel >= 0 ? this.wheelItems[sel].id : null
+  }
+
   // delayed subtitle that clearSubtitle() can still cancel (teleport rigs
   // must not inherit queued trinket lines — 12.5 anti-pattern)
   sayLater(text, delaySeconds, seconds = 4) {

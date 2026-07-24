@@ -124,6 +124,19 @@ try {
   check('photo mode: free camera + hint up', d.photo === true && hint)
   await page.evaluate(() => window.__MOONREST__.togglePhotoMode(false))
 
+  // — emote wheel (Part 4.2): hold Tab, pick, release —
+  await page.evaluate(() => window.__MOONREST__.teleportPlayer(2, -17, 0))
+  await page.keyboard.down('Tab')
+  await page.waitForTimeout(400)
+  const wheelUp = await page.evaluate(() => document.querySelector('.emotewheel')?.classList.contains('on'))
+  await page.keyboard.press('Digit1')
+  await page.waitForTimeout(250)
+  await page.keyboard.up('Tab')
+  await page.waitForTimeout(300)
+  const emoted = await page.evaluate(() => window.__MOONREST__.state.action)
+  check('emote wheel: Tab-hold → pick → wave', wheelUp === true && emoted === 'wave', `action=${emoted}`)
+  await page.evaluate(() => window.__MOONREST__.setAction(null))
+
   // — error boundary (synthetic event — no real throw) —
   await page.evaluate(() => window.__MOONREST__.triggerErrorBoundary())
   const err = await page.evaluate(() => document.querySelector('.errorcard')?.textContent ?? '')

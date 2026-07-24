@@ -71,11 +71,16 @@ export class AudioEngine {
     this.reverbHall.buffer = this.makeImpulse(4.0)
     this.reverbSend = ctx.createGain()
     this.reverbSend.gain.value = 0.25
-    this.reverbSend.connect(this.reverb)
+    // one send, two rooms: the 2.5s space everywhere, the 4s vault in the Hall
+    this.roomMix = ctx.createGain()
+    this.roomMix.gain.value = 1
+    this.hallMix = ctx.createGain()
+    this.hallMix.gain.value = 0
+    this.reverbSend.connect(this.roomMix)
+    this.roomMix.connect(this.reverb)
+    this.reverbSend.connect(this.hallMix)
+    this.hallMix.connect(this.reverbHall)
     this.reverb.connect(this.master)
-    this.hallSend = ctx.createGain()
-    this.hallSend.gain.value = 0
-    this.hallSend.connect(this.reverbHall)
     this.reverbHall.connect(this.master)
 
     // tape hiss: looped filtered noise, -42dB under everything
@@ -132,6 +137,14 @@ export class AudioEngine {
     const rng = worldRNG.fork('noise')
     for (let i = 0; i < len; i++) d[i] = rng.next() * 2 - 1
     return buf
+  }
+
+  // the Candlelit Hall answers in its own 4-second stone (Part 9.1)
+  setHallAcoustics(on) {
+    if (!this.started) return
+    const t = this.ctx.currentTime
+    this.roomMix.gain.setTargetAtTime(on ? 0.3 : 1, t, 0.8)
+    this.hallMix.gain.setTargetAtTime(on ? 1 : 0, t, 0.8)
   }
 
   rms(busName) {

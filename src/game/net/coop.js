@@ -222,6 +222,7 @@ export class Net {
     this.myName = sanitizeName(name ?? DEFAULT_NAMES[1])
     this.code = String(code).toUpperCase()
     return new Promise((resolve, reject) => {
+      this._joinReject = reject
       this.peer = new Peer(this._peerOpts())
       this.peer.on('error', (e) => { this.log.push({ ev: 'error', type: e.type }); reject(e) })
       this.peer.on('open', () => {
@@ -229,7 +230,7 @@ export class Net {
         this.hostConn = conn
         conn.on('open', () => conn.send({ t: 'hello', name: this.myName }))
         conn.on('data', (m) => {
-          if (m.t === 'snap') { this._applySnap(m); resolve(m.you) }
+          if (m.t === 'snap') { this._joinReject = null; this._applySnap(m); resolve(m.you) }
           else this._clientData(m)
         })
         conn.on('close', () => this._hostLost())
@@ -272,6 +273,10 @@ export class Net {
     if (m.ev === 'kindle') {
       const light = this.h.world.lights.find((l) => l.id === m.id)
       if (!light || light.kindled) return
+      // host-side reach check: a keeper can only kindle what they stand beside
+      // (clients enforce 2m; the host allows slack for interp, not teleports)
+      const rp = this.remotes.get(from)
+      if (rp && Math.hypot(rp.pos.x - light.x, rp.pos.z - light.z) > 8) return
       if (m.id === 'isle-keep-brazier' && !this._allChanneling(m.id)) {
         this.conns.get(from)?.send({ t: 'deny', reason: 'brazier' })
         return
@@ -344,7 +349,15 @@ export class Net {
     else if (m.t === 'peer+') { this._addRemote(m.id, m.name, m.tint); this.roster.set(m.id, { name: m.name, tint: m.tint }); this.h.onPeerJoin?.(m) }
     else if (m.t === 'peer-') { this.roster.delete(m.id); this._fade(m.id) }
     else if (m.t === 'deny') this.h.onDeny?.(m.reason)
-    else if (m.t === 'full') this._hostLost()
+    else if (m.t === 'full') {
+      // a fifth lantern: turned away kindly, not "host lost" (Part 5.1 max 4)
+      this.log.push({ ev: 'full' })
+      this.role = null
+      try { this.peer?.destroy() } catch (e) { /* already down */ }
+      this.h.onDeny?.('full')
+      this._joinReject?.(new Error('night full'))
+      this._joinReject = null
+    }
   }
 
   _applySnap(m) {
