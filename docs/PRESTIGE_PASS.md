@@ -79,7 +79,21 @@ hat silhouette that separates from the background. Accept: in every
 screenshot containing the player, the character silhouette and hat are
 identifiable at a glance.
 
-Only when AA.1–AA.7 all pass with screenshot evidence in `POLISH_JUDGE.md`
+**AA.8 It's blurry.** The build renders at a low internal resolution and
+upscales, so everything reads smeared. Adopt Part Q's **Restored** mode as the
+DEFAULT immediately: render at native canvas resolution x devicePixelRatio
+(cap 2.0), no downscale pass; textures stay small and hand-painted but their
+texel edges must be razor-crisp squares (nearest filtering at native res), not
+mush; dither strength <= 0.15 so it reads as film grain, not noise; UI and
+text pixel-sharp at DPR. Benchmark against funded stylized games that do
+chunky-content-rendered-crisp: Lunacid's default "as it appears in memory"
+mode, A Short Hike, Tunic. The soft low-res look survives ONLY as the optional
+N64/PS1 dials. Accept: a 1920x1080 screenshot shows hard texel edges (visible
+single-pixel-wide edges on texture boundaries) and sharp menu text; a
+side-by-side of old default vs Restored is saved to docs/build/shots/ and
+inspected.
+
+Only when AA.1–AA.8 all pass with screenshot evidence in `POLISH_JUDGE.md`
 does the rest of this document's work begin.
 
 ---
