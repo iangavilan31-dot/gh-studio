@@ -35,21 +35,24 @@ const FRAG = /* glsl */ `
   uniform float uFogNear;
   uniform float uFogFar;
   uniform float uFogInfluence;
+  uniform vec2 uNearFade;
   void main() {
     vec4 tex = texture2D(uMap, vUv);
     float fogF = smoothstep(uFogNear, uFogFar, vFogDepth) * uFogInfluence;
     vec3 col = mix(tex.rgb * uColor, uFogColor, fogF);
     // near-camera fade: a raindrop half a meter from the lens otherwise
-    // becomes a full-frame translucent monolith (judge pass 3, finding 1)
-    float nearF = smoothstep(0.45, 2.0, vFogDepth);
+    // becomes a full-frame translucent monolith (judge pass 3, finding 1);
+    // per-system range so close-up bursts (intro ignition) still land
+    float nearF = smoothstep(uNearFade.x, uNearFade.y, vFogDepth);
     gl_FragColor = vec4(col, tex.a * vAlpha * (1.0 - fogF * 0.6) * nearF);
   }
 `
 
 export class ParticleSystem {
-  constructor(scene, { tex, max = 200, color = 0xffffff, additive = true, stretchY = 1, fogInfluence = 1, flat = false }) {
+  constructor(scene, { tex, max = 200, color = 0xffffff, additive = true, stretchY = 1, fogInfluence = 1, flat = false, nearFade = [0.45, 2.0] }) {
     this.max = max
     this.flat = flat // ground-plane quads (splash rings) instead of billboards
+    this.nearFade = nearFade // [start, full] camera distance for the near fade
     this.count = 0
     this.data = [] // {pos:Vector3, vel:Vector3, life, maxLife, size, seed, update?}
     const base = new THREE.PlaneGeometry(1, 1)
@@ -72,6 +75,7 @@ export class ParticleSystem {
       uCamRight: { value: new THREE.Vector3(1, 0, 0) },
       uCamUp: { value: new THREE.Vector3(0, 1, 0) },
       uStretchY: { value: stretchY },
+      uNearFade: { value: new THREE.Vector2(nearFade[0], nearFade[1]) },
       uFogColor: globalUniforms.uFogColor,
       uFogNear: globalUniforms.uFogNear,
       uFogFar: globalUniforms.uFogFar,
