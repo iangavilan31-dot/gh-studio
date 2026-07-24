@@ -43,8 +43,15 @@ export class Input {
       if (this.pointerLocked) {
         this.lookDX += e.movementX
         this.lookDY += e.movementY
+      } else if (this._dragging) {
+        // sandboxed embeds (artifact iframes) can deny pointer lock outright —
+        // click-drag look keeps the camera usable everywhere
+        this.lookDX += e.movementX
+        this.lookDY += e.movementY
       }
     })
+    canvas.addEventListener('mousedown', () => { this._dragging = true })
+    window.addEventListener('mouseup', () => { this._dragging = false })
   }
 
   _c(code) { return this.remap[code] ?? code }
@@ -54,7 +61,13 @@ export class Input {
   // one connected gamepad, polled per frame (buttons synthesize key codes so
   // every existing consumer — channel hold included — just works)
   pollGamepad() {
-    const pads = navigator.getGamepads?.() ?? []
+    if (this._padBlocked) return
+    let pads
+    try { pads = navigator.getGamepads?.() ?? [] } catch (e) {
+      // permissions policy in sandboxed embeds throws here — once is enough
+      this._padBlocked = true
+      return
+    }
     const gp = [...pads].find((p) => p && p.connected)
     this.pad = gp ?? null
     if (!gp) return
