@@ -40,7 +40,8 @@ const data = await page.evaluate(async () => {
   M.suppressNightEnd(true)
   const pois = M.pois
   const kb = (type, code) => window.dispatchEvent(new KeyboardEvent(type, { code, bubbles: true }))
-  // the authored opening route: park ritual → east road → Emberwick lamps
+  // the authored opening route: park ritual → east road → Emberwick lamps →
+  // and back west into the shrine country (fills the full ten minutes)
   const villageLights = M.lights.filter((l) => l.zone === 'village').slice(0, 4).map((l) => ({ x: l.x, z: l.z, light: true }))
   const route = [
     { x: 4.2, z: -19.2, light: true },   // Beldam's bench lamp (her pointer)
@@ -51,6 +52,12 @@ const data = await page.evaluate(async () => {
     { x: 72, z: 1 }, { x: 88, z: 2 },    // into the street
     ...villageLights,
     { x: 137, z: 4 },                    // the gate landmark
+    // the return: back down the street, out west to the wayside shrines
+    { x: 100, z: 2 }, { x: 72, z: 1 }, { x: 40, z: 0 }, { x: 24, z: 0 },
+    { x: -6, z: 20 }, { x: -36, z: 34 },
+    { x: -52, z: 42, light: true },      // wayside shrine 1 (deep amber)
+    { x: -34, z: 22 },                   // the memorial stone
+    { x: 0, z: 0 },                      // the park heart
   ]
   const events = []
   let wp = 0, prev = null, channelStart = null
@@ -62,12 +69,12 @@ const data = await page.evaluate(async () => {
     await new Promise((r) => setTimeout(r, 100))
     const s = M.state
     const nt = s.nightT - nt0
-    if (nt >= 10 || wp >= route.length) break
-    const t = route[wp]
+    if (nt >= 10) break // the full ten minutes — route exhaustion just idles at the park heart
+    const t = route[Math.min(wp, route.length - 1)]
     const dx = t.x - s.playerPos[0], dz = t.z - s.playerPos[2]
     const d = Math.hypot(dx, dz)
     if (!channelStart) M.setCamYaw(Math.atan2(-dx, -dz)) // steer toward the waypoint
-    if (d < 2.4) {
+    if (d < 1.8 && wp < route.length) { // inside interact range (2.0), not outside it
       if (t.light && !channelStart) {
         kb('keyup', 'KeyW')
         kb('keydown', 'KeyE')

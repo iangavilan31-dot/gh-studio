@@ -1998,14 +1998,14 @@ export class World {
     const hallY = hy(-110, 152)
     this.postcards = [
       // the Long Bench from the south lawn, path leading away, late moon
-      { zone: 'park', idx: 1, pos: [-2.4, hy(-2.4, -24.0) + 1.4, -24.0], look: [2.6, hy(2, -19.6) + 1.7, -19.6], minute: 33 },
+      { zone: 'park', idx: 1, pos: [8, hy(8, -23) + 1.4, -23], look: [1.6, hy(2, -19.6) + 1.7, -19.4], minute: 33 }, // from the east: lamp fore-right, bench subject, trunk frames the left edge
       // downhill from the top of Emberwick: lamps stepping down, moon low west
       // (dolly 3m forward — the empty bottom third read as void; judge #9)
       { zone: 'village', idx: 1, pos: [123, streetH(123) + 2.0, streetZ(123) + 1.6], look: [96, streetH(96) + 1.2, streetZ(96)], minute: 30 },
       // the roof-edge canyon: down the street from above, warm windows both
       // sides, the moon low at the street's end (the flat walkable roofs
       // offer no "roofscape" — the drama is the street below)
-      { zone: 'rooftops', idx: 1, pos: [124, streetH(124) + 5.6 + 1.0, streetZ(124) - 3.5], look: [102, streetH(102) + 4.5, streetZ(102)], minute: 33 },
+      { zone: 'rooftops', idx: 1, pos: [124, streetH(124) + 5.6 + 1.0, streetZ(124) - 3.5], look: [102, streetH(102) + 5.2, streetZ(102)], minute: 34 }, // moon deeper in frame
       // across the colonnade to the moonwell, moon in the southeast gap
       { zone: 'ruins', idx: 1, pos: [-104, hy(-104, -7) + 1.5, -7], look: [-117, hy(-117, 5) + 2.4, 5], minute: 22 },
       // castle silhouette across the moat from the west bank — at minute 3
@@ -2014,9 +2014,9 @@ export class World {
       // the album cover: throne steps, carpet, candle vault (E.6)
       { zone: 'hall', idx: 1, pos: [-110, hallY + 1.3, 162.5], look: [-110, hallY + 2.6, 169.8], minute: 24 },
       // under the arch looking back down the path, moon low over the trail
-      { zone: 'mosswood', idx: 1, pos: [82, hy(82, 109.5) + 1.6, 109.5], look: [58, hy(58, 111) + 2.8, 111], minute: 30 },
+      { zone: 'mosswood', idx: 1, pos: [82, hy(82, 109.5) + 1.6, 109.5], look: [58, hy(58, 111) + 2.8, 111], minute: 33 }, // moon in the corridor gap below the canopy
       // keep-top vista: the best view of the moon in the game (E.8)
-      { zone: 'isle', idx: 1, pos: [0, kBase + 11.2, -150], look: [-14, kBase + 12.4, -177], minute: 38 },
+      { zone: 'isle', idx: 1, pos: [0, kBase + 11.2, -150], look: [-18, kBase + 12.4, -176], minute: 38 }, // panned off the brazier halo's frame edge
     ]
   }
 

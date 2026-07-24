@@ -17,8 +17,11 @@ page.on('console', (m) => { if (m.type() === 'error') issues.push(m.text()) })
 await page.goto(`http://localhost:${PORT}/`)
 await page.waitForFunction(() => window.__MOONREST__?.ready)
 console.log('signature:', JSON.stringify(await page.evaluate(() => window.__MOONREST__.nightSignature)))
-await page.evaluate(() => window.__MOONREST__.teleportPlayer(-5.6, -28, 2.4))
-await page.evaluate(() => { window.__MOONREST__.skipTo(34); window.__MOONREST__.setCamYaw(1.01) }) // low western moon in frame
+// the frame must PROVE first person: two meters from a lamp the keeper
+// just lit, its pool at their feet, the low moon behind it
+await page.evaluate(() => window.__MOONREST__.kindle('park-bench-lamp'))
+await page.evaluate(() => window.__MOONREST__.teleportPlayer(6.5, -17, 0.81))
+await page.evaluate(() => { window.__MOONREST__.skipTo(34); window.__MOONREST__.setCamYaw(0.81) })
 await page.waitForTimeout(600)
 await page.keyboard.press('v')
 await page.waitForTimeout(900)

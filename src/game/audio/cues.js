@@ -72,7 +72,8 @@ class PositionalCues {
   // cinematics/photo flights leave the player parked — ramp the cues out
   // rather than droning at their last gain through a whole reel
   duck() {
-    if (!this.started || !audio.ctx) return
+    if (!this.started || !audio.ctx || this._ducked) return
+    this._ducked = true // one automation event, not one per frame
     const t = audio.ctx.currentTime
     for (const c of [this.bell, this.organ]) c?.g.gain.setTargetAtTime(0, t, 0.4)
   }
@@ -82,6 +83,7 @@ class PositionalCues {
   // a rumor at the edge of its radius
   update(px, pz, viewYaw) {
     if (!this.started || !audio.ctx) return
+    this._ducked = false
     const t = audio.ctx.currentTime
     for (const c of [this.bell, this.organ]) {
       if (!c) continue

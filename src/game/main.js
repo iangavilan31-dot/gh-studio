@@ -41,7 +41,8 @@ const night = new Night(scene)
 const hud = new HUD()
 
 // particle systems (global cap 2000 across all — Part 8.7)
-const embers = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#ffb45e' }), max: 220, additive: true })
+// tight near-fade: the intro ignition burst happens ~1m from the camera
+const embers = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#ffb45e' }), max: 220, additive: true, nearFade: [0.08, 0.35] })
 const stars = new Stars(scene)
 const ambience = new Ambience(scene, world)
 
@@ -312,11 +313,12 @@ function updateIntro(dt) {
   // beats: high moon gaze → descend through the fog to the cold lamp →
   // Beldam asleep → the player's lantern flares → pull out to the orbit
   const beats = [
-    // drift up to the moon…
-    { a: 0.0, b: 4.6, p0: [-8, 9.5, -30], p1: [-5.6, 7.9, -27.6], l0: [32, 32, -22], l1: [30.4, 27.2, -21.2] },
-    // …and HOLD on it — a breath, not a pan (the reveal needs a beat to land)
-    { a: 4.6, b: 7.0, p0: [-5.6, 7.9, -27.6], p1: [-5, 7.5, -27], l0: [30.4, 27.2, -21.2], l1: [30, 26, -21] },
-    { a: 7.0, b: 12.0, p0: [-5, 7.5, -27], p1: [4.6, ty + 1.9, -14.8], l0: [30, 26, -21], l1: [4.2, ty + 2.5, -19.2] },
+    // drift up to the moon — the path rides south of the big tree so the
+    // sightline CLEARS the canopy; the disc is framed, never sliced
+    { a: 0.0, b: 4.6, p0: [-8, 9.5, -35.5], p1: [-5.6, 7.9, -33], l0: [32, 32, -22], l1: [30.4, 29.6, -20.2] },
+    // …and HOLD on it — a breath, not a pan (judge pass 4)
+    { a: 4.6, b: 7.0, p0: [-5.6, 7.9, -33], p1: [-5, 7.5, -32.4], l0: [30.4, 29.6, -20.2], l1: [30, 28.6, -20] },
+    { a: 7.0, b: 12.0, p0: [-5, 7.5, -32.4], p1: [4.6, ty + 1.9, -14.8], l0: [30, 28.6, -20], l1: [4.2, ty + 2.5, -19.2] },
     { a: 12.0, b: 15.5, p0: [4.6, ty + 1.9, -14.8], p1: [3.1, ty + 1.5, -17.5], l0: [4.2, ty + 2.5, -19.2], l1: [1.6, ty + 1.3, -19.6] },
     { a: 15.5, b: 17.5, p0: [3.1, ty + 1.5, -17.5], p1: [4.5, ty + 1.45, -17.0], l0: [1.6, ty + 1.3, -19.6], l1: [2.6, ty + 1.15, -18.2] },
   ]
@@ -678,8 +680,9 @@ function tick() {
     if (shell.blocking && !cinematic) hud.hidePrompt()
     player.update(NULL_INPUT, orbit.smoothYaw, dt, elapsed)
   }
-  // Q.3: in the wizard's eyes the wizard is not in front of them
-  rig.group.visible = !(orbit.firstPerson && mode === 'game' && !cinematic && !photo.on)
+  // Q.3: in the wizard's eyes the wizard is not in front of them — and on the
+  // way OUT the rig stays hidden until the camera has eased off the head
+  rig.group.visible = !((orbit.firstPerson || orbit.curDist < 0.7) && mode === 'game' && !cinematic && !photo.on)
   // staff-lantern glow pulses with footsteps (4.1), settling between strides
   if (rig.staffHalo) {
     staffPulse = Math.max(0, staffPulse - dt * 2.2)
@@ -984,7 +987,7 @@ window.__MOONREST__ = {
   get stirLog() { return npcs.stirLog ?? [] },
   get trinkets() { return progress.trinkets },
   bootAudio() { bootAudio(); return audio.started },
-  get lights() { return world.lights.map((l) => ({ id: l.id, kindled: l.kindled, x: l.x, z: l.z })) },
+  get lights() { return world.lights.map((l) => ({ id: l.id, zone: l.zone, kindled: l.kindled, x: l.x, z: l.z })) },
   // AA.5 wander-test surface: everything actionable or discoverable a walker
   // can "surface" — interactables (lights/brews), foglands breadcrumbs +
   // fingerposts, and the sleepers themselves
