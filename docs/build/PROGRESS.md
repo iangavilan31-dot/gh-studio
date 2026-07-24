@@ -420,3 +420,23 @@ each fix, then pass 2. Exit: two consecutive passes avg ≥9.0, no category
 If context compacts here: re-read PRESTIGE_PASS.md Part 0 + Part L, this
 tail, and POLISH_JUDGE.md; the gate logs live in the session scratchpad
 (judge1.log). All 11 gates were green at commit ff496e4.
+
+## 2026-07-24 — Judge pass 1 scored 8.59; pass 2 in flight
+
+Pass 1: honest 8.59 avg (POLISH_JUDGE.md), all hard gates green on the clean
+sequential record. Reviewers A (visual) + B (code) filed 20 findings; 16 fixed
+same-pass, 4 carried. Pass-2 batch shipped: reveal volumes (C.2), charm idles +
+kindle look-back (C.4), reach-by-height channels (C.3), uphill/downhill feel
+(C.1), first-kindle silence (F.3), mossy tiled shingles (B.3), densest rooftop
+sky, hall floor pools + brighter bake (E.6). Pass-2 evidence pipeline
+(build → reel → postcards → 11 gates, STRICTLY SEQUENTIAL — see DECISIONS #1)
+running; on completion: read reel, score pass 2, spawn fresh reviewers if
+scores near the bar. Deferred consciously: P.4 fingerprints 7/8, F.2
+positional audio, Part O Watcher/Undercroft/BloodMoon, Q.3 first-person —
+ledger holds them open; M-cuts law says quality-over-scope.
+
+If compacted: goal = POLISH_JUDGE.md two consecutive passes avg ≥9.0 (no cat
+<8.0, opening/movement/atmosphere/prod-value ≥9.0, audio ≥8.5) + all gates +
+PROGRESS ends with PRESTIGE PASS COMPLETE — SHIP. Re-read PRESTIGE_PASS Part L
++ POLISH_JUDGE.md tail + this entry. Artifact republish steps in the post-ship
+entry above (package-artifact.mjs + Artifact url).
