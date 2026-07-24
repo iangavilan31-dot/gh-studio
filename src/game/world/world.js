@@ -1828,7 +1828,7 @@ export class World {
       // across the colonnade to the moonwell, moon in the southeast gap
       { zone: 'ruins', idx: 1, pos: [-104, hy(-104, -7) + 1.5, -7], look: [-117, hy(-117, 5) + 2.4, 5], minute: 22 },
       // castle silhouette across the moat water from the west bank
-      { zone: 'gloomspire', idx: 1, pos: [-96, hy(-96, 116) + 1.6, 116], look: [-114, hy(-114, 127) + 9.5, 127], minute: 16 },
+      { zone: 'gloomspire', idx: 1, pos: [-140, hy(-140, 114) + 2.2, 114], look: [-112, hy(-112, 126) + 8.5, 126], minute: 16 },
       // the album cover: throne steps, carpet, candle vault (E.6)
       { zone: 'hall', idx: 1, pos: [-110, hallY + 1.15, 158], look: [-110, hallY + 2.8, 169.5], minute: 24 },
       // under the arch looking back down the path, moon low over the trail
