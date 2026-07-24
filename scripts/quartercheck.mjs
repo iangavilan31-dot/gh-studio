@@ -27,7 +27,6 @@ const browser = await chromium.launch({
   args: ['--no-sandbox'],
 })
 const page = await browser.newPage()
-await page.addInitScript(() => { window.__NIGHT_SEED__ = 42 }) // D.1: rigs run a pinned night signature
 let fails = 0
 for (const name of shots) {
   const file = resolve(shotsDir, `${name}.png`)

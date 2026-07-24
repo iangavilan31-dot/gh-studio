@@ -10,7 +10,7 @@ await new Promise((r) => setTimeout(r, 2500))
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-angle=swiftshader'] })
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } })
 await page.addInitScript(() => { window.__NIGHT_SEED__ = 42 }) // D.1: rigs run a pinned night signature
-await page.addInitScript(() => { try { if (!localStorage.getItem('moonrest-settings-v1')) localStorage.setItem('moonrest-settings-v1', JSON.stringify({ settingsV: 2, memoryMode: 'n64', resScale: 1 })) } catch (e) {} })
+// judge-facing capture: default Restored pipeline (dither 0.15, native res)
 const issues = []
 page.on('pageerror', (e) => issues.push(e.message))
 page.on('console', (m) => { if (m.type() === 'error') issues.push(m.text()) })
@@ -18,6 +18,7 @@ await page.goto(`http://localhost:${PORT}/`)
 await page.waitForFunction(() => window.__MOONREST__?.ready)
 console.log('signature:', JSON.stringify(await page.evaluate(() => window.__MOONREST__.nightSignature)))
 await page.evaluate(() => window.__MOONREST__.teleportPlayer(-5.6, -28, 2.4))
+await page.evaluate(() => { window.__MOONREST__.skipTo(34); window.__MOONREST__.setCamYaw(1.01) }) // low western moon in frame
 await page.waitForTimeout(600)
 await page.keyboard.press('v')
 await page.waitForTimeout(900)

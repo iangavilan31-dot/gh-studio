@@ -75,15 +75,16 @@ export function applyPose(rig, st, time) {
   b.spine.rotation.z += idleShift * 0.03 * (1 - m)
 
   // — head: gentle counter-tilt, looks ahead; idle glances wander —
-  // C.4 proud nod: one dip-and-return after a kindle streak
-  const nodF = (st.nod ?? 0) > 0 ? Math.sin((1 - st.nod) * Math.PI * 2) * 0.14 * st.nod : 0
+  // C.4 proud nod: one dip-and-return after a kindle streak (never mid-action)
+  const nodF = !st.action && (st.nod ?? 0) > 0 ? Math.sin((1 - st.nod) * Math.PI * 2) * 0.14 * st.nod : 0
   b.head.rotation.x = -b.spine.rotation.x * 0.5 + breathe * 0.015 * (1 - m) + nodF
   b.head.rotation.z = -b.spine.rotation.z * 0.6
   b.head.rotation.y = idleShift * 0.14 + Math.sin(st.idleShiftT * 0.31) * 0.05 * (1 - m) + (st.headLook ?? 0)
 
   // — hat: counter-bobs the breathe; brim-flap while jogging; tip lags the lean —
   // C.4: a mosswood gust tugs the brim and drags the beard for a moment
-  const gust = st.windGust ?? 0
+  // (never mid-action: a sleeper's hat must not flap)
+  const gust = st.action ? 0 : (st.windGust ?? 0)
   b.hat.position.y = 0.24 - breathe * 0.006 * (1 - m) - gaitBob * 0.35
   b.hat.rotation.x = Math.sin(ph * 2) * 0.05 * j - lean * 0.8 + Math.sin(st.breatheT * 11) * 0.055 * gust
   b.hat.rotation.z = Math.sin(st.breatheT * 0.6) * 0.02 - turnLean * 0.7 + (0.1 + Math.sin(st.breatheT * 7.3) * 0.05) * gust

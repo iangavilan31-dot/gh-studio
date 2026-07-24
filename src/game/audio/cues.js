@@ -69,6 +69,14 @@ class PositionalCues {
     return { x, z, radius, input, g, pan, debug: { pan: 0, gain: 0, d: 0 } }
   }
 
+  // cinematics/photo flights leave the player parked — ramp the cues out
+  // rather than droning at their last gain through a whole reel
+  duck() {
+    if (!this.started || !audio.ctx) return
+    const t = audio.ctx.currentTime
+    for (const c of [this.bell, this.organ]) c?.g.gain.setTargetAtTime(0, t, 0.4)
+  }
+
   // pan = source direction projected on the camera right vector — full
   // left/right at ±90°, centered ahead/behind; distance curve keeps the cue
   // a rumor at the edge of its radius

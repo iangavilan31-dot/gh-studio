@@ -101,8 +101,11 @@ player.onLand = (impact) => {
       vel: new THREE.Vector3(drng.range(-0.5, 0.5), drng.range(0.2, 0.5), drng.range(-0.5, 0.5)),
       maxLife: drng.range(0.4, 0.8),
       size: drng.range(0.1, 0.2) * (0.6 + impact * 0.6),
-      alpha: 0.28,
       seed: drng.next(),
+      update(p, dt2) {
+        p.pos.addScaledVector(p.vel, dt2)
+        p.alpha = 0.28 * (1 - p.life / p.maxLife) // fade out, not pop out
+      },
     })
   }
 }
@@ -168,7 +171,9 @@ const lobbyProvider = () => {
 
 function applyNetEvent(ev) {
   if (ev.ev === 'kindle') {
-    world.kindle(ev.id, { remote: true }) // full consequences run deterministically on every client
+    // your OWN kindle also arrives via the host broadcast — it must keep its
+    // local feedback (glance-back, rumble, streak); only a PEER's is remote
+    world.kindle(ev.id, { remote: ev.from !== net.myId })
   } else if (ev.ev === 'emote' || ev.ev === 'chan') {
     const rp = net.remotes.get(ev.from)
     if (rp) {
@@ -195,9 +200,11 @@ const net = new Net({
     kindled: world.kindledIds, nightT: night.minutes, phase: night.phaseAge ?? null,
     catAwake: npcs.ghostCat?.state === 'follow', momentsDone: [...moments.done],
     mounts: npcs.chickens.map((c) => (c.state === 'mount' ? c.riderId : null)),
+    nightSeed: nightSignature.seed, // D.1: peers share one dealt night
   }),
   applySnapshot: (s) => {
     if (s.you != null) swapLocalTint(s.you) // join order picks your robe
+    if (s.nightSeed != null && s.nightSeed !== nightSignature.seed) applyNightSeed(s.nightSeed) // one dealt night for the lobby
     for (const id of s.kindled ?? []) world.kindle(id, { quiet: true })
     if (s.nightT != null) { night.minutes = s.nightT; night.targetMinutes = s.nightT }
     if (s.phase != null) night.setPhase(s.phase)
@@ -331,8 +338,8 @@ function updateIntro(dt) {
   if (!intro.embered && t >= 15.85) {
     // ignition punch: one ember burst off the staff lantern the moment it takes
     intro.embered = true
-    if (rig.staffLantern) {
-      rig.staffLantern.getWorldPosition(_iv)
+    if (rig.bones.staffLantern) {
+      rig.bones.staffLantern.getWorldPosition(_iv)
       emberBurst(embers, _iv.x, _iv.y, _iv.z, worldRNG.fork('introember'), 16)
     }
   }
@@ -485,16 +492,17 @@ const zoneKindles = (zone) => world.lights.filter((l) => l.zone === zone && l.ki
 // D.1 the Uncertain Road: each real-world night deals gentle variations —
 // cosmetic scalars only (fog reach, wind temper, moon warmth), deterministic
 // per seed, NEVER gating progression. Rigs may pin __NIGHT_SEED__.
-const nightSeedVal = window.__NIGHT_SEED__ ?? Math.floor(Date.now() / 86400000)
-const sigRng = worldRNG.fork('night/' + nightSeedVal)
-const nightSignature = {
-  seed: nightSeedVal,
-  fogDrift: +(0.94 + sigRng.next() * 0.12).toFixed(3),   // ±6% fog reach
-  gustiness: +(0.7 + sigRng.next() * 0.6).toFixed(2),    // wind temper
-  moonWarmth: +(0.94 + sigRng.next() * 0.14).toFixed(3), // moon face tint
+const nightSignature = { seed: 0, fogDrift: 1, gustiness: 1, moonWarmth: 1 }
+function applyNightSeed(seedVal) {
+  const sigRng = worldRNG.fork('night/' + seedVal)
+  nightSignature.seed = seedVal
+  nightSignature.fogDrift = +(0.94 + sigRng.next() * 0.12).toFixed(3)   // ±6% fog reach
+  nightSignature.gustiness = +(0.7 + sigRng.next() * 0.6).toFixed(2)    // wind temper
+  nightSignature.moonWarmth = +(0.94 + sigRng.next() * 0.14).toFixed(3) // moon face tint
+  night.signatureTint = nightSignature.moonWarmth
+  night.setPhase(night.phaseAge) // re-apply: the face tint carries the signature
 }
-night.signatureTint = nightSignature.moonWarmth
-night.setPhase(night.phaseAge) // re-apply: the face tint now carries the signature
+applyNightSeed(window.__NIGHT_SEED__ ?? Math.floor(Date.now() / 86400000))
 
 let kindleStreak = 0, lastKindleT = -999
 world.onKindle = (light, remote) => {
@@ -504,7 +512,8 @@ world.onKindle = (light, remote) => {
     // across the map must not yank the local head or buzz the pad
     player.lookBack(light.x, light.z, 2.6)
     input.rumble(0.3, 0.6, 140) // controller ping (4.2) — no-op without a pad
-    // C.4 proud nod: the third lamp inside a minute earns a small dip of the head
+    // C.4 proud nod: a chain of three lamps (each within 60s of the last)
+    // earns a small dip of the head
     kindleStreak = elapsed - lastKindleT < 60 ? kindleStreak + 1 : 1
     lastKindleT = elapsed
     if (kindleStreak >= 3) { player.anim.nod = 1; kindleStreak = 0 }
@@ -641,8 +650,13 @@ function tick() {
     player.update(NULL_INPUT, orbit.smoothYaw, dt, elapsed)
   } else if (!cinematic && !shell.blocking) {
     const jogging = input.down('ShiftLeft', 'ShiftRight') && player.anim.speed > 2
-    // Q.3: V flips between the wizard's back and the wizard's eyes (persisted)
-    if (input.pressed('KeyV')) { shell.s.viewMode = shell.s.viewMode === 'first' ? 'third' : 'first'; shell.save(); applySettings(shell.s) }
+    // Q.3: V flips between the wizard's back and the wizard's eyes (persisted);
+    // stands down if the player has rebound a verb onto KeyV
+    if (input.pressed('KeyV') && !Object.values(input.remap).includes('KeyV')) {
+      shell.s.viewMode = shell.s.viewMode === 'first' ? 'third' : 'first'; shell.save(); applySettings(shell.s)
+    }
+    // first-person eye height follows the pose
+    orbit.fpEyeTarget = player.anim.action === 'sit' ? 0.98 : (player.anim.action === 'lie' || player.anim.action === 'sleep') ? 0.5 : 1.42
     player.update(input, orbit.smoothYaw, dt, elapsed)
     handleEmoteWheel() // consumes the look while open, so the camera holds still
     orbit.update(player.pos, player.yaw, jogging, wheelOpen ? [0, 0] : input.consumeLook(), dt, world.interactables)
@@ -693,6 +707,9 @@ function tick() {
       beds.setZone(zoneLight.audioZone)
       audio.setHallAcoustics(zoneLight.audioZone === 'hall')
     }
+  } else if (audio.started) {
+    cues.duck() // cinematic/title/photo: the bell and organ bow out
+    player.anim.windGust = 0 // and the parked rig's hat settles
   }
   // shared bench rest softens the rain's sound as well as its particles
   if ((ambience.rainSoftT > 0) !== rainWasSoft) {
@@ -854,6 +871,39 @@ window.__MOONREST__ = {
       inner: [window.innerWidth, window.innerHeight],
     }
   },
+  // forensic: toggle whole subsystems off to bisect a screenshot artifact
+  debugHide(kind, v = false) {
+    const map = {
+      rain: ambience.rain.mesh, rings: ambience.rings.mesh, smoke: ambience.smoke.mesh,
+      moths: ambience.moths.mesh, sparkle: ambience.sparkle.mesh, mist: ambience.mist.mesh,
+      zzz: ambience.zzz.mesh, leaves: ambience.leaves.mesh, petals: ambience.petals.mesh,
+      arcane: ambience.arcane.mesh, spores: ambience.spores.mesh, drips: ambience.drips.mesh,
+      stars: stars.mesh, meteor: stars.meteor, streak: world.moonStreak,
+      moonface: night.face, flare: night.flare, embers: embers.mesh,
+    }
+    if (!map[kind]) return Object.keys(map)
+    map[kind].visible = v
+    return true
+  },
+  // forensic: everything with a mesh near a world XZ — for hunting mystery
+  // geometry in screenshots (type, size, position, material facts)
+  sceneCensus(x, z, r = 6) {
+    const out = []
+    const v = new THREE.Vector3()
+    scene.traverse((o) => {
+      if (!o.isMesh) return
+      o.getWorldPosition(v)
+      if (Math.hypot(v.x - x, v.z - z) > r) return
+      const p = o.geometry.parameters ?? {}
+      out.push({
+        geo: o.geometry.type, pos: [+v.x.toFixed(1), +v.y.toFixed(1), +v.z.toFixed(1)],
+        size: [p.width ?? p.radiusTop ?? p.radius ?? -1, p.height ?? -1],
+        vis: o.visible, op: o.material?.uniforms?.uOpacity?.value ?? o.material?.opacity ?? null,
+        blend: o.material?.blending ?? null,
+      })
+    })
+    return out
+  },
   collidersNear(x, z, r = 8) {
     return {
       colliders: world.colliders.filter((c) => Math.hypot(c.x - x, c.z - z) < r).map((c) => ({ x: +c.x.toFixed(1), z: +c.z.toFixed(1), r: +c.r.toFixed(2), h: +(c.h ?? 0).toFixed(2), ground: +world.heightAt(c.x, c.z).toFixed(2) })),
@@ -890,7 +940,7 @@ window.__MOONREST__ = {
       legLx: +rig.bones.legL.rotation.x.toFixed(2),
     }
   },
-  kindle(id) { return net.active ? net.requestKindle(id) : world.kindle(id) },
+  kindle(id) { return net.active ? net.requestKindle(id) : world.kindle(id, { remote: true }) }, // rig path: no C.4 head-yank
   skipTo(min) { night.skipTo(min); return true },
   autopilot() { return autopilot() },
   setPhase(age) { night.setPhase(age); return true },
