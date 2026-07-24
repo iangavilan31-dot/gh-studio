@@ -81,20 +81,27 @@ export class OrbitCamera {
       }
     }
 
-    // C.2 reveal: eased bell over the duration — yaw drifts toward the
-    // landmark (player look input still applies above), distance and FOV widen
+    // C.2 reveal: eased bell over the duration — the FRAME drifts toward the
+    // landmark as a presentation-only yaw offset (movement basis untouched,
+    // so control is influenced, never taken), distance and FOV widen
     let revealAmt = 0
+    this.revealYawOff = this.revealYawOff ?? 0
     if (this.revealT > 0) {
       this.revealT = Math.max(0, this.revealT - dt)
       const x = 1 - this.revealT / this.revealDur
       revealAmt = Math.sin(Math.min(1, x * 1.15) * Math.PI) // ease in, hold, ease out
-      if (this.revealTarget && lookDelta[0] === 0) {
+      if (this.revealTarget) {
         const want = Math.atan2(playerPos.x - this.revealTarget[0], playerPos.z - this.revealTarget[1])
         let dyr = want - this.yaw
         while (dyr > Math.PI) dyr -= Math.PI * 2
         while (dyr < -Math.PI) dyr += Math.PI * 2
-        this.yaw += dyr * Math.min(1, dt * 1.6) * revealAmt
+        const wantOff = Math.max(-0.9, Math.min(0.9, dyr)) * revealAmt
+        this.revealYawOff += (wantOff - this.revealYawOff) * Math.min(1, dt * 2.2)
       }
+    } else if (Math.abs(this.revealYawOff) > 0.001) {
+      this.revealYawOff *= Math.exp(-dt * 2.5)
+    } else {
+      this.revealYawOff = 0
     }
 
     // 0.12s orbit smoothing
@@ -108,10 +115,11 @@ export class OrbitCamera {
     // pivot: 1.8m above hip → about head height of the little wizard + margin
     _pivot.set(playerPos.x, playerPos.y + 1.25, playerPos.z)
 
+    const viewYaw = this.smoothYaw + this.revealYawOff
     _dir.set(
-      Math.sin(this.smoothYaw) * Math.cos(this.smoothPitch),
+      Math.sin(viewYaw) * Math.cos(this.smoothPitch),
       -Math.sin(this.smoothPitch),
-      Math.cos(this.smoothYaw) * Math.cos(this.smoothPitch)
+      Math.cos(viewYaw) * Math.cos(this.smoothPitch)
     )
     const wantDist = this.dist + revealAmt * 2.1
     _desired.copy(_pivot).addScaledVector(_dir, wantDist)
