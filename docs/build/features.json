@@ -958,7 +958,8 @@
     "every zone shot contains >=1 warm accent",
     "programmatic warm-pixel count above threshold per shot"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "lanternpool.png READ: carried warm pool on grass + rim on player, fence catches warmth; pilot embers visible in park/village/hall shots; huecheck warmth park 0.00645 (>0.0015) all 3 zones PASS; perfgate 98 calls"
   },
   {
    "id": "POLISH-AA3",

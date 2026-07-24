@@ -28,7 +28,15 @@ counts until all eight AA items carry screenshot evidence here.
   foglands beside the breadcrumb lantern, rooftops high in the cobalt sky).
 - Known follow-ups logged for AA.4: rooftops pose lost its subject; mosswood
   snore-Z clips frame edge; foglands sky band too dark (AA.3 scope).
-### AA.2 — warm light: pending
+### AA.2 — warm light ✅ 2026-07-24
+- Carried lantern pool: shared-shader per-vertex warm falloff (7m, near-field
+  attenuated so the wearer gets a rim, not a bath) fed by local + remote staff
+  lanterns with flicker; ember pilot-glows breathe on every unkindled light
+  (additive dot, distance-culled); kindled pools unchanged (baked vertex warm).
+- Evidence READ: lanternpool.png (player alone in open dark: ground pool, fence
+  rim, distant pilots), hall.png (sconce pilots + chandelier + carpet),
+  park/village (pilots + warm windows). huecheck PASS 3/3 (park warmth 0.00645
+  vs 0.0015 floor); perfgate PASS (98 calls — pilots are culled).
 ### AA.3 — saturated darkness: pending
 ### AA.4 — density: pending
 ### AA.5 — fun floor: pending

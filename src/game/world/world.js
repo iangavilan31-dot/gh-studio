@@ -210,17 +210,30 @@ export class World {
 
   registerLight(id, zone, parts, x, z, yBase = null) {
     const y = (yBase ?? heightAt(x, z)) + (parts.flameH ?? 3.2)
-    this.lights.push({
+    const light = {
       id, zone, x, z, y,
       parts, kindled: false, bloom: 0,
       flickerSeed: worldRNG.range(0, Math.PI * 2),
       haloBase: parts.halo ? parts.halo.material.uniforms.uOpacity.value : 0.55,
       poolBase: parts.pool ? parts.pool.material.uniforms.uOpacity.value : 0.4,
       glassBase: parts.glass ? parts.glass.material.uniforms.uOpacity.value : 0.45,
-    })
+    }
+    this.lights.push(light)
     this.interactables.push({ id, x, z, kind: 'light' })
     if (parts.flame) this.flames.push({ mesh: parts.flame, tex: parts.flame.material.uniforms.uMap.value, frame: worldRNG.int(0, 3), acc: worldRNG.range(0, 0.12) })
     if (parts.halo) this.halos.push(parts.halo)
+    // ember pilot-glow (AA.2): every cold light advertises itself — a faint
+    // breathing ember at the flame seat until the real flame takes over
+    if (!this.pilotMat) {
+      this.pilotMat = retroMaterial({ map: TEX.glowDot({ name: 'pilot', color: '#e07828' }), transparent: true, depthWrite: false, opacity: 0.5, emissive: 0xd06820 })
+      this.pilotMat.blending = THREE.AdditiveBlending
+    }
+    const pilot = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.34), this.pilotMat)
+    ensureVertexColors(pilot.geometry)
+    pilot.position.set(x, y, z)
+    pilot.renderOrder = 5
+    this.scene.add(pilot)
+    light.pilot = pilot
   }
 
   // decorative pre-lit lamp (foglands breadcrumbs — not objectives)
@@ -252,6 +265,7 @@ export class World {
     light.kindled = true
     light.bloom = 0.0001
     const p = light.parts
+    if (light.pilot) light.pilot.visible = false // the real flame takes over
     if (p.flame) p.flame.visible = true
     if (p.halo) { p.halo.visible = true; p.halo.material.uniforms.uOpacity.value = 0 }
     if (p.pool) { p.pool.visible = true; p.pool.material.uniforms.uOpacity.value = 0 }
@@ -479,6 +493,9 @@ export class World {
     fence(8, -28, 14, -24)
 
     this.poses.park = { pos: [7.5, 1.3, -13.5], look: [1.5, 1.9, -20.2], minute: 33 }
+    // AA.2 evidence pose: the player alone in open dark — only the staff
+    // lantern's traveling pool lights the ground
+    this.poses.lanternpool = { pos: [-8.8, heightAt(-8.8, -24.4) + 1.7, -24.4], look: [-5.6, heightAt(-5.6, -28) + 1.0, -28], minute: 20, player: [-5.6, -28, 0.8] }
     this.poses.player = { pos: [4.8, 1.1, -16.2], look: [2.6, 0.9, -18.4] }
   }
 
@@ -1531,6 +1548,18 @@ export class World {
       f.mesh.lookAt(this.camera.position.x, f.mesh.getWorldPosition(_wp).y, this.camera.position.z)
     }
     for (const h of this.halos) { if (h.visible) h.lookAt(this.camera.position) }
+    // pilot embers breathe (AA.2) — culled with distance like their zones
+    for (const l of this.lights) {
+      if (!l.pilot) continue
+      if (l.kindled) continue
+      const cam = this.camera.position
+      const vis = Math.hypot(cam.x - l.x, cam.z - l.z) < 80
+      l.pilot.visible = vis
+      if (vis) {
+        l.pilot.scale.setScalar(1 + 0.22 * Math.sin(time * 2.1 + l.flickerSeed) + 0.08 * Math.sin(time * 5.3 + l.flickerSeed * 2))
+        l.pilot.lookAt(cam)
+      }
+    }
     for (const s of this.sways) {
       s.rotation.z = Math.sin(time * 0.8 + s.position.x) * 0.06
       s.rotation.x = Math.sin(time * 0.6 + s.position.z) * 0.05

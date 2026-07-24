@@ -21,6 +21,11 @@ export const globalUniforms = {
   // Restored mode (Part Q.1): -0.5 mip LOD bias keeps texel edges crisp at
   // distance without shimmer; 0 in the retro dials
   uLodBias: { value: 0 },
+  // Carried warmth (PRESTIGE AA.2, Lunacid's rule): each player's lantern-staff
+  // casts a traveling warm pool. Up to 4 lanterns (local + 3 remotes); w hides
+  // unused slots far below the world.
+  uLanternPos: { value: [new THREE.Vector3(0, -999, 0), new THREE.Vector3(0, -999, 0), new THREE.Vector3(0, -999, 0), new THREE.Vector3(0, -999, 0)] },
+  uLanternStr: { value: new Float32Array([0, 0, 0, 0]) },
 }
 
 const VERT = /* glsl */ `
@@ -29,11 +34,14 @@ const VERT = /* glsl */ `
   varying vec3 vColor;
   varying float vFogDepth;
   varying float vHemi;
+  varying float vLantern;
   uniform float uTime;
   uniform float uWindAmp;
   uniform float uSnapEnable;
   uniform vec2 uSnapRes;
   uniform float uAffineMix;
+  uniform vec3 uLanternPos[4];
+  uniform float uLanternStr[4];
   void main() {
     vUv = uv;
     vColor = color;
@@ -52,6 +60,19 @@ const VERT = /* glsl */ `
     vFogDepth = -mv.z;
     vec3 wn = normalize(mat3(modelMatrix) * normal);
     vHemi = wn.y * 0.5 + 0.5; // hemisphere blend factor (sky above / fog below)
+    // carried lantern pools (AA.2): per-vertex warm falloff, upfacing bias so
+    // it reads as a pool on the ground and a rim on nearby surfaces
+    vec3 wp = (modelMatrix * vec4(pos, 1.0)).xyz;
+    float lac = 0.0;
+    for (int i = 0; i < 4; i++) {
+      float d = distance(wp, uLanternPos[i]);
+      float f = max(0.0, 1.0 - d / 7.0);
+      // near-field attenuation: the wearer gets a rim, not an orange bath —
+      // the pool lands on the ground around them
+      float nearAtt = 0.3 + 0.7 * smoothstep(0.35, 1.7, d);
+      lac += uLanternStr[i] * f * f * nearAtt;
+    }
+    vLantern = min(lac, 1.0) * (0.55 + 0.45 * vHemi);
     vec4 clip = projectionMatrix * mv;
     if (uSnapEnable > 0.5) {
       // PS1: snap vertices to a coarse screen grid...
@@ -73,6 +94,7 @@ const FRAG = /* glsl */ `
   varying vec3 vColor;
   varying float vFogDepth;
   varying float vHemi;
+  varying float vLantern;
   uniform sampler2D uMap;
   uniform vec3 uFogColor;
   uniform float uFogNear;
@@ -95,6 +117,9 @@ const FRAG = /* glsl */ `
     col *= uAmbient;
     #endif
     col += uEmissive * tex.rgb;
+    // carried lantern warmth (AA.2) — modulated by the texture so painted
+    // detail stays legible inside the pool; applied before fog so fog wins
+    col += vec3(0.98, 0.62, 0.26) * vLantern * 0.38 * (tex.rgb * 0.75 + 0.25);
     float fogF = smoothstep(uFogNear, uFogFar, vFogDepth);
     #ifdef NO_FOG
     fogF = 0.0;
@@ -144,6 +169,8 @@ export function retroMaterial({
       uSnapRes: globalUniforms.uSnapRes,
       uAffineMix: globalUniforms.uAffineMix,
       uLodBias: globalUniforms.uLodBias,
+      uLanternPos: globalUniforms.uLanternPos,
+      uLanternStr: globalUniforms.uLanternStr,
     },
   })
   return mat
