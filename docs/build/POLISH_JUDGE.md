@@ -328,3 +328,55 @@ LOW comment/dead-code → cleaned (quartercheck pin, nod comment, camera).
 F's checked-and-clean list covers: by-reference uniform binding, FP mode
 isolation, overlay replication, signature determinism, cue title-leak,
 chan h relay, input repeat, world builds, late-joiner score.
+
+## Judge pass 3 — SCORED (after POLISH-60/61)
+Official gate record 09:31:19–09:43:05 UTC on the POLISH-60 build:
+11/11 sequential PASS (feel · kindle · traverse · moments · hue · quarter
+· wander · perf · autopilot · coop · shell), build exit 0.
+Evidence read personally this pass: all 9 zone shots, 8 postcards,
+firstperson.png, 6 intro beats (shots/intro/), k1capture.json,
+revealprobe.json, pancheck.json.
+
+1. opening impact **9.0** — captured beat-by-beat: rain-black lift, the
+   moon HOLD through the canopy, descent, Beldam, ignition with rising
+   embers AND the bench initials in frame, seamless title blend. K.1
+   route capture: zero dead stretches. ✓
+2. movement feel **9.0** — landing settle (impact-scaled) + dust + thump,
+   jog camera lag, C.3 reach + replication, headLook ease-out, repeat-key
+   recovery; latency ≤220ms asserted; feel gates green. ✓
+3. camera quality **8.9** — all-zone reveals (probe evidence), doorway
+   crossing flips=0, first-person mode with pose-following eye, jog lag.
+4. character charm **8.8** — charm/gust/nod/landing all present and
+   action-gated; slope stride; local-only glance-back.
+5. zone composition **9.0** — village-1 is the anchor frame (moon over
+   the vanishing point, chickens on moonlit cobbles); gloomspire-1 moon-
+   behind-towers; rooftops-1 street canyon; no frame below ~7.5.
+6. material readability **9.1** — world-wide tiling + vertical-grain
+   posts; masonry/shingle/cobble/water all read at texel scale.
+7. atmosphere **9.2** — the moon is a CHARACTER now (face reads in every
+   frame after the glare cut); near-fade killed the artifact class;
+   fog=horizon; hall shafts; drizzle. ✓
+8. environmental storytelling **8.9** — 8/8 fingerprints (initials appear
+   in the opening!), the king, the stern lantern, shrines/ravens/boat.
+9. interaction satisfaction **8.8** — per-fixture flames, reach-by-height,
+   kindle bloom/chime/layers; pilots advertise.
+10. audio quality **8.9** — positional bell/organ (pan evidence) with
+    cinematic ducking; F.3 complete; motif; RMS-asserted. ✓ (≥8.5)
+11. co-op companionship **8.9** — self-kindle feedback restored, one
+    dealt night per lobby, channel-height replication, 17/17 moments.
+12. UI presentation **9.0** — unchanged.
+13. performance **9.5** — record green; 61–113 calls, 69–88k tris.
+14. stability **9.5** — three adversarial review cycles applied; every
+    rig console-clean; near-camera artifact class eliminated.
+15. emotional memorability **8.9** — the moon language, village-1,
+    the hall king, heard-before-seen landmarks.
+16. perceived production value **9.2** — the reel's floor is ~7.5 and
+    its ceiling is genuine postcard grade. ✓
+
+**Average 9.04 — PASS.** No category <8.0 ✓ (min 8.8). Thresholds:
+opening 9.0 ✓ · movement 9.0 ✓ · atmosphere 9.2 ✓ · audio 8.9 ✓ ·
+production value 9.2 ✓.
+
+**PASS 3 = PASS #1 of the two consecutive required. Pass 4 (confirming)
+follows: fresh reviewers, fix anything found, full sequential record,
+honest rescore.**
