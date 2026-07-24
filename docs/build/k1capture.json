@@ -1,12 +1,22 @@
 {
  "events": [
   {
-   "nt": 0.02,
+   "nt": 0.03,
    "ev": "kindle",
    "id": "park-bench-lamp"
   },
   {
-   "nt": 1.48,
+   "nt": 0.35,
+   "ev": "kindle",
+   "id": "park-lantern-1"
+  },
+  {
+   "nt": 0.74,
+   "ev": "kindle",
+   "id": "park-lantern-2"
+  },
+  {
+   "nt": 1.16,
    "ev": "waypoint",
    "at": [
     24,
@@ -14,7 +24,7 @@
    ]
   },
   {
-   "nt": 1.65,
+   "nt": 1.33,
    "ev": "waypoint",
    "at": [
     40,
@@ -22,12 +32,12 @@
    ]
   },
   {
-   "nt": 1.66,
+   "nt": 1.33,
    "ev": "zone",
    "to": "foglandPV"
   },
   {
-   "nt": 1.85,
+   "nt": 1.54,
    "ev": "waypoint",
    "at": [
     60,
@@ -35,7 +45,7 @@
    ]
   },
   {
-   "nt": 1.98,
+   "nt": 1.66,
    "ev": "waypoint",
    "at": [
     72,
@@ -43,51 +53,28 @@
    ]
   },
   {
-   "nt": 1.99,
+   "nt": 1.67,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 2,
+   "nt": 1.68,
    "ev": "reveal",
    "zone": "village"
   },
   {
-   "nt": 2.15,
+   "nt": 1.83,
    "ev": "waypoint",
    "at": [
     88,
     2
    ]
-  },
-  {
-   "nt": 2.58,
-   "ev": "zone",
-   "to": "rooftops"
-  },
-  {
-   "nt": 2.59,
-   "ev": "reveal",
-   "zone": "rooftops"
-  },
-  {
-   "nt": 2.66,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 2.66,
-   "ev": "waypoint",
-   "at": [
-    137,
-    4
-   ]
   }
  ],
  "gaps": [],
- "simMinutes": 2.66,
- "kindled": 1,
+ "simMinutes": 10,
+ "kindled": 3,
  "endZone": "village",
- "waypointsReached": 9,
+ "waypointsReached": 8,
  "consoleIssues": []
 }
