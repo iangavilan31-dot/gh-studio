@@ -42,6 +42,21 @@ export class InteractSystem {
       const d = Math.hypot(l.x - p.x, l.z - p.z)
       if (d < bestD && !this.losBlocked(p.x, p.z, l.x, l.z, p.y + 1)) { bestD = d; best = l }
     }
+    // nearest brew (instant pickup takes precedence when closer)
+    let bestBrew = null, bestBrewD = RANGE
+    for (const b of this.world.brews ?? []) {
+      if (b.taken) continue
+      const d = Math.hypot(b.x - p.x, b.z - p.z)
+      if (d < bestBrewD) { bestBrewD = d; bestBrew = b }
+    }
+    if (bestBrew && bestBrewD < bestD) {
+      this.hud.showPrompt('take')
+      if (input.pressed('KeyE') && !this.channeling) {
+        this.world.takeBrew(bestBrew.id)
+        this.log.push({ id: bestBrew.id, event: 'brew-taken' })
+      }
+      return
+    }
 
     if (best) this.hud.showPrompt('kindle')
     else this.hud.hidePrompt()

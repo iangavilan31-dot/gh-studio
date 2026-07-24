@@ -68,7 +68,10 @@ async function main() {
     await page.waitForTimeout(1200)
     await page.evaluate(() => window.__MOONREST__.skipTo(24))
     if (process.argv.includes('--kindled')) {
-      await page.evaluate(() => window.__MOONREST__.lights.forEach((l) => window.__MOONREST__.kindle(l.id)))
+      await page.evaluate(() => {
+        window.__MOONREST__.suppressNightEnd(true) // rigs shoot the lit world, not the finale
+        window.__MOONREST__.lights.forEach((l) => window.__MOONREST__.kindle(l.id))
+      })
       await page.waitForTimeout(2600)
     }
 

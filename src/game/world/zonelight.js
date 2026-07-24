@@ -256,8 +256,15 @@ export class ZoneLightState {
     for (let i = 0; i < 5; i++) this.sky.uniforms.uStops.value[i].copy(this.stops[i])
     globalUniforms.uFogColor.value.copy(this.fog)
     globalUniforms.uFogNear.value = this.fogNear
-    globalUniforms.uFogFar.value = this.fogFar
+    // lunar phase tightens fog on new-moon nights (6.2); warmBias from min-30
+    globalUniforms.uFogFar.value = this.fogFar * (this.fogTight ?? 1)
     globalUniforms.uAmbient.value.copy(this.ambient)
+    if (this.warmBias > 0) {
+      const a = globalUniforms.uAmbient.value
+      a.r *= 1 + 0.12 * this.warmBias
+      a.g *= 1 + 0.05 * this.warmBias
+      a.b *= 1 - 0.06 * this.warmBias
+    }
     globalUniforms.uSkyUp.value.copy(this.skyUp)
     // horizon stop follows the blended fog exactly (Rule 3 by construction)
     this.stops[4].copy(this.fog)

@@ -66,6 +66,7 @@ export function lampPost({ height = 3.0, lit = true } = {}) {
   const flameTex = TEX.flameSheet().clone()
   flameTex.repeat.set(0.25, 1)
   const flame = M(new THREE.PlaneGeometry(0.34, 0.34), retroMaterial({ map: flameTex, emissive: 0xffffff, alphaTest: 0.4 }))
+  flame.userData.dyn = true
   flame.position.y = height + 0.22
   g.add(flame)
   const haloMat = retroMaterial({ map: TEX.glowDot({ color: '#e8a84a' }), transparent: true, depthWrite: false, opacity: 0.55 })
@@ -87,16 +88,20 @@ export function lampPost({ height = 3.0, lit = true } = {}) {
 // Shared kindle-state parts builder: glass + flame sprite + halo + pool,
 // tinted by the zone accent (Ruins kindles CYAN — the one cold accent).
 function lightParts({ accent = '#e8a84a', cool = false, flameScale = 1, poolR = 3.4 } = {}) {
+  // parts returned here animate/toggle — never merged into zone statics
   const glassMat = retroMaterial({ map: TEX.white(), emissive: new THREE.Color(accent).multiplyScalar(0.55).getHex(), transparent: true, opacity: 0.45, depthWrite: false })
   const flameTex = TEX.flameSheet({ cool }).clone()
   flameTex.repeat.set(0.25, 1)
   const flame = M(new THREE.PlaneGeometry(0.34 * flameScale, 0.34 * flameScale), retroMaterial({ map: flameTex, emissive: 0xffffff, alphaTest: 0.4 }))
+  flame.userData.dyn = true
   const haloMat = retroMaterial({ map: TEX.glowDot({ color: accent }), transparent: true, depthWrite: false, opacity: 0.55 })
   haloMat.blending = THREE.AdditiveBlending
   const halo = M(new THREE.PlaneGeometry(1.35 * flameScale, 1.35 * flameScale), haloMat)
+  halo.userData.dyn = true
   const poolMat = retroMaterial({ map: TEX.glowDot({ color: accent }), transparent: true, depthWrite: false, opacity: 0.4 })
   poolMat.blending = THREE.AdditiveBlending
   const pool = M(new THREE.CircleGeometry(poolR, 20), poolMat)
+  pool.userData.dyn = true
   pool.rotation.x = -Math.PI / 2
   return { glassMat, flame, halo, pool }
 }

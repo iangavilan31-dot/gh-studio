@@ -61,3 +61,18 @@ is a solid cylinder (no interior). Two hammocks (posts + sagging cloth + blanket
 lump + snore-z) sleep under the stars at the cove instead — same beat (sleeping
 sailors near the keep-top finale), zero extra interior geometry. If M9 judges want
 the interior, hollowing the keep is a contained change.
+
+## D10 — Perf budget met via zone culling + per-material merge, not strict per-zone merge
+**Risk: LOW (gate-verified).** Part 8's "aim for ≤6 draw calls per zone's static set" was
+treated as a guideline, not a hard rule: the shipped strategy is per-zone visibility
+groups (culled at distance−radius < 95) + `mergeStaticInGroups()` (opaque non-dyn meshes
+merged per material inside each group) + merged window flicker groups + NPC body merges +
+fog-prop distance culling. Worst observed view: 97 calls / 80.4k tris — inside the hard
+budget (≤120 / ≤150k) that the perf gate actually enforces. Chasing literal ≤6 would
+require merging across texture atlases for marginal gain.
+
+## D11 — Village trinket is "a warm hen feather" (spec's example list has no village item)
+**Risk: TRIVIAL.** Part 6.2's trinket examples name items for most zones but not the
+village. The village's zone character (bakery, chickens, hearth-lit street) implies it;
+the hen feather follows the pattern (small, warm, animal-adjacent). Also: 'gatewalkers'
+trinket id is reserved for the M7 arch co-op moment per Part 7.

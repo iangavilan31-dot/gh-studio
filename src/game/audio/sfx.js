@@ -171,6 +171,52 @@ export function snore() {
   o.start(t + 0.55); o.stop(t + 1.1)
 }
 
+// Cat purr: 30Hz amplitude-modulated rumble (9.3)
+export function catPurr(seconds = 1.6) {
+  if (!audio.started) return
+  const ctx = audio.ctx
+  const t = ctx.currentTime
+  const o = ctx.createOscillator()
+  o.type = 'sawtooth'
+  o.frequency.value = 62
+  const lp = ctx.createBiquadFilter()
+  lp.type = 'lowpass'
+  lp.frequency.value = 240
+  const am = ctx.createOscillator()
+  am.frequency.value = 30
+  const amG = ctx.createGain()
+  amG.gain.value = 0.5
+  const g = ctx.createGain()
+  g.gain.setValueAtTime(0, t)
+  g.gain.linearRampToValueAtTime(0.05, t + 0.2)
+  g.gain.setTargetAtTime(0, t + seconds - 0.3, 0.15)
+  const carrier = ctx.createGain()
+  carrier.gain.value = 0.5
+  am.connect(amG); amG.connect(carrier.gain)
+  o.connect(lp); lp.connect(carrier); carrier.connect(g); g.connect(audio.buses.sfx)
+  o.start(t); am.start(t)
+  o.stop(t + seconds); am.stop(t + seconds)
+}
+
+// Big gentle bell toll (min-38 nod, arch bell). Inharmonic partials, long decay.
+export function bellToll(deep = true) {
+  if (!audio.started) return
+  const ctx = audio.ctx
+  const t = ctx.currentTime
+  const f0 = deep ? 98 : 164
+  for (const [ratio, amp] of [[0.5, 0.16], [1, 0.22], [1.183, 0.1], [1.506, 0.08], [2.514, 0.05]]) {
+    const o = ctx.createOscillator()
+    o.type = 'sine'
+    o.frequency.value = f0 * ratio
+    const g = ctx.createGain()
+    g.gain.setValueAtTime(0, t)
+    g.gain.linearRampToValueAtTime(amp, t + 0.015)
+    g.gain.setTargetAtTime(0, t + 0.015, deep ? 2.8 : 1.6)
+    o.connect(g); g.connect(audio.buses.sfx); g.connect(audio.reverbSend)
+    o.start(t); o.stop(t + 9)
+  }
+}
+
 // bottle pickup "hmm!" — happy little formant blip
 export function brewHum() {
   if (!audio.started) return
