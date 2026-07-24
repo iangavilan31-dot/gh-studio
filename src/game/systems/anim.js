@@ -16,14 +16,22 @@ export function makeAnimState() {
     breatheT: 0,
     speed: 0,
     airborne: false,
+    // C.1 feel: smoothed acceleration (lean/settle), yaw rate (turn lean),
+    // and a slow idle-shift clock so standing still never reads frozen
+    accel: 0,
+    yawRate: 0,
+    idleShiftT: 0,
   }
 }
 
 // Advance phase by actual distance: stride ~1.1m walk, ~1.5m jog.
 export function advanceAnim(st, dt, speed, airborne) {
+  const rawAccel = dt > 0 ? (speed - st.speed) / dt : 0
+  st.accel = damp(st.accel, Math.max(-8, Math.min(8, rawAccel)), 6, dt)
   st.speed = speed
   st.airborne = airborne
   st.breatheT += dt
+  st.idleShiftT += dt
   const moving = speed > 0.05
   st.moveBlend = damp(st.moveBlend, moving ? 1 : 0, 10, dt)
   st.jogBlend = damp(st.jogBlend, speed > 2.2 ? 1 : 0, 8, dt)
@@ -43,22 +51,34 @@ export function applyPose(rig, st, time) {
   const hopY = st.airborne ? 0.04 : 0
   b.hips.position.y = 0.46 + breathe * 0.008 * (1 - m) + gaitBob + hopY
 
-  // — spine lean: forward with speed, sway with stride —
-  b.spine.rotation.x = lerp(0, 0.14 + j * 0.1, m)
-  b.spine.rotation.z = Math.sin(ph) * 0.045 * m
+  // C.1: visible acceleration through body lean; letting go of speed makes
+  // the robe and hat settle a beat later (the body stops, the cloth doesn't)
+  const lean = st.accel * 0.045
+  const turnLean = (st.yawRate ?? 0) * 0.055 * m
+
+  // — spine lean: forward with speed + acceleration, sway with stride —
+  b.spine.rotation.x = lerp(0, 0.14 + j * 0.1, m) + lean
+  b.spine.rotation.z = Math.sin(ph) * 0.045 * m + turnLean
   b.spine.rotation.y = Math.sin(ph) * 0.03 * m
 
-  // — head: gentle counter-tilt, looks ahead —
+  // — idle weight shift (every ~8–16s): hips ease side to side, head glances —
+  const shiftCycle = Math.sin(st.idleShiftT * 0.52) * Math.sin(st.idleShiftT * 0.173)
+  const idleShift = shiftCycle * shiftCycle * Math.sign(shiftCycle) * (1 - m)
+  b.hips.position.x = idleShift * 0.018
+  b.spine.rotation.z += idleShift * 0.03 * (1 - m)
+
+  // — head: gentle counter-tilt, looks ahead; idle glances wander —
   b.head.rotation.x = -b.spine.rotation.x * 0.5 + breathe * 0.015 * (1 - m)
   b.head.rotation.z = -b.spine.rotation.z * 0.6
+  b.head.rotation.y = idleShift * 0.14 + Math.sin(st.idleShiftT * 0.31) * 0.05 * (1 - m)
 
-  // — hat: counter-bobs the breathe; brim-flap while jogging —
+  // — hat: counter-bobs the breathe; brim-flap while jogging; tip lags the lean —
   b.hat.position.y = 0.24 - breathe * 0.006 * (1 - m) - gaitBob * 0.35
-  b.hat.rotation.x = Math.sin(ph * 2) * 0.05 * j
-  b.hat.rotation.z = Math.sin(st.breatheT * 0.6) * 0.02
+  b.hat.rotation.x = Math.sin(ph * 2) * 0.05 * j - lean * 0.8
+  b.hat.rotation.z = Math.sin(st.breatheT * 0.6) * 0.02 - turnLean * 0.7
 
-  // — beard sway (lags the body) —
-  b.beard.rotation.x = 0.06 + Math.sin(ph - 0.9) * 0.07 * m + breathe * 0.01
+  // — beard sway (lags the body, drags on acceleration) —
+  b.beard.rotation.x = 0.06 + Math.sin(ph - 0.9) * 0.07 * m + breathe * 0.01 - lean * 1.1
   b.beard.rotation.z = Math.sin(ph * 0.5 + 0.4) * 0.03 * m
 
   // — legs: stride swing —
