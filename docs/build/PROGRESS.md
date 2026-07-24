@@ -353,3 +353,49 @@ docs/build/JUDGE.md pass 3 carried items. Candidate polish targets: rooftops
 wide shot could still include Nib; gloomspire pose castle-fill; hall
 brightness by eye on hardware; any feel notes the owner brings from playing.
 All gates in scripts/ must stay green; artifact republish per above.
+
+---
+
+## 2026-07-24 — PRESTIGE PASS: Part AA complete (all 8 playtest defects fixed)
+
+Owner verdict was: blurry, too dark, moon and warm lights missing, not much to
+do. Every AA item now carries evidence in docs/build/POLISH_JUDGE.md:
+
+- **AA.8 Restored default** — native-res RT (DPR cap 2), dither 0.15, luma
+  sharpen 0.15, mip LOD bias -0.5; retro dials keep 480×270; settings migrate.
+- **AA.1 Moon** — arc sweeps ESE→west; per-pose minutes; bigger painted face,
+  weaker flare core: the moon is in all 9 exterior shots.
+- **AA.2 Warm light** — carried lantern pool in the shared shader (4 slots,
+  near-field attenuation), pilot embers on every cold light, roof pools.
+- **AA.3 Saturated darkness** — shadow-masked screen-blend floor from the
+  sat-pushed zone fog hue; huecheck now samples the FINAL frame, all 9 zones,
+  with minSat floors.
+- **AA.7 Player reads** — violet-biased hemi fill + lantern rim.
+- **AA.4 Density** — ground macro-variation bake, path edging stones, park
+  clusters, offshore rowboat, rooftop chimneys/clothesline/pools; recomposed
+  rooftops/mosswood/sea/foglands poses; NEW quartercheck.mjs gate 10/10.
+- **AA.5 Fun floor** — Beldam intro murmur pointer; wayside shrines, memorial
+  stones, benches, ravens; NEW wandercheck.mjs gate (max encounter gap 16.1s).
+- **AA.6 Completeness** — all 9 areas in this repo's Vite app, traverse 11/11.
+
+**Full gate suite green at this commit:** init/smoke ✓ feel ✓ kindle ✓
+traverse ✓ moments 12/12 ✓ hue 9/9 ✓ quarter 10/10 ✓ wander ✓ autopilot ✓
+coop 17/17 ✓ shell 16/16 ✓ perf (101 calls / 89.8k tris / 222KB gz) ✓.
+
+**Learnings:**
+- Headless swiftshader can't push native-res Restored at playable frame times;
+  behavior gates preseed the N64 pipeline (they test mechanics, not the
+  renderer) and visual gates keep Restored. Wall-clock holds must wait for
+  GAME-confirmed outcomes (kindle held-E) — sim time runs ~0.4× wall.
+- Playwright screenshots slow the frame budget dramatically mid-test; a held
+  channel key across a screenshot needs outcome-based waits.
+- Additive warm glows over cool surfaces desaturate below warm-classifier
+  thresholds — pools need to dominate (or bake) rather than tint.
+- The moon can be in EVERY zone shot honestly if the arc is authored to cross
+  every framing and each pose pins its minute (the moon is the clock; shots at
+  different hours are truthful).
+
+**Next:** Parts B–Q polish in priority order (first ten minutes, feel, zone
+identity, audio continuity, handcraft), then the Part L judge loop (two
+consecutive passes ≥9.0 avg, no category <8.0). Artifact republish per the
+post-ship notes when the pass completes.
