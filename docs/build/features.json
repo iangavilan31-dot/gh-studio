@@ -1112,7 +1112,8 @@
     "hall.png + hall-1 postcard READ: pools/mist/shafts visible",
     "album-cover throne shot"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "hall.png: chandelier pools on carpet, vault mist, two moon shafts (streak tex, DoubleSide \u2014 one-sided planes were backface-culled); postcards/hall-1.png: album-cover throne shot (Pale King scaled 1.3 at throne face, tilted crown, aura, candelabra pair, softened warm bake gain 0.4). POLISH-53/54 + this commit."
   },
   {
    "id": "POLISH-F2",
