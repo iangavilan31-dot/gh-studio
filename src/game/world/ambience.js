@@ -12,7 +12,7 @@ export class Ambience {
     this.world = world
     this.rng = worldRNG.fork('ambience')
     this.rain = new ParticleSystem(scene, { tex: TEX.streak(), max: 240, additive: false, stretchY: 2.6, fogInfluence: 0.4 })
-    this.rings = new ParticleSystem(scene, { tex: TEX.ring(), max: 60, additive: false, fogInfluence: 0.4 })
+    this.rings = new ParticleSystem(scene, { tex: TEX.ring(), max: 60, additive: false, fogInfluence: 0.4, flat: true })
     this.leaves = new ParticleSystem(scene, { tex: TEX.leaf(), max: 40, additive: false })
     this.smoke = new ParticleSystem(scene, { tex: TEX.puff(), max: 60, additive: false, fogInfluence: 0.8 })
     this.moths = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#d8cfae' }), max: 48, additive: true })

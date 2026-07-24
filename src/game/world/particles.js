@@ -44,8 +44,9 @@ const FRAG = /* glsl */ `
 `
 
 export class ParticleSystem {
-  constructor(scene, { tex, max = 200, color = 0xffffff, additive = true, stretchY = 1, fogInfluence = 1 }) {
+  constructor(scene, { tex, max = 200, color = 0xffffff, additive = true, stretchY = 1, fogInfluence = 1, flat = false }) {
     this.max = max
+    this.flat = flat // ground-plane quads (splash rings) instead of billboards
     this.count = 0
     this.data = [] // {pos:Vector3, vel:Vector3, life, maxLife, size, seed, update?}
     const base = new THREE.PlaneGeometry(1, 1)
@@ -93,9 +94,14 @@ export class ParticleSystem {
   }
 
   update(dt, camera) {
-    const e = camera.matrixWorld.elements
-    this.uniforms.uCamRight.value.set(e[0], e[1], e[2])
-    this.uniforms.uCamUp.value.set(e[4], e[5], e[6])
+    if (this.flat) {
+      this.uniforms.uCamRight.value.set(1, 0, 0)
+      this.uniforms.uCamUp.value.set(0, 0, 1)
+    } else {
+      const e = camera.matrixWorld.elements
+      this.uniforms.uCamRight.value.set(e[0], e[1], e[2])
+      this.uniforms.uCamUp.value.set(e[4], e[5], e[6])
+    }
     let i = 0
     for (let k = this.data.length - 1; k >= 0; k--) {
       const p = this.data[k]

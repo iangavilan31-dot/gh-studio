@@ -152,12 +152,13 @@ const lobbyProvider = () => {
 
 function applyNetEvent(ev) {
   if (ev.ev === 'kindle') {
-    world.kindle(ev.id) // full consequences run deterministically on every client
+    world.kindle(ev.id, { remote: true }) // full consequences run deterministically on every client
   } else if (ev.ev === 'emote' || ev.ev === 'chan') {
     const rp = net.remotes.get(ev.from)
     if (rp) {
       const a = ev.ev === 'chan' ? (ev.on ? 'channel' : null) : ev.id
       rp.action = a; rp.anim.action = a; rp.anim.actionT = 0
+      if (a === 'channel') rp.anim.channelHeight = ev.h ?? 0 // C.3 reach replicates
     }
   } else if (ev.ev === 'moment') {
     moments.apply(ev)
@@ -191,7 +192,13 @@ const net = new Net({
       progress.trinkets.push('archstone'); progress.save()
     }
     s.mounts?.forEach((rid, i) => { if (rid != null) npcs.mountChicken(i, rid) })
-    if (audio.started) score.setLayers(zoneKindles(score.zone)) // audible gains, not just counters
+    if (audio.started) {
+      // F.3 for late joiners: snapshot kindles arrive quiet, so the "first
+      // flame wakes the music" hook never fired — start it here or a joiner
+      // inherits a permanently silent lit night
+      if (world.kindledCount > 0 && !score.playing) score.start()
+      score.setLayers(zoneKindles(score.zone)) // audible gains, not just counters
+    }
   },
   getCatPos: () => (npcs.ghostCat?.state === 'follow' ? npcs.ghostCat.rig.group.position.toArray().map((v) => +v.toFixed(2)) : null),
   setCatTarget: (arr) => { npcs.catNetTarget = arr },
@@ -226,7 +233,7 @@ npcs.onChickenMount = (chIdx, playerId) => {
 
 // kindles route through the authority; channel state feeds the brazier law
 interact.requestKindle = (id) => (net.active ? net.requestKindle(id) : world.kindle(id))
-interact.onChannelState = (id, on) => { if (net.active) net.request({ ev: 'chan', id, on }) }
+interact.onChannelState = (id, on) => { if (net.active) net.request({ ev: 'chan', id, on, h: player.anim.channelHeight }) }
 let neSent = false // host tells clients when the min-40 clock ends the night
 // a closing tab says goodbye properly, so peers see the firefly fade at once
 // instead of waiting out a dead connection
@@ -446,11 +453,14 @@ canvas.addEventListener('wheel', (e) => {
 const zoneKindles = (zone) => world.lights.filter((l) => l.zone === zone && l.kindled).length
 
 // kindle consequences: chime in zone key, ember burst, next music layer (6.1)
-world.onKindle = (light) => {
+world.onKindle = (light, remote) => {
   if (audio.started && !score.playing) score.start() // F.3: the first flame wakes the music
-  // C.4: the keeper glances back at what they just lit
-  player.lookBack(light.x, light.z, 2.6)
-  input.rumble(0.3, 0.6, 140) // controller ping (4.2) — no-op without a pad
+  if (!remote) {
+    // C.4: the keeper glances back at what THEY just lit — a peer's kindle
+    // across the map must not yank the local head or buzz the pad
+    player.lookBack(light.x, light.z, 2.6)
+    input.rumble(0.3, 0.6, 140) // controller ping (4.2) — no-op without a pad
+  }
   kindleChime(light.zone)
   emberBurst(embers, light.x, light.y, light.z, worldRNG.fork('embers' + light.id))
   if (light.zone === score.zone) score.setLayers(zoneKindles(light.zone))
@@ -635,7 +645,7 @@ function tick() {
   {
     const z = zoneLight.currentZoneId
     if (z !== _prevZone) {
-      const LANDMARKS = { village: [137, 4], gloomspire: [-110, 125], isle: [0, -152], mosswood: [84, 110], ruins: [-132, 0] }
+      const LANDMARKS = { village: [137, 4], gloomspire: [-110, 125], isle: [0, -152], mosswood: [84, 110], ruins: [-132, 0], rooftops: [122, -6], hall: [-110, 166] }
       if (LANDMARKS[z] && !_revealed.has(z) && mode === 'game' && !cinematic && !photo.on) {
         _revealed.add(z)
         orbit.reveal(LANDMARKS[z])

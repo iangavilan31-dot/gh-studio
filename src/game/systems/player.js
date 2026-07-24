@@ -139,16 +139,15 @@ export class PlayerController {
     // C.4 look-back: head turns toward the remembered point, then lets go
     if (this._lookBack) {
       this._lookBack.t -= dt
-      if (this._lookBack.t <= 0) { this._lookBack = null; this.anim.headLook = 0 }
-      else {
-        const want = Math.atan2(this._lookBack.x - this.pos.x, this._lookBack.z - this.pos.z) - this.yaw
-        let dyl = want
-        while (dyl > Math.PI) dyl -= Math.PI * 2
-        while (dyl < -Math.PI) dyl += Math.PI * 2
-        const clamped = Math.max(-1.0, Math.min(1.0, dyl))
-        const env = Math.min(1, this._lookBack.t / 0.5) // ease out at the end
-        this.anim.headLook = (this.anim.headLook ?? 0) + (clamped * env - (this.anim.headLook ?? 0)) * Math.min(1, dt * 4)
-      }
+      const want = Math.atan2(this._lookBack.x - this.pos.x, this._lookBack.z - this.pos.z) - this.yaw
+      let dyl = want
+      while (dyl > Math.PI) dyl -= Math.PI * 2
+      while (dyl < -Math.PI) dyl += Math.PI * 2
+      const clamped = Math.max(-1.0, Math.min(1.0, dyl))
+      const env = Math.min(1, Math.max(0, this._lookBack.t) / 0.5) // ease out at the end
+      this.anim.headLook = (this.anim.headLook ?? 0) + (clamped * env - (this.anim.headLook ?? 0)) * Math.min(1, dt * 4)
+      // release only once the head has actually settled — no single-frame snap
+      if (this._lookBack.t <= 0 && Math.abs(this.anim.headLook) < 0.02) { this._lookBack = null; this.anim.headLook = 0 }
     }
 
     // drive rig

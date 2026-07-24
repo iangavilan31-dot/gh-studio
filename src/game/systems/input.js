@@ -21,7 +21,12 @@ export class Input {
 
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Tab') e.preventDefault() // Tab is the emote wheel, not focus
-      if (e.repeat) return
+      if (e.repeat) {
+        // a held key cleared by the focus guard re-registers here — held only,
+        // never a fresh press (a repeat must not fire hop/interact again)
+        this.keys.add(e.code)
+        return
+      }
       this.keys.add(e.code)
       this.justPressed.add(e.code)
       this.pressTimes.set(e.code, performance.now())

@@ -105,8 +105,13 @@ const FRAG = /* glsl */ `
   uniform float uAlphaTest;
   uniform float uOpacity;
   uniform float uLodBias;
+  uniform vec2 uMapRepeat;
+  uniform vec2 uMapOffset;
   void main() {
-    vec4 tex = texture2D(uMap, vUv, uLodBias);
+    // ShaderMaterials never get three's uvTransform — repeat/offset are bound
+    // by reference below, so texture.repeat tiling and offset animation
+    // (flame frames, water scroll) work exactly like on built-in materials
+    vec4 tex = texture2D(uMap, vUv * uMapRepeat + uMapOffset, uLodBias);
     if (tex.a < uAlphaTest) discard;
     vec3 col = tex.rgb * vColor;
     #ifdef USE_HEMI
@@ -161,6 +166,9 @@ export function retroMaterial({
     depthWrite,
     uniforms: {
       uMap: { value: map },
+      // live references: mutating texture.repeat/.offset flows straight to the GPU
+      uMapRepeat: { value: map ? map.repeat : new THREE.Vector2(1, 1) },
+      uMapOffset: { value: map ? map.offset : new THREE.Vector2(0, 0) },
       uEmissive: { value: new THREE.Color(emissive) },
       uAlphaTest: { value: alphaTest },
       uOpacity: { value: opacity },

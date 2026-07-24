@@ -278,9 +278,11 @@ export class World {
   }
   get brewCount() { return this.brews?.filter((b) => b.taken).length ?? 0 }
 
-  kindle(id, { quiet = false } = {}) {
+  kindle(id, { quiet = false, remote = false } = {}) {
     // quiet: late-join snapshot application (Part 5.1) — light the world without
     // chimes/embers/stirs replaying a night that already happened
+    // remote: a peer lit it — consequences run, but local-only feedback
+    // (glance-back, rumble) stays with whoever actually did the kindling
     const light = this.lights.find((l) => l.id === id)
     if (!light || light.kindled) return false
     light.kindled = true
@@ -291,7 +293,7 @@ export class World {
     if (p.halo) { p.halo.visible = true; p.halo.material.uniforms.uOpacity.value = 0 }
     if (p.pool) { p.pool.visible = true; p.pool.material.uniforms.uOpacity.value = 0 }
     if (p.glass) { p.glass.visible = true; p.glass.material.uniforms.uOpacity.value = 0 }
-    if (!quiet && this.onKindle) this.onKindle(light)
+    if (!quiet && this.onKindle) this.onKindle(light, remote)
     return true
   }
 
@@ -313,9 +315,10 @@ export class World {
     // path/street ribbons (visual strips slightly above terrain)
     this.ribbons = [] // recorded for the AA.4 edging pass
     const addRibbon = (points, width, tex, repeat) => {
+      // ribbon UVs already tile by arc length (one tile per 8m) — texture
+      // repeat on top would compound now that the shader honors it
       const geoR = ribbonGeometry(points, width)
       const t = tex
-      t.repeat.set(repeat, 1)
       ensureVertexColors(geoR)
       const m = new THREE.Mesh(geoR, retroMaterial({ map: t }))
       this.scene.add(m)
@@ -402,15 +405,7 @@ export class World {
     sea.position.set(0, WATER_Y, -160)
     this.scene.add(sea)
     this.waterMats.push({ tex: seaTex, sx: 0.004, sy: 0.002 })
-    // gloomspire moat
-    const moatTex = TEX.water({ name: 'moat', base: '#1a1430', light: '#31264e' })
-    moatTex.repeat.set(16, 16)
-    const moat = new THREE.Mesh(new THREE.CircleGeometry(31, 28), retroMaterial({ map: moatTex }))
-    ensureVertexColors(moat.geometry)
-    moat.rotation.x = -Math.PI / 2
-    moat.position.set(-110, WATER_Y, 125)
-    this.scene.add(moat)
-    this.waterMats.push({ tex: moatTex, sx: 0.002, sy: 0.0015 })
+    // (the gloomspire moat lives in buildGloomspire — one disc, not two)
   }
 
   buildPark() {
@@ -584,10 +579,9 @@ export class World {
     const rng = worldRNG.fork('village')
     const mats = sharedMats()
     const plasterMat = retroMaterial({ map: TEX.plaster() })
-    // B.3: shingles must read as SHINGLE ROWS, not masonry slabs — tile the
-    // texture across each roof face and let the moss family through (2.1)
+    // B.3: shingles read as SHINGLE ROWS — the 8-course texture spans one
+    // roof face exactly (repeat 1: the approved village look)
     const shingleTex = TEX.shingle({ moss: 0.4 })
-    shingleTex.repeat.set(3, 2)
     const shingleMat = retroMaterial({ map: shingleTex })
     const stoneMat = retroMaterial({ map: TEX.stoneBlock() })
 
@@ -1395,11 +1389,13 @@ export class World {
       const candMat = retroMaterial({ map: TEX.plank({ name: 'candelabrawood' }) })
       const glowMat = retroMaterial({ map: TEX.glowDot({ name: 'thronewarm', color: '#ffb45e' }), transparent: true, depthWrite: false, opacity: 0.65 })
       glowMat.blending = THREE.AdditiveBlending
+      this.throneCandles = [] // baked into the hall showcase like the chandeliers
       for (const sx of [-2.4, 2.4]) {
         const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.09, 1.6, 6), candMat)
         ensureVertexColors(pole.geometry, [0.35, 0.3, 0.24])
         pole.position.set(cx + sx, y0 + 1.8, zB - 2.2)
         this.scene.add(pole)
+        this.throneCandles.push([cx + sx, y0 + 2.75, zB - 2.2])
         const glow = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 1.7), glowMat)
         ensureVertexColors(glow.geometry)
         glow.position.set(cx + sx, y0 + 2.75, zB - 2.2)
@@ -1633,7 +1629,9 @@ export class World {
   // every interior vertex.
   bakeHallShowcase() {
     if (!this.hallMeshes) return
-    const chandeliers = [[-110, 6.9, 146], [-110, 6.9, 155], [-110, 6.9, 164]]
+    const chandeliers = [[-110, 6.9, 146], [-110, 6.9, 155], [-110, 6.9, 164],
+      // throne candelabra (tighter pools): the Pale King's end must READ
+      ...(this.throneCandles ?? [])]
     const v = new THREE.Vector3()
     for (const mesh of this.hallMeshes) {
       mesh.updateMatrixWorld()
@@ -1740,7 +1738,10 @@ export class World {
       const leanYaw = rng.range(-0.4, 0.4) + (rng.chance(0.3) ? 0.12 : 0) // none face alike (P.1)
       g.userData.collider = { r: 0.55, h: 1.6 }
       this.place(g, sx, sz, leanYaw)
-      this.registerLight(`wayside-shrine-${shrineN}`, 'wayside', sc, sx, sz + 0.38, heightAt(sx, sz) + 0.38)
+      // the sconce offset rotates with the figure — register where it landed,
+      // or the cold pilot ember floats beside the niche
+      const scx = sx + Math.sin(leanYaw) * 0.38, scz = sz + Math.cos(leanYaw) * 0.38
+      this.registerLight(`wayside-shrine-${shrineN}`, 'wayside', sc, scx, scz, heightAt(sx, sz) + 0.38)
     }
     // memorial stones — worn markers of the order, three words at most, moss
     this.memorials = []
