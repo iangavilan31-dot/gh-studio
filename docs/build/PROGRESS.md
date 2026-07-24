@@ -315,3 +315,41 @@ MOONREST is complete per docs/MASTER_PROMPT.md, M0→M10, on branch
 The moon sets. The lights hold. Rest now.
 
 SHIP — evidence: features.json 94/94 · JUDGE.md 3-pass exit (8.65, 8.8) · all 11 hard gates green · shot reel read · autopilot full-night log · perf 97 calls / 80.4k tris / 216KB gz / boot 0.4s · draft PR #4
+
+---
+
+## 2026-07-24 ~03:50 UTC — POST-SHIP: live on claude.ai + first real-hardware fixes
+
+The game is published as a playable artifact (solo only — the host CSP blocks
+the PeerJS broker): **https://claude.ai/code/artifact/9225a370-4e78-4efb-ae5b-b6104ba9c0b2**
+To update it from a NEW session: `npm run build && node scripts/package-artifact.mjs`,
+then publish dist/moonrest-artifact.html with the Artifact tool passing
+`url: <that URL>` (without `url`, a new conversation mints a different link).
+
+First human play sessions (the owner, on a Retina Mac) surfaced and fixed:
+- **Retina render bug (the big one):** a redundant setViewport before the RT
+  scene pass gets ×pixelRatio'd by three and overrode the RT's own viewport —
+  at dpr 2 every frame was the bottom-left quadrant magnified 2×. All headless
+  gates ran at dpr 1 where it's a no-op; the owner's screenshot was the first
+  Retina frame ever rendered. Fixed by deleting the call; verified at dpr 1+2.
+- Camera comfort: pitch clamp [-0.72, 0.38], collision pull-in floor 1.5m,
+  autoPlace() finds clear air at night-start (spawn sat under the big tree).
+- Sandboxed-embed hardening: gamepad poll try/catch, drag-look fallback when
+  pointer lock is denied, error boundary ignores benign API denials, renderer
+  tracks its real box (ResizeObserver + visualViewport + settle retries).
+- Fullscreen menu item (title + pause); artifact packaging script
+  (scripts/package-artifact.mjs) with its hard-won gotchas documented.
+
+**Learnings:**
+- Test at devicePixelRatio 2, not just 1 — a whole bug class lives there.
+- Never regex-copy a tag whose attributes contain raw markup (the favicon
+  data-URI SVG ate the <style> and <canvas> when truncated at the first '>').
+- Real players find in minutes what four adversarial reviewers missed: nothing
+  replaces hardware + eyes on the actual build.
+
+**Next action (owner-requested): a POLISH AUTOBUILD PASS in a fresh session.**
+Re-read docs/MASTER_PROMPT.md Part 0 + Part 2, this file's tail, and
+docs/build/JUDGE.md pass 3 carried items. Candidate polish targets: rooftops
+wide shot could still include Nib; gloomspire pose castle-fill; hall
+brightness by eye on hardware; any feel notes the owner brings from playing.
+All gates in scripts/ must stay green; artifact republish per above.
