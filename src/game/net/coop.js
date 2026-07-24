@@ -165,7 +165,17 @@ export class RemotePlayer {
     if (fl >= 0) this.world.flames.splice(fl, 1)
     const ha = this.world.halos.indexOf(this.rig.staffHalo)
     if (ha >= 0) this.world.halos.splice(ha, 1)
+    disposeRig(this.rig.group) // GPU resources too — join/leave cycles must not grow VRAM
   }
+}
+
+// free geometry + per-rig materials/textures (atlas + rune plate are per-player)
+export function disposeRig(group) {
+  group.traverse((o) => {
+    o.geometry?.dispose?.()
+    const mats = Array.isArray(o.material) ? o.material : o.material ? [o.material] : []
+    for (const m of mats) { m.uniforms?.uMap?.value?.dispose?.(); m.dispose?.() }
+  })
 }
 const _v = new THREE.Vector3()
 
@@ -201,8 +211,27 @@ export class Net {
     return window.__PEER_OPTS__ ?? {}
   }
 
+  // full reset so a failed host/join never bricks the session — the next
+  // Host/Join Night starts from a clean slate (a peer error like EXPIRE never
+  // fires a connection close, so this must be called explicitly)
+  _teardown() {
+    try { this.peer?.destroy() } catch (e) { /* already down */ }
+    this.peer = null
+    this.hostConn = null
+    this.conns.clear()
+    this.roster.clear()
+    this.channeling.clear()
+    this.recentChan?.clear()
+    this.role = null
+    this.code = null
+    this.myId = 0
+    this._joined = false
+    this._joinReject = null
+  }
+
   host(name) {
-    if (this.role) return Promise.resolve(this.code)
+    if (this.role === 'host' && this.peer && !this.peer.destroyed) return Promise.resolve(this.code)
+    if (this.role) return Promise.reject(new Error('already networked'))
     this.role = 'host'
     this.myId = 0
     this.myName = sanitizeName(name ?? DEFAULT_NAMES[0])
@@ -211,7 +240,11 @@ export class Net {
     return new Promise((resolve, reject) => {
       this.peer = new Peer('moonrest-' + this.code.toLowerCase(), this._peerOpts())
       this.peer.on('open', () => { this.log.push({ ev: 'host-open', code: this.code }); resolve(this.code) })
-      this.peer.on('error', (e) => { this.log.push({ ev: 'error', type: e.type }); if (this.role === 'host' && !this.conns.size) reject(e) })
+      this.peer.on('error', (e) => {
+        this.log.push({ ev: 'error', type: e.type })
+        // a broker/id failure before anyone connected → clean slate, not a husk
+        if (this.role === 'host' && !this.conns.size) { this._teardown(); reject(e) }
+      })
       this.peer.on('connection', (conn) => this._hostAccept(conn))
     })
   }
@@ -224,7 +257,12 @@ export class Net {
     return new Promise((resolve, reject) => {
       this._joinReject = reject
       this.peer = new Peer(this._peerOpts())
-      this.peer.on('error', (e) => { this.log.push({ ev: 'error', type: e.type }); reject(e) })
+      this.peer.on('error', (e) => {
+        this.log.push({ ev: 'error', type: e.type })
+        // bad/expired code (EXPIRE, peer-unavailable) rejects the peer WITHOUT
+        // ever closing the pending connection — reset here or co-op bricks
+        if (!this._joined) { const rj = this._joinReject; this._teardown(); rj?.(e) }
+      })
       this.peer.on('open', () => {
         const conn = this.peer.connect('moonrest-' + this.code.toLowerCase(), { reliable: true, serialization: 'json' })
         this.hostConn = conn
@@ -237,7 +275,7 @@ export class Net {
         // still comes up — only CLOSE means the host is really gone
         conn.on('close', () => {
           if (this._joined) this._hostLost()
-          else { this.role = null; this._joinReject?.(new Error('could not reach the night')); this._joinReject = null }
+          else { const rj = this._joinReject; this._teardown(); rj?.(new Error('could not reach the night')) }
         })
         conn.on('error', (e) => this.log.push({ ev: 'conn-error', type: e?.type ?? String(e).slice(0, 60) }))
       })
@@ -248,6 +286,7 @@ export class Net {
   _hostAccept(conn) {
     conn.on('data', (m) => {
       if (m.t === 'hello') {
+        if (conn._mrId != null) return // one seat per connection — ignore repeat hellos
         let id = -1
         for (let i = 1; i < 4; i++) if (!this.roster.has(i)) { id = i; break }
         if (id === -1) { conn.send({ t: 'full' }); setTimeout(() => conn.close(), 300); return }
@@ -379,13 +418,22 @@ export class Net {
     if (this.role !== 'client') return
     this.log.push({ ev: 'host-lost' })
     for (const [id] of this.remotes) this._fade(id)
-    this.role = null
-    this.h.onHostLost?.()
+    const cb = this.h.onHostLost
+    this._teardown()
+    cb?.()
   }
 
   // — shared —
   _addRemote(id, name, tint) {
-    if (this.remotes.has(id)) return
+    const old = this.remotes.get(id)
+    if (old) {
+      // the same seat re-taken while its last occupant was still fading —
+      // finish the old ghost NOW or the pending timer would eat the new avatar
+      clearTimeout(old._fadeTimer)
+      this.h.beforeRemoteDispose?.(old)
+      old.dispose()
+      this.remotes.delete(id)
+    }
     const rp = new RemotePlayer(this.h.scene, this.h.world, { id, name, tint })
     rp.onFootstep = this.h.remoteFootstep
     this.remotes.set(id, rp)
@@ -393,11 +441,16 @@ export class Net {
 
   _fade(id) {
     const rp = this.remotes.get(id)
-    if (!rp) return
+    if (!rp || rp.fading > 0) return
     rp.fading = 0.0001 // fades to fireflies, removed after 10s (5.2)
     this.h.spawnFireflies?.(rp.pos.x, rp.pos.y + 1, rp.pos.z)
     this.h.onPeerLeave?.({ id, name: rp.name })
-    setTimeout(() => { rp.dispose(); this.remotes.delete(id) }, 10000)
+    rp._fadeTimer = setTimeout(() => {
+      if (this.remotes.get(id) !== rp) return // seat re-taken; not ours to delete
+      this.h.beforeRemoteDispose?.(rp)
+      rp.dispose()
+      this.remotes.delete(id)
+    }, 10000)
   }
 
   _drop(id) {
@@ -446,9 +499,7 @@ export class Net {
   }
 
   leave() {
-    try { this.peer?.destroy() } catch (e) { /* already down */ }
     for (const [id] of this.remotes) this._fade(id)
-    this.conns.clear()
-    this.role = null
+    this._teardown() // roster/channeling/code cleared too — re-hosting starts clean
   }
 }

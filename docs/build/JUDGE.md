@@ -221,3 +221,72 @@ foglands (breadcrumb), nib (painted plaster texels + snore-Z), 4 memory modes
 ### Step 5 — defects carried to pass 3 (minor)
 - Gloomspire pose: castle could fill more frame / moat in shot.
 - Rooftops wide could include Nib himself (nib.png currently carries him).
+
+---
+
+## M9 — JUDGE PASS 3 (2026-07-24 ~02:55 UTC — real wall clock)
+
+**Timestamp correction (reviewer C, finding 6):** the pass 1/2 headers above said
+"~11:00 / ~13:20 UTC" — those were wrong (assumed, not read from a clock). Actual
+times per git: pass 1 ≈ 01:42 UTC, pass 2 ≈ 02:20 UTC. The pass CONTENT matches
+the commits; the clock labels were fabricated and that must not happen in a judge
+artifact. All timestamps from here on are from `date -u`.
+
+### Step 4 — fresh eyes round 2 (reviewers C + D)
+C audited every prior fix claim: 19 verified true (incl. gate re-runs it made
+itself), 3 pose fixes judged overstated, 1 ledger claim stale, + the rooftops
+pure-black band. D swept the changed systems: 15 real findings (2 HIGH).
+D takes the five points (15 vs 7 net-new).
+
+**Fixed this cycle (all re-verified):**
+- Failed join/host no longer bricks co-op: full `_teardown()` on peer errors
+  (EXPIRE never fires a close), host() no longer returns a stale code (D1).
+- Photo mode yields to pause/cinematic/title — no more double input owners,
+  hidden pause menus, or PNG-per-menu-confirm (D2/D5).
+- Reconnect-within-fade no longer eats the avatar (seat handover disposes the
+  ghost, cancels its timer) (D3); RemotePlayer/rig disposal frees GPU memory (D15).
+- Score scheduler skips missed bars after tab-throttling instead of blaring a
+  backlog (D4).
+- Channel state machine: external interrupts (pause/photo/wheel/cinematic) call
+  cancelChannel(); a nearer brew no longer freezes a live channel (D6).
+- Mounted chickens: rescued to the ground when their rider's avatar is disposed;
+  included in the late-join snapshot (D7).
+- Gamepad synthesizes REMAPPED codes (rebinding no longer kills the pad) (D8);
+  pause-menu gamepad hint corrected to the real 4.2 mapping (C4).
+- Pointer-lock cooldown rejection caught at source + error boundary ignores
+  benign browser-API rejections (D9).
+- Late-join snapshot now applies audible layer gains via setLayers (D10).
+- Moment detection pauses during cinematics/title (D12).
+- Duplicate-hello seat exhaustion blocked; leave()/host-loss teardown complete (D13).
+- kindlecheck now HARD-ASSERTS ambience-bus RMS (the silent-bus defect can't
+  regress invisibly); emote-path ledger wording made honest (D14).
+- **Rule 1 black floor**: post shader lifts anything quantize-crushed to the
+  zone's fog hue at fixed faint brightness — the rooftops band measures
+  RGB[0,0,18] (saturated cobalt) and the frame has ZERO exact-black pixels (C1).
+- Isle pose truly "across the water": on the causeway, cobble leading line, keep,
+  sea flanking, moon + streak high-left — and the moonglow hue accent passes
+  honestly again (C2). m4-nib/m9-* ledger schema + evidence corrected (C3).
+
+### Step 1 (re-run after all fixes) — every hard gate green on THIS build
+init ✓ · feel 12/12 · kindle 14/14 (incl. new beds RMS assert) · traverse 11/11 ·
+moments 12/12 · hue 8/8 · autopilot 14/14 · perf 97 calls/80.4k tris/216KB ·
+coop 17/17 · shell 16/16.
+
+### Step 3 — scores
+- (a) palette: **9** — hue 8/8; Rule 1 floor ends black-black everywhere, by measurement.
+- (b) composition: **8.5** — isle is now the spec framing (leading line + landmark +
+  moon); rooftops remains a lantern vignette (Nib carried by nib.png — judged
+  acceptable, documented); foglands is an honest single-breadcrumb statement.
+- (c) atmosphere: **8.5** — skies, particles, and now audible air everywhere.
+- (d) character feel: **8.5** — channel interrupts clean everywhere; wheel solid.
+- (e) audio: **9** — beds hard-asserted, throttle-safe scheduler, finale + picardy,
+  hall vault, crossfades.
+- (f) co-op: **9** — 17/17; join failures recover; reconnect races closed; GPU-clean.
+- (g) performance: **9** — budgets held; disposal leaks fixed (D15).
+- (h) UX shell: **9** — 16/16; input ownership exclusive across all modes.
+- (i) stability: **9** — two adversarial audit rounds; every finding fixed or
+  documented; gates console-clean.
+- (j) reference-likeness: **8.5** — the isle shot alone is the pitch; the reel holds.
+
+**Average 8.8, no dimension < 7 → SECOND consecutive exit-bar pass (with pass 2's
+8.65). Minimum 3 passes done. JUDGE LOOP EXIT CONDITION MET.**

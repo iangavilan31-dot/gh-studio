@@ -30,7 +30,11 @@ export class Input {
     window.addEventListener('blur', () => this.keys.clear())
 
     canvas.addEventListener('click', () => {
-      if (!this.pointerLocked) canvas.requestPointerLock?.()
+      if (!this.pointerLocked) {
+        // Chromium rejects during the ~1.3s cooldown after an Esc release —
+        // benign, must not surface as an unhandled rejection
+        try { canvas.requestPointerLock?.()?.catch?.(() => {}) } catch (e) { /* unsupported */ }
+      }
     })
     document.addEventListener('pointerlockchange', () => {
       this.pointerLocked = document.pointerLockElement === canvas
@@ -56,11 +60,13 @@ export class Input {
     if (!gp) return
     const held = new Set()
     const b = (i) => gp.buttons[i]?.pressed
-    // Part 4.2 table: E/A interact · Space/B hop · C/D-pad-down sit · Tab/Y emote
-    if (b(0)) held.add('KeyE')       // A: kindle (hold)
-    if (b(1)) held.add('Space')      // B: hop
-    if (b(13)) held.add('KeyC')      // D-pad down: sit/lie
-    if (b(3)) held.add('Tab')        // Y: emote wheel
+    // Part 4.2 table: E/A interact · Space/B hop · C/D-pad-down sit · Tab/Y emote.
+    // Buttons synthesize the REMAPPED physical codes so a rebound keyboard
+    // never silently disables the pad.
+    if (b(0)) held.add(this._c('KeyE'))   // A: kindle (hold)
+    if (b(1)) held.add(this._c('Space'))  // B: hop
+    if (b(13)) held.add(this._c('KeyC'))  // D-pad down: sit/lie
+    if (b(3)) held.add('Tab')             // Y: emote wheel
     if (b(9)) held.add('Escape')     // start: menu
     if (b(4) || b(6) || b(5) || b(7)) held.add('ShiftLeft') // shoulders: jog
     for (const code of held) {

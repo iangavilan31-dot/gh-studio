@@ -25,6 +25,20 @@ export class InteractSystem {
 
   get channelTarget() { return this.channeling ? this.target?.id ?? null : null }
 
+  // external interrupt (pause/photo/cinematic/emote wheel stole the loop):
+  // let go of the flame exactly like a released key would
+  cancelChannel() {
+    if (!this.channeling) return
+    this.log.push({ id: this.target?.id, event: 'channel-interrupt', t: this.channel })
+    this.onChannelState?.(this.target?.id, false)
+    this.channeling = false
+    this.channel = 0
+    this.channelSound?.stop(false)
+    this.channelSound = null
+    if (this.player.anim.action === 'channel') this.player.setAction(null)
+    this.hud.setProgress(0)
+  }
+
   losBlocked(x1, z1, x2, z2, y) {
     // sample the segment against colliders (skip endpoints' own space)
     const steps = 8
@@ -55,9 +69,11 @@ export class InteractSystem {
       const d = Math.hypot(b.x - p.x, b.z - p.z)
       if (d < bestBrewD) { bestBrewD = d; bestBrew = b }
     }
-    if (bestBrew && bestBrewD < bestD) {
+    // a nearer brew never hijacks a channel in progress — the early return
+    // here used to freeze the channel state machine mid-hold
+    if (bestBrew && bestBrewD < bestD && !this.channeling) {
       this.hud.showPrompt('take')
-      if (input.pressed('KeyE') && !this.channeling) {
+      if (input.pressed('KeyE')) {
         this.world.takeBrew(bestBrew.id)
         this.log.push({ id: bestBrew.id, event: 'brew-taken' })
       }

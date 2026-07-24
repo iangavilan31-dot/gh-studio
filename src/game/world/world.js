@@ -1386,8 +1386,9 @@ export class World {
     this.moonStreak.position.set(0, WATER_Y + 0.05, -95)
     this.scene.add(this.moonStreak)
 
-    // from the causeway: lantern chain leads to the keep, sea + streak at left
-    this.poses.isle = { pos: [8.5, 2.6, -121], look: [-2.5, kBase + 5.5, -152] }
+    // across the water (Part 3.2.8): on the causeway itself — lamp chain ahead,
+    // sea flanking, keep beyond, moon high in frame
+    this.poses.isle = { pos: [2.2, 2.3, -86], look: [-20, kBase + 13, -152] }
     // sea view for the water/moon-streak evidence (m5-water)
     this.poses.sea = { pos: [4, 2.2, -50], look: [-30, 10, -130] }
   }

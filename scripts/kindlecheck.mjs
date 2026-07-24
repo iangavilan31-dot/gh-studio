@@ -84,6 +84,9 @@ check('kindle persists', st.kindled.includes('park-bench-lamp'))
 await page.waitForTimeout(2500)
 st = await S()
 check('music bus RMS > 0', (st.audio.rms?.music ?? 0) > 0.0005, `rms=${JSON.stringify(st.audio.rms)}`)
+// the ambience beds (9.3) must actually SOUND — a silent ambience bus was a
+// shipped defect once; this assert keeps it dead
+check('ambience bus RMS > 0 (beds live)', (st.audio.rms?.ambience ?? 0) > 0.0003, `rms=${JSON.stringify(st.audio.rms)}`)
 
 // 6) remaining lights kindle via API (counter math)
 await page.evaluate(() => { window.__MOONREST__.kindle('park-lantern-1'); window.__MOONREST__.kindle('park-lantern-2'); window.__MOONREST__.kindle('park-firefly-jar') })

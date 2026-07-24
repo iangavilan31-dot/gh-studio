@@ -49,9 +49,14 @@ export class Shell {
     this.ui.appendChild(this.fade)
     this.blocking = false // player input gated while a screen is up
 
-    // in-fiction error boundary (Part 10) — never alert()
+    // in-fiction error boundary (Part 10) — never alert(). Benign browser-API
+    // rejections (pointer-lock cooldown, autoplay policy) are not crashes.
     window.addEventListener('error', () => this.showError())
-    window.addEventListener('unhandledrejection', () => this.showError())
+    window.addEventListener('unhandledrejection', (e) => {
+      const msg = String(e?.reason?.message ?? e?.reason ?? '')
+      if (/pointer ?lock|NotAllowedError|user gesture|play\(\)/i.test(msg)) return
+      this.showError()
+    })
 
     window.addEventListener('keydown', (e) => this.onKey(e))
     this.showTitle()
@@ -286,7 +291,7 @@ export class Shell {
     section('accessibility')
     cycle('subtitles', 'subtitles', [true, false], ['on', 'off'])
     cycle('channel: hold → toggle', 'holdToToggle', [false, true], ['hold', 'toggle'])
-    this.el('div', 'hint', 'no strobe anywhere in the night — checked, promise. gamepad: left stick walk, right stick look, A hop, X kindle.', card)
+    this.el('div', 'hint', 'no strobe anywhere in the night — checked, promise. gamepad: left stick walk, right stick look, A kindle, B hop, Y emote, D-pad-down sit.', card)
     const list = this.el('div', 'menu', null, card)
     this.menuItem(list, 'Back', () => (from === 'pause' ? this.showPause() : this.showTitle()))
   }

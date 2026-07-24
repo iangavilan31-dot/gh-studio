@@ -177,6 +177,7 @@ const net = new Net({
   snapshot: () => ({
     kindled: world.kindledIds, nightT: night.minutes, phase: night.phaseAge ?? null,
     catAwake: npcs.ghostCat?.state === 'follow', momentsDone: [...moments.done],
+    mounts: npcs.chickens.map((c) => (c.state === 'mount' ? c.riderId : null)),
   }),
   applySnapshot: (s) => {
     if (s.you != null) swapLocalTint(s.you) // join order picks your robe
@@ -189,7 +190,8 @@ const net = new Net({
     if (moments.done.has('arch') && !progress.trinkets.includes('archstone')) {
       progress.trinkets.push('archstone'); progress.save()
     }
-    if (audio.started) { score.activeLayers = zoneKindles(score.zone); audio.state.layers = Math.min(score.activeLayers + 1, score.layerGains.length) }
+    s.mounts?.forEach((rid, i) => { if (rid != null) npcs.mountChicken(i, rid) })
+    if (audio.started) score.setLayers(zoneKindles(score.zone)) // audible gains, not just counters
   },
   getCatPos: () => (npcs.ghostCat?.state === 'follow' ? npcs.ghostCat.rig.group.position.toArray().map((v) => +v.toFixed(2)) : null),
   setCatTarget: (arr) => { npcs.catNetTarget = arr },
@@ -205,6 +207,7 @@ const net = new Net({
   },
   spawnFireflies: (x, y, z) => emberBurst(embers, x, y, z, worldRNG.fork('fade' + Math.round(x * 7 + z * 3))),
   remoteFootstep: (surface, vol) => footstep(surface, vol),
+  beforeRemoteDispose: (rp) => npcs.rescueChickens(rp.rig), // riders set their chicken down
 })
 
 const moments = new Moments({
@@ -423,6 +426,10 @@ function tick() {
     wheelOpen = false
     hud.hideEmoteWheel()
   }
+  // photo mode yields to menus and cinematics — never two input owners at once
+  if (photo.on && (shell.blocking || cinematic || mode === 'title')) togglePhoto(false)
+  // anything that steals the update loop mid-channel lets go of the flame cleanly
+  if (interact.channeling && (shell.blocking || cinematic || photo.on || wheelOpen || mode === 'title')) interact.cancelChannel()
 
   night.paused = mode === 'title' // the 40 minutes belong to the walk, not the menu
 
@@ -492,6 +499,13 @@ function tick() {
     rainWasSoft = ambience.rainSoftT > 0
     beds.soften(rainWasSoft ? 0.35 : 1)
   }
+  // Rule 1 black floor: the zone's fog HUE at a fixed faint brightness —
+  // scaling the raw fog color isn't enough in the darkest cobalt zones
+  {
+    const f = zoneLight.fog
+    const peak = Math.max(f.r, f.g, f.b, 0.01)
+    pipeline.postUniforms.uFloor.value.copy(f).multiplyScalar(Math.min(0.05 / peak, 1))
+  }
   world.moonDir = night.dirWorld
   world.update(dt, elapsed)
   night.update(dt, camera)
@@ -500,7 +514,7 @@ function tick() {
   ambience.update(dt, camera, zoneLight.currentZoneId, elapsed)
   npcs.update(dt, elapsed, player, camera)
   net.update(dt, camera)
-  moments.update(dt, elapsed)
+  moments.update(dt, elapsed, !cinematic && mode === 'game') // no new rituals mid-reel
   if (net.role === 'host' && nightflow.ending && !neSent) { neSent = true; net.broadcastEvent({ ev: 'nightEnd' }) }
   updateOverlay(dt)
   input.endFrame()

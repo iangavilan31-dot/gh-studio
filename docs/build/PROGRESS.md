@@ -212,3 +212,28 @@ docs/build/PLAN.md, then the tail of this file. Never re-derive the plan from me
 - Uniform-driven mode switches beat define-driven: zero recompile hitches and one global toggle.
 - Comment-stripping belongs in static banned-API scanners; docs mention the banned word.
 - Auto-exiting the title from rig entry points keeps a growing test fleet stable without touching every script.
+
+## 2026-07-24 ~02:55 UTC — M9 COMPLETE: judge loop exit condition met
+
+Three full judge passes (12.4 protocol, all steps incl. two competitive
+fresh-eyes reviewer rounds — four clean-context reviewers total, 40+ verified
+findings, every one fixed or documented as a D-entry):
+- Pass 1: avg 8.25 → big fix cycle (PS1 dial, poses, emote wheel, ambience beds,
+  Night's End finale, star-shell shader bug, late-join trinkets, + 12 more).
+- Pass 2: avg 8.65, none <7 (exit bar #1).
+- Pass 3: avg 8.8, none <7 (exit bar #2, consecutive) after closing both HIGH
+  round-2 findings (join-brick teardown, photo/pause input collision) and the
+  Rule 1 black floor (measured: zero exact-black pixels).
+All 11 hard gates green on the shipping build; kindlecheck grew a 14th assert
+(ambience-bus RMS) so the worst audio defect class can't silently return.
+
+**Learnings:**
+- Adversarial fresh-context review pays for itself: four reviewers found five
+  bug classes (shader transform bug, silent bus, bricked-join state machine,
+  input-owner collisions, quantize-to-black) that green gates never would.
+- Never write a timestamp you didn't read from a clock — a judge artifact with
+  impossible metadata undermines every claim around it (C6).
+- WebRTC error events are advisory; only 'close' is truth. And guard every
+  send behind conn.open.
+
+**Next action:** M10 — Morning Report + SHIP line, final push, PR body update.

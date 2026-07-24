@@ -146,6 +146,9 @@ export class Score {
   schedule() {
     const cfg = ZONE_MUSIC[this.zone]
     const stepDur = 60 / cfg.bpm / 2 // eighth notes
+    // after tab-hidden timer throttling, SKIP the missed bars instead of
+    // scheduling a backlog of simultaneous notes (they'd blare on refocus)
+    if (audio.ctx.currentTime - this.nextNoteTime > 1) this.nextNoteTime = audio.ctx.currentTime + 0.1
     while (this.nextNoteTime < audio.ctx.currentTime + 0.35) {
       const stepIdx = this.step % 32
       if (stepIdx === 0) {

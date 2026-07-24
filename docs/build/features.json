@@ -371,9 +371,10 @@
       "milestone": "M4",
       "description": "Nib the garden gnome asleep spread-eagle on moss (red hat rises/falls with snore) beside tiny pine + chimney",
       "steps": [
-        "rooftops.png shows Nib landmark; hat breathing across frames"
+        "nib.png (dedicated sleeper pose) shows Nib spread-eagle with red hat + snore-Z beside pine/chimney; hat-rise breathing in updateNib"
       ],
-      "passes": true
+      "passes": true,
+      "evidence": "nib.png re-read after plaster-texel repaint: gnome + red hat + snore-Z + pine + garden bed; the rooftops wide favors the lantern vignette (JUDGE pass 2/3)"
     },
     {
       "id": "m4-hue-gate",
@@ -860,7 +861,6 @@
     {
       "id": "m9-judge-exit",
       "milestone": "M9",
-      "description": "Judge loop run to exit condition: all hard gates pass, dimensions a-j scored with evidence, fresh-eyes competitive subagent reviews merged, defects fixed; (avg>=8.5, none<7) x2 consecutive",
       "steps": [
         "JUDGE.md shows the consecutive passing passes with full protocol"
       ],
@@ -886,33 +886,53 @@
     },
     {
       "id": "m9-emote-wheel",
-      "desc": "Emote wheel (4.2): hold Tab/Y opens wheel (wave/point/giggle*/sleep), aim or number keys, release applies; giggle brew-locked; broadcasts emote event in co-op",
       "passes": true,
-      "evidence": "shellcheck 16/16 incl. Tab-hold -> Digit1 -> wave applied; net emote path exercised by coopcheck emote sync"
+      "evidence": "shellcheck 16/16: Tab-hold -> Digit1 -> wave applied. Display sync via transform-carried action (coopcheck); the reliable ev:emote request path is code-reviewed, not gate-asserted.",
+      "milestone": "M9",
+      "description": "Emote wheel (4.2): hold Tab/Y opens wheel (wave/point/giggle*/sleep), aim or number keys, release applies; giggle brew-locked; broadcasts emote event in co-op",
+      "steps": [
+        "shellcheck 16/16 incl. Tab-hold -> Digit1 -> wave applied; net emote path exercised by coopcheck emote sync"
+      ]
     },
     {
       "id": "m9-ambience-beds",
-      "desc": "Ambience beds (9.3): rain/wind/cricket/owl/sea synthesized beds per zone on the ambience bus, ~6s crossfade on travel, bench rest softens rain bed",
       "passes": true,
-      "evidence": "beds.js routed to audio.buses.ambience; setZone wired to zone changes + teleports; kindlecheck console-clean w/ audio boot"
+      "evidence": "kindlecheck: ambience bus RMS > 0 asserted with beds live (new hard assert); setZone wired to zone changes + teleports",
+      "milestone": "M9",
+      "description": "Ambience beds (9.3): rain/wind/cricket/owl/sea synthesized beds per zone on the ambience bus, ~6s crossfade on travel, bench rest softens rain bed",
+      "steps": [
+        "beds.js routed to audio.buses.ambience; setZone wired to zone changes + teleports; kindlecheck console-clean w/ audio boot"
+      ]
     },
     {
       "id": "m9-nightsend-finale",
-      "desc": "Nights End score (9.2): all layers swell over the reel, picardy third lands on the title card; zone travel crossfades ~6s instead of hard-cutting",
       "passes": true,
-      "evidence": "score.finale()/picardy() wired via nightflow hooks; buildZone rings old layers down over 6s; autopilotcheck reel->card green"
+      "evidence": "score.finale()/picardy() wired via nightflow hooks; buildZone rings old layers down over 6s; autopilotcheck reel->card green",
+      "milestone": "M9",
+      "description": "Nights End score (9.2): all layers swell over the reel, picardy third lands on the title card; zone travel crossfades ~6s instead of hard-cutting",
+      "steps": [
+        "score.finale()/picardy() wired via nightflow hooks; buildZone rings old layers down over 6s; autopilotcheck reel->card green"
+      ]
     },
     {
       "id": "m9-star-shell",
-      "desc": "Star shell follows the camera in the SHADER (modelMatrix applied) so distant zones keep their skies; village/rooftops starfields restored",
       "passes": true,
-      "evidence": "stars.js vertex shader fix; rooftops.png + village.png re-read: stars present far from origin"
+      "evidence": "stars.js vertex shader fix; rooftops.png + village.png re-read: stars present far from origin",
+      "milestone": "M9",
+      "description": "Star shell follows the camera in the SHADER (modelMatrix applied) so distant zones keep their skies; village/rooftops starfields restored",
+      "steps": [
+        "stars.js vertex shader fix; rooftops.png + village.png re-read: stars present far from origin"
+      ]
     },
     {
       "id": "m9-hall-reverb",
-      "desc": "Hall acoustics (9.1): 4s vault impulse crossfaded in via roomMix/hallMix when entering the hall",
       "passes": true,
-      "evidence": "engine.setHallAcoustics wired to zone changes + teleport snap"
+      "evidence": "engine.setHallAcoustics wired to zone changes + teleport snap",
+      "milestone": "M9",
+      "description": "Hall acoustics (9.1): 4s vault impulse crossfaded in via roomMix/hallMix when entering the hall",
+      "steps": [
+        "engine.setHallAcoustics wired to zone changes + teleport snap"
+      ]
     }
   ]
 }
