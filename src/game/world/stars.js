@@ -20,7 +20,10 @@ const VERT = /* glsl */ `
     vUv = uv;
     float tw = 0.55 + 0.45 * sin(uTime * (1.2 + iSeed * 2.6) + iSeed * 40.0);
     vA = iSeed < uDensity ? tw : 0.0;
-    vec3 wp = iPos + (uCamRight * position.x + uCamUp * position.y) * iSize;
+    // modelMatrix carries the camera-follow (the shell is re-centered on the
+    // camera every frame) — without it the shell stays parked at the origin
+    // and half the sky frustum-clips away from distant zones
+    vec3 wp = (modelMatrix * vec4(iPos, 1.0)).xyz + (uCamRight * position.x + uCamUp * position.y) * iSize;
     gl_Position = projectionMatrix * viewMatrix * vec4(wp, 1.0);
   }
 `

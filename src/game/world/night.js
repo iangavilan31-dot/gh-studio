@@ -130,7 +130,7 @@ export class Night {
   }
 
   update(dt, camera) {
-    this.minutes = Math.min(NIGHT_MINUTES, this.minutes + dt / 60)
+    if (!this.paused) this.minutes = Math.min(NIGHT_MINUTES, this.minutes + dt / 60) // the night starts with play, not the title (6.2)
     // great arc: zenith-ish (t=0) → western horizon fog (t=40)
     const t = this.minutes / NIGHT_MINUTES
     const elev = THREE.MathUtils.lerp(1.15, 0.03, t)        // radians above horizon

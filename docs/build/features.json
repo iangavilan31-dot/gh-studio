@@ -332,7 +332,8 @@
         "village.png hue-check passes vs 2.1 row 2",
         "smoke + sign sway visible across 2 frames"
       ],
-      "passes": true
+      "passes": true,
+      "evidence": "village.png re-read after star-shell modelMatrix fix: amber windows, S-curve street, indigo sky w/ stars + meteor; hue gate village PASS"
     },
     {
       "id": "m4-rooftops-art",
@@ -342,7 +343,8 @@
         "rooftops.png hue-check passes vs 2.1 row 3",
         "star twinkle differs across 2 frames"
       ],
-      "passes": true
+      "passes": true,
+      "evidence": "rooftops.png re-read after star-shell modelMatrix fix: proper starfield + hook lantern + moths + smoke; nib.png covers the gnome close-up; hue gate rooftops PASS"
     },
     {
       "id": "m4-beldam",
@@ -572,7 +574,7 @@
         "headless: idle 90s (time-scaled debug), reel starts (state log + screenshot)"
       ],
       "passes": true,
-      "evidence": "attract at 180s idle wired in nightflow; noteInput cancels; logo element present"
+      "evidence": "attract reel: 90s idle at TITLE + 180s in-game, both wired in main/nightflow; noteInput cancels; logo element present"
     },
     {
       "id": "m6-autopilot",
@@ -612,7 +614,7 @@
         "gate script prints p95 + calls/tris and exits 0; numbers logged to PROGRESS.md"
       ],
       "passes": true,
-      "evidence": "perfgate PASS: 97 draw calls (<=120), 80406 tris (<=150k), 177KB gz (<=1.2MB); p95 118ms software-GL baseline documented"
+      "evidence": "perfgate PASS: 97 calls (<=120), 80.4k tris (<=150k), 216KB gz (<=1.2MB); frame-time p95 unverifiable headless (software GL ~118ms) — waiver recorded as D19"
     },
     {
       "id": "m7-host-join",
@@ -642,7 +644,7 @@
         "two-context: client kindles, host sees light + music layer; invalid channel rejected (log)"
       ],
       "passes": true,
-      "evidence": "coopcheck: kindle host+client sync, chan events feed brazier law, moment events (bench) rebroadcast; deterministic consequences via world.kindle on every client"
+      "evidence": "coopcheck: kindle host+client sync w/ HOST-SIDE reach check (8m), chan events + 2.5s grace feed brazier law, moment events rebroadcast deterministically"
     },
     {
       "id": "m7-moon-heartbeat",
@@ -662,7 +664,7 @@
         "two-context: host kindles 3 then client joins and sees all 3 lit (state + screenshot)"
       ],
       "passes": true,
-      "evidence": "coopcheck: third context joins mid-night, snapshot delivers kindled lights + nightT (30.24) + roster/tints"
+      "evidence": "coopcheck 17/17: snapshot delivers kindled/nightT/phase/cat/moments + syncCompletedZones grants missed zone trinkets + archstone from momentsDone"
     },
     {
       "id": "m7-disconnect",
@@ -802,7 +804,7 @@
         "pause screenshot; world still animating behind (2 frames differ)"
       ],
       "passes": true,
-      "evidence": "shellcheck: Esc opens pause w/ lights 3/37 + brews counters + shelf; pause.png READ (dim+desat, snore-z + subtitle alive behind card); no HUD anywhere"
+      "evidence": "shellcheck + pause.png: counters, shelf, night code, keeper controls reference section, dim+desat live world; no HUD anywhere"
     },
     {
       "id": "m8-settings",
@@ -813,7 +815,7 @@
         "settings screenshots"
       ],
       "passes": true,
-      "evidence": "shellcheck: settings persist across reload (localStorage moonrest-settings-v1); remap/sensitivity/invert wired via Input; holdToToggle in interact; subtitles gate in hud.say; gamepad polling in input.pollGamepad"
+      "evidence": "shellcheck: persist across reload; remap/sensitivity/invert/cameraAssist wired; holdToToggle IMPLEMENTED in interact (tap-to-channel); subtitles gate; gamepad per 4.2 table + rumble"
     },
     {
       "id": "m8-memory-modes",
@@ -823,7 +825,7 @@
         "4 screenshots, visibly distinct, each mode's signature present"
       ],
       "passes": true,
-      "evidence": "shellcheck: PS1 snap+affine(0.8) uniforms, VHS scanline/chroma/wobble (vhs.png READ: scanlines + fringing), Clean 2x RT + quantize 0; hiss +6dB via applyPrefs"
+      "evidence": "shellcheck 16/16: PS1 snap+affine 0.35 (0.8 melted the street — judge pass 1), VHS scanline/chroma/wobble (vhs.png), Clean 2x RT + quantize 0; hiss +6dB via applyPrefs"
     },
     {
       "id": "m8-photo-mode",
@@ -881,6 +883,36 @@
         "PROGRESS.md ends with SHIP + evidence list; PR URL recorded"
       ],
       "passes": false
+    },
+    {
+      "id": "m9-emote-wheel",
+      "desc": "Emote wheel (4.2): hold Tab/Y opens wheel (wave/point/giggle*/sleep), aim or number keys, release applies; giggle brew-locked; broadcasts emote event in co-op",
+      "passes": true,
+      "evidence": "shellcheck 16/16 incl. Tab-hold -> Digit1 -> wave applied; net emote path exercised by coopcheck emote sync"
+    },
+    {
+      "id": "m9-ambience-beds",
+      "desc": "Ambience beds (9.3): rain/wind/cricket/owl/sea synthesized beds per zone on the ambience bus, ~6s crossfade on travel, bench rest softens rain bed",
+      "passes": true,
+      "evidence": "beds.js routed to audio.buses.ambience; setZone wired to zone changes + teleports; kindlecheck console-clean w/ audio boot"
+    },
+    {
+      "id": "m9-nightsend-finale",
+      "desc": "Nights End score (9.2): all layers swell over the reel, picardy third lands on the title card; zone travel crossfades ~6s instead of hard-cutting",
+      "passes": true,
+      "evidence": "score.finale()/picardy() wired via nightflow hooks; buildZone rings old layers down over 6s; autopilotcheck reel->card green"
+    },
+    {
+      "id": "m9-star-shell",
+      "desc": "Star shell follows the camera in the SHADER (modelMatrix applied) so distant zones keep their skies; village/rooftops starfields restored",
+      "passes": true,
+      "evidence": "stars.js vertex shader fix; rooftops.png + village.png re-read: stars present far from origin"
+    },
+    {
+      "id": "m9-hall-reverb",
+      "desc": "Hall acoustics (9.1): 4s vault impulse crossfaded in via roomMix/hallMix when entering the hall",
+      "passes": true,
+      "evidence": "engine.setHallAcoustics wired to zone changes + teleport snap"
     }
   ]
 }

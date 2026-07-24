@@ -119,9 +119,10 @@ try {
 
   // — brazier law: a lone keeper's channel is denied while a peer is present —
   const denied = await B.page.evaluate(() => {
-    window.__MOONREST__.teleportPlayer(-3.2, -166, 0)
+    window.__MOONREST__.teleportPlayer(4, -156, 0) // beside the keep (host reach check is live)
     return window.__MOONREST__.kindle('isle-keep-brazier')
   })
+  await new Promise((r) => setTimeout(r, 400)) // let a transform carry the new position first
   await new Promise((r) => setTimeout(r, 1200))
   const brazierCold = await B.page.evaluate(() => !window.__MOONREST__.state.kindled.includes('isle-keep-brazier'))
   check('brazier denied for a lone channeler', brazierCold, `request sent=${denied}`)

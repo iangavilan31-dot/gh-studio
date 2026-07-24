@@ -121,6 +121,23 @@
         position: absolute; left: 50%; bottom: 3.5%; transform: translateX(-50%);
         color: #8f9dbd; font-size: 13px; letter-spacing: 0.12em; text-shadow: 0 1px 3px #000;
       }
+      #ui .emotewheel {
+        position: absolute; left: 50%; top: 50%; width: 210px; height: 210px;
+        transform: translate(-50%, -50%) scale(0.9); opacity: 0; pointer-events: none;
+        transition: all 0.15s ease; border-radius: 50%;
+        background: radial-gradient(circle, rgba(9,14,26,0.0) 30%, rgba(9,14,26,0.72) 62%, rgba(9,14,26,0.0) 74%);
+      }
+      #ui .emotewheel.on { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      #ui .ew-item {
+        position: absolute; color: #b9b2d6; font-size: 17px; letter-spacing: 0.14em;
+        font-family: 'Alegreya', Georgia, serif; text-shadow: 0 1px 4px #000; transform: translate(-50%, -50%);
+      }
+      #ui .ew-item.sel { color: #ffe9b3; text-shadow: 0 0 12px rgba(232,194,106,0.7); }
+      #ui .ew-item.locked { opacity: 0.3; font-style: italic; }
+      #ui .ew-0 { left: 50%; top: 9%; }     /* up: wave */
+      #ui .ew-1 { left: 91%; top: 50%; }    /* right: point */
+      #ui .ew-2 { left: 50%; top: 91%; }    /* down: giggle */
+      #ui .ew-3 { left: 9%; top: 50%; }     /* left: sleep */
     </style>
   </head>
   <body>

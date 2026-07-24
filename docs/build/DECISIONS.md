@@ -118,3 +118,20 @@ in-game (credits screen) and in the M10 README section, scoped to the game's cod
 pre-M8 rigs keep working unmodified (the title itself is gated by shellcheck).
 Title attract fires at 90s idle reusing the M6 reel (in-game 180s path IS exercised by
 long rig runs); a dedicated 90s-wait assert would add wall-clock for little signal.
+
+## D18 — Gargoyle "who is it watching" stays per-viewer, not networked
+**Risk: LOW (spec deviation, recorded).** Part 3.2.5 says the watching logic is
+networked. Shipped behavior: each client computes watching against ITS OWN camera —
+the statue turns its head at whoever isn't looking, per screen. Networking a single
+watched-target would make the statue visibly track a player who IS looking straight
+at it (breaking the joke for everyone else) and adds traffic for a gag. The
+co-op-visible part — the all-wave wave-back — IS host-validated and synced.
+
+## D19 — Frame-time p95 ≤ 16.6ms cannot be verified in this environment
+**Risk: MEDIUM (the one budget taken on reasoning, not measurement).** Part 11's 60fps
+p95 gate assumes a hardware GPU; this container renders through SwiftShader software
+GL at ~8–14fps (p95 ≈ 118ms), so perfgate.mjs logs p95 as a baseline and gates the
+tractable proxies instead: draw calls ≤120 (97), tris ≤150k (80.4k), bundle ≤1.2MB
+(216KB), boot ≤3s (~0.4s). Reasoning for real hardware: 97 calls / 80k tris at 480×270
+with one pass + one post quad is far inside integrated-GPU headroom for 60fps. A human
+run on a 2020 laptop should confirm; flagged in the Morning Report.

@@ -140,3 +140,45 @@ Fresh-eyes findings (step 4) to be merged below when both reviewers return.
 7. Hall chandelier halos 3.4→4.3 / 0.6→0.78 (hall.png re-read: rings read);
    moon streak 0.4→0.62 opacity, 9→11 wide.
 Re-verified: hue 8/8, shell 15/15, perf 96 calls, feel 12/12 — all green.
+
+### Step 4 — fresh eyes, competitive (two clean-context reviewers)
+Reviewer B (systems sweep) found 16 real issues; Reviewer A (art/evidence sweep)
+found 9 (several overlapping my already-applied pass-1 fixes, which A read
+pre-fix). B takes the five points (16 vs 9 verified). Merged + actioned:
+
+**Fixed this cycle (all re-verified green):**
+- Emote wheel existed nowhere (B1, HIGH): Tab/Y hold-wheel (wave/point/giggle*/
+  sleep) + digit picks + gamepad Y + net emote broadcast. shellcheck 16/16.
+- Star shell pinned to origin in the shader (A1, HIGH): modelMatrix applied —
+  village/rooftops skies restored (shots re-read).
+- Ambience bus was silent (B2): procedural rain/wind/cricket/owl/sea beds per
+  zone, 6s travel crossfades, bench-rest softens the rain SOUND too.
+- Night's End had no musical finale (B3): all layers swell over the reel,
+  picardy third on the title card.
+- Zone music hard-cut on travel (B5): 6s ring-down/bloom-in crossfade.
+- Late joiners never got earned trinkets (B4): syncCompletedZones + archstone
+  from momentsDone.
+- hold-to-toggle a11y setting was dead (B6): implemented in interact.
+- Hall 4s reverb was dead code (B7): roomMix/hallMix crossfade on hall entry.
+- Trinket ids showed raw on the shelf (B8): keys aligned to progress ids.
+- Pause lacked the controls reference (B9/A6): added.
+- Camera auto-frame off-switch (B10): settings row + wiring.
+- Gamepad remapped to the 4.2 table + kindle rumble (B11); staff halo now
+  pulses with footsteps (4.1).
+- Moon clock ran at the title (B12): night.paused while mode==='title'.
+- 5th joiner got "host lost" (B14): clean "night is full" deny + reject.
+- Host kindle requests now reach-checked at 8m (B16).
+- Stale ledger evidence corrected; missing spec rows added as m9-* entries (A2).
+
+**Documented, not coded:** gargoyle watching stays per-viewer (D18); frame-time
+p95 waiver (D19/A3/B15).
+
+**Carried to pass 2:** hall overall luminance (A4 — halos boosted, re-judge);
+gloomspire pose lacks water reflections (A5 — no reflections in a no-lights
+pipeline, judge in pass 2); Nib texture flatness (A8); sea-plane far-edge seam
+(A9); foglands mood vs Rule 1 floor (A7 — reframed already, re-judge).
+
+**Environment learning:** a half-dead `peerjs` CLI process from an earlier
+EAFNOSUPPORT crash was still claiming port 9101 and silently poisoned two
+coopcheck runs (client "host-lost" seconds after join). Kill stale brokers
+before blaming the netcode.

@@ -67,7 +67,11 @@ export class InteractSystem {
     if (best) this.hud.showPrompt('kindle')
     else this.hud.hidePrompt()
 
-    const holdE = input.down('KeyE')
+    // a11y (Part 10): toggle mode — tap E to begin the channel, tap again to
+    // let go; default is hold-to-channel
+    const holdE = this.holdToToggle
+      ? (this.channeling ? !input.pressed('KeyE') : input.down('KeyE'))
+      : input.down('KeyE')
 
     if (this.channeling) {
       const stillValid = best && this.target && best.id === this.target.id && holdE
