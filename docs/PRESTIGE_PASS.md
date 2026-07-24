@@ -16,6 +16,74 @@
 > the default render mode — see Part Q). Everything else in the master document
 > (Vibe Constitution, zone specs, budgets, harness rules) remains law.
 
+---
+
+# PART AA — PLAYTEST FINDINGS (fix before everything else)
+
+The owner playtested the first build and reported: "there's not much to really
+do." Two playtest screenshots (the Park path; a forest area) confirm seven
+defects. Create a `POLISH-AA*` ledger entry for each. ALL of Part AA must pass
+before any other polish work in this document begins — polish applied to an
+empty, moonless, black world is wasted effort.
+
+**AA.1 The moon is missing.** Rule 6 of the Vibe Constitution is not
+implemented. Build the sky-pass moon now: large painted face, cross-glow halo,
+on its descending night arc, never fog-occluded, visible from EVERY exterior.
+Accept: the moon appears in every exterior zone screenshot.
+
+**AA.2 There is no warm light anywhere.** The screenshots contain zero warm
+accents — no lit windows, no lamp glow, no ember on cold lanterns. Fix: every
+zone's warm accent type must be visible from its path; unkindled lights show a
+faint ember pilot-glow and a readable silhouette (they must advertise
+themselves); kindled lights bloom warm pools onto nearby surfaces; the player's
+lantern-staff casts a traveling warm pool so the player CARRIES warmth through
+the dark. Accept: every zone screenshot contains at least one warm accent, and
+a shot of the player in open dark shows their lantern pool.
+
+**AA.3 Crushed black darkness.** The world reads grey-black, violating Rule 1:
+darkness must be a SATURATED cool hue (teal park, indigo village, violet
+ruins). Raise the ambient floor to each zone's measured hue family; make the
+sky gradient's horizon band visible in frame; fog color must equal that horizon
+color and be visibly present. Accept: programmatic sample of each screenshot —
+mean color is not neutral (saturation above threshold) and dominant hue matches
+the Part 2.1 table.
+
+**AA.4 The world is empty and flat.** Vast bare ground, a wide featureless
+path, trunk-only trees with no canopy, near-zero props. Run a density pass per
+zone: tree canopies that read against the sky, prop clusters arranged as small
+stories (B.1), path edging stones and narrowing, ground texture variation,
+foreground/middle/distant layering (B.2), a landmark visible from every zone
+entrance. Accept: no screenshot contains a screen-quarter of undifferentiated
+ground or sky (excluding the sky-dome's authored gradient).
+
+**AA.5 "Not much to do" — enforce the FUN FLOOR.** From any standing point,
+walking for at most 20 seconds in some direction must surface something
+actionable or discoverable: a cold light, a sleeper, a Moon Brew glint, a
+fingerpost, a postcard vista, an echo condition. The first kindle must be
+discoverable within 60 seconds of gaining control (visible cold lamp near
+spawn + Beldam's murmur pointing at it). Interact prompts appear reliably at
+2m. The pause menu shows live counters. Accept: the autopilot night reaches
+all required kindles and 8 sleeper stirs; a scripted "wander test" (random
+walk, 3 minutes) logs an actionable encounter at least every 20 seconds.
+
+**AA.6 Content completeness check.** Verify all 8 zones + Foglands exist, are
+reachable on foot, and match MASTER_PROMPT.md Part 3. If the current build is
+a single-scene prototype, or lives only as a published artifact page, port it
+into this repo's Vite app (per the master doc's file layout) and build the
+missing zones FIRST. Accept: the 8-zone screenshot reel exists and each shot
+matches its zone spec at blockout quality or better.
+
+**AA.7 The player reads as a black blob.** Apply the robe tint from the
+palette (violet `#4B3B6E` default), warm rim from the carried lantern, and a
+hat silhouette that separates from the background. Accept: in every
+screenshot containing the player, the character silhouette and hat are
+identifiable at a glance.
+
+Only when AA.1–AA.7 all pass with screenshot evidence in `POLISH_JUDGE.md`
+does the rest of this document's work begin.
+
+---
+
 You are no longer building the first version of MOONREST.
 
 The existing game has already completed one implementation pass. Your task is now
@@ -113,7 +181,8 @@ Before editing code:
    * `docs/build/JUDGE.md`
    * `docs/build/DECISIONS.md`
    * `docs/build/features.json`
-6. Create `docs/build/POLISH_AUDIT.md`.
+6. Create `docs/build/POLISH_AUDIT.md` (Part AA findings are pre-seeded
+   entries — list them first, already ranked highest).
 
 The audit must identify:
 
