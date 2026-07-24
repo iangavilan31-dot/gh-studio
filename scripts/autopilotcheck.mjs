@@ -21,6 +21,13 @@ const browser = await chromium.launch({
   args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--autoplay-policy=no-user-gesture-required'],
 })
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } })
+  // Behavior gate: run the light 480x270 retro pipeline — headless software
+  // raster can't do native-res Restored at playable frame times, and this
+  // gate tests mechanics, not the renderer (Restored is covered by the
+  // shoot/hue/shell/perf gates).
+  await page.addInitScript(() => {
+    try { localStorage.setItem('moonrest-settings-v1', JSON.stringify({ settingsV: 2, memoryMode: 'n64', resScale: 1 })) } catch (e) {}
+  })
 const issues = []
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') issues.push(m.text()) })
 page.on('pageerror', (e) => issues.push(e.message))
@@ -54,7 +61,8 @@ check('stir log: 8 zones stirred', stirs.length === 8, stirs.map((s) => s.zone).
 check('beat log: brews-complete fired', beats.some((b) => b.kind === 'brews-complete'))
 
 // the reel: wait for the title card, screenshot the stats
-await page.waitForFunction(() => document.querySelector('#ui .nightcard')?.classList.contains('on'), null, { timeout: 90000 }).catch(() => {})
+// headless sim time runs ~0.4x wall (dt clamp on slow frames) — the reel needs the long leash
+await page.waitForFunction(() => document.querySelector('#ui .nightcard')?.classList.contains('on'), null, { timeout: 240000 }).catch(() => {})
 const cardOn = await page.evaluate(() => document.querySelector('#ui .nightcard')?.classList.contains('on'))
 check('title card shown after dolly reel', cardOn === true)
 await page.locator('body').screenshot({ path: resolve(dir, 'nights-end.png') })
@@ -62,7 +70,7 @@ const nightLog = await page.evaluate(() => window.__MOONREST__.nightLog)
 check('night log: reel → card sequence', nightLog.some((l) => l.event === 'nights-end') && nightLog.some((l) => l.event === 'title-card'), JSON.stringify(nightLog.map((l) => l.event)))
 
 // the reset: the page reloads itself; wait for the new night and check persistence
-await page.waitForFunction(() => window.__MOONREST__?.ready && !window.__AUTOPILOT_RUNNING__, null, { timeout: 30000 }).catch(() => {})
+await page.waitForFunction(() => window.__MOONREST__?.ready && !window.__AUTOPILOT_RUNNING__, null, { timeout: 90000 }).catch(() => {})
 await page.waitForTimeout(1500)
 const st2 = await page.evaluate(() => window.__MOONREST__.state)
 check('new night: lights reset cold', st2.kindled.length === 0, `${st2.kindled.length}`)

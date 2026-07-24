@@ -20,6 +20,13 @@ const browser = await chromium.launch({
   args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--autoplay-policy=no-user-gesture-required'],
 })
 const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } })
+  // Behavior gate: run the light 480x270 retro pipeline — headless software
+  // raster can't do native-res Restored at playable frame times, and this
+  // gate tests mechanics, not the renderer (Restored is covered by the
+  // shoot/hue/shell/perf gates).
+  await page.addInitScript(() => {
+    try { localStorage.setItem('moonrest-settings-v1', JSON.stringify({ settingsV: 2, memoryMode: 'n64', resScale: 1 })) } catch (e) {}
+  })
 const issues = []
 page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') issues.push(m.text()) })
 page.on('pageerror', (e) => issues.push(e.message))
@@ -64,12 +71,16 @@ check('channel interrupt logged, no kindle', st.kindled.length === 0 && log.some
 await page.locator('body').screenshot({ path: resolve(dir, 'before.png') })
 const rmsBefore = st.audio.rms?.music ?? 0
 await page.keyboard.down('e')
-await page.waitForTimeout(2400)
+// hold until the game confirms — the channel needs 1.2s of SIMULATED time,
+// and headless frame pacing (esp. right after a screenshot) can stretch how
+// much wall clock that takes
+await page.waitForFunction(() => window.__MOONREST__.state.kindled.includes('park-bench-lamp'), null, { timeout: 20000 }).catch(() => {})
 await page.keyboard.up('e')
 await page.waitForTimeout(1200) // bloom halfway
 await page.locator('body').screenshot({ path: resolve(dir, 'after.png') })
 st = await S()
-check('kindled registered', st.kindled.includes('park-bench-lamp'), JSON.stringify(st.kindled))
+log = await page.evaluate(() => window.__MOONREST__.interactLog)
+check('kindled registered', st.kindled.includes('park-bench-lamp'), JSON.stringify(st.kindled) + ' log=' + JSON.stringify(log))
 check('music layers = 2 after 1 kindle (base+1)', st.audio.layers === 2, `layers=${st.audio.layers}`)
 
 // 4) persistence: walk away and back

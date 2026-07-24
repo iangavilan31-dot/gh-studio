@@ -41,6 +41,13 @@ const issues = { A: [], B: [], C: [] }
 async function boot(tag) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } })
   const page = await ctx.newPage()
+  // Behavior gate: run the light 480x270 retro pipeline — headless software
+  // raster can't do native-res Restored at playable frame times, and this
+  // gate tests mechanics, not the renderer (Restored is covered by the
+  // shoot/hue/shell/perf gates).
+  await page.addInitScript(() => {
+    try { localStorage.setItem('moonrest-settings-v1', JSON.stringify({ settingsV: 2, memoryMode: 'n64', resScale: 1 })) } catch (e) {}
+  })
   page.on('console', (m) => { if (m.type() === 'error') issues[tag].push(`[${tag}] ${m.text()}`) })
   page.on('pageerror', (e) => issues[tag].push(`[${tag} pageerror] ${e.message}`))
   await page.goto(`http://localhost:${PORT}/`)
@@ -104,7 +111,8 @@ try {
 
   // — moon heartbeat: host clock jumps, client slews to it within ~6s —
   await A.page.evaluate(() => window.__MOONREST__.skipTo(30))
-  await new Promise((r) => setTimeout(r, 6500))
+  // heartbeat every 5s of HOST sim time ≈ 12s wall under headless frame pacing
+  await new Promise((r) => setTimeout(r, 20000))
   const ntB = await B.page.evaluate(() => window.__MOONREST__.state.nightT)
   check('client slews to host moon clock', Math.abs(ntB - 30) < 1.2, `client nightT=${ntB}`)
 

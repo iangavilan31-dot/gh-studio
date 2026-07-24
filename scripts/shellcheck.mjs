@@ -87,7 +87,8 @@ try {
   d = await page.evaluate(() => window.__MOONREST__.shellDebug())
   check('Esc opens the pause menu', d.screen === 'pause' && d.blocking)
   const counters = await page.evaluate(() => [...document.querySelectorAll('.counter')].map((c) => c.textContent))
-  check('pause shows lights + brews counters', counters.some((c) => c.includes('3 / 37')) && counters.some((c) => c.includes('/ 12')), JSON.stringify(counters))
+  const lightsTotal = await page.evaluate(() => window.__MOONREST__.lights.length)
+  check('pause shows lights + brews counters', counters.some((c) => c.includes(`3 / ${lightsTotal}`)) && counters.some((c) => c.includes('/ 12')), JSON.stringify(counters))
   await page.locator('#game').screenshot({ path: resolve(shotsDir, 'pause.png') })
   console.log('saved pause.png')
   await page.keyboard.press('Escape')
@@ -128,12 +129,12 @@ try {
   // — emote wheel (Part 4.2): hold Tab, pick, release —
   await page.evaluate(() => window.__MOONREST__.teleportPlayer(2, -17, 0))
   await page.keyboard.down('Tab')
-  await page.waitForTimeout(700) // software-GL frames are ~80ms; give the wheel a beat
+  await page.waitForTimeout(1400) // native-res Restored under software GL: ~300ms frames — give the wheel real beats
   const wheelUp = await page.evaluate(() => document.querySelector('.emotewheel')?.classList.contains('on'))
   await page.keyboard.press('Digit1')
-  await page.waitForTimeout(450)
+  await page.waitForTimeout(900)
   await page.keyboard.up('Tab')
-  await page.waitForTimeout(400)
+  await page.waitForTimeout(900)
   const emoted = await page.evaluate(() => window.__MOONREST__.state.action)
   check('emote wheel: Tab-hold → pick → wave', wheelUp === true && emoted === 'wave', `action=${emoted}`)
   await page.evaluate(() => window.__MOONREST__.setAction(null))

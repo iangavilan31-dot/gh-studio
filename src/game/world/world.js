@@ -419,6 +419,7 @@ export class World {
     const longBench = bench({ length: 2.6 })
     this.place(longBench, 2, -19.6, 0)
     this.benchPos = new THREE.Vector3(2, heightAt(2, -19.6), -19.6)
+    this.benches = [[2, -19.6]] // rest spots are actionable (AA.5 wander POIs)
 
     const benchLamp = lampPost({ lit: false })
     this.place(benchLamp.group, 4.2, -19.2)
@@ -427,6 +428,7 @@ export class World {
     for (const a of [Math.PI * 0.55, Math.PI * 1.25]) {
       const b = bench({})
       this.place(b, Math.cos(a) * 16, Math.sin(a) * 16, -a + Math.PI / 2)
+      this.benches.push([Math.cos(a) * 16, Math.sin(a) * 16])
     }
     let li = 0
     for (const a of [Math.PI * 0.15, Math.PI * 0.85]) {
@@ -1611,6 +1613,64 @@ export class World {
   buildFoglands() {
     const rng = worldRNG.fork('foglands')
     const mats = sharedMats()
+
+    // Wayside shrines (PRESTIGE O.2 / AA.5): hooded stone figures with candle
+    // niches in the open country between roads — optional cold lights that
+    // kindle a deep amber; the empty fields stop being empty
+    const shrineStone = retroMaterial({ map: TEX.stoneBlock({ name: 'shrinestone', base: '#3e4442' }) })
+    let shrineN = 0
+    for (const [sx, sz] of [[-52, 42], [-18, 78], [40, 64], [86, 24], [16, -44], [-36, -26]]) {
+      shrineN++
+      const g = new THREE.Group()
+      const plinth = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.3, 0.9), shrineStone)
+      ensureVertexColors(plinth.geometry, [0.7, 0.7, 0.7])
+      plinth.position.y = 0.15
+      g.add(plinth)
+      // hooded figure: lathe body, cone hood, bowed head — worn, faceless
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.34, 1.05, 7), shrineStone)
+      ensureVertexColors(body.geometry, [0.82, 0.82, 0.85])
+      body.position.y = 0.82
+      g.add(body)
+      const hood = new THREE.Mesh(new THREE.ConeGeometry(0.26, 0.42, 7), shrineStone)
+      ensureVertexColors(hood.geometry, [0.72, 0.72, 0.76])
+      hood.position.y = 1.44
+      hood.rotation.x = 0.18 // the bow
+      g.add(hood)
+      // candle niche at the figure's feet
+      const niche = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.26, 0.2), shrineStone)
+      ensureVertexColors(niche.geometry, [0.5, 0.5, 0.5])
+      niche.position.set(0, 0.43, 0.32)
+      g.add(niche)
+      const sc = sconce({ accent: '#d98a2b' }) // deep amber, not required for completion
+      sc.group.position.set(0, 0.38, 0.38)
+      sc.group.scale.setScalar(0.8)
+      g.add(sc.group)
+      g.rotation.y = rng.range(-0.4, 0.4) + (rng.chance(0.3) ? 0.12 : 0) // one leans (P.1)
+      g.userData.collider = { r: 0.55, h: 1.6 }
+      this.place(g, sx, sz)
+      this.registerLight(`wayside-shrine-${shrineN}`, 'wayside', sc, sx, sz + 0.38, heightAt(sx, sz) + 0.38)
+    }
+    // memorial stones — worn markers of the order, three words at most, moss
+    for (const [mx, mz, lean] of [[-34, 22, 0.08], [62, 80, -0.06], [-74, 96, 0.13]]) {
+      const slab = new THREE.Mesh(new THREE.BoxGeometry(0.5, rng.range(0.7, 1.0), 0.16), shrineStone)
+      ensureVertexColors(slab.geometry, [0.62, 0.66, 0.62])
+      const g = new THREE.Group()
+      slab.position.y = 0.4
+      slab.rotation.z = lean // none stand straight anymore
+      g.add(slab)
+      g.userData.collider = { r: 0.35, h: 0.9 }
+      this.place(g, mx, mz, rng.range(0, Math.PI))
+    }
+    // a lone bench in the grass, facing nothing in particular (D.1)
+    const lone = bench({ length: 1.6 })
+    this.place(lone, -6, 54, 2.2)
+    this.benches.push([-6, 54])
+    // and one at the southwest shore, facing the sea and the setting moon —
+    // somebody used to sit here often (the wear is in the dark patches)
+    const shore = bench({ length: 1.6 })
+    this.place(shore, -34, -46, Math.PI * 1.05)
+    this.benches.push([-34, -46])
+
     // fingerposts at forks
     const posts = [
       { x: 24, z: 0, labels: ['EMBERWICK →', '← THE PARK'] },
@@ -1620,6 +1680,7 @@ export class World {
       { x: 92, z: 48, labels: ['MOSSWOOD →', '← EMBERWICK'] },
       { x: -20, z: 110, labels: ['MOSSWOOD →', '← GLOOMSPIRE'] },
     ]
+    this.signposts = posts.map((pd) => ({ x: pd.x, z: pd.z }))
     for (const pd of posts) {
       const g = new THREE.Group()
       const post = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 2.6, 6), mats.plank)
@@ -1656,6 +1717,7 @@ export class World {
       this.interactables.push({ id: `sign-${pd.x}-${pd.z}`, x: pd.x, z: pd.z, kind: 'sign', labels: pd.labels })
     }
     // breadcrumb lanterns along corridors (pre-kindled, flickering — not objectives)
+    this.crumbs = [] // exposed for the AA.5 wander test
     const crumbs = [
       [32, 1.5], [48, -1.5], [-32, 1.5], [-50, -1.5], [-72, 1.5],
       [0 + 1.8, -50], [-1.8, -62], [1.8, -86], [-1.8, -112],
@@ -1664,6 +1726,7 @@ export class World {
       [-78, 113], [-44, 109], [-6, 112], [24, 108],
     ]
     for (const [cx, cz] of crumbs) {
+      this.crumbs.push([cx, cz])
       const lamp = lampPost({ lit: false, height: 2.2 })
       this.place(lamp.group, cx, cz)
       this.litLamp(lamp, cx, cz)

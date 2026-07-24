@@ -64,8 +64,21 @@ counts until all eight AA items carry screenshot evidence here.
   edge energy on every zone shot; ground quadrants must be differentiated
   (sky quadrants exempt as authored gradient). 10/10 PASS. huecheck 9/9,
   perfgate PASS (101 calls / 89.8k tris).
-### AA.5 — fun floor: pending
-### AA.6 — content completeness: pending
+### AA.5 — fun floor ✅ 2026-07-24
+- First kindle staged: Beldam murmurs the pointer ("...lamp went cold again.
+  right here, beside my bench, friend... zzz") ~7s after control; the cold
+  lamp advertises itself 1.9m from spawn with its pilot ember.
+- The open country got content: 6 wayside shrines (O.2 hooded figures, optional
+  amber cold lights), 3 leaning memorial stones, a lone bench + a sea-view
+  bench, 3 ravens on weathered posts (head-track passers, one caw each).
+- NEW HARD GATE: scripts/wandercheck.mjs — seeded 3-minute random walk;
+  actionable/discoverable encounter (light/brew/sign/crumb/bench/sleeper/raven
+  within 16m) at least every 20s. PASS: max gap 16.1s. Autopilot PASS
+  (all 37 required kindles + 8 stirs + reel + reset).
+### AA.6 — content completeness ✅ 2026-07-24
+- All 8 zones + Foglands live in THIS repo's Vite app (src/game/*): traverse
+  gate walks them on foot 11/11; the full Restored-mode reel exists and was
+  read shot-by-shot through AA.1–AA.4. No published-artifact-only content.
 ### AA.7 — player readability ✅ 2026-07-24
 - Character hemisphere gains a violet-biased fill so the #4B3B6E robe tint and
   silhouette never crush to black; carried-lantern rim (AA.2) warms the hat

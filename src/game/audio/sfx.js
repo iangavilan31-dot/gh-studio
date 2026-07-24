@@ -153,6 +153,28 @@ export function cluck(alarmed = false) {
   }
 }
 
+// Raven croak (PRESTIGE O.2): one dry caw, low and unhurried — each raven
+// spends it exactly once per night, then keeps its own counsel.
+export function caw() {
+  if (!audio.started) return
+  const ctx = audio.ctx
+  const t0 = ctx.currentTime
+  const o = ctx.createOscillator()
+  o.type = 'sawtooth'
+  o.frequency.setValueAtTime(295, t0)
+  o.frequency.exponentialRampToValueAtTime(205, t0 + 0.18)
+  const bp = ctx.createBiquadFilter()
+  bp.type = 'bandpass'
+  bp.frequency.value = 720
+  bp.Q.value = 1.5
+  const g = ctx.createGain()
+  g.gain.setValueAtTime(0, t0)
+  g.gain.linearRampToValueAtTime(0.085, t0 + 0.02)
+  g.gain.exponentialRampToValueAtTime(0.001, t0 + 0.3)
+  o.connect(bp); bp.connect(g); g.connect(audio.buses.sfx)
+  o.start(t0); o.stop(t0 + 0.32)
+}
+
 // Comedic sleeper snore: filtered noise inhale + soft sine whistle out.
 export function snore() {
   if (!audio.started) return
