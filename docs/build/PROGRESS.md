@@ -399,3 +399,24 @@ coop 17/17 ✓ shell 16/16 ✓ perf (101 calls / 89.8k tris / 222KB gz) ✓.
 identity, audio continuity, handcraft), then the Part L judge loop (two
 consecutive passes ≥9.0 avg, no category <8.0). Artifact republish per the
 post-ship notes when the pass completes.
+
+## 2026-07-24 — Prestige polish underway (post-AA)
+
+Done since AA: **POLISH-H1** opening sequence (rain-black → moon → descent →
+lantern ignition → seamless title orbit; skippable; rig-bypassed; menu keys
+gated during the hold) · **POLISH-C1** movement personality (accel lean,
+robe/hat/beard settle lag, turn lean, idle weight-shifts) · **POLISH-F1**
+shared night pulse (54Hz swell, all zones) + the Lamplighter motif (one cell
+quoted by every zone's lead in its own mode at each regen).
+
+**Judge pass 1 (Part L) in flight:** full hard-gate suite running; two
+adversarial reviewer subagents (A visuals vs shots+specs, B code/systems vs
+last 12 commits) hunting competitively. NEXT ACTION after both return: merge
+findings into POLISH_JUDGE.md pass-1 entry, score the 16 categories honestly
+with evidence, fix top defects by production-value damage, re-verify, commit
+each fix, then pass 2. Exit: two consecutive passes avg ≥9.0, no category
+<8.0, opening/movement/atmosphere ≥9.0, audio ≥8.5, production value ≥9.0.
+
+If context compacts here: re-read PRESTIGE_PASS.md Part 0 + Part L, this
+tail, and POLISH_JUDGE.md; the gate logs live in the session scratchpad
+(judge1.log). All 11 gates were green at commit ff496e4.
