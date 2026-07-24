@@ -114,3 +114,20 @@ commits). Findings merged below; fixes applied within this pass are marked.
 9. Ledger lacks B–Q entries (MED) → FIXED: 12 entries seeded (115 total).
 10. Foglands quadrants pass by gradient (LOW) → documented in DECISIONS #3.
 11. Village shingle texel scale (LOW) → carried with #4.
+
+### Reviewer B findings → outcomes
+1. Intro shortened fresh nights by 4 min (MED) → FIXED: startNight resets the
+   clock to dusk.
+2. quartercheck sky exemption unconditional (MED) → FIXED: top quadrants
+   exempt only with a measured vertical-gradient sky signature.
+3. C1/F1 missing ledger entries (MED) → FIXED (seeded with evidence).
+4. Sub-150ms blur could latch keys (MED) → FIXED: refocus clears too.
+5. Shrine lean stomped by place() (LOW) → FIXED: yaw passed through.
+6. Raven head owl-spin across ±π (LOW) → FIXED: wrapped delta.
+7. Reversed smoothstep UB in floor mask (LOW) → FIXED: 1-smoothstep.
+8. Intro keyboard-only skip (LOW) → FIXED: pointerdown skips.
+9. Latency bound loosened + wander console hygiene (LOW) → FIXED: 220ms bound
+   restored; wandercheck gains the standard console guard.
+Cleared by B: ledger ratchet intact, fog==horizon untouched, no realtime
+lights, no per-frame allocs in the new paths, wayside zone id safe, v2
+settings migration, palette readback validity, motif degrees in range.

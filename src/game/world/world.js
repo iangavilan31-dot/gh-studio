@@ -1687,9 +1687,9 @@ export class World {
       sc.group.position.set(0, 0.38, 0.38)
       sc.group.scale.setScalar(0.8)
       g.add(sc.group)
-      g.rotation.y = rng.range(-0.4, 0.4) + (rng.chance(0.3) ? 0.12 : 0) // one leans (P.1)
+      const leanYaw = rng.range(-0.4, 0.4) + (rng.chance(0.3) ? 0.12 : 0) // none face alike (P.1)
       g.userData.collider = { r: 0.55, h: 1.6 }
-      this.place(g, sx, sz)
+      this.place(g, sx, sz, leanYaw)
       this.registerLight(`wayside-shrine-${shrineN}`, 'wayside', sc, sx, sz + 0.38, heightAt(sx, sz) + 0.38)
     }
     // memorial stones — worn markers of the order, three words at most, moss

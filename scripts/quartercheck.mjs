@@ -47,10 +47,13 @@ for (const name of shots) {
     const quads = []
     for (const [qy, qx] of [[0, 0], [0, 1], [1, 0], [1, 1]]) {
       let sum = 0, sum2 = 0, edge = 0, n = 0, en = 0
+      let topSum = 0, topN = 0, botSum = 0, botN = 0
+      const yMid = (qy + 0.5) * H / 2
       for (let y = qy * H / 2; y < (qy + 1) * H / 2; y++) {
         for (let x = qx * W / 2; x < (qx + 1) * W / 2; x++) {
           const l = lum[y * W + x]
           sum += l; sum2 += l * l; n++
+          if (y < yMid) { topSum += l; topN++ } else { botSum += l; botN++ }
           if (x + 1 < W && y + 1 < H) {
             edge += Math.abs(l - lum[y * W + x + 1]) + Math.abs(l - lum[(y + 1) * W + x])
             en++
@@ -59,7 +62,10 @@ for (const name of shots) {
       }
       const mean = sum / n
       const std = Math.sqrt(Math.max(0, sum2 / n - mean * mean))
-      quads.push({ mean: +mean.toFixed(4), std: +std.toFixed(4), edge: +(edge / en).toFixed(5) })
+      // sky signature: the authored gradient descends — upper half of the
+      // quadrant measurably differs from the lower half
+      const vgrad = Math.abs(topSum / topN - botSum / botN)
+      quads.push({ mean: +mean.toFixed(4), std: +std.toFixed(4), edge: +(edge / en).toFixed(5), vgrad: +vgrad.toFixed(4) })
     }
     return quads
   }, dataUri)
@@ -67,7 +73,10 @@ for (const name of shots) {
   const verdicts = stats.map((q, i) => {
     const isTop = i < 2
     const flat = q.std < STD_MIN && q.edge < EDGE_MIN
-    return { ...q, quad: ['TL', 'TR', 'BL', 'BR'][i], fail: flat && !isTop }
+    // top quadrants are exempt ONLY as authored sky: a vertical gradient must
+    // actually be present (AA.4's "excluding the sky-dome's authored gradient")
+    const skyLike = isTop && q.vgrad > 0.004
+    return { ...q, quad: ['TL', 'TR', 'BL', 'BR'][i], fail: flat && !skyLike }
   })
   const bad = verdicts.filter((v) => v.fail)
   if (bad.length) fails++

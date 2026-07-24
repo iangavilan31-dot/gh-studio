@@ -257,6 +257,7 @@ function setupIntro() {
   night.skipTo(4) // the moon hangs young in the east for the reveal
   document.querySelector('#ui .shell')?.classList.add('introhold')
 }
+canvas.addEventListener('pointerdown', () => { if (intro.active && !intro.done) endIntro() })
 function endIntro(fast = false) {
   if (intro.done) return
   intro.done = true
@@ -326,6 +327,7 @@ function startNight(fresh = false) {
   mode = 'game'
   cinematic = false
   endIntro(true)
+  night.skipTo(0) // dusk — the intro's moon-reveal minute never shortens the night
   orbit.autoPlace(player.pos, Math.PI) // wake up with the night in view, not bark
   nightflow.noteInput()
   npcs.nightIntro() // AA.5: Beldam points at the first cold lamp
