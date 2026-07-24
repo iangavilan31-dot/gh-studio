@@ -418,6 +418,11 @@ function tick() {
 
   // photo mode toggle (in the night, no menu up)
   if (mode === 'game' && !shell.screen && !cinematic && input.pressed('KeyP')) togglePhoto(!photo.on)
+  // a menu/cinematic interrupting a Tab-hold discards the wheel, emoting nothing
+  if (wheelOpen && (cinematic || shell.blocking || photo.on || mode === 'title')) {
+    wheelOpen = false
+    hud.hideEmoteWheel()
+  }
 
   night.paused = mode === 'title' // the 40 minutes belong to the walk, not the menu
 
