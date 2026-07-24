@@ -162,7 +162,9 @@ export class Pipeline {
   render(scene, camera, time) {
     this.postUniforms.uTime.value = time
     this.renderer.setRenderTarget(this.rt)
-    this.renderer.setViewport(0, 0, this.rt.width, this.rt.height)
+    // NO setViewport here: a render target carries its own viewport, and a
+    // manual call gets multiplied by pixelRatio — at dpr 2 the scene pass
+    // rendered 960×540 into the 480×270 target (zoomed quadrant on Retina)
     this.renderer.clear()
     this.renderer.render(scene, camera)
     // snapshot scene-pass stats before the post quad resets them
