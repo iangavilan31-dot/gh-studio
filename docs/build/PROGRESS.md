@@ -237,3 +237,81 @@ All 11 hard gates green on the shipping build; kindlecheck grew a 14th assert
   send behind conn.open.
 
 **Next action:** M10 — Morning Report + SHIP line, final push, PR body update.
+
+---
+
+# THE MORNING REPORT — 2026-07-24 ~03:00 UTC
+
+## 1 · What's finished
+
+MOONREST is complete per docs/MASTER_PROMPT.md, M0→M10, on branch
+`claude/moonrest-autonomous-build-015qyb` (draft PR #4):
+
+- **The world:** 8 art-complete zones + 6 fogland corridors, one seeded
+  heightfield, 37 kindle-able cold lights, 12 hidden Moon Brews, 9 keepsakes,
+  8 sleepers with scripted stirs (Beldam, chickens, Nib, the Curator, the
+  gargoyle, the Pale King + ghost cat, Mote, the sailors), a real-lunar-phase
+  moon that is the only clock, Night's End dolly reel + title card + reset loop,
+  attract mode (90s title / 180s in-game).
+- **The look:** 480×270 nearest pipeline, one shared retro shader, zero
+  realtime lights/shadows, vertex-baked warmth (hall showcase fully painted),
+  per-zone Part 2.1 palettes enforced by a programmatic hue gate, four Memory
+  dials (N64/PS1/VHS/Clean), a Rule 1 fog-hued black floor (no black-black,
+  by measurement), 100% procedural assets — no model/texture/audio file exists.
+- **The sound:** synthesized everything — generative per-zone dungeon-synth
+  score whose layers grow with kindles, ambience beds (rain/wind/cricket/owl/
+  sea) with 6s travel crossfades, hall 4s vault reverb, stride-synced footsteps,
+  Night's End layer-swell resolving on a picardy third, tape hiss.
+- **Co-op (2–4):** PeerJS host-authority — 4-letter codes, 10Hz hermite-interp
+  transforms, validated events (host reach + all-channel brazier law), 5s moon
+  heartbeat, late-join full snapshot (incl. earned keepsakes + mounted
+  chickens), disconnect firefly fades, clean full-lobby and host-loss fictions,
+  rune name plates, all 8 co-op moments, solo-degradable.
+- **The shell:** title over a live diorama, pause (counters/shelf/code/controls
+  — the only UI surface), settings (video/audio/controls/a11y, persisted),
+  photo mode, emote wheel, error boundary in fiction, moon favicon + OG meta,
+  README.
+
+## 2 · Workarounds & judgment calls (riskiest first — full detail in DECISIONS.md)
+
+- **D19:** frame-time p95 ≤16.6ms is unverifiable on software GL (~118ms
+  baseline logged); gated proxies instead: 97 draw calls / 80.4k tris / 216KB
+  gz / 0.4s boot. Needs one human run on real hardware.
+- **D12:** co-op gates run against a LOCAL PeerJS broker; the public cloud
+  broker is the one untested link (client code identical).
+- **D1:** VIBE_BIBLE.md / docs/research/ never existed here; judge dimension (j)
+  scored against Part 3's embedded reference descriptions per Part 0.1.
+- **D2:** the branch replaces the portfolio app shell (spec-sanctioned option);
+  main is untouched until a human merges.
+- **D16/D18/D13/D14:** license note scoped in-credits/README (no repo-wide
+  LICENSE imposed); gargoyle watching is per-viewer; brews are per-keeper;
+  "all players" moments count the present lobby (solo included).
+
+## 3 · Waiting on a human
+
+- Play it on hardware (60fps sanity + the p95 number, D19); one real-network
+  co-op session through the public broker (D12).
+- Decide whether/how to merge into the portfolio repo (D2) and whether a
+  repo-level LICENSE should exist (D16).
+- Optional niceties skipped in-scope: gloomspire water reflections (A5, no
+  planar reflections in a no-lights pipeline), networked gargoyle gaze (D18).
+
+## 4 · Evidence
+
+- **Gates (all green on the shipping build):** build exit 0 · init smoke ·
+  feel 12/12 · kindle 14/14 (music RMS + ambience RMS) · traverse 11/11 ·
+  moments 12/12 · hue 8/8 · autopilot 14/14 (37 kindles, 8 completions, 8
+  stirs, 12 brews, reel→card→reset, persistence) · perf 97≤120 calls,
+  80,412≤150k tris, 216KB≤1.2MB gz · coop 17/17 · shell 16/16.
+- **Shot reel (docs/build/shots/, every PNG read during judge passes):** 8 zones
+  kindled + sea + foglands + nib + 4 memory modes + coop pair + title/pause/vhs
+  + nights-end card.
+- **Judge record (docs/build/JUDGE.md):** pass 1 8.25 → pass 2 8.65 → pass 3
+  8.8, none <7, two consecutive — exit met; 4 adversarial reviewers, ~40
+  verified findings, all fixed or documented.
+- **Ledger:** docs/build/features.json — 94 entries, 94 passing, each with its
+  evidence string.
+
+The moon sets. The lights hold. Rest now.
+
+SHIP — evidence: features.json 94/94 · JUDGE.md 3-pass exit (8.65, 8.8) · all 11 hard gates green · shot reel read · autopilot full-night log · perf 97 calls / 80.4k tris / 216KB gz / boot 0.4s · draft PR #4
