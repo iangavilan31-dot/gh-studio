@@ -440,3 +440,20 @@ If compacted: goal = POLISH_JUDGE.md two consecutive passes avg ≥9.0 (no cat
 PROGRESS ends with PRESTIGE PASS COMPLETE — SHIP. Re-read PRESTIGE_PASS Part L
 + POLISH_JUDGE.md tail + this entry. Artifact republish steps in the post-ship
 entry above (package-artifact.mjs + Artifact url).
+
+## Pass 2 close — reviewer C+D fixes landed (POLISH-52..54)
+The pass-2 fix cycle is complete. Headline: reviewer D discovered that
+texture.repeat/.offset never reached the GPU (ShaderMaterial ignores
+uvTransform) — POLISH-53 binds them by reference and the entire world's
+texel density activated at once (ground tiling, wall masonry, hall floor,
+flame frame animation, water scroll). All 14 reviewer-C findings and all 9
+reviewer-D findings are fixed or explicitly deferred (chicken readability
+C#14). Pale King staging verified in postcards/hall-1.png (crown, aura,
+candelabra). Moon occlusion fixed (205m). Rain rings lie flat.
+NEXT: (1) finish sequential gate record run, (2) reshoot hall+rooftops
+(pose tweak pending), (3) write PASS 2 scores into POLISH_JUDGE.md
+honestly, (4) pass 3 targets: F.2 positional audio evidence, K.1
+ten-minute capture, C.2 reveal capture evidence, O.1 atmosphere items,
+Q.3 first-person, D.1 night signature.
+If context is lost: re-read MASTER_PROMPT.md Part 0 + PLAN.md, then this
+entry; the gate runner script is scratchpad/gates.sh (sequential only).

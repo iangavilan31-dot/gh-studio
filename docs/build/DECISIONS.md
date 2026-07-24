@@ -157,3 +157,16 @@ run on a 2020 laptop should confirm; flagged in the Morning Report.
    fixed with normal-blend ember cores. If the judge still reads rooftops as
    warmth-free, the pose gets a pre-kindled chimney lantern (breadcrumb-style,
    set dressing) rather than a threshold tweak.
+6. **texture.repeat/.offset were silent no-ops on the shared ShaderMaterial**
+   (three.js applies uvTransform only to built-in materials — reviewer D,
+   confirmed in WebGLMaterials.js). Fixed by binding uMapRepeat/uMapOffset BY
+   REFERENCE to map.repeat/.offset, activating every dormant dial at once:
+   ground/sea/hall tiling, flame-sheet frame animation, water scrolling.
+   Sites whose approved look was built on the broken behavior (road ribbons —
+   arc-length UVs; village shingles — one 8-course tile per face) had their
+   redundant repeat calls REMOVED to preserve the judged look. The Q.1 texel
+   density this delivers supersedes decision 4's deferral.
+7. **The moon lives at 205m (was 165) with planes rescaled to keep angular
+   size.** Terrain must occlude the moon, never the reverse; 205 clears every
+   silhouette inside the 220 far plane (isle headland was drawing behind the
+   flare's transparent pass at 165).

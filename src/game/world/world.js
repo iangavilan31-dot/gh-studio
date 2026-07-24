@@ -947,7 +947,8 @@ export class World {
     // subject, moss roofs leading left, moon low over the western roofline
     // shot along the prop line from the NE: Nib's pine + lantern + chimneys
     // + clothesline, the low moon dead ahead over the western roofline
-    this.poses.rooftops = { pos: [121.4, roofH(121.4) + 0.75, streetZ(121.4) - 8.6], look: [118.9, roofH(118.9) + 0.35, streetZ(118.9) - 10.9], minute: 33 }
+    // look held near level: half the frame was an empty shadowed roof slope
+    this.poses.rooftops = { pos: [121.4, roofH(121.4) + 0.75, streetZ(121.4) - 8.6], look: [118.9, roofH(118.9) + 0.8, streetZ(118.9) - 11.4], minute: 33 }
     // close on Nib for the sleeper evidence shots
     this.poses.nib = { pos: [119.6, roofH(119.6) + 0.55, streetZ(119.6) - 11.1], look: [118.2, roofH(118.2) + 0.2, streetZ(118.2) - 10.0] }
   }

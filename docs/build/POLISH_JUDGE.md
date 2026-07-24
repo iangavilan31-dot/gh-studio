@@ -189,3 +189,34 @@ audio 8.5 ✓, production value 8.5 (<9 ✗).
 6. Movement: uphill lean / careful downhill steps. (cat 2)
 7. F.3 silence before first kindle + F.2 positional bell/organ. (cat 10)
 8. P.4: place remaining 7 fingerprints. (cats 8,16)
+
+### Reviewer D (pass 2, code/systems) — findings → outcomes
+1. HIGH co-op late joiner gets silent night (score never starts from quiet
+   snapshot kindles) → FIXED main.js applySnapshot: score.start() when
+   audio.started && kindledCount>0. (POLISH-53)
+2. HIGH texture.repeat/.offset silent no-ops on ShaderMaterial → FIXED:
+   uMapRepeat/uMapOffset bound by reference; world-wide tiling + flame
+   frame anim + water scroll activated. Ribbon/shingle redundant repeats
+   removed to preserve approved looks. (POLISH-53, DECISIONS #6)
+3. MED focus-clear leaves held keys dead (e.repeat dropped) → FIXED:
+   repeat events re-register held keys without justPressed.
+4. MED charm idle fires inside lie/sleep/channel → FIXED: gated !st.action.
+5. MED-LOW headLook snaps ~25° on expiry → FIXED: eases to zero, releases
+   at |headLook|<0.02.
+6. LOW-MED shrine leanYaw un-aligned pilot ember/light registration →
+   FIXED: registration rotated by leanYaw.
+7. LOW lookBack+rumble fired on remote/autopilot kindles → FIXED: remote
+   flag threaded world.kindle → onKindle; local-only feedback gated.
+8. LOW channelHeight not replicated → FIXED: 'chan' event carries h.
+9. LOW reveals covered 5/7 zones vs ledger claim → FIXED: rooftops + hall
+   added to LANDMARKS. (C.2 capture evidence still owed before flip.)
+
+### Reviewer C carry-overs closed this cycle
+- Pale King readability: candelabra pair + soft bake (gain 0.4 r 5.5) +
+  king scaled 1.3 seated at throne face — postcards/hall-1.png READ.
+- Isle moon-over-headland (#8): moon at 205m, planes rescaled — isle.png
+  shows the headland occluding the halo correctly.
+- Per-fixture flame variation (#9): flame textures were already per-fixture
+  clones; activation of offsets makes each fixture flicker independently.
+- Splash rings (new, from tiling reshoot): flat ground basis — no more
+  floating circles in player.png.
