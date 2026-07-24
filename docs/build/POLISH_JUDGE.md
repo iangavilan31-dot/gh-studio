@@ -85,3 +85,32 @@ counts until all eight AA items carry screenshot evidence here.
   brim and shoulders. Evidence READ: player.png (hat + head + beard clearly
   identifiable beside the bench), lanternpool.png (plum-violet robe, halo rim,
   full silhouette against open dark).
+
+---
+
+## POLISH REVIEW PASS 1 — 2026-07-24
+
+**Protocol:** full hard-gate suite (sequential; three concurrency flakes re-run
+solo), full Restored reel + postcards regenerated and READ, two competing
+fresh-context reviewers (A: visuals vs specs; B: code/systems vs last 12
+commits). Findings merged below; fixes applied within this pass are marked.
+
+### Reviewer A findings → outcomes
+1. Rooftops warm accent unreadable (HIGH) → FIXED: normal-blend ember cores in
+   every pilot (additive orange over cobalt read purple); huecheck kindled
+   warmth 0.0032–0.0065 passes; unkindled reel now shows true-orange embers.
+2. Carried pool invisible in lanternpool.png (HIGH) → FIXED: radius 7→8,
+   warm gain 0.38→0.6; reshoot READ — pool clearly lands on the grass.
+3. Hall showcase absent (HIGH) → PARTIAL: pool gain ×2.0, vault fade, drifting
+   floor mist ×4, two moon shafts; hall.png improved, still shy of "prestige
+   interior" — carried to pass 2 (POLISH-E6 stays open).
+4. Rooftops moss palette missing (MED) → carried to pass 2 (shingle repaint).
+5. Rooftops starfield not densest (MED) → carried to pass 2.
+6. Robe reads teal-black (MED) → FIXED: hemisphere tint desaturated 35% on
+   characters; robe now plum-violet in reshoots.
+7. No moon reflection on water (MED) → FIXED: streak follows the viewer along
+   the moon azimuth, clamped to open water; visible in sea.png reshoot.
+8. Postcards missing (MED) → FIXED this pass (8 authored cards + rig).
+9. Ledger lacks B–Q entries (MED) → FIXED: 12 entries seeded (115 total).
+10. Foglands quadrants pass by gradient (LOW) → documented in DECISIONS #3.
+11. Village shingle texel scale (LOW) → carried with #4.
