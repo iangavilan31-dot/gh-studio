@@ -131,3 +131,61 @@ commits). Findings merged below; fixes applied within this pass are marked.
 Cleared by B: ledger ratchet intact, fog==horizon untouched, no realtime
 lights, no per-frame allocs in the new paths, wayside zone id safe, v2
 settings migration, palette readback validity, motif degrees in range.
+
+### Pass 1 — hard-gate record (clean sequential run, build 9daedc9)
+build ✓ shoot ✓ postcards ✓ feel ✓ kindle ✓ traverse ✓ moments 12/12 ✓
+hue 9/9 ✓ quarter 10/10 ✓ (after sky-signature hardening) wander ✓ (max gap
+14.5s after memorial POIs) perf ✓ (101 calls / 89.8k tris / 222KB gz)
+autopilot ✓ coop 17/17 ✓ shell 16/16 ✓. Console clean in every rig.
+Note: quarter/wander verdicts are from the close-out build (memorial POI
+surface + gate hardening only — no gameplay delta); all others from the
+pipeline build. Concurrency lesson recorded in DECISIONS #1.
+
+### Pass 1 — scores (1–10, evidence-grounded; reel READ end to end)
+1. opening impact **8.5** — rain-black → moon reveal → descent → ignition →
+   seamless title lands; the descent easing is still linear-mechanical.
+2. movement feel **8.5** — accel lean/settle/turn lean/idle shifts; latency
+   one-frame; no foot slide (phase-by-distance). Uphill/downhill effort absent.
+3. camera quality **8.0** — orbit/collision/assist solid; NO reveal volumes at
+   zone entrances yet (C.2), interior shoulder work pending.
+4. character charm **8.0** — silhouette/rim/idle glances good; C.4 rare
+   micro-behaviors (hat blow, proud nod, lantern-warm hands) absent.
+5. zone composition **8.5** — park/gloomspire/ruins/isle/sea strong postcard
+   frames; rooftops remains the weak sister (bare mid-frame, near-pole tangent).
+6. material readability **8.0** — cobble/plaster/bark/carpet read; village
+   shingles read as masonry slabs (A-11); water better with streak.
+7. atmosphere **9.0** — saturated zone hues, fog=horizon, particles/mist
+   everywhere, ember pilots breathing, the moon owns every sky.
+8. environmental storytelling **8.5** — shrines/memorials/ravens/odd sock/
+   boat/sleepers; P.4 fingerprints 1/8 placed.
+9. interaction satisfaction **8.5** — kindle bloom/chime/layer add + pilots
+   advertising targets; C.3 per-type channel variations absent.
+10. audio quality **8.5** — layered generative score + shared pulse + motif +
+    beds, RMS-asserted; F.2 positional landmarks and F.3 silence design open.
+11. co-op companionship **8.5** — 17/17 verified moments, shared pools/reel.
+12. UI presentation **9.0** — crisp DPR type, live diorama, intro, in-fiction
+    error boundary.
+13. performance **9.5** — 101/150 calls, 90k/250k tris, 222KB/1.4MB gz.
+14. stability **9.5** — every rig console-clean; adversarial review×2 fixed.
+15. emotional memorability **8.5** — the moon language + Beldam's pointer +
+    wayside melancholy; Hall/Isle climaxes not yet at full weight.
+16. perceived production value **8.5** — the blur/black/empty era is over;
+    hall interior and rooftops still read budget.
+
+**Average 8.59 — honest fail vs the 9.0 bar (expected at pass 1).**
+Thresholds: opening 8.5 (<9 ✗), movement 8.5 (<9 ✗), atmosphere 9.0 ✓,
+audio 8.5 ✓, production value 8.5 (<9 ✗).
+
+### Pass 2 target list (by production-value damage)
+1. Rooftops zone rebuild-lite: moss shingle repaint + row rhythm (also fixes
+   village B.3), densest starfield, pose tangent fix. (cats 5,6,16)
+2. Hall showcase phase 2: brighter pool bake + throne staging + reverb-visible
+   candle reflections via painted floor sheen. (cats 5,16)
+3. C.2 reveal volumes at 3 hero entrances (village downhill, gloomspire
+   causeway, isle causeway) + jog camera lag. (cat 3)
+4. C.4 charm: 3 rare idles (lantern-warm hands, hat gust in mosswood, look-back
+   at freshly lit street) + C.3 kindle variation by target height. (cats 4,9)
+5. Opening: eased dolly curves + moon-reveal hold beat. (cat 1)
+6. Movement: uphill lean / careful downhill steps. (cat 2)
+7. F.3 silence before first kindle + F.2 positional bell/organ. (cat 10)
+8. P.4: place remaining 7 fingerprints. (cats 8,16)
