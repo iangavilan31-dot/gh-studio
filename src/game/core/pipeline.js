@@ -84,9 +84,13 @@ const POST_FRAG = /* glsl */ `
     float vig = smoothstep(0.85, 0.35, length(vc) * (1.2 - uVignette * 0.2));
     vec3 vigCol = mix(vec3(0.0), uVignetteTint, uWarm);
     col = mix(vigCol, col, mix(1.0 - uVignette, 1.0, vig));
-    // Rule 1: darkness is a saturated cool color, never black-black — a
-    // fog-tinted floor (set per zone) lifts anything quantize crushed to zero
-    col = max(col, uFloor);
+    // Rule 1 (AA.3): darkness is a saturated cool color, never black-black.
+    // Screen-blend the zone-hue floor, masked to the shadows — the low end
+    // is COLORIZED toward the zone hue while warm accents keep their fire
+    // (Rule 2: warmth stays precious, uncontaminated).
+    float lum = dot(col, vec3(0.299, 0.587, 0.114));
+    vec3 lift = uFloor * smoothstep(0.4, 0.05, lum);
+    col = lift + col * (vec3(1.0) - lift);
     col = pow(col, vec3(1.0 / uGamma));
     gl_FragColor = vec4(col, 1.0);
   }

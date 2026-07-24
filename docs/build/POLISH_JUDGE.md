@@ -37,7 +37,18 @@ counts until all eight AA items carry screenshot evidence here.
   rim, distant pilots), hall.png (sconce pilots + chandelier + carpet),
   park/village (pilots + warm windows). huecheck PASS 3/3 (park warmth 0.00645
   vs 0.0015 floor); perfgate PASS (98 calls — pilots are culled).
-### AA.3 — saturated darkness: pending
+### AA.3 — saturated darkness ✅ 2026-07-24
+- Post floor rebuilt: zone fog hue, saturation pushed (×1.45+0.08), screen-blend
+  masked to shadows (smoothstep lum 0.4→0.05) — darkness colorizes toward the
+  zone hue, warm accents keep their fire. Floor brightness 0.05→0.085 peak.
+- Gate hardened for AA.3: huecheck now samples the FINAL frame
+  (samplePaletteFinal reads the default framebuffer post-pipeline), covers all
+  9 zones (was 3) and asserts per-zone saturation floors (minSat on
+  hueStrength). 9/9 PASS.
+- Evidence READ: village.png (rich indigo night, warm windows pop), hall.png
+  (readable, though E.6 candle-pool showcase work remains), park/gloomspire/
+  mosswood/isle/foglands reshot. Park warmth margin is thin (0.00152 vs
+  0.0015) — AA.4 density adds honest warm content to that frame.
 ### AA.4 — density: pending
 ### AA.5 — fun floor: pending
 ### AA.6 — content completeness: pending

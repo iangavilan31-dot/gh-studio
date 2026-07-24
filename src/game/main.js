@@ -335,6 +335,8 @@ function updatePhoto(dt) {
   if (input.pressed('Enter')) capturePhoto()
 }
 const _pv = new THREE.Vector3()
+const _floorC = new THREE.Color()
+const _floorHSL = { h: 0, s: 0, l: 0 }
 function capturePhoto() {
   const prev = pipeline.resScale
   // retro dials upscale the keepsake to 2×; Restored is already native res
@@ -530,12 +532,15 @@ function tick() {
     rainWasSoft = ambience.rainSoftT > 0
     beds.soften(rainWasSoft ? 0.35 : 1)
   }
-  // Rule 1 black floor: the zone's fog HUE at a fixed faint brightness —
-  // scaling the raw fog color isn't enough in the darkest cobalt zones
+  // Rule 1 black floor (AA.3): the zone's fog HUE, saturation pushed, at a
+  // fixed faint brightness — screen-blended in the post pass so darkness
+  // everywhere reads as the zone's cool color, never grey-black
   {
-    const f = zoneLight.fog
+    const f = _floorC.copy(zoneLight.fog)
+    f.getHSL(_floorHSL)
+    f.setHSL(_floorHSL.h, Math.min(1, _floorHSL.s * 1.45 + 0.08), _floorHSL.l)
     const peak = Math.max(f.r, f.g, f.b, 0.01)
-    pipeline.postUniforms.uFloor.value.copy(f).multiplyScalar(Math.min(0.05 / peak, 1))
+    pipeline.postUniforms.uFloor.value.copy(f).multiplyScalar(Math.min(0.085 / peak, 1))
   }
   world.moonDir = night.dirWorld
   world.update(dt, elapsed)
@@ -553,6 +558,55 @@ function tick() {
 }
 
 // ——— Test surface (MASTER_PROMPT 0.4) ———
+// shared pixel-buffer palette analysis (hue circle mean, saturation weight,
+// warm/red/green/bright fractions, median luminance) — used by both the
+// pre-post RT sample and the AA.3 final-frame sample
+function analyzePixels(buf) {
+  let hueX = 0, hueY = 0, hueWeight = 0, warm = 0, red = 0, green = 0, bright = 0, n = 0
+  const lums = []
+  for (let i = 0; i < buf.length; i += 16) {
+    const r = buf[i] / 255, g = buf[i + 1] / 255, b = buf[i + 2] / 255
+    const max = Math.max(r, g, b), min = Math.min(r, g, b)
+    const l = (max + min) / 2
+    const s = max === min ? 0 : (max - min) / (1 - Math.abs(2 * l - 1) + 1e-6)
+    let hue = 0
+    if (max !== min) {
+      if (max === r) hue = ((g - b) / (max - min)) % 6
+      else if (max === g) hue = (b - r) / (max - min) + 2
+      else hue = (r - g) / (max - min) + 4
+      hue *= 60
+      if (hue < 0) hue += 360
+    }
+    n++
+    lums.push(l)
+    if (l > 0.45) bright++
+    if (s > 0.12 && l > 0.02) {
+      const wgt = s * Math.min(l * 3, 1)
+      hueX += Math.cos((hue * Math.PI) / 180) * wgt
+      hueY += Math.sin((hue * Math.PI) / 180) * wgt
+      hueWeight += wgt
+      if (hue > 15 && hue < 60 && s > 0.25 && l > 0.12) warm++
+      if ((hue < 15 || hue > 345) && s > 0.28 && l > 0.08) red++
+      // green glow reads through violet fog at reduced saturation — threshold
+      // tuned for additive-over-fog compositing (documented in JUDGE.md)
+      if (hue > 90 && hue < 160 && s > 0.2 && l > 0.12) green++
+    }
+  }
+  lums.sort((a, b) => a - b)
+  let avgHue = (Math.atan2(hueY, hueX) * 180) / Math.PI
+  if (avgHue < 0) avgHue += 360
+  return {
+    avgHue: +avgHue.toFixed(1),
+    hueStrength: +(hueWeight / n).toFixed(4),
+    medianLum: +lums[Math.floor(lums.length / 2)].toFixed(4),
+    warmFrac: +(warm / n).toFixed(5),
+    redFrac: +(red / n).toFixed(5),
+    greenFrac: +(green / n).toFixed(5),
+    brightFrac: +(bright / n).toFixed(5),
+    sampled: n,
+  }
+}
+
 window.__MOONREST__ = {
   ready: true,
   seed: worldRNG.seed,
@@ -701,49 +755,19 @@ window.__MOONREST__ = {
     const buf = new Uint8Array(w * h * 4)
     renderer.readRenderTargetPixels(rt, 0, 0, w, h, buf)
     renderer.setRenderTarget(null)
-    let hueX = 0, hueY = 0, hueWeight = 0, warm = 0, red = 0, green = 0, bright = 0, n = 0
-    const lums = []
-    for (let i = 0; i < buf.length; i += 16) {
-      const r = buf[i] / 255, g = buf[i + 1] / 255, b = buf[i + 2] / 255
-      const max = Math.max(r, g, b), min = Math.min(r, g, b)
-      const l = (max + min) / 2
-      const s = max === min ? 0 : (max - min) / (1 - Math.abs(2 * l - 1) + 1e-6)
-      let hue = 0
-      if (max !== min) {
-        if (max === r) hue = ((g - b) / (max - min)) % 6
-        else if (max === g) hue = (b - r) / (max - min) + 2
-        else hue = (r - g) / (max - min) + 4
-        hue *= 60
-        if (hue < 0) hue += 360
-      }
-      n++
-      lums.push(l)
-      if (l > 0.45) bright++
-      if (s > 0.12 && l > 0.02) {
-        const wgt = s * Math.min(l * 3, 1)
-        hueX += Math.cos((hue * Math.PI) / 180) * wgt
-        hueY += Math.sin((hue * Math.PI) / 180) * wgt
-        hueWeight += wgt
-        if (hue > 15 && hue < 60 && s > 0.25 && l > 0.12) warm++
-        if ((hue < 15 || hue > 345) && s > 0.28 && l > 0.08) red++
-        // green glow reads through violet fog at reduced saturation — threshold
-        // tuned for additive-over-fog compositing (documented in JUDGE.md)
-        if (hue > 90 && hue < 160 && s > 0.2 && l > 0.12) green++
-      }
-    }
-    lums.sort((a, b) => a - b)
-    let avgHue = (Math.atan2(hueY, hueX) * 180) / Math.PI
-    if (avgHue < 0) avgHue += 360
-    return {
-      avgHue: +avgHue.toFixed(1),
-      hueStrength: +(hueWeight / n).toFixed(4),
-      medianLum: +lums[Math.floor(lums.length / 2)].toFixed(4),
-      warmFrac: +(warm / n).toFixed(5),
-      redFrac: +(red / n).toFixed(5),
-      greenFrac: +(green / n).toFixed(5),
-      brightFrac: +(bright / n).toFixed(5),
-      sampled: n,
-    }
+    return analyzePixels(buf)
+  },
+  // AA.3: palette of the FINAL frame (post pass included — floor, quantize,
+  // gamma). Reads the default framebuffer right after a full pipeline render,
+  // cropped to the letterbox viewport.
+  samplePaletteFinal() {
+    pipeline.render(scene, camera, elapsed)
+    const gl = pipeline.renderer.getContext()
+    const v = pipeline.viewport
+    const w = Math.max(2, Math.round(v.z)), h = Math.max(2, Math.round(v.w))
+    const buf = new Uint8Array(w * h * 4)
+    gl.readPixels(Math.round(v.x), Math.round(v.y), w, h, gl.RGBA, gl.UNSIGNED_BYTE, buf)
+    return analyzePixels(buf)
   },
   get state() {
     const fps = frameTimes.length ? frameTimes.length / frameTimes.reduce((a, b) => a + b, 0) : 0

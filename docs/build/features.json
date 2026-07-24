@@ -969,7 +969,8 @@
     "programmatic sample of each zone shot: mean saturation above threshold, dominant hue matches Part 2.1 family",
     "no near-neutral mean in any exterior shot"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "huecheck rewritten to sample the FINAL frame (post incl.) across ALL 9 zones with minSat floors \u2014 9/9 PASS (hueStrength: park .193, village .237, gloomspire .232, isle .234 etc.); shadow-masked screen-blend floor (saturated fog hue, 0.085 peak) colorizes darkness while warm accents stay pure; village.png/hall.png READ"
   },
   {
    "id": "POLISH-AA4",
