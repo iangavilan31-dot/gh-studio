@@ -1064,6 +1064,7 @@ window.__MOONREST__ = {
       },
       fps: Math.round(fps),
       fov: +camera.fov.toFixed(1),
+      introT: intro.active && !intro.done ? +intro.t.toFixed(1) : null, // H.1 capture rig
       camDist: +orbit.curDist.toFixed(2), // C.2 doorway-snap evidence
       viewMode: orbit.firstPerson ? 'first' : 'third', // Q.3
       rigVisible: rig.group.visible,
