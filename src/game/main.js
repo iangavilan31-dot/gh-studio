@@ -235,6 +235,86 @@ window.addEventListener('pagehide', () => { if (net.active) net.leave() })
 // ——— The shell (Part 10): title → night, pause, settings, photo mode ———
 let mode = 'title' // 'title' | 'game'
 let titleIdle = 0
+
+// ——— H.1 opening sequence: rain-black → moon → lamp → fog → Beldam → the
+// lantern ignites → title. Skippable on any input; lands seamlessly on the
+// title diorama orbit (the menu fades in without cutting away).
+const intro = { active: true, t: 0, black: null, hint: null, done: false }
+function setupIntro() {
+  // the loop-reset reload (Night's End → dusk) goes straight to the menu —
+  // the ritual replays only on a fresh visit (still skippable any time)
+  let returning = false
+  try { returning = localStorage.getItem('moonrest-night-ended') === '1' } catch (e) {}
+  if (returning) { intro.active = false; intro.done = true; return }
+  const ui = document.getElementById('ui')
+  intro.black = document.createElement('div')
+  intro.black.className = 'introblack'
+  ui.appendChild(intro.black)
+  intro.hint = document.createElement('div')
+  intro.hint.className = 'introskip'
+  intro.hint.textContent = 'any key — skip'
+  ui.appendChild(intro.hint)
+  night.skipTo(4) // the moon hangs young in the east for the reveal
+  document.querySelector('#ui .shell')?.classList.add('introhold')
+}
+function endIntro(fast = false) {
+  if (intro.done) return
+  intro.done = true
+  intro.active = false
+  if (fast) { intro.black?.remove(); intro.hint?.remove() }
+  else {
+    intro.black?.classList.add('lift')
+    setTimeout(() => { intro.black?.remove(); intro.hint?.remove() }, 3000)
+  }
+  intro.hint?.classList.remove('on')
+  document.querySelector('#ui .shell')?.classList.remove('introhold')
+}
+const _iv = new THREE.Vector3()
+const _lookA = new THREE.Vector3(), _lookB = new THREE.Vector3()
+const ss = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t) }
+function updateIntro(dt) {
+  intro.t += dt
+  const t = intro.t
+  const ty = world.heightAt(2, -19.6)
+  if (t > 1.2 && t < 2.0) intro.black?.classList.add('lift') // rain-black lifts
+  if (t > 3 && t < 4) intro.hint?.classList.add('on')
+  // beats: high moon gaze → descend through the fog to the cold lamp →
+  // Beldam asleep → the player's lantern flares → pull out to the orbit
+  const beats = [
+    { a: 0.0, b: 7.0, p0: [-8, 9.5, -30], p1: [-5, 7.5, -27], l0: [32, 32, -22], l1: [30, 26, -21] },
+    { a: 7.0, b: 12.0, p0: [-5, 7.5, -27], p1: [4.6, ty + 1.9, -14.8], l0: [30, 26, -21], l1: [4.2, ty + 2.5, -19.2] },
+    { a: 12.0, b: 15.5, p0: [4.6, ty + 1.9, -14.8], p1: [3.1, ty + 1.5, -17.5], l0: [4.2, ty + 2.5, -19.2], l1: [1.6, ty + 1.3, -19.6] },
+    { a: 15.5, b: 17.5, p0: [3.1, ty + 1.5, -17.5], p1: [4.5, ty + 1.45, -17.0], l0: [1.6, ty + 1.3, -19.6], l1: [2.6, ty + 1.15, -18.2] },
+  ]
+  let placed = false
+  for (const k of beats) {
+    if (t >= k.a && t < k.b) {
+      const f = ss(k.a, k.b, t)
+      camera.position.set(
+        k.p0[0] + (k.p1[0] - k.p0[0]) * f,
+        k.p0[1] + (k.p1[1] - k.p0[1]) * f,
+        k.p0[2] + (k.p1[2] - k.p0[2]) * f)
+      _lookA.set(...k.l0); _lookB.set(...k.l1)
+      camera.lookAt(_iv.copy(_lookA).lerp(_lookB, f))
+      placed = true
+      break
+    }
+  }
+  if (t >= 15.8 && t < 17.5) staffPulse = Math.min(1, staffPulse + dt * 3) // the lantern ignites
+  if (t >= 17.5) {
+    // blend onto the live orbit so the menu fades in without a cut
+    const f = ss(17.5, 19.5, t)
+    const a = elapsed * 0.03
+    _iv.set(2 + Math.cos(a) * 8, ty + 2.4, -19.6 + Math.sin(a) * 8)
+    camera.position.lerp(_iv, f)
+    _lookA.set(2.6, ty + 1.15, -18.2); _lookB.set(2, ty + 1.1, -19.6)
+    camera.lookAt(_lookA.lerp(_lookB, f))
+    if (t >= 18.4) endIntro()
+    placed = true
+  }
+  zoneLight.update(2, -19.6, dt, 2)
+  return placed
+}
 const NULL_INPUT = { moveAxis: () => [0, 0], pressed: () => false, down: () => false, endFrame: () => {} }
 
 function startNight(fresh = false) {
@@ -245,6 +325,7 @@ function startNight(fresh = false) {
   }
   mode = 'game'
   cinematic = false
+  endIntro(true)
   orbit.autoPlace(player.pos, Math.PI) // wake up with the night in view, not bark
   nightflow.noteInput()
   npcs.nightIntro() // AA.5: Beldam points at the first cold lamp
@@ -290,6 +371,7 @@ const shell = new Shell({
   bootAudio: () => bootAudio(),
 })
 applySettings(shell.s)
+setupIntro() // H.1: the night introduces itself before the menu does
 
 // ——— Photo mode (Part 10): P — free-fly, roll, FOV, filter, UI hide, PNG ———
 const photo = { on: false, euler: new THREE.Euler(0, 0, 0, 'YXZ'), fov: 55, hint: null }
@@ -390,6 +472,7 @@ let cinematic = false
 function teleport(poseName) {
   const p = POSES[poseName]
   if (!p) return false
+  endIntro(true) // rigs never sit through the opening
   if (mode === 'title') { shell.clear(); mode = 'game' } // rigs shoot the night, not the menu
   cinematic = true
   hud.hidePrompt() // no HUD in cinematic frames (12.5)
@@ -468,10 +551,14 @@ function tick() {
   night.paused = mode === 'title' // the 40 minutes belong to the walk, not the menu
 
   if (mode === 'title') {
+    // the opening sequence owns the camera first (H.1); any input skips it —
+    // the world underneath keeps living (rain, moon, flames) the whole time
+    if (intro.active && !intro.done && inputActive) endIntro()
+    const introOwns = intro.active && !intro.done && updateIntro(dt)
     // live Park diorama drifts behind the title (Part 10)
     titleIdle = inputActive ? 0 : titleIdle + dt
     if (titleIdle > 90 && shell.screen === 'title') nightflow.startAttract()
-    if (!nightflow.attract && !nightflow.ending) {
+    if (!introOwns && !nightflow.attract && !nightflow.ending) {
       const a = elapsed * 0.03
       const ty = world.heightAt(2, -19.6)
       camera.position.set(2 + Math.cos(a) * 8, ty + 2.4, -19.6 + Math.sin(a) * 8)
@@ -614,6 +701,7 @@ window.__MOONREST__ = {
   poses: Object.keys(POSES),
   teleport,
   teleportPlayer(x, z, yaw = 0) {
+    endIntro(true)
     if (mode === 'title') { shell.clear(); mode = 'game' } // rigs auto-enter the night
     cinematic = false
     player.pos.set(x, world.heightAt(x, z), z)
@@ -621,6 +709,7 @@ window.__MOONREST__ = {
     return true
   },
   startNight(fresh = false) { shell.clear(); return startNight(fresh) },
+  skipIntro() { endIntro(true); return true },
   shellDebug() {
     return {
       mode, screen: shell.screen, blocking: shell.blocking, photo: photo.on,

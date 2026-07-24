@@ -60,6 +60,13 @@
       /* ——— the shell (Part 10) ——— */
       #ui .shell { position: absolute; inset: 0; display: none; pointer-events: auto; font-family: 'Alegreya', Georgia, serif; }
       #ui .shell.on { display: flex; align-items: center; justify-content: center; }
+      /* H.1 opening: the menu holds its breath while the night introduces itself */
+      #ui .shell.introhold { opacity: 0; pointer-events: none; }
+      #ui .shell { transition: opacity 1.4s ease; opacity: 1; }
+      #ui .introblack { position: absolute; inset: 0; background: #000; opacity: 1; pointer-events: none; transition: opacity 2.6s ease; z-index: 40; }
+      #ui .introblack.lift { opacity: 0; }
+      #ui .introskip { position: absolute; right: 3.2%; bottom: 4%; color: rgba(214, 218, 234, 0.4); font-family: 'Alegreya', Georgia, serif; font-size: 15px; letter-spacing: 0.12em; pointer-events: none; opacity: 0; transition: opacity 1s ease; z-index: 41; }
+      #ui .introskip.on { opacity: 1; }
       #ui .shell.dim { background: rgba(6, 10, 20, 0.55); backdrop-filter: saturate(0.55) brightness(0.85) blur(1.5px); }
       #ui .fogfade {
         position: absolute; inset: 0; background: #202b3f; opacity: 0; pointer-events: none;
