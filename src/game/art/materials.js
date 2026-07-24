@@ -125,7 +125,7 @@ const FRAG = /* glsl */ `
     col += uEmissive * tex.rgb;
     // carried lantern warmth (AA.2) — modulated by the texture so painted
     // detail stays legible inside the pool; applied before fog so fog wins
-    col += vec3(0.98, 0.62, 0.26) * vLantern * 0.6 * (tex.rgb * 0.7 + 0.3);
+    col += vec3(0.98, 0.6, 0.22) * vLantern * 0.6 * (tex.rgb * 0.45 + 0.55);
     float fogF = smoothstep(uFogNear, uFogFar, vFogDepth);
     #ifdef NO_FOG
     fogF = 0.0;
