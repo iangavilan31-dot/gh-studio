@@ -864,7 +864,8 @@
       "steps": [
         "JUDGE.md shows the consecutive passing passes with full protocol"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "JUDGE.md: pass 2 avg 8.65 + pass 3 avg 8.8, none <7, consecutive; 3 passes minimum met; 4 fresh-eyes reviewers, all findings fixed or documented (D18/D19)"
     },
     {
       "id": "m10-readme",
@@ -873,7 +874,8 @@
       "steps": [
         "README.md reviewed complete"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "README.md: play/host/verify instructions + honest credits + MIT-style note scoped to src/game"
     },
     {
       "id": "m10-ship",
@@ -882,7 +884,8 @@
       "steps": [
         "PROGRESS.md ends with SHIP + evidence list; PR URL recorded"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "PROGRESS.md Morning Report + final SHIP line with evidence list; final push + PR #4 updated"
     },
     {
       "id": "m9-emote-wheel",
