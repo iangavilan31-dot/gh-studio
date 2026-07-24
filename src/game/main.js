@@ -328,6 +328,7 @@ function startNight(fresh = false) {
   cinematic = false
   endIntro(true)
   night.skipTo(0) // dusk — the intro's moon-reveal minute never shortens the night
+  _revealed.clear() // each night re-earns its reveals
   orbit.autoPlace(player.pos, Math.PI) // wake up with the night in view, not bark
   nightflow.noteInput()
   npcs.nightIntro() // AA.5: Beldam points at the first cold lamp
@@ -420,6 +421,8 @@ function updatePhoto(dt) {
   if (input.pressed('Enter')) capturePhoto()
 }
 const _pv = new THREE.Vector3()
+let _prevZone = 'park'
+const _revealed = new Set()
 const _floorC = new THREE.Color()
 const _floorHSL = { h: 0, s: 0, l: 0 }
 function capturePhoto() {
@@ -444,6 +447,9 @@ const zoneKindles = (zone) => world.lights.filter((l) => l.zone === zone && l.ki
 
 // kindle consequences: chime in zone key, ember burst, next music layer (6.1)
 world.onKindle = (light) => {
+  if (audio.started && !score.playing) score.start() // F.3: the first flame wakes the music
+  // C.4: the keeper glances back at what they just lit
+  player.lookBack(light.x, light.z, 2.6)
   input.rumble(0.3, 0.6, 140) // controller ping (4.2) — no-op without a pad
   kindleChime(light.zone)
   emberBurst(embers, light.x, light.y, light.z, worldRNG.fork('embers' + light.id))
@@ -459,7 +465,9 @@ function bootAudio() {
   if (audio.started) return
   audio.start()
   audio.state.zoneKey = 'D'
-  score.start()
+  // F.3 silence design: before the first kindle the night has no music —
+  // only rain and wind. The first flame starts the score.
+  if (world.kindledCount > 0) score.start()
   beds.start()
   beds.setZone(zoneLight.audioZone ?? 'park', 1)
   audio.setHallAcoustics(zoneLight.audioZone === 'hall')
@@ -621,6 +629,19 @@ function tick() {
   if ((ambience.rainSoftT > 0) !== rainWasSoft) {
     rainWasSoft = ambience.rainSoftT > 0
     beds.soften(rainWasSoft ? 0.35 : 1)
+  }
+  // C.2 reveal volumes: first arrival in a hero zone each night borrows the
+  // camera for a beat — the landmark introduces itself
+  {
+    const z = zoneLight.currentZoneId
+    if (z !== _prevZone) {
+      const LANDMARKS = { village: [137, 4], gloomspire: [-110, 125], isle: [0, -152], mosswood: [84, 110], ruins: [-132, 0] }
+      if (LANDMARKS[z] && !_revealed.has(z) && mode === 'game' && !cinematic && !photo.on) {
+        _revealed.add(z)
+        orbit.reveal(LANDMARKS[z])
+      }
+      _prevZone = z
+    }
   }
   // Rule 1 black floor (AA.3): the zone's fog HUE, saturation pushed, at a
   // fixed faint brightness — screen-blended in the post pass so darkness

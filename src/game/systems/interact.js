@@ -120,6 +120,8 @@ export class InteractSystem {
       this.channeling = true
       this.target = best
       this.channel = 0
+      // C.3: tell the pose how high the flame seat is
+      this.player.anim.channelHeight = best.y - (this.player.pos.y + 1.1)
       this.player.setAction('channel')
       this.channelSound = kindleChannelStart()
       this.log.push({ id: best.id, event: 'channel-start' })

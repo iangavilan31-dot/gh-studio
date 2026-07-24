@@ -35,7 +35,9 @@ export function advanceAnim(st, dt, speed, airborne) {
   const moving = speed > 0.05
   st.moveBlend = damp(st.moveBlend, moving ? 1 : 0, 10, dt)
   st.jogBlend = damp(st.jogBlend, speed > 2.2 ? 1 : 0, 8, dt)
-  const stride = lerp(1.1, 1.5, st.jogBlend)
+  // C.1: careful downhill steps — the stride shortens on descents
+  let stride = lerp(1.1, 1.5, st.jogBlend)
+  if ((st.slope ?? 0) < -0.16) stride *= 0.86
   if (moving) st.phase += (speed / stride) * Math.PI * dt * 2
   if (st.action) st.actionT += dt
 }
@@ -56,8 +58,9 @@ export function applyPose(rig, st, time) {
   const lean = st.accel * 0.045
   const turnLean = (st.yawRate ?? 0) * 0.055 * m
 
-  // — spine lean: forward with speed + acceleration, sway with stride —
-  b.spine.rotation.x = lerp(0, 0.14 + j * 0.1, m) + lean
+  // — spine lean: forward with speed + acceleration + uphill effort —
+  const uphill = Math.max(0, st.slope ?? 0) * 0.32 * m
+  b.spine.rotation.x = lerp(0, 0.14 + j * 0.1, m) + lean + uphill
   b.spine.rotation.z = Math.sin(ph) * 0.045 * m + turnLean
   b.spine.rotation.y = Math.sin(ph) * 0.03 * m
 
@@ -70,7 +73,7 @@ export function applyPose(rig, st, time) {
   // — head: gentle counter-tilt, looks ahead; idle glances wander —
   b.head.rotation.x = -b.spine.rotation.x * 0.5 + breathe * 0.015 * (1 - m)
   b.head.rotation.z = -b.spine.rotation.z * 0.6
-  b.head.rotation.y = idleShift * 0.14 + Math.sin(st.idleShiftT * 0.31) * 0.05 * (1 - m)
+  b.head.rotation.y = idleShift * 0.14 + Math.sin(st.idleShiftT * 0.31) * 0.05 * (1 - m) + (st.headLook ?? 0)
 
   // — hat: counter-bobs the breathe; brim-flap while jogging; tip lags the lean —
   b.hat.position.y = 0.24 - breathe * 0.006 * (1 - m) - gaitBob * 0.35
@@ -87,8 +90,12 @@ export function applyPose(rig, st, time) {
   b.legR.rotation.x = Math.sin(ph + Math.PI) * legAmp
 
   // — arms: counter-swing; right arm carries the staff (less swing) —
-  b.armL.rotation.x = Math.sin(ph + Math.PI) * 0.5 * m
-  b.armL.rotation.z = 0.12 + Math.sin(st.breatheT * 0.7) * 0.02
+  // C.4 cold idle: after long stillness, the free hand drifts toward the
+  // lantern's warmth for a moment (discovered, not performed)
+  const charmPhase = (st.idleShiftT % 34) / 34
+  const charm = charmPhase > 0.82 && charmPhase < 0.94 ? Math.sin(((charmPhase - 0.82) / 0.12) * Math.PI) * (1 - m) : 0
+  b.armL.rotation.x = Math.sin(ph + Math.PI) * 0.5 * m - charm * 0.85
+  b.armL.rotation.z = 0.12 + Math.sin(st.breatheT * 0.7) * 0.02 - charm * 0.35
   b.armR.rotation.x = -0.35 + Math.sin(ph) * 0.16 * m // staff held forward
   b.armR.rotation.z = -0.14
 
@@ -109,9 +116,12 @@ export function applyPose(rig, st, time) {
     b.armL.rotation.x = -1.5
     b.armL.rotation.z = 0.55
   } else if (a === 'channel') {
-    b.armL.rotation.x = -1.9
-    b.armR.rotation.x = -1.9
-    b.spine.rotation.x = -0.08
+    // C.3: the reach follows the target — high lamps get a full raise, low
+    // lanterns a stooped tip
+    const reach = Math.max(-0.55, Math.min(0.45, (st.channelHeight ?? 0) * 0.28))
+    b.armL.rotation.x = -1.9 - reach
+    b.armR.rotation.x = -1.9 - reach
+    b.spine.rotation.x = -0.08 + (reach < 0 ? -reach * 0.5 : -reach * 0.15)
   } else if (a === 'giggle') {
     const t = st.actionT
     b.spine.rotation.x = Math.sin(t * 14) * 0.06

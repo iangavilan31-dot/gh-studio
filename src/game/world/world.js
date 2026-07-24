@@ -584,7 +584,11 @@ export class World {
     const rng = worldRNG.fork('village')
     const mats = sharedMats()
     const plasterMat = retroMaterial({ map: TEX.plaster() })
-    const shingleMat = retroMaterial({ map: TEX.shingle({ moss: 0.15 }) })
+    // B.3: shingles must read as SHINGLE ROWS, not masonry slabs — tile the
+    // texture across each roof face and let the moss family through (2.1)
+    const shingleTex = TEX.shingle({ moss: 0.4 })
+    shingleTex.repeat.set(3, 2)
+    const shingleMat = retroMaterial({ map: shingleTex })
     const stoneMat = retroMaterial({ map: TEX.stoneBlock() })
 
     // 7 half-timbered houses: 4 on the north row (roofs walkable), 3 south
@@ -1614,9 +1618,9 @@ export class World {
         w = Math.min(1.15, w)
         // E.6 boost: pools must READ as pools of candlelight — the showcase
         // was measuring near-zero bright-warm pixels before this
-        r *= 1 + w * 2.0
-        g *= 1 + w * 1.05
-        b *= 1 + w * 0.22
+        r *= 1 + w * 2.7
+        g *= 1 + w * 1.35
+        b *= 1 + w * 0.26
         // the vault above disappears into darkness
         const vault = THREE.MathUtils.clamp((v.y - 5.2) / 3.4, 0, 1)
         const fade = 1 - vault * 0.55
@@ -1638,6 +1642,17 @@ export class World {
         m2.userData.dyn = true
         this.scene.add(m2)
         this.hallMist.push({ mesh: m2, baseX: m2.position.x, seed: i * 2.3 })
+      }
+      // pre-lit chandeliers carry visible pools on the polished floor
+      const floorPoolMat = retroMaterial({ map: TEX.glowDot({ name: 'hallfloorpool', color: '#f0a848' }), transparent: true, depthWrite: false, opacity: 0.42 })
+      floorPoolMat.blending = THREE.AdditiveBlending
+      for (const z of [146, 155, 164]) {
+        const fp = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 5.6), floorPoolMat)
+        ensureVertexColors(fp.geometry)
+        fp.rotation.x = -Math.PI / 2
+        fp.position.set(-110, hy + 0.07, z)
+        fp.userData.dyn = true
+        this.scene.add(fp)
       }
       const shaftMat = retroMaterial({ map: TEX.glowDot({ name: 'hallshaft', color: '#9d97c2' }), transparent: true, depthWrite: false, opacity: 0.085 })
       shaftMat.blending = THREE.AdditiveBlending
