@@ -220,3 +220,68 @@ audio 8.5 ✓, production value 8.5 (<9 ✗).
   clones; activation of offsets makes each fixture flicker independently.
 - Splash rings (new, from tiling reshoot): flat ground basis — no more
   floating circles in player.png.
+
+## Judge pass 2 — scored 2026-07-24 (after POLISH-52..56)
+Evidence: all 9 zone shots + postcards park-1/hall-1/isle-1 (+ village/
+gloomspire/rooftops/ruins/mosswood/foglands/sea) personally read on the
+final build of this cycle. Headline change: texture repeat/offset
+activation (DECISIONS #6) re-textured the world; hall/rooftops restaged.
+
+1. opening impact **8.6** — sequence unchanged; the world it reveals now
+   reads (tiled ground under the rain-black lift). Moon-reveal hold beat
+   still owed. (<9 ✗)
+2. movement feel **8.7** — C.3 reach-by-height + replication, headLook
+   ease-out, charm gated, repeat-key recovery; landing settle and jog
+   camera lag still absent. (<9 ✗)
+3. camera quality **8.6** — reveal volumes at ALL 7 entrances,
+   presentation-only yaw bias (movement basis untouched); capture
+   evidence for the C.2 flip still owed.
+4. character charm **8.4** — charm idle (gated), slope stride, uphill
+   lean, local-only glance-back; hat-gust and proud-nod still absent.
+5. zone composition **8.8** — rooftops recomposed (Nib+moon+lamp, level
+   look), foglands east corridor, player open-dark, hall corridor +
+   album postcard; no weak sister left, none exceptional either.
+6. material readability **9.0** — the repeat activation: shingle courses,
+   wall masonry, hall floor tiles, 4m ground grass, water wavelets —
+   confirmed in every shot read.
+7. atmosphere **9.1** — moon occluded by terrain (isle), grain rim faded,
+   hall moon shafts, flat splash rings; fog=horizon everywhere. ✓
+8. environmental storytelling **8.6** — Pale King staging joins shrines/
+   memorials/ravens/rowboat; P.4 fingerprints still 1/8.
+9. interaction satisfaction **8.7** — per-fixture flame flicker now real,
+   C.3 reach variation, kindle bloom/chime/layers.
+10. audio quality **8.6** — F.3 complete including the late-joiner
+    score-start; F.2 positional landmarks still open. (≥8.5 ✓)
+11. co-op companionship **8.7** — silent-joiner HIGH fix, channel height
+    replication, remote-kindle feedback gating.
+12. UI presentation **9.0** — unchanged.
+13. performance **9.5** — 61–113 calls, 69–88k tris; perfgate green.
+14. stability **9.5** — full console-clean reel; third adversarial
+    review cycle (D) applied 9/9.
+15. emotional memorability **8.7** — the hall climax finally has its
+    king; isle vista + moon language hold.
+16. perceived production value **9.0** — the "budget" reads (hall,
+    rooftops) are gone; world-wide texel density. ✓
+
+**Average 8.84 — FAIL vs 9.0 (honest).** No category <8.0 ✓ (min 8.4).
+Thresholds: opening 8.6 ✗, movement 8.7 ✗, atmosphere 9.1 ✓,
+audio 8.6 ✓, production value 9.0 ✓.
+
+### Pass 3 target list (by threshold damage)
+1. Opening → 9: moon-reveal hold beat + eased dolly curves + ignition
+   punch; K.1 ten-minute capture to time the beats. (cat 1)
+2. Movement → 9: hop landing settle (compression + dust), jog camera
+   lag, stride foot-plant on slopes. (cat 2)
+3. Character 8.4 → 8.8: hat gust in mosswood wind, proud nod after a
+   3-lamp streak. (cat 4)
+4. C.2 capture evidence (fov/revealT probe at 2 entrances) → flip. (cat 3)
+5. F.2 positional bell/organ at village/hall heard before seen. (cat 10)
+6. P.4: place remaining 7 fingerprints. (cats 8, 16)
+
+### Pass 2 official gate record (frozen build @ POLISH-56, sequential, idle box)
+08:33:24–08:45:10 UTC — feelcheck PASS · kindlecheck PASS · traversecheck
+PASS · momentscheck PASS · huecheck PASS · quartercheck PASS · wandercheck
+PASS · perfgate PASS · autopilotcheck PASS · coopcheck PASS · shellcheck
+PASS — 11/11, npm run build exit 0. Reel note: zone shots are consistent
+with this build (hall/rooftops/postcards reshot on it; other zones
+untouched by POLISH-54..56 diffs).
