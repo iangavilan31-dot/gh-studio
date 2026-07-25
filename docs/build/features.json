@@ -1212,8 +1212,8 @@
     "victory-nap capture",
     "bottle HUD readable at a glance"
    ],
-   "passes": false,
-   "evidence": "SIM HALF GREEN (fightfeel 34/34 x2 deterministic): KO at blast bounds, stock loss, wooze reset, moon-platform ride at x=0 (y 13->6, early-drop with jump), invuln exactly 120 ticks from drop and verified protective, matchEnd -> winner. Bottle HUD + moon slab READ in shots/dream/ko-moths.png. NOT YET: victory-nap capture + KO moths visible (dream scene needs its F5 light pass first \u2014 arena is blockout-dark). passes flips when the visual half is captured."
+   "passes": true,
+   "evidence": "Sim half: fightfeel 34/34 x2 deterministic \u2014 KO at blast bounds, stock loss, wooze reset, moon-platform ride at x=0 (y 13->6, early-drop with jump), invuln exactly 120 ticks from drop and verified protective, matchEnd -> winner. Visual half (shots/dream/): ko-moths.png = moth-burst cloud + rider on the glowing moon slab + HUD stock 3->2; respawn-moon.png = mid-descent shimmer aura + drifting z; victory-nap.png = winner lying beside the loser center-bench in the jar pool (nap spot clamped to |x|<=8); fight.png = two-fighter heavy frozen in hitstop. Along the way the shots caught a REAL sim bug the gates missed: the wall pushout teleported any landing that dipped a hair below a slab top to the slab's END face (0.95 -> 13.3 in one tick); fixed with a prevY side-entry guard, re-verified by tick trace (jab travel now ~0.5m) and 34/34 still green."
   },
   {
    "id": "FIGHT-F4",

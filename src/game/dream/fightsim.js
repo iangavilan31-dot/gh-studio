@@ -186,7 +186,10 @@ export function stepFighter(f, inp, arena, ev) {
   for (const s of a2(arena).solids) {
     const x0 = s.x - s.w / 2, x1 = s.x + s.w / 2
     const top = s.y, bottom = s.y - s.h
-    if (f.y < top - 1e-6 && f.y > bottom - 1.4 && f.x > x0 - 0.3 && f.x < x1 + 0.3) {
+    // side-entry only: a fighter descending from ABOVE the top is landing,
+    // not wall-clipping — without the prevY guard, the frame that dips a
+    // hair below the top teleported them to the slab's far END face
+    if (prevY < top - 1e-6 && f.y < top - 1e-6 && f.y > bottom - 1.4 && f.x > x0 - 0.3 && f.x < x1 + 0.3) {
       // inside the slab band: push to the nearer face; vy untouched (no stick)
       f.x = (f.x - s.x < 0 ? x0 - 0.3 : x1 + 0.3)
       f.vx = 0
