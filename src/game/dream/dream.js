@@ -610,6 +610,29 @@ class DreamMode {
       b.visible = false; scene.add(b); fx.bottles.push(b)
     }
     fx.moon = glow('#c8d4f0', 5.5, 5.5)
+    // — F6 items: bottled brews, one comically load-bearing boot, and the
+    //   neutral chicken who is not participating (officially) —
+    fx.itemMeshes = []
+    const glassMat2 = retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.75, emissive: 0x2a5040 })
+    for (let i = 0; i < 3; i++) {
+      const g = new THREE.Group()
+      const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.5, 6), glassMat2)
+      ensureVertexColors(bottle.geometry, [0.6, 0.8, 0.7])
+      g.add(bottle)
+      const halo = glow('#e8c26a', 1.1, 1.1); halo.visible = true; halo.position.y = 0.25; g.add(halo)
+      g.visible = false; scene.add(g); fx.itemMeshes.push(g)
+    }
+    const bootG = new THREE.Group()
+    const leather = retroMaterial({ map: TEX.plank({ name: 'dreamboot' }), emissive: 0x1a1008 })
+    const sole = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.22, 0.26), leather)
+    ensureVertexColors(sole.geometry, [0.55, 0.4, 0.28]); bootG.add(sole)
+    const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.42, 0.26), leather)
+    ensureVertexColors(shaft.geometry, [0.6, 0.44, 0.3]); shaft.position.set(-0.17, 0.3, 0); bootG.add(shaft)
+    bootG.visible = false; scene.add(bootG); fx.boot = bootG
+    fx.critter = buildChicken()
+    fx.critter.group.scale.setScalar(1.2)
+    fx.critter.group.visible = false
+    scene.add(fx.critter.group)
   }
 
   // position the pools from live sim state (render dt — drifts through hitstop)
@@ -709,6 +732,44 @@ class DreamMode {
       } else b.visible = false
     }
 
+    // — F6 items on the floor + the neutral chicken —
+    let bi2 = 0, bootUsed = false
+    for (const it of this.match.items) {
+      if (it.kind === 'boot' && !bootUsed) {
+        bootUsed = true
+        fx.boot.visible = true
+        fx.boot.position.set(it.x, it.y, 0.25)
+        fx.boot.rotation.z = Math.sin(tick * 0.06) * 0.1
+      } else if (bi2 < fx.itemMeshes.length) {
+        const g = fx.itemMeshes[bi2++]
+        g.visible = true
+        g.position.set(it.x, it.y + Math.sin(tick * 0.09 + bi2) * 0.06, 0.25)
+        g.rotation.z = Math.sin(tick * 0.05 + bi2 * 2) * 0.12
+      }
+    }
+    if (!bootUsed) fx.boot.visible = false
+    for (let i = bi2; i < fx.itemMeshes.length; i++) fx.itemMeshes[i].visible = false
+    const cr = this.match.critter
+    if (cr && this.match.critterOn) {
+      const g = fx.critter.group
+      g.visible = true
+      this.critterDuck = Math.max(0, (this.critterDuck ?? 0) - dt * 3)
+      g.position.set(cr.x, cr.y + Math.abs(Math.sin(tick * 0.4)) * 0.1 * (1 - this.critterDuck), 0.2)
+      g.rotation.y = (cr.vx ?? 0) >= 0 ? Math.PI / 2 : -Math.PI / 2
+      g.scale.y = 1.2 * (1 - this.critterDuck * 0.45) // the frame-1 duck
+      if (fx.critter.headBone) fx.critter.headBone.rotation.x = Math.sin(tick * 0.23) * 0.25
+    } else fx.critter.group.visible = false
+    // ember trails for the emberjack'd
+    for (const f of this.match.fighters) {
+      if ((f.emberT ?? 0) > 0 && f.stocks > 0 && this.match.tick % 4 === 0) {
+        this.embers?.spawn({
+          pos: new THREE.Vector3(f.x - f.face * 0.3, f.y + 0.15, 0.2), vel: new THREE.Vector3(0, 0.8, 0),
+          maxLife: 0.6, size: 0.08, alpha: 0.5, seed: (tick % 60) / 60,
+          update(p, dt2) { p.pos.y += p.vel.y * dt2; p.alpha = 0.5 * (1 - p.life / p.maxLife) },
+        })
+      }
+    }
+
     // — Lights Out: the warm accents die down to the lantern pools —
     const targetDim = this.match.lightsOutT > 0 ? 0.22 : 1
     this.dimF += (targetDim - this.dimF) * Math.min(1, dt * 6)
@@ -784,6 +845,10 @@ class DreamMode {
     this.nightmare = !!opts.nightmare
     this.scene = this._buildScene(def)
     this.match = makeMatch(makeArena(def.arena), [])
+    // items ride live matches by default (Part 6: on unless toggled off);
+    // manual/gate matches stay pure unless a gate asks
+    this.match.itemsOn = opts.items ?? !this.manual
+    this.match.critterOn = this.match.itemsOn && this.arenaId !== 'chicken' // the bird is home there
     this._spawnFighters(players, opts)
     this.liveInput = liveInput
     this.acc = 0
@@ -882,6 +947,18 @@ class DreamMode {
         this.zs?.spawn({ pos: new THREE.Vector3(cx, cy + 1.6, 0.5), vel: new THREE.Vector3(0.3, 1.1, 0), maxLife: 2.2, size: 0.5, seed: 0.5 })
       } else if (e.t === 'matchEnd') {
         this.victory = { winner: e.winner, t: 0 }
+      } else if (e.t === 'brew' && e.kind === 'humble') {
+        // the modest moth cloud arrives
+        const f = this.match?.fighters?.[e.id]
+        for (let i = 0; i < 8 && f; i++) {
+          const a = (i / 8) * Math.PI * 2
+          this.moths?.spawn({
+            pos: new THREE.Vector3(f.x, f.y + 1, 0.4),
+            vel: new THREE.Vector3(Math.cos(a) * 0.9, Math.sin(a) * 0.7 + 0.5, 0),
+            maxLife: 1.4, size: 0.12, seed: i / 8,
+            update(p, dt2) { p.pos.x += p.vel.x * dt2; p.pos.y += p.vel.y * dt2; p.vel.x *= 0.98 },
+          })
+        }
       } else if (e.t === 'hit' || e.t === 'throw') {
         if (this.crowd) this.crowdPulse = Math.min(1.6, this.crowdPulse + 0.7) // polite applause
         const reduced = typeof window !== 'undefined' && window.__REDUCED_MOTION__
@@ -925,7 +1002,10 @@ class DreamMode {
         grab: f.grab, grabbing: f.grabbing, mash: f.mash, ko: f.ko, invuln: f.invuln,
         deep: +f.deep.toFixed(2), armorT: f.armorT, ghostT: f.ghostT, slowFallT: f.slowFallT,
         superFx: f.superFx ? { kind: f.superFx.kind, t: f.superFx.t } : null,
+        floatT: f.floatT ?? 0, tinyT: f.tinyT ?? 0, giggleT: f.giggleT ?? 0, emberT: f.emberT ?? 0, boot: !!f.boot,
       })),
+      items: this.match.items.map((i) => ({ kind: i.kind, x: +i.x.toFixed(3), y: +i.y.toFixed(3) })),
+      critter: this.match.critter ? { x: +this.match.critter.x.toFixed(3), y: +this.match.critter.y.toFixed(3) } : null,
       over: !!this.match.over, winner: this.match.winner ?? null,
       projs: this.match.projs.map((p) => ({ kind: p.kind, x: +p.x.toFixed(3), y: +p.y.toFixed(3), vx: +p.vx.toFixed(3), turned: !!p.turned })),
       hazards: this.match.hazards.map((h) => ({ kind: h.kind, x: +h.x.toFixed(3), y: +h.y.toFixed(3), warn: h.warn, t: h.t })),
@@ -967,9 +1047,12 @@ class DreamMode {
       }
       g.position.set(f.x, f.y, 0)
       g.rotation.y = f.face > 0 ? Math.PI / 2 : -Math.PI / 2
-      // Constellation Slam: Nib IS the constellation, briefly enormous
-      const targetS = (R.baseScale ?? 1) * (f.superFx?.kind === 'constellation' ? 2.2 : 1)
+      // Constellation Slam: Nib IS the constellation, briefly enormous;
+      // Tinywort: briefly the opposite
+      const targetS = (R.baseScale ?? 1) * (f.superFx?.kind === 'constellation' ? 2.2 : 1) * ((f.tinyT ?? 0) > 0 ? 0.62 : 1)
       if (Math.abs(g.scale.x - targetS) > 0.001) g.scale.setScalar(g.scale.x + (targetS - g.scale.x) * Math.min(1, dt * 5))
+      // gigglewater: helplessly delighted
+      if ((f.giggleT ?? 0) > 0) g.rotation.z = Math.sin(this.match.tick * 0.5 + f.id) * 0.16
       if (R.kind === 'wizard') {
         advanceAnim(st, dt, Math.abs(f.vx), !f.grounded)
         applyPose(R.rig, st, 0)

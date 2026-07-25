@@ -221,6 +221,9 @@ export function stepFighter(f, inp, arena, ev, tick = 0) {
     return
   }
 
+  // — gigglewater: stunned by their own good time (inputs dissolve) —
+  if (f.giggleT > 0) { f.giggleT--; inp = {} }
+
   // — attacks: light/heavy/special start when free; a full lantern turns
   //   the special press into the Deep Dream super; aerials pre-pay lag —
   if (!f.move && f.landlag <= 0 && f.launched <= 0) {
@@ -240,6 +243,9 @@ export function stepFighter(f, inp, arena, ev, tick = 0) {
   }
   if (f.launched > 0) f.launched--
   if (f.armorT > 0) f.armorT--
+  if (f.floatT > 0) f.floatT--
+  if (f.tinyT > 0) f.tinyT--
+  if (f.emberT > 0) f.emberT--
   if (f.ghostT > 0) f.ghostT--
   if (f.slowFallT > 0) f.slowFallT--
 
@@ -290,7 +296,7 @@ export function stepFighter(f, inp, arena, ev, tick = 0) {
   // — gravity, fast-fall (Moonrise slow-fall drifts its victims) —
   if (!f.grounded) {
     if (inp.down && f.vy < 2 && !f.fastfall) { f.fastfall = true; ev?.push({ t: 'fastfall', id: f.id }) }
-    const drift = f.slowFallT > 0 ? 0.35 : 1
+    const drift = (f.slowFallT > 0 ? 0.35 : 1) * (f.floatT > 0 ? 0.55 : 1) // Moonrise · Floatleaf
     const g = f.k.gravity * (f.fastfall ? FEEL.FASTFALL : 1) * drift * dt
     f.vy = Math.max(f.k.maxFall * (f.fastfall ? FEEL.FASTFALL : 1) * drift, f.vy + g)
   }
@@ -348,13 +354,16 @@ export function stepFighter(f, inp, arena, ev, tick = 0) {
 
 const a2 = (a) => a // clarity alias
 
-// The match container: fighters + arena + tick counter (+ live projectiles
-// and super hazards: chandeliers, waltzing ghosts, roots, the Derby).
+// The match container: fighters + arena + tick counter (+ live projectiles,
+// super hazards, and — when itemsOn — falling brews, the Boot, and one
+// neutral chicken who cannot be hit and answers to nobody).
 export function makeMatch(arena, fighters) {
-  return { tick: 0, arena, fighters, events: [], projs: [], hazards: [], lightsOutT: 0 }
+  return { tick: 0, arena, fighters, events: [], projs: [], hazards: [], lightsOutT: 0, items: [], critter: null, itemClock: 0, itemsOn: false, critterOn: false }
 }
 
 const deg = (d) => (d * Math.PI) / 180
+// Tinywort shrinks the target you're trying to hit (Part 6)
+const hR = (d) => (d.tinyT > 0 ? d.hurtR * 0.6 : d.hurtR)
 
 // Apply a launch to `d` from direction `dir` with knockback kb; the
 // defender's held stick bends the trajectory by up to DI_MAX (DI-lite).
@@ -436,6 +445,13 @@ export function stepMatch(m, inputsById) {
     const tossPressed = !!inp.toss && !f.tossHeld
     f.tossHeld = !!inp.toss
     if (f.grab >= 0 || f.hitstop > 0) continue
+    // the Boot outranks a grab: throw it, comically hard, honking (Part 6)
+    if (tossPressed && f.boot && f.stocks > 0 && f.ko <= 0) {
+      f.boot = false
+      m.projs.push({ kind: 'boot', owner: f.id, x: f.x + f.face * 0.6, y: f.y + 1.2, vx: f.face * 13, vy: 3, life: 90, dmg: 18, kb: 10, ang: 48, t: 0, hitIds: new Set() })
+      ev.push({ t: 'honk', id: f.id })
+      continue
+    }
     // start a toss: press with a free opponent in reach
     if (tossPressed && f.grabbing < 0 && !f.move && f.landlag <= 0) {
       for (const d of m.fighters) {
@@ -511,6 +527,11 @@ export function stepMatch(m, inputsById) {
         p.vx -= p.face * 0.34 // boomerang: decelerate, turn, hit on the way home
         if (!p.turned && p.vx * p.face <= 0) { p.turned = true; p.hitIds.clear() }
       }
+      if (p.kind === 'boot') {
+        p.vy -= 16 * TICK // boots arc like thrown boots…
+        const fl = itemFloor(m.arena, p.x, p.y)
+        if (fl != null && p.y < fl + 0.25 && p.vy < 0) { p.vy = 5; ev.push({ t: 'bootBounce', x: +p.x.toFixed(2) }) } // …and SKIP
+      }
       p.x += p.vx * TICK
       p.y += (p.vy ?? 0) * TICK
       if (p.kind === 'dart' && p.t % 6 === 0) ev.push({ t: 'dartTrail', x: +p.x.toFixed(2), y: +p.y.toFixed(2) })
@@ -523,16 +544,20 @@ export function stepMatch(m, inputsById) {
       for (const d of m.fighters) {
         if (p.dead || d.id === p.owner || p.hitIds.has(d.id) || d.ko > 0 || d.invuln > 0 || d.stocks <= 0 || d.ghostT > 0) continue
         const dx = d.x - p.x, dy = d.y + 0.9 - p.y
-        if (dx * dx + dy * dy > (0.5 + d.hurtR) ** 2) continue
+        if (dx * dx + dy * dy > (0.5 + hR(d)) ** 2) continue
         p.hitIds.add(d.id)
         const o = m.fighters[p.owner]
         applyHit(o ?? { id: p.owner, deep: 0, hitstop: 0, face: Math.sign(p.vx) || 1 }, d, m, inputsById, ev,
           { dmg: p.dmg, baseKB: p.kb, growth: 0.1, angleDeg: p.ang, hitstop: 3, r: 0.5 }, p.kind, Math.sign(p.vx) || 1)
-        if (p.kind === 'dart') p.dead = true
+        if (p.kind === 'dart' || p.kind === 'boot') p.dead = true
+        if (p.kind === 'boot') ev.push({ t: 'honk', id: d.id })
       }
     }
     m.projs = m.projs.filter((p) => !p.dead)
   }
+
+  // — items + the neutral chicken (Part 6; live matches only) —
+  stepItems(m, inputsById, ev)
 
   m.tick++
   return ev
@@ -568,7 +593,7 @@ function hitCircle(f, m, inputsById, ev, A, cause) {
   for (const d of m.fighters) {
     if (d.id === f.id || f.hitIds.has(d.id) || d.ko > 0 || d.invuln > 0 || d.stocks <= 0 || d.ghostT > 0) continue
     const dx = d.x - hx, dy = d.y + 0.9 - hy
-    if (dx * dx + dy * dy > (A.r + d.hurtR) ** 2) continue
+    if (dx * dx + dy * dy > (A.r + hR(d)) ** 2) continue
     f.hitIds.add(d.id)
     applyHit(f, d, m, inputsById, ev, A, cause)
   }
@@ -726,7 +751,7 @@ function stepSuperFx(m, inputsById, ev) {
         for (const d of m.fighters) {
           if (d.id === f.id || d.ko > 0 || d.invuln > 0 || d.stocks <= 0 || d.ghostT > 0) continue
           const dx = d.x - f.x, dy = d.y + 0.9 - (f.y + 1.0)
-          if (dx * dx + dy * dy > (2.3 + d.hurtR) ** 2) continue
+          if (dx * dx + dy * dy > (2.3 + hR(d)) ** 2) continue
           applyHit(f, d, m, inputsById, ev, { dmg: 4, baseKB: 5, growth: 0.12, angleDeg: 55, hitstop: 3, r: 2.3 }, 'bottleTornado', Math.sign(dx) || f.face)
         }
         f.hitIds = save
@@ -771,7 +796,7 @@ function stepSuperFx(m, inputsById, ev) {
         for (const d of m.fighters) {
           if (d.id === h.owner || h.hitIds.has(d.id) || d.ko > 0 || d.invuln > 0 || d.stocks <= 0 || d.ghostT > 0 || d.armorT > 0) continue
           const dx = d.x - h.x, dy = d.y + 0.9 - (h.y + (h.kind === 'root' ? 0.6 : 0.9))
-          if (dx * dx + dy * dy > (spec.r + d.hurtR) ** 2) continue
+          if (dx * dx + dy * dy > (spec.r + hR(d)) ** 2) continue
           h.hitIds.add(d.id)
           applyHit(owner ?? { id: h.owner, deep: 0, hitstop: 0, face: 1 }, d, m, inputsById, ev, spec, h.kind, Math.sign(h.vx ?? dx) || 1)
         }
@@ -779,5 +804,97 @@ function stepSuperFx(m, inputsById, ev) {
       if (h.strike) h.dead = true
     }
     m.hazards = m.hazards.filter((h) => !h.dead)
+  }
+}
+
+// ═══ F6: ITEMS (Part 6) — five Moon Brews, the rare Boot, and one neutral
+// chicken that cannot be hit (frame-1 dodge, structurally) and sometimes
+// pecks whoever is winning. Deterministic spawns via dnoise; live-match
+// only (m.itemsOn) so the feel gates and the balance bracket stay pure. ═══
+const BREWS = ['floatleaf', 'tinywort', 'gigglewater', 'emberjack', 'humble']
+
+function applyBrew(f, kind, ev) {
+  ev.push({ t: 'brew', id: f.id, kind })
+  if (kind === 'floatleaf') f.floatT = 300        // low-gravity bubble
+  else if (kind === 'tinywort') f.tinyT = 300     // briefly small (harder to hit)
+  else if (kind === 'gigglewater') { f.giggleT = 45; f.move = null } // self-stun, worth it
+  else if (kind === 'emberjack') f.emberT = 300   // flame trail: hits land hotter
+  else if (kind === 'humble') f.ghostT = Math.max(f.ghostT, 60) // a modest moth cloud
+}
+
+// highest solid top at x, at or below y (items land on furniture, not plats)
+function itemFloor(arena, x, y) {
+  let best = null
+  for (const s of arena.solids) {
+    if (x < s.x - s.w / 2 || x > s.x + s.w / 2) continue
+    if (s.y <= y + 0.01 && (best == null || s.y > best)) best = s.y
+  }
+  return best
+}
+
+function stepItems(m, inputsById, ev) {
+  if (!m.itemsOn) return
+  m.itemClock++
+  // a brew drifts down every ~15s; the Boot is rare and announces itself
+  if (m.itemClock % 900 === 450 && m.items.length < 3) {
+    const kind = dnoise(m.tick, 77, 1) < 0.08 ? 'boot' : BREWS[Math.floor(dnoise(m.tick, 77, 2) * BREWS.length)]
+    const bb = m.arena.blast
+    const x = bb.l + 5 + dnoise(m.tick, 77, 3) * (bb.r - bb.l - 10)
+    m.items.push({ kind, x, y: 15, vy: 0, t: 0 })
+    ev.push({ t: 'itemDrop', kind, x: +x.toFixed(2) })
+  }
+  for (const it of m.items) {
+    it.t++
+    it.vy = Math.max(-4.5, it.vy - 14 * TICK) // brews drift down like leaves
+    const floor = itemFloor(m.arena, it.x, it.y)
+    it.y += it.vy * TICK
+    if (floor != null && it.y <= floor + 0.15) { it.y = floor + 0.15; it.vy = 0 }
+    if (it.y < m.arena.blast.b) it.dead = true
+    if (it.t > 2400) it.dead = true // unclaimed dreams evaporate
+    for (const f of m.fighters) {
+      if (it.dead || f.stocks <= 0 || f.ko > 0 || f.grab >= 0 || f.giggleT > 0) continue
+      const dx = f.x - it.x, dy = f.y + 0.6 - it.y
+      if (dx * dx + dy * dy > 1.1) continue
+      it.dead = true
+      if (it.kind === 'boot') { f.boot = true; ev.push({ t: 'bootGet', id: f.id }) }
+      else applyBrew(f, it.kind, ev)
+      break
+    }
+  }
+  m.items = m.items.filter((i) => !i.dead)
+
+  // — the neutral chicken: wanders, cannot be hit, pecks the leader —
+  if (m.critterOn) {
+    if (!m.critter) m.critter = { x: 2, y: 0, vx: 0, peckT: 700 }
+    const c = m.critter
+    // leader: most stocks, then least wooze (nobody acknowledges this bird)
+    let lead = null
+    for (const f of m.fighters) {
+      if (f.stocks <= 0 || f.ko > 0) continue
+      if (!lead || f.stocks > lead.stocks || (f.stocks === lead.stocks && f.wooze < lead.wooze)) lead = f
+    }
+    c.peckT--
+    const hunting = lead && c.peckT < 150
+    const tx = hunting ? lead.x : Math.sin(m.tick * 0.008) * 8
+    c.vx += Math.sign(tx - c.x) * 8 * TICK
+    c.vx = Math.max(-2.6, Math.min(2.6, c.vx)) * 0.985
+    c.x += c.vx * TICK
+    const bb = m.arena.blast
+    c.x = Math.max(bb.l + 2, Math.min(bb.r - 2, c.x))
+    const fl = itemFloor(m.arena, c.x, 6)
+    c.y = fl ?? 0
+    if (hunting && lead && Math.abs(lead.x - c.x) < 1.1 && Math.abs(lead.y - c.y) < 1.2 && lead.invuln <= 0 && lead.ghostT <= 0 && lead.armorT <= 0) {
+      lead.wooze += 3
+      launch(lead, Math.sign(lead.x - c.x) || 1, (3 + lead.wooze * 0.05) / lead.k.weight, 40, inputsById[lead.id]?.x, ev, 'critterPeck')
+      lead.hitstop = 2
+      ev.push({ t: 'critterPeck', d: lead.id })
+      c.peckT = 700 + Math.floor(dnoise(m.tick, 88, 1) * 300)
+    } else if (c.peckT <= 0) c.peckT = 700
+    // frame-1 dodge: any active swing near the bird makes it duck (event
+    // only — it has no hurtbox at all, which is the joke)
+    for (const f of m.fighters) {
+      if (!f.move || f.hitstop > 0) continue
+      if (Math.abs(f.x - c.x) < 2 && m.tick % 5 === 0) ev.push({ t: 'critterDodge', x: +c.x.toFixed(2) })
+    }
   }
 }

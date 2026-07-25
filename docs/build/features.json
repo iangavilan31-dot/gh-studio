@@ -1248,7 +1248,8 @@
     "boot honk audio evidence",
     "neutral chicken frame-1 dodge gate"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "Items live-match only (m.itemsOn; gates/balance stay pure, on by default in live play, toggleable). Deterministic drops every 900 ticks (dnoise kind/x, Boot at 8% rarity), brews drift down and land on furniture (itemFloor), evaporate unclaimed after 40s. All five brews gated: Floatleaf 300-tick low-gravity (gravity x0.55), Tinywort 300-tick shrink (hurtR x0.6 through every contact test), Gigglewater 45-tick self-stun (inputs dissolve, gate proves no move starts), Emberjack 300-tick flame trail, Humble Brew 60-tick moth-cloud mist. The Boot: pickup, toss-press throw (outranks grabs), honks on throw AND on impact, SKIPS across the floor (first arc sank through the bench short of everything), kb 11.8 verified. Neutral chicken: no hurtbox at all (the frame-1 dodge is structural \u2014 351 duck events, zero hits in 2500 adversarial ticks), wanders on dnoise, hunts and pecks the current leader (critterPeck verified), absent from its own Warm Oven. Suite green x2; balance PASS unchanged; items.png shows the set table."
   },
   {
    "id": "FIGHT-F7",

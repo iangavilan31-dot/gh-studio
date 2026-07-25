@@ -182,6 +182,18 @@ await arenaShot('mote', `
   step({ jump: true }); for (let k = 0; k < 18; k++) step({ x: 1 })
 `)
 
+// ——— F6: brews on the bench, the Boot, and the bird (item table) ———
+await page.evaluate(() => {
+  const M = window.__MOONREST__
+  M.fight.exit(); M.fight.enter('beldam', 2, 99)
+  M.fight.itemsOn(true)
+  M.fight.spawnItem('floatleaf', -3)
+  M.fight.spawnItem('boot', 2.4)
+  const step = (a, b) => M.fight.step({ 0: a ?? {}, 1: b ?? {} })
+  for (let k = 0; k < 130; k++) step()
+})
+await shot('items')
+
 // ——— Nightmare regrades: identical hitboxes, only the light changes ———
 for (const a of ['beldam', 'paleking']) {
   for (const [suffix, nm] of [['day', 0], ['night', 1]]) {

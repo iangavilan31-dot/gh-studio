@@ -709,6 +709,82 @@ check('star-lines hold early…', f5.star.onLine === true)
 check('…and undraw on schedule (fighter falls with the line)', f5.star.undrawn === true)
 check('the Full Hall drops chandeliers on its own clock, ≥1.5s warm', f5.hall.spawnedAt === 781 && f5.hall.warnSeen >= 89, JSON.stringify(f5.hall))
 
+// ═══ F6: ITEMS — five brews, the Boot, and the bird nobody can touch ═══
+const f6 = await page.evaluate(() => {
+  const M = window.__MOONREST__
+  const step = (a, b) => M.fight.step({ 0: a ?? {}, 1: b ?? {} })
+  const reenter = () => { M.fight.exit(); M.fight.enter('beldam', 2, 99); M.fight.itemsOn(true); for (let k = 0; k < 60; k++) step() }
+  const out = {}
+  // — a brew falls on schedule and is drunk by walking over it —
+  reenter()
+  let s = step(), seenDrop = null
+  while (s.tick < 480) { s = step(); const d = s.events.find((e) => e.t === 'itemDrop'); if (d) seenDrop = d.kind }
+  out.scheduledDrop = seenDrop
+  // — each brew does what the bottle says —
+  const drink = (kind) => {
+    reenter()
+    M.fight.spawnItem(kind, -5.2)
+    let s2 = step(), g = 0
+    while (!s2.events.some((e) => e.t === 'brew' || e.t === 'bootGet') && g++ < 300) s2 = step({ x: s2.fighters[0].x < -5.2 ? 1 : -1 })
+    for (let j = 0; j < 3; j++) s2 = step()
+    return s2.fighters[0]
+  }
+  out.float = drink('floatleaf').floatT
+  out.tiny = drink('tinywort').tinyT
+  out.giggle = drink('gigglewater').giggleT
+  out.ember = drink('emberjack').emberT
+  out.humble = drink('humble').ghostT
+  // — gigglewater actually stuns: no move starts while giggling —
+  reenter()
+  M.fight.spawnItem('gigglewater', -5.2)
+  let s3 = step(), g3 = 0
+  while (!s3.events.some((e) => e.t === 'brew') && g3++ < 300) s3 = step({ x: s3.fighters[0].x < -5.2 ? 1 : -1 })
+  s3 = step({ light: true })
+  out.giggleStunned = s3.fighters[0].move === null
+  // — the Boot: pick up, throw on toss, it flies and lands HARD —
+  reenter()
+  M.fight.spawnItem('boot', -5.2)
+  let s4 = step(), g4 = 0
+  while (!s4.events.some((e) => e.t === 'bootGet') && g4++ < 300) s4 = step({ x: s4.fighters[0].x < -5.2 ? 1 : -1 })
+  out.bootHeld = s4.fighters[0].boot
+  // face P2 and let it fly
+  s4 = step({ x: 1 }); s4 = step()
+  s4 = step({ toss: true })
+  let honked = s4.events.some((e) => e.t === 'honk'), bootHit = null
+  for (let k = 0; k < 90; k++) {
+    s4 = step()
+    if (s4.events.some((e) => e.t === 'honk')) honked = true
+    const h = s4.events.find((e) => e.t === 'hit' && e.move === 'boot')
+    if (h) { bootHit = h.kb; break }
+  }
+  out.boot = { honked, bootHit }
+  // — the neutral chicken: unhittable, and it pecks the leader —
+  reenter()
+  let dodges = 0, critterPeck = false, critterHit = false
+  let s5 = step()
+  let g5 = 0
+  while (g5++ < 2500) {
+    const cx = s5.critter?.x ?? 0
+    const dx = cx - s5.fighters[0].x
+    // chase the bird and swing at it
+    s5 = step({ x: Math.abs(dx) > 1.2 ? Math.sign(dx) : 0, light: g5 % 10 < 2 })
+    if (s5.events.some((e) => e.t === 'critterDodge')) dodges++
+    if (s5.events.some((e) => e.t === 'critterPeck')) critterPeck = true
+    if (s5.events.some((e) => e.t === 'hit' && e.d === -2)) critterHit = true
+  }
+  out.critter = { dodges, critterPeck, critterHit }
+  return out
+})
+check('brews fall on the item clock', f6.scheduledDrop != null, `first=${f6.scheduledDrop}`)
+check('Floatleaf: low-gravity bubble (300 ticks)', f6.float > 280, `floatT=${f6.float}`)
+check('Tinywort: briefly small', f6.tiny > 280, `tinyT=${f6.tiny}`)
+check('Gigglewater: the good time takes your turn', f6.giggle > 30 && f6.giggleStunned === true, `giggleT=${f6.giggle} stunned=${f6.giggleStunned}`)
+check('Emberjack: flame trail armed', f6.ember > 280, `emberT=${f6.ember}`)
+check('Humble Brew: a modest moth cloud (brief mist)', f6.humble >= 50, `ghostT=${f6.humble}`)
+check('the Boot: held, honks on the throw, lands comically hard', f6.bootHeld === true && f6.boot.honked && f6.boot.bootHit >= 10, JSON.stringify(f6.boot))
+check('the neutral chicken ducks every swing and is never hit', f6.critter.dodges > 0 && f6.critter.critterHit === false, JSON.stringify(f6.critter))
+check('…and pecks whoever is winning', f6.critter.critterPeck === true)
+
 // ═══ F7: BOTS — Dozy naps, Awake plays, Lucid punishes ═══
 const f7 = await page.evaluate(() => {
   const M = window.__MOONREST__

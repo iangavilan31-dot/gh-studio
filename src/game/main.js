@@ -1009,6 +1009,8 @@ window.__MOONREST__ = {
     charge(id = 0) { const f = dream.match?.fighters?.[id]; if (f) f.deep = 100; return !!f }, // gate rig: full lantern
     botDuel(a = 'lucid', b = 'dozy', ticks = 14400) { return dream.botDuel(a, b, ticks) },
     sceneCount() { return dream.scene?.children.length ?? -1 },
+    itemsOn(on = true) { if (!dream.match) return false; dream.match.itemsOn = !!on; dream.match.critterOn = !!on; return true },
+    spawnItem(kind = 'floatleaf', x = 0) { if (!dream.match) return false; dream.match.items.push({ kind, x, y: 8, vy: 0, t: 0 }); return true },
     get lastShake() { return dream.lastShake ?? null },
   },
   // — F0 entry/exit test surface (tunnel timing is wall-clock, not ticks) —
