@@ -585,3 +585,15 @@ its caster chasing Mote off the edge — respawn rides ignore attack
 inputs; the gate now walks home first. NEXT: F4 visual half (rigs per
 fighter from npc builders, specials presentation, distinctness shots) →
 flip F4; then remaining supers ride with F5 arenas; F7 bots.
+
+## FIGHT-F4 COMPLETE — eight fighters, eight specials, eight supers, all seen
+fightfeel is 55 checks x2. Presentation: FX pools give every sim object a
+body (darts + ember trails, spinning boomerang hats, chandeliers that hang
+just above frame so the descent reads, bark roots, a pool of 6 stampede
+chickens, waltzing noble pairs with heads, tornado bottles orbiting
+Beldam, the rising mini-moon, Lights Out dims ambient+sky to the lantern
+pools, reduced-motion-aware tornado sway). Constellation scales the rig
+2.2x live. Shots: roster/critters/super-x7/special-dart all read honest.
+NEXT: F7 bots (Dozy/Awake/Lucid from the proven driver) + balance
+round-robin; F8 couch inputs; F5 arenas; F6 items; F9 online; F11 lobby;
+F12 comedy; FIGHT_JUDGE x2. Re-read DREAMSCRAP_PASS.md after compaction.

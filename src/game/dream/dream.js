@@ -45,7 +45,7 @@ function genericRig(built, { scale = 1, standX = 0, lift = 0, accent = null, rol
   pose.add(built.group)                 // never a cartwheel through the floor
   outer.add(pose)
   outer.scale.setScalar(scale)
-  return { kind: 'generic', group: outer, pose, accent, roller, spin: 0 }
+  return { kind: 'generic', group: outer, pose, accent, roller, spin: 0, baseScale: scale }
 }
 
 function makeDreamRig(fid, idx) {
@@ -159,6 +159,11 @@ class DreamMode {
     // (Part 5's "particles NOT frozen"), and they sell every KO
     this.moths = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#d8cfae' }), max: 90, additive: true })
     this.zs = new ParticleSystem(scene, { tex: TEX.zGlyph(), max: 10, additive: false })
+    this.embers = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#e8a848' }), max: 70, additive: true })
+    this._buildFxPools(scene)
+    this.baseAmbient = new THREE.Color(P.ambient)
+    this.baseSkyUp = new THREE.Color(P.skyUp)
+    this.dimF = 1
     // the rain falls upward (Part 4.1 — Beldam's dream logic)
     this.rainUp = new ParticleSystem(scene, { tex: TEX.streak(), max: 240, additive: false, stretchY: 2.6, fogInfluence: 0.4 })
     this.rng = worldRNG.fork('dream/ambient')
@@ -214,6 +219,176 @@ class DreamMode {
     this.camera.position.set(0, 3.4, 17)
     this.camera.lookAt(0, 2.6, 0)
     return scene
+  }
+
+  // ——— F4 FX pools: every sim projectile/hazard/super has a body ———
+  _buildFxPools(scene) {
+    const glow = (color, w, h) => {
+      const m = retroMaterial({ map: TEX.glowDot({ color }), transparent: true, depthWrite: false, opacity: 0.85 })
+      m.blending = THREE.AdditiveBlending
+      const q = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m)
+      ensureVertexColors(q.geometry)
+      q.visible = false
+      scene.add(q)
+      return q
+    }
+    const fx = (this.fx = { darts: [], hats: [], chands: [], warns: [], roots: [], birds: [], nobles: [], bottles: [], moon: null })
+    for (let i = 0; i < 3; i++) fx.darts.push(glow('#e8a848', 0.55, 0.55))
+    for (let i = 0; i < 2; i++) {
+      const hat = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.5, 6), retroMaterial({ map: TEX.white(), emissive: 0x1a1428 }))
+      ensureVertexColors(hat.geometry, [0.32, 0.28, 0.45])
+      hat.visible = false; scene.add(hat); fx.hats.push(hat)
+    }
+    // chandeliers: cone + halo, plus warm warn circles for ALL telegraphs
+    for (let i = 0; i < 3; i++) {
+      const g = new THREE.Group()
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.9, 0.8, 7), retroMaterial({ map: TEX.white(), emissive: 0x3a2c10 }))
+      ensureVertexColors(cone.geometry, [0.8, 0.66, 0.3]); cone.rotation.x = Math.PI; g.add(cone)
+      const halo = glow('#e8c26a', 2.2, 2.2); halo.visible = true; g.add(halo)
+      g.visible = false; scene.add(g); fx.chands.push(g)
+    }
+    for (let i = 0; i < 8; i++) {
+      const w = glow('#e8a848', 1.8, 0.9)
+      w.rotation.x = -Math.PI / 2; w.position.y = 0.05
+      fx.warns.push(w)
+    }
+    for (let i = 0; i < 5; i++) {
+      const root = new THREE.Mesh(new THREE.ConeGeometry(0.35, 1.6, 6), retroMaterial({ map: TEX.bark({ name: 'dreamroot' }), emissive: 0x0e1a10 }))
+      ensureVertexColors(root.geometry, [0.45, 0.55, 0.4])
+      root.visible = false; scene.add(root); fx.roots.push(root)
+    }
+    for (let i = 0; i < 6; i++) {
+      const bird = buildChicken()
+      bird.group.scale.setScalar(1.35)
+      bird.group.visible = false
+      scene.add(bird.group)
+      fx.birds.push(bird)
+    }
+    for (let i = 0; i < 3; i++) {
+      const pair = new THREE.Group()
+      for (const sx of [-0.35, 0.35]) {
+        const mat = retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.5, depthWrite: false, emissive: 0x24404a })
+        const noble = new THREE.Mesh(new THREE.ConeGeometry(0.34, 1.5, 7), mat)
+        ensureVertexColors(noble.geometry, [0.65, 0.9, 0.95])
+        noble.position.set(sx, 0.75, 0)
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 7, 5), mat)
+        ensureVertexColors(head.geometry, [0.7, 0.92, 0.96])
+        head.position.set(sx, 1.62, 0)
+        pair.add(noble); pair.add(head)
+      }
+      pair.visible = false; scene.add(pair); fx.nobles.push(pair)
+    }
+    const glassMat = retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.7, emissive: 0x2a5040 })
+    for (let i = 0; i < 5; i++) {
+      const b = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.55, 6), glassMat)
+      ensureVertexColors(b.geometry, [0.5, 0.72, 0.62])
+      b.visible = false; scene.add(b); fx.bottles.push(b)
+    }
+    fx.moon = glow('#c8d4f0', 5.5, 5.5)
+  }
+
+  // position the pools from live sim state (render dt — drifts through hitstop)
+  _updateFx(dt) {
+    const fx = this.fx
+    if (!fx || !this.match) return
+    const tick = this.match.tick
+    let di = 0, hi = 0
+    for (const p of this.match.projs) {
+      if (p.kind === 'dart' && di < fx.darts.length) {
+        const q = fx.darts[di++]
+        q.visible = true; q.position.set(p.x, p.y, 0.3)
+        // the warm footprint trail (Part 3)
+        this.embers?.spawn({
+          pos: new THREE.Vector3(p.x, p.y - 0.05, 0.25), vel: new THREE.Vector3(0, 0.4, 0),
+          maxLife: 0.7, size: 0.09, alpha: 0.5, seed: (tick % 60) / 60,
+          update(pt, dt2) { pt.pos.y += pt.vel.y * dt2; pt.alpha = 0.5 * (1 - pt.life / pt.maxLife) },
+        })
+      } else if (p.kind === 'hat' && hi < fx.hats.length) {
+        const q = fx.hats[hi++]
+        q.visible = true; q.position.set(p.x, p.y, 0.3)
+        q.rotation.z += dt * 14 * Math.sign(p.vx || 1)
+      }
+    }
+    for (let i = di; i < fx.darts.length; i++) fx.darts[i].visible = false
+    for (let i = hi; i < fx.hats.length; i++) fx.hats[i].visible = false
+
+    let ci = 0, ri = 0, bi = 0, ni = 0, wi = 0
+    for (const h of this.match.hazards) {
+      if (h.kind === 'chand' && ci < fx.chands.length) {
+        const g = fx.chands[ci++]
+        // hangs just above the frame during the warn so the descent READS
+        g.visible = true; g.position.set(h.x, h.warn > 0 ? 8.2 : Math.min(8.2, h.y), 0)
+        if (h.warn > 0 && wi < fx.warns.length) {
+          const w = fx.warns[wi++]
+          w.visible = true; w.position.set(h.x, 0.06, 0.2)
+          w.scale.setScalar(1.5)
+          w.material.uniforms.uOpacity.value = 0.4 + 0.3 * Math.sin(tick * 0.4)
+        }
+      } else if (h.kind === 'root' && ri < fx.roots.length) {
+        const r = fx.roots[ri++]
+        if (h.warn > 0) {
+          if (wi < fx.warns.length) {
+            const w = fx.warns[wi++]
+            w.visible = true; w.position.set(h.x, 0.06, 0.2)
+            w.material.uniforms.uOpacity.value = 0.25 + 0.2 * Math.sin(tick * 0.5)
+          }
+          r.visible = false
+        } else {
+          const age = h.t - (h.popT ?? h.t)
+          const up = Math.min(1, age / 6)
+          const down = Math.max(0, 1 - Math.max(0, age - 60) / 30)
+          r.visible = down > 0
+          r.scale.set(1, Math.max(0.05, up * down), 1)
+          r.position.set(h.x, 0.8 * r.scale.y, 0.1)
+        }
+      } else if (h.kind === 'derbybird' && bi < fx.birds.length) {
+        const b = fx.birds[bi++]
+        b.group.visible = true
+        b.group.position.set(h.x, Math.abs(Math.sin((tick + bi * 7) * 0.5)) * 0.18, 0.2)
+        b.group.rotation.y = h.vx > 0 ? Math.PI / 2 : -Math.PI / 2
+        if (b.headBone) b.headBone.rotation.x = Math.sin((tick + bi * 5) * 0.6) * 0.3
+      } else if (h.kind === 'waltz' && ni < fx.nobles.length) {
+        const n = fx.nobles[ni++]
+        n.visible = true
+        n.position.set(h.x, 0, 0.1)
+        n.rotation.y = Math.sin((tick + ni * 11) * 0.08) * 0.8 // the slow turn of the dance
+        n.children.forEach((c, k) => { c.position.y += Math.sin((tick + k * 9) * 0.12) * 0.002 })
+      }
+    }
+    for (let i = ci; i < fx.chands.length; i++) fx.chands[i].visible = false
+    for (let i = ri; i < fx.roots.length; i++) fx.roots[i].visible = false
+    for (let i = bi; i < fx.birds.length; i++) fx.birds[i].group.visible = false
+    for (let i = ni; i < fx.nobles.length; i++) fx.nobles[i].visible = false
+    for (let i = wi; i < fx.warns.length; i++) fx.warns[i].visible = false
+
+    // — per-fighter super bodies —
+    let moonOn = false, tornado = null
+    for (const f of this.match.fighters) {
+      if (f.superFx?.kind === 'moonrise' && f.id !== undefined) {
+        moonOn = true
+        const rise = 1 - f.superFx.t / 180
+        fx.moon.visible = true
+        fx.moon.position.set(f.x, 2.5 + rise * 5.5, -2)
+        fx.moon.material.uniforms.uOpacity.value = 0.55 * Math.min(1, (1 - rise) * 4)
+      }
+      if (f.superFx?.kind === 'bottleTornado') tornado = f
+    }
+    if (!moonOn) fx.moon.visible = false
+    for (let i = 0; i < fx.bottles.length; i++) {
+      const b = fx.bottles[i]
+      if (tornado) {
+        const a = (i / fx.bottles.length) * Math.PI * 2 + tick * 0.11
+        b.visible = true
+        b.position.set(tornado.x + Math.cos(a) * 1.9, tornado.y + 1.0 + Math.sin(tick * 0.13 + i) * 0.6, 0.25)
+        b.rotation.z = a
+      } else b.visible = false
+    }
+
+    // — Lights Out: the warm accents die down to the lantern pools —
+    const targetDim = this.match.lightsOutT > 0 ? 0.22 : 1
+    this.dimF += (targetDim - this.dimF) * Math.min(1, dt * 6)
+    globalUniforms.uAmbient.value.copy(this.baseAmbient).multiplyScalar(this.dimF)
+    globalUniforms.uSkyUp.value.copy(this.baseSkyUp).multiplyScalar(this.dimF)
   }
 
   // the only HUD: bottle tints + stock moons, no numbers (Part 2)
@@ -417,6 +592,9 @@ class DreamMode {
       }
       g.position.set(f.x, f.y, 0)
       g.rotation.y = f.face > 0 ? Math.PI / 2 : -Math.PI / 2
+      // Constellation Slam: Nib IS the constellation, briefly enormous
+      const targetS = (R.baseScale ?? 1) * (f.superFx?.kind === 'constellation' ? 2.2 : 1)
+      if (Math.abs(g.scale.x - targetS) > 0.001) g.scale.setScalar(g.scale.x + (targetS - g.scale.x) * Math.min(1, dt * 5))
       if (R.kind === 'wizard') {
         advanceAnim(st, dt, Math.abs(f.vx), !f.grounded)
         applyPose(R.rig, st, 0)
@@ -497,6 +675,11 @@ class DreamMode {
     }
     this.camera.position.set(c.x + nx, c.y + ny, c.d)
     this.camera.lookAt(c.x, c.y - 0.4, 0)
+    // Bottle Tornado: the screen sways for EVERYONE (reduced-motion exempt)
+    if (!(typeof window !== 'undefined' && window.__REDUCED_MOTION__) &&
+      this.match.fighters.some((f) => f.superFx?.kind === 'bottleTornado')) {
+      this.camera.rotation.z += Math.sin(this.match.tick * 0.06) * 0.03
+    }
   }
 
   update(dt) {
@@ -526,6 +709,8 @@ class DreamMode {
     this.moths?.update(dt, this.camera)
     this.zs?.update(dt, this.camera)
     this.rainUp?.update(dt, this.camera)
+    this.embers?.update(dt, this.camera)
+    this._updateFx(dt)
     // moon respawn rides + invuln shimmers track sim state
     this.match?.fighters.forEach((f, i) => {
       const plat = this.moonPlats?.[i]

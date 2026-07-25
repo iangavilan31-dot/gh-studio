@@ -134,6 +134,53 @@ await page.evaluate(() => {
 })
 await shot('critters')
 
+// ——— the supers, seen (F4 presentation evidence) ———
+const superShot = async (name, fids, prep) => {
+  await page.evaluate(([f]) => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('beldam', 2, 99, f) }, [fids])
+  await page.waitForTimeout(700)
+  await page.evaluate(`(() => {
+    const M = window.__MOONREST__
+    const step = (a, b) => M.fight.step({ 0: a ?? {}, 1: b ?? {} })
+    for (let k = 0; k < 60; k++) step()
+    ${prep}
+  })()`)
+  await shot(name)
+}
+// walk-in helper snippet reused by several preps
+const CLOSE = `
+  let s = step(), g = 0
+  while (Math.abs(s.fighters[1].x - s.fighters[0].x) > 2.0 && g++ < 300) s = step({ x: s.fighters[1].x > s.fighters[0].x ? 1 : -1 })
+  for (let j = 0; j < 10; j++) s = step()
+`
+await superShot('super-tornado', ['beldam', 'lamplighter'], `${CLOSE}
+  M.fight.charge(0); step({ special: true })
+  for (let k = 0; k < 46; k++) step()`)
+await superShot('super-chandeliers', ['paleking', 'lamplighter'], `${CLOSE}
+  M.fight.charge(0); step({ special: true })
+  for (let k = 0; k < 128; k++) step()`)
+await superShot('super-derby', ['chicken', 'paleking'], `
+  M.fight.charge(0); step({ special: true })
+  for (let k = 0; k < 105; k++) step()`)
+await superShot('super-constellation', ['nib', 'mote'], `${CLOSE}
+  M.fight.charge(0); step({ special: true })
+  for (let k = 0; k < 60; k++) step()`)
+await superShot('super-party', ['curator', 'lamplighter'], `
+  M.fight.charge(0); step({ special: true })
+  for (let k = 0; k < 235; k++) step()`)
+await superShot('super-roots', ['mote', 'paleking'], `${CLOSE}
+  M.fight.charge(0); step({ special: true })
+  for (let k = 0; k < 78; k++) step()`)
+await superShot('super-lightsout', ['watcher', 'lamplighter'], `${CLOSE}
+  M.fight.charge(0); step({ special: true })
+  for (let k = 0; k < 40; k++) step()`)
+await superShot('special-dart', ['lamplighter', 'beldam'], `
+  let s = step(), g = 0
+  while (Math.abs(s.fighters[1].x - s.fighters[0].x) > 6.5 && g++ < 300) s = step({ x: s.fighters[1].x > s.fighters[0].x ? 1 : -1 })
+  for (let j = 0; j < 10; j++) s = step()
+  const d = Math.sign(s.fighters[1].x - s.fighters[0].x)
+  step({ special: true, x: d })
+  for (let k = 0; k < 24; k++) step()`)
+
 // the victory nap: drive a fresh duel to its end, then let the real-time
 // victory scene play — winner lies down beside the loser (~3s in)
 await page.evaluate(() => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('beldam', 2) })
