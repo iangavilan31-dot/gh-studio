@@ -123,9 +123,29 @@ function doEmote(id) {
 // ——— DREAMSCRAP F0: lie down beside a dreamer and the dream reaches out ———
 const dreamTunnel = new DreamTunnel()
 let dreamRest = 0 // seconds spent asleep in a sleeper's orbit
+// F9: a synchronized dream — all human seats over delay-based lockstep
+let pendingFightFrames = []
+function beginNetDream(arenaId, players, mySeat, humanSeats, fids = null) {
+  if (dream.active) return false
+  endIntro(true)
+  if (mode === 'title') { shell.clear(); mode = 'game' }
+  dreamTunnel.begin('in', 1.4, () => {
+    dream.enter(arenaId, players, input, {
+      ...(fids ? { fids } : {}),
+      net: { seat: mySeat, delay: 4, humanSeats, send: (m) => net.sendFightInput(m) },
+      items: false, // deterministic across peers either way, but keep round one clean
+    })
+    for (const m of pendingFightFrames) dream.netInput(m) // the early bird's frames
+    pendingFightFrames = []
+  })
+  dreamTunnel.noCancel = true // dealt dreams don't need the sleeper's pose
+  return true
+}
+
 function beginDreamEntry(arenaId) {
   if (dreamTunnel.active || dream.active) return false
   if (!shell.s.dreamFound) { shell.s.dreamFound = true; shell.save() } // the title grows a 'Dream' item
+  dreamTunnel.noCancel = false // the sleeper standing up cancels THIS path
   dreamTunnel.begin('in', 1.4, () => {
     endIntro(true)
     if (mode === 'title') { shell.clear(); mode = 'game' }
@@ -189,6 +209,14 @@ const lobbyProvider = () => {
 }
 
 function applyNetEvent(ev) {
+  if (ev.ev === 'dreamStart') {
+    // F9: every peer tunnels into the same dream; seats follow the roster
+    // order the host dealt. Local human plays their seat on the P1 keys.
+    const seats = ev.seats ?? []
+    const mySeat = Math.max(0, seats.indexOf(net.myId ?? 0))
+    beginNetDream(ev.arena ?? 'beldam', seats.length, mySeat, seats.map((_, i) => i), ev.fids)
+    return
+  }
   if (ev.ev === 'kindle') {
     // your OWN kindle also arrives via the host broadcast — it must keep its
     // local feedback (glance-back, rumble, streak); only a PEER's is remote
@@ -244,6 +272,7 @@ const net = new Net({
   },
   getCatPos: () => (npcs.ghostCat?.state === 'follow' ? npcs.ghostCat.rig.group.position.toArray().map((v) => +v.toFixed(2)) : null),
   setCatTarget: (arr) => { npcs.catNetTarget = arr },
+  onFightInput: (m) => { if (!dream.netInput(m) && pendingFightFrames.length < 900) pendingFightFrames.push(m) }, // F9 lockstep frames (buffer the startup race)
   onPeerJoin: () => hud.say('another lantern joins the night.', 3.5),
   onPeerLeave: () => hud.say('a lantern drifts away, fireflies now.', 3.5),
   onHostLost: () => {
@@ -715,7 +744,7 @@ function tick() {
       }
     } else {
       dreamRest = 0
-      if (dreamTunnel.active && dreamTunnel.dir === 'in' && dreamTunnel.phase === 'close') dreamTunnel.cancel()
+      if (dreamTunnel.active && dreamTunnel.dir === 'in' && dreamTunnel.phase === 'close' && !dreamTunnel.noCancel) dreamTunnel.cancel()
     }
     // the woozy wink (4.1): warm bloom + gentle camera roll, then it passes
     if (winkT > 0) {
@@ -1010,6 +1039,15 @@ window.__MOONREST__ = {
     botDuel(a = 'lucid', b = 'dozy', ticks = 14400) { return dream.botDuel(a, b, ticks) },
     sceneCount() { return dream.scene?.children.length ?? -1 },
     itemsOn(on = true) { if (!dream.match) return false; dream.match.itemsOn = !!on; dream.match.critterOn = !!on; return true },
+    // F9: host deals a synchronized dream to every connected lantern
+    startOnline(arena = 'beldam') {
+      if (net.role !== 'host') return false
+      const seats = [net.myId ?? 0, ...net.remotes.keys()]
+      net.broadcastEvent({ ev: 'dreamStart', arena, seats })
+      return true
+    },
+    netHash(tick) { return dream.net?.hashes?.[tick] ?? null },
+    get netStalled() { return dream.net?.stalled ?? null },
     spawnItem(kind = 'floatleaf', x = 0) { if (!dream.match) return false; dream.match.items.push({ kind, x, y: 8, vy: 0, t: 0 }); return true },
     get lastShake() { return dream.lastShake ?? null },
   },

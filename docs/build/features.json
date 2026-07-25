@@ -1281,7 +1281,8 @@
     "4-context online capture",
     "desync check across contexts"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "Delay-based lockstep (4-tick input delay, in the 3-5f spec window) over the existing PeerJS layer: raw 'fi' frames bypass host validation (the deterministic sim referees on every peer), host relays client frames, bots recompute locally and never touch the wire. Host deals a synchronized dream via broadcastEvent('dreamStart'); seats follow roster order; each peer tunnels in. fightonline.mjs (two real browser contexts + local PeerJS broker, same client code as the public cloud): 10/10 \u2014 both peers enter, lockstep advances (peer tick delta 4), A's keys move A's fighter and B's REMOTE input moves seat 2 on A's sim, determinism heartbeats (state hash every 60 ticks: x/y/wooze/stocks/deep per fighter) IDENTICAL at every shared tick, stall count 2 on a local wire. The startup race (early bird's frames arriving before the slow peer's tunnel finishes) is buffered and flushed at enter. coopcheck 17/17 unchanged. DECISIONS: rollback out of scope per spec; Escape mid-online exits locally and peers stall (rematch flow F11); late-join spectator fireflies deferred to F11's lobby."
   },
   {
    "id": "FIGHT-F10",

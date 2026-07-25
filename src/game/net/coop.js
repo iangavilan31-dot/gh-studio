@@ -307,6 +307,8 @@ export class Net {
         this._broadcast({ ...m, id }, id)
       } else if (m.t === 'req') {
         this._hostValidate(conn._mrId, m)
+      } else if (m.t === 'fi') {
+        this._onFightFrame(m, conn)
       }
     })
     conn.on('close', () => this._drop(conn._mrId))
@@ -356,6 +358,19 @@ export class Net {
     this.h.applyEvent(ev)
   }
 
+  // ═══ F9: DREAMSCRAP lockstep input channel — raw 'fi' frames bypass host
+  // validation (inputs are opinions, not authority; the deterministic sim
+  // is the referee on every peer). Host relays client frames to the rest. ═══
+  sendFightInput(m) {
+    if (this.role === 'client') { if (this.hostConn?.open) this.hostConn.send({ t: 'fi', ...m }) }
+    else if (this.role === 'host') this._broadcast({ t: 'fi', ...m })
+  }
+
+  _onFightFrame(m, fromConn) {
+    if (this.role === 'host' && fromConn) this._broadcast({ t: 'fi', tick: m.tick, seat: m.seat, inp: m.inp }, fromConn._mrId)
+    this.h.onFightInput?.(m)
+  }
+
   // client → host request (host applies its own actions directly via broadcastEvent)
   request(ev) {
     if (this.role === 'client') { if (this.hostConn?.open) this.hostConn.send({ t: 'req', ...ev }) }
@@ -389,6 +404,7 @@ export class Net {
       if (m.cat) this.h.setCatTarget?.(m.cat)
     }
     else if (m.t === 'ev') this.h.applyEvent(m)
+    else if (m.t === 'fi') this._onFightFrame(m, null)
     else if (m.t === 'nt') this.h.night.targetMinutes = m.v // slewed in update()
     else if (m.t === 'peer+') { this._addRemote(m.id, m.name, m.tint); this.roster.set(m.id, { name: m.name, tint: m.tint }); this.h.onPeerJoin?.(m) }
     else if (m.t === 'peer-') { this.roster.delete(m.id); this._fade(m.id) }
