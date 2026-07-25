@@ -858,6 +858,26 @@ class DreamMode {
     // bots fill the seats nobody's sitting in (Part 6): {id: 'dozy'|'awake'|'lucid'}
     this.bots = new Map()
     for (const [bid, level] of Object.entries(opts.bots ?? {})) this.bots.set(+bid, makeBot(level, +bid))
+    // ═══ F9: delay-based lockstep (DECISIONS: rollback out of scope). Human
+    // inputs travel the wire DELAY ticks ahead; tick T only executes once
+    // every human seat's input for T is in hand; bots recompute identically
+    // on every peer and never touch the wire. ═══
+    this.net = opts.net
+      ? {
+        seat: opts.net.seat, delay: opts.net.delay ?? 4, send: opts.net.send,
+        humanSeats: opts.net.humanSeats ?? [0, 1],
+        queues: new Map(), sentThrough: -1, hashes: {}, stalled: 0,
+      }
+      : null
+    if (this.net) {
+      // the first DELAY ticks sail on empty inputs, both sides agree
+      for (let t = 0; t < this.net.delay; t++) {
+        const q = {}
+        for (const hs of this.net.humanSeats) q[hs] = {}
+        this.net.queues.set(t, q)
+      }
+      this.net.sentThrough = this.net.delay - 1
+    }
     this._buildHud(players)
     this.active = true
     return true
@@ -967,6 +987,61 @@ class DreamMode {
         this.shake = { ampM, ticks: e.shakeTicks ?? 6, left: e.shakeTicks ?? 6, seed: (e.d ?? 0) * 7 + (this.match?.tick ?? 0) % 13 }
         this.lastShake = { amp01: e.shake ?? 0.4, ampM: +ampM.toFixed(4), ticks: e.shakeTicks ?? 6, capM: +(0.006 * visH).toFixed(4), reduced: !!reduced }
       }
+    }
+  }
+
+  // a remote human's input frame arrives (any order, any timing).
+  // Returns false when there's no live net-match to queue into — the
+  // caller buffers those (peers' tunnels finish at slightly different
+  // moments, and the early bird's first frames must not be lost).
+  netInput(m) {
+    if (!this.net || !this.active) return false
+    let q = this.net.queues.get(m.tick)
+    if (!q) { q = {}; this.net.queues.set(m.tick, q) }
+    if (q[m.seat] === undefined) q[m.seat] = m.inp ?? {}
+    return true
+  }
+
+  _netStep() {
+    const N = this.net
+    const t = this.match.tick
+    // send local input for t+delay (exactly once per future tick)
+    while (N.sentThrough < t + N.delay) {
+      const ft = N.sentThrough + 1
+      const inp = this._localNetInput()
+      let q = N.queues.get(ft)
+      if (!q) { q = {}; N.queues.set(ft, q) }
+      q[N.seat] = inp
+      N.send?.({ tick: ft, seat: N.seat, inp })
+      N.sentThrough = ft
+    }
+    const q = N.queues.get(t)
+    for (const hs of N.humanSeats) if (!q || q[hs] === undefined) { N.stalled++; return false } // wait for the wire
+    const inputs = { ...q }
+    for (const [bid, bot] of this.bots) inputs[bid] = bot(this.match) // deterministic on every peer
+    this._consumeEvents(stepMatch(this.match, inputs))
+    N.queues.delete(t)
+    // a determinism heartbeat every second: peers compare these in the gate
+    if (this.match.tick % 60 === 0) {
+      N.hashes[this.match.tick] = this.match.fighters
+        .map((f) => `${f.id}:${f.x.toFixed(3)},${f.y.toFixed(3)},${f.wooze},${f.stocks},${f.deep.toFixed(1)}`)
+        .join('|')
+    }
+    return true
+  }
+
+  // online, the local human always plays on the P1 keys whatever their seat
+  _localNetInput() {
+    const inp = this.liveInput
+    if (!inp) return {}
+    return {
+      x: (inp.down('KeyD') ? 1 : 0) - (inp.down('KeyA') ? 1 : 0),
+      down: inp.down('KeyS'),
+      jump: inp.down('KeyW', 'Space'),
+      light: inp.down('KeyF'),
+      heavy: inp.down('KeyG'),
+      toss: inp.down('KeyH'),
+      special: inp.down('KeyR'),
     }
   }
 
@@ -1146,9 +1221,13 @@ class DreamMode {
       this.acc = Math.min(this.acc + dt, 0.25)
       while (this.acc >= TICK) {
         this.acc -= TICK
-        const inputs = this._liveSnapshot()
-        for (const [bid, bot] of this.bots) inputs[bid] = bot(this.match) // per-TICK: lockstep-legal
-        this._consumeEvents(stepMatch(this.match, inputs))
+        if (this.net) {
+          if (!this._netStep()) { this.acc = 0; break } // stall for the wire
+        } else {
+          const inputs = this._liveSnapshot()
+          for (const [bid, bot] of this.bots) inputs[bid] = bot(this.match) // per-TICK: lockstep-legal
+          this._consumeEvents(stepMatch(this.match, inputs))
+        }
       }
     }
     // render-dt presentation: particles DRIFT through hitstop (Part 5)

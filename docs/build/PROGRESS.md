@@ -639,3 +639,9 @@ chicken, all deterministic, live-match-only so gates and the bracket
 stay pure. 9 new gates green; items.png reads.
 NEXT: F9 online lockstep; F10 perf; F11 lobby+rematch; F12 comedy;
 FIGHT_JUDGE x2. Re-read DREAMSCRAP_PASS.md after compaction.
+
+## FIGHT-F9 COMPLETE — distant homies, one dream
+4-tick delay lockstep over PeerJS, real two-context gate 10/10 with
+identical determinism heartbeats. Startup race buffered. coopcheck
+17/17 untouched. DECISIONS #10 records the rollback scoping.
+NEXT: F10 perf; F11 lobby/rematch/trophies; F12 comedy; FIGHT_JUDGE x2.

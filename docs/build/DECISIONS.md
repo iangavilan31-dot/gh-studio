@@ -180,3 +180,17 @@ run on a 2020 laptop should confirm; flagged in the Morning Report.
    sim pauses during a dream (audio beds crossfade); no waking system gains
    combat verbs — integration law Part 7 enforced structurally by keeping
    all fight code under src/game/dream/.
+
+## 10. DREAMSCRAP online is delay-based lockstep, not rollback
+Part 6 allows 3-5 frames of input delay and explicitly scopes rollback
+out. We run 4 ticks of delay over the existing PeerJS room: every human
+seat's input for tick T must be in hand before T executes; bots and
+items recompute identically on every peer and never touch the wire. The
+deterministic fixed-step sim (DECISIONS #8) is what makes this a page of
+code instead of a subsystem. Verified end-to-end against a local PeerJS
+broker with per-second state-hash heartbeats compared across two real
+browser contexts. Known small holes, accepted and documented: a local
+Escape exits only locally (peers stall until they leave too — the F11
+rematch menu is the proper door), and net.update's waking keepalives
+pause while dreaming (both peers dream together, so nobody is listening
+for them anyway).
