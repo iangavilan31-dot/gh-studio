@@ -551,6 +551,7 @@ function makeDreamRig(fid, idx) {
       const rig = buildWizard({ tint: '#20242e', withStaff: false })
       rig.group.scale.setScalar(1.12) // tall
       rig.bones.hat.visible = false // no pointed hat — a hood instead
+      rig.bones.legL.visible = false; rig.bones.legR.visible = false // a wraith has no feet
       // a deep hood draping over the head and shoulders (wraith silhouette)
       const hoodMat = retroMaterial({ map: TEX.white(), emissive: 0x141420 })
       const hood = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.62, 8), hoodMat)
@@ -559,6 +560,15 @@ function makeDreamRig(fid, idx) {
       const cowl = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.4, 8, 1, true), hoodMat)
       ensureVertexColors(cowl.geometry, [0.09, 0.1, 0.15])
       cowl.position.set(0, -0.06, 0); rig.bones.head.add(cowl)
+      // a flared, tattered ghost-TAIL instead of legs — it hangs and frays to
+      // a point, so the Watcher reads as a tall floating wraith in silhouette
+      const tailMat = retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.92, depthWrite: false, emissive: 0x141824 })
+      const tail = new THREE.Mesh(new THREE.ConeGeometry(0.32, 0.95, 7), tailMat)
+      ensureVertexColors(tail.geometry, [0.12, 0.14, 0.2])
+      tail.position.set(0, -0.62, 0); rig.bones.hips.add(tail)
+      const tailTip = new THREE.Mesh(new THREE.ConeGeometry(0.14, 0.5, 6), tailMat)
+      ensureVertexColors(tailTip.geometry, [0.1, 0.11, 0.16])
+      tailTip.position.set(0, -1.05, 0); rig.bones.hips.add(tailTip)
       const wisp = glowQuad('#8f7cd8', 2.3, 3.2, 0.34)
       wisp.position.set(0, 0.95, -0.12)
       rig.group.add(wisp)
@@ -566,8 +576,14 @@ function makeDreamRig(fid, idx) {
     }
     case 'beldam': {
       const rig = buildWizard({ tint: '#3a4258', beardLength: 0.62, withStaff: false })
-      rig.group.scale.set(1.02, 0.86, 1.02) // short and stout
+      rig.group.scale.set(1.06, 0.82, 1.06) // short and stout
       rig.bones.hat.scale.set(1.7, 0.62, 1.7) // wide floppy brim, flopped low
+      // a round pot-BELLY — the drunken master's unmistakable stout barrel
+      // silhouette, quite unlike the tall keeper or the flaring wraith
+      const bellyMat = retroMaterial({ map: TEX.white(), emissive: 0x1a2030 })
+      const belly = mesh(new THREE.SphereGeometry(0.3, 9, 7), bellyMat, [0.24, 0.28, 0.37])
+      belly.scale.set(1.35, 1.05, 1.15); belly.position.set(0, -0.05, 0.1)
+      rig.bones.spine.add(belly)
       const glass = retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.9, emissive: 0x3a7858 })
       const bottle = mesh(new THREE.CylinderGeometry(0.08, 0.105, 0.36, 6), glass, [0.6, 0.95, 0.72])
       bottle.position.set(0, -0.36, 0.08)
