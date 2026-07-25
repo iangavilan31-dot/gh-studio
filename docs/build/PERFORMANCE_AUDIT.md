@@ -21,3 +21,16 @@ contention-proof.
 - Dream scene draw calls (F1 blockout): trivial. Budget tracking begins
   when fighters+items+hazards land (F5/F6); MOONREST budgets apply
   unchanged (≤150 calls, ≤250k tris).
+
+## F2 impact record (all tick-measured, FIGHTFEEL PASS 29/29)
+- hitstop: light 3 ticks = 50ms (∈40–70) · heavy 6 ticks = 100ms (∈80–130);
+  BOTH parties frozen (positions bit-identical through the freeze) ✓
+- knockback: heavy 10.72 vs light 5.18 at first blood; growth verified
+  5.18 → 5.96 across a wooze-building exchange ✓
+- DI-lite: launch angle 64.4° (hold toward) vs 24.4° (hold away) = ±20°
+  exactly, measured from the launch event's own angle ✓
+- landing lag by move weight: aerial light 3 ticks, aerial heavy 7 (∈2–8) ✓
+- toss: grab in 1.25m reach; fresh escape ≈5 mashes; need grows
+  +1 per 20 wooze ✓ (hits break grabs; the Chicken will be ungrabbable)
+- screenshake: amp01→meters capped at 0.6% of visible frame height
+  (0.047m ≤ 0.070m cap), ≤12 ticks = 200ms, reduced-motion zeroes it ✓

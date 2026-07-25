@@ -145,7 +145,7 @@ class DreamMode {
     return true
   }
 
-  // live P1 mapping (couch spec: WASD + F/G) — snapshot per sim tick
+  // live P1 mapping (couch spec: WASD + F/G; H tosses) — snapshot per tick
   _liveSnapshot() {
     const inp = this.liveInput
     if (!inp) return {}
@@ -156,15 +156,32 @@ class DreamMode {
         down: inp.down('KeyS'),
         jump: inp.down('KeyW', 'Space'),
         light: inp.down('KeyF'),
-        special: inp.down('KeyG'),
+        heavy: inp.down('KeyG'),
+        toss: inp.down('KeyH'),
       },
+    }
+  }
+
+  // Part 5 impact presentation: hitstop freezes fighters (sim-side), the
+  // CAMERA shakes with knockback — capped at 0.6% of the visible frame
+  // height, ≤200ms, and fully disabled by reduced motion.
+  _consumeEvents(events) {
+    for (const e of events) {
+      if (e.t === 'hit' || e.t === 'throw') {
+        const reduced = typeof window !== 'undefined' && window.__REDUCED_MOTION__
+        const visH = 2 * 17 * Math.tan((this.camera?.fov ?? 38) * Math.PI / 360)
+        const ampM = reduced ? 0 : (e.shake ?? 0.4) * 0.006 * visH
+        this.shake = { ampM, ticks: e.shakeTicks ?? 6, left: e.shakeTicks ?? 6, seed: (e.d ?? 0) * 7 + (this.match?.tick ?? 0) % 13 }
+        this.lastShake = { amp01: e.shake ?? 0.4, ampM: +ampM.toFixed(4), ticks: e.shakeTicks ?? 6, capM: +(0.006 * visH).toFixed(4), reduced: !!reduced }
+      }
     }
   }
 
   // one manual tick for the feel gates (DECISIONS #8)
   stepManual(inputsById = {}) {
     if (!this.active) return null
-    stepMatch(this.match, inputsById)
+    const events = stepMatch(this.match, inputsById)
+    this._consumeEvents(events)
     this._pose(TICK)
     return this.simState()
   }
@@ -177,6 +194,8 @@ class DreamMode {
         id: f.id, x: +f.x.toFixed(4), y: +f.y.toFixed(4), vx: +f.vx.toFixed(4), vy: +f.vy.toFixed(4),
         grounded: f.grounded, coyote: f.coyote, jumpsLeft: f.jumpsLeft, jumpBuf: f.jumpBuf,
         landlag: f.landlag, fastfall: f.fastfall, face: f.face, wooze: f.wooze, stocks: f.stocks,
+        hitstop: f.hitstop, move: f.move?.name ?? null, moveT: f.move?.t ?? 0, launched: f.launched,
+        grab: f.grab, grabbing: f.grabbing, mash: f.mash,
       })),
       events: this.match.events.slice(),
     }
@@ -191,6 +210,28 @@ class DreamMode {
       rig.group.rotation.y = f.face > 0 ? Math.PI / 2 : -Math.PI / 2
       advanceAnim(st, dt, Math.abs(f.vx), !f.grounded)
       applyPose(rig, st, 0)
+      // swing overlay (readability blockout; real move poses land in F4):
+      // the arm whips through the active window, wooze sways the idle
+      if (f.move) {
+        const A = { light: 15, heavy: 34 }[f.move.name] ?? 15
+        const ph = Math.min(1, f.move.t / A)
+        rig.bones.armR.rotation.x = -0.35 - Math.sin(ph * Math.PI) * (f.move.name === 'heavy' ? 2.4 : 1.7)
+      }
+      if (f.wooze > 0) {
+        const sway = Math.min(0.22, f.wooze * 0.0022)
+        rig.bones.spine.rotation.z += Math.sin((this.match.tick + f.id * 17) * 0.11) * sway
+      }
+    }
+    // camera shake decay (presentation only)
+    if (this.shake && this.shake.left > 0 && this.camera) {
+      const s = this.shake
+      s.left--
+      const k = s.left / s.ticks
+      const n = Math.sin(s.seed + s.left * 2.7) * s.ampM * k
+      const n2 = Math.cos(s.seed * 1.3 + s.left * 3.1) * s.ampM * k * 0.6
+      this.camera.position.set(n, 3.4 + n2, 17)
+    } else if (this.camera) {
+      this.camera.position.set(0, 3.4, 17)
     }
   }
 
@@ -200,7 +241,7 @@ class DreamMode {
       this.acc = Math.min(this.acc + dt, 0.25)
       while (this.acc >= TICK) {
         this.acc -= TICK
-        stepMatch(this.match, this._liveSnapshot())
+        this._consumeEvents(stepMatch(this.match, this._liveSnapshot()))
       }
     }
     this._pose(dt)
