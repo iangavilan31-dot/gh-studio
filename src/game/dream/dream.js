@@ -374,9 +374,12 @@ class DreamMode {
         hitstop: f.hitstop, move: f.move?.name ?? null, moveT: f.move?.t ?? 0, launched: f.launched,
         grab: f.grab, grabbing: f.grabbing, mash: f.mash, ko: f.ko, invuln: f.invuln,
         deep: +f.deep.toFixed(2), armorT: f.armorT, ghostT: f.ghostT, slowFallT: f.slowFallT,
+        superFx: f.superFx ? { kind: f.superFx.kind, t: f.superFx.t } : null,
       })),
       over: !!this.match.over, winner: this.match.winner ?? null,
       projs: this.match.projs.map((p) => ({ kind: p.kind, x: +p.x.toFixed(3), y: +p.y.toFixed(3), vx: +p.vx.toFixed(3), turned: !!p.turned })),
+      hazards: this.match.hazards.map((h) => ({ kind: h.kind, x: +h.x.toFixed(3), y: +h.y.toFixed(3), warn: h.warn, t: h.t })),
+      lightsOutT: this.match.lightsOutT,
       events: this.match.events.slice(),
     }
   }

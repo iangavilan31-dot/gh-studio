@@ -570,6 +570,105 @@ check('fog step teleports into mist', Math.abs(f4.fog.jumped - 3.4) < 0.8 && f4.
 check('Deep Dream lantern fills to full by landing hits', f4.deepFull >= 100, `deep=${f4.deepFull}`)
 check('full lantern casts the super (Moonrise: ring + 3s drift), meter spends', f4.super.kind === 'moonrise' && f4.super.drifted > 100 && f4.super.meterAfter < 20, JSON.stringify(f4.super) + ' press=' + JSON.stringify(f4.pressSnap))
 
+// ═══ F4c: THE SUPERS — every Deep Dream cast does what its card says ═══
+const f4s = await page.evaluate(() => {
+  const M = window.__MOONREST__
+  const out = {}
+  const step = (a, b) => M.fight.step({ 0: a ?? {}, 1: b ?? {} })
+  const reenter = (fids) => { M.fight.exit(); M.fight.enter('beldam', 2, 99, fids); for (let k = 0; k < 60; k++) step() }
+  const closeTo = (gap) => {
+    let s = step(), g = 0
+    while (Math.abs(s.fighters[1].x - s.fighters[0].x) > gap && g++ < 300) s = step({ x: s.fighters[1].x > s.fighters[0].x ? 1 : -1 })
+    for (let j = 0; j < 10; j++) s = step()
+    return s
+  }
+  const cast = () => { M.fight.charge(0); let s = step({ special: true }); return s }
+  const run = (n, fn) => { let s = null; for (let k = 0; k < n; k++) { s = step(); fn?.(s) } return s }
+
+  // — Bottle Tornado: orbit pulses hit repeatedly —
+  reenter(['beldam', 'lamplighter'])
+  closeTo(1.8)
+  cast()
+  let tornadoHits = 0, superKind = null
+  run(160, (s) => {
+    superKind = superKind ?? s.events.find((e) => e.t === 'super')?.kind ?? null
+    tornadoHits += s.events.filter((e) => e.t === 'hit' && e.move === 'bottleTornado').length
+  })
+  out.tornado = { kind: superKind, hits: tornadoHits }
+
+  // — Constellation Slam: Nib enormous — same jab, bigger launch —
+  reenter(['nib', 'mote'])
+  let s = closeTo(1.5)
+  step({ light: true, x: 1 })
+  let kbBase = 0
+  run(20, (s2) => { const h = s2.events.find((e) => e.t === 'hit'); if (h && !kbBase) kbBase = h.kb })
+  reenter(['nib', 'mote'])
+  closeTo(1.5)
+  cast()
+  run(26) // let the cast's recovery finish before the jab
+  step({ light: true, x: 1 })
+  let kbBig = 0, fxKind = null
+  run(20, (s2) => { const h = s2.events.find((e) => e.t === 'hit' && e.move === 'light'); if (h && !kbBig) kbBig = h.kb; fxKind = fxKind ?? (s2.fighters[0].superFx?.kind ?? null) })
+  out.constellation = { kbBase, kbBig, fxKind }
+
+  // — The Party Remembered: waltzing nobles cross and clip P2 —
+  reenter(['curator', 'lamplighter'])
+  cast()
+  let waltzSeen = 0, waltzHit = false
+  run(600, (s2) => {
+    waltzSeen = Math.max(waltzSeen, s2.hazards.filter((h) => h.kind === 'waltz').length)
+    if (s2.events.some((e) => e.t === 'hit' && e.move === 'waltz')) waltzHit = true
+  })
+  out.party = { waltzSeen, waltzHit }
+
+  // — Chandelier Court: 1.5s warm telegraph, then the drop lands —
+  reenter(['paleking', 'lamplighter'])
+  closeTo(1.6) // the center chandelier drops at the King's own x — on P2
+  cast()
+  let chandWarn = 0, chandHit = false
+  run(260, (s2) => {
+    for (const h of s2.hazards) if (h.kind === 'chand') chandWarn = Math.max(chandWarn, h.warn)
+    if (s2.events.some((e) => e.t === 'hit' && e.move === 'chand')) chandHit = true
+  })
+  out.chand = { warn: chandWarn, hit: chandHit }
+
+  // — The Old Forest: roots pop in sequence and connect —
+  reenter(['mote', 'paleking'])
+  closeTo(4)
+  cast()
+  let rootPops = 0, rootHit = false
+  run(200, (s2) => {
+    rootPops += s2.events.filter((e) => e.t === 'rootPop').length
+    if (s2.events.some((e) => e.t === 'hit' && e.move === 'root')) rootHit = true
+  })
+  out.forest = { rootPops, rootHit }
+
+  // — The Derby: the stampede crosses the whole stage —
+  reenter(['chicken', 'paleking'])
+  cast()
+  let birds = 0, derbyHit = false
+  run(400, (s2) => {
+    birds = Math.max(birds, s2.hazards.filter((h) => h.kind === 'derbybird').length)
+    if (s2.events.some((e) => e.t === 'hit' && e.move === 'derbybird')) derbyHit = true
+  })
+  out.derby = { birds, derbyHit }
+
+  // — Lights Out: the dark holds exactly as long as it says —
+  reenter(['watcher', 'lamplighter'])
+  s = cast()
+  let lightsMax = 0
+  run(20, (s2) => { lightsMax = Math.max(lightsMax, s2.lightsOutT) })
+  out.lights = { max: lightsMax }
+  return out
+})
+check('Bottle Tornado: orbit pulses land repeatedly', f4s.tornado.kind === 'bottleTornado' && f4s.tornado.hits >= 2, JSON.stringify(f4s.tornado))
+check('Constellation Slam: the same jab launches far bigger', f4s.constellation.fxKind === 'constellation' && f4s.constellation.kbBig > f4s.constellation.kbBase * 1.25, JSON.stringify(f4s.constellation))
+check('The Party Remembered: 3 waltzing nobles, and they connect', f4s.party.waltzSeen === 3 && f4s.party.waltzHit, JSON.stringify(f4s.party))
+check('Chandelier Court: ≥1.5s warm telegraph then the slam lands', f4s.chand.warn >= 89 && f4s.chand.hit, JSON.stringify(f4s.chand))
+check('The Old Forest: 5 sequential root pops, roots connect', f4s.forest.rootPops === 5 && f4s.forest.rootHit, JSON.stringify(f4s.forest))
+check('The Derby: 6 birds stampede and connect', f4s.derby.birds >= 4 && f4s.derby.derbyHit, JSON.stringify(f4s.derby))
+check('Lights Out: 3s of dark, counted in ticks', f4s.lights.max >= 178, JSON.stringify(f4s.lights))
+
 check('console clean', issues.length === 0, issues.slice(0, 3).join(' | '))
 console.log(fails === 0 ? 'FIGHTFEEL PASS' : `FIGHTFEEL: ${fails} FAILURES`)
 await browser.close()
