@@ -300,6 +300,9 @@ await superShot('super-roots', ['mote', 'paleking'], `${CLOSE}
 await superShot('super-lightsout', ['watcher', 'lamplighter'], `${CLOSE}
   M.fight.charge(0); step({ special: true })
   for (let k = 0; k < 40; k++) step()`)
+await superShot('super-moonrise', ['lamplighter', 'beldam'], `${CLOSE}
+  M.fight.charge(0); step({ special: true })
+  for (let k = 0; k < 95; k++) step()`)
 await superShot('special-dart', ['lamplighter', 'beldam'], `
   let s = step(), g = 0
   while (Math.abs(s.fighters[1].x - s.fighters[0].x) > 6.5 && g++ < 300) s = step({ x: s.fighters[1].x > s.fighters[0].x ? 1 : -1 })
