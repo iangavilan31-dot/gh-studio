@@ -261,9 +261,11 @@ await page.evaluate(() => {
 })
 await shot('nightmare-forest')
 
-// ——— the supers, seen (F4 presentation evidence) ———
-const superShot = async (name, fids, prep) => {
-  await page.evaluate(([f]) => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('beldam', 2, 99, f) }, [fids])
+// ——— the supers, seen (F4 presentation evidence) — each on its OWN dream
+// where one exists, so the reel isn't eight shots of the same dark bench
+// (judge pass 6, finding 8) ———
+const superShot = async (name, fids, prep, arena = 'beldam') => {
+  await page.evaluate(([f, a]) => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter(a, 2, 99, f) }, [fids, arena])
   await page.waitForTimeout(700)
   await page.evaluate(`(() => {
     const M = window.__MOONREST__
@@ -284,25 +286,27 @@ await superShot('super-tornado', ['beldam', 'lamplighter'], `${CLOSE}
   for (let k = 0; k < 46; k++) step()`)
 await superShot('super-chandeliers', ['paleking', 'lamplighter'], `${CLOSE}
   M.fight.charge(0); step({ special: true })
-  for (let k = 0; k < 128; k++) step()`)
+  for (let k = 0; k < 128; k++) step()`, 'paleking')
 await superShot('super-derby', ['chicken', 'paleking'], `
   M.fight.charge(0); step({ special: true })
-  for (let k = 0; k < 138; k++) step()`) // the whole flock inside ±9 of center
+  for (let k = 0; k < 138; k++) step()`, 'chicken') // the whole flock inside ±9 of center
 await superShot('super-constellation', ['nib', 'mote'], `${CLOSE}
   M.fight.charge(0); step({ special: true })
-  for (let k = 0; k < 60; k++) step()`)
+  for (let k = 0; k < 60; k++) step()`, 'nib')
 await superShot('super-party', ['curator', 'lamplighter'], `
   M.fight.charge(0); step({ special: true })
-  for (let k = 0; k < 235; k++) step()`)
+  for (let k = 0; k < 235; k++) step()`, 'curator')
 await superShot('super-roots', ['mote', 'paleking'], `${CLOSE}
   M.fight.charge(0); step({ special: true })
-  for (let k = 0; k < 78; k++) step()`)
+  for (let k = 0; k < 78; k++) step()`, 'mote')
 await superShot('super-lightsout', ['watcher', 'lamplighter'], `${CLOSE}
   M.fight.charge(0); step({ special: true })
-  for (let k = 0; k < 40; k++) step()`)
+  for (let k = 0; k < 40; k++) step()`, 'curator')
+// Moonrise: catch it at the CREST — the moon high behind the caster and the
+// knockback ring blooming (rise < ~0.45 → ~tick 105 of the 180-tick super)
 await superShot('super-moonrise', ['lamplighter', 'beldam'], `${CLOSE}
   M.fight.charge(0); step({ special: true })
-  for (let k = 0; k < 95; k++) step()`)
+  for (let k = 0; k < 120; k++) step()`, 'chicken')
 await superShot('special-dart', ['lamplighter', 'beldam'], `
   let s = step(), g = 0
   while (Math.abs(s.fighters[1].x - s.fighters[0].x) > 6.5 && g++ < 300) s = step({ x: s.fighters[1].x > s.fighters[0].x ? 1 : -1 })
