@@ -1257,7 +1257,8 @@
     "roundrobin log in docs/build/",
     "winrate bounds gate PASS"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "Bots: src/game/dream/bots.js \u2014 pure functions over match state (dnoise only, lockstep-legal), three levels: Dozy (drops 2/3 of ticks, no jumps/DI), Awake (the certified F3 driver promoted: approach/face/pulse/drop/recover), Lucid (+survival DI, fast-fall pursuit, shelf pathing, spends supers). Gates: Lucid beats Dozy 4/5 across roster casts and 5/5 from the other seat; Awake beats Dozy 3/5; all matches finish (fightfeel 58 checks x2). Awake bot fills seat 2 on every sleep-emote entry (the dreamer fights back) \u2014 f0flow 11/11 re-verified. Balance round-robin (scripts/balance.mjs, pure node over the sim, 8 fighters x 20 matches/pair = 560 matches, ZERO draws): all within 40-60% \u2014 lamplighter/beldam/nib 47.1, curator 59.3, paleking 52.9, mote 52.9, chicken 42.9 (still the fastest hands in the dream; nobody says so), watcher 50.7. The bracket caught three REAL sim bugs the feel gates missed: grab-frozen super recast (1278 Moonrises), hitstop-thaw edge re-fire (3859 darts), and buffered-jump beating drop-through (a bot pogoed on the jar shelf for 4 sim-minutes). All three fixed in fightsim with the full suite green x2."
   },
   {
    "id": "FIGHT-F8",

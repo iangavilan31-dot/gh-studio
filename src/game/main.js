@@ -129,7 +129,9 @@ function beginDreamEntry(arenaId) {
   dreamTunnel.begin('in', 1.4, () => {
     endIntro(true)
     if (mode === 'title') { shell.clear(); mode = 'game' }
-    dream.enter(arenaId, 2, input)
+    // the dreamer fights back: an Awake bot holds seat 2 until couch/online
+    // seat-filling lands with F8/F9
+    dream.enter(arenaId, 2, input, { bots: { 1: 'awake' } })
   })
   return true
 }
@@ -1005,6 +1007,7 @@ window.__MOONREST__ = {
     step(inputsById = {}) { return dream.stepManual(inputsById) },
     state() { return dream.simState() },
     charge(id = 0) { const f = dream.match?.fighters?.[id]; if (f) f.deep = 100; return !!f }, // gate rig: full lantern
+    botDuel(a = 'lucid', b = 'dozy', ticks = 14400) { return dream.botDuel(a, b, ticks) },
     get lastShake() { return dream.lastShake ?? null },
   },
   // — F0 entry/exit test surface (tunnel timing is wall-clock, not ticks) —

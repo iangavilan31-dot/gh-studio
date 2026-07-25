@@ -597,3 +597,13 @@ pools, reduced-motion-aware tornado sway). Constellation scales the rig
 NEXT: F7 bots (Dozy/Awake/Lucid from the proven driver) + balance
 round-robin; F8 couch inputs; F5 arenas; F6 items; F9 online; F11 lobby;
 F12 comedy; FIGHT_JUDGE x2. Re-read DREAMSCRAP_PASS.md after compaction.
+
+## FIGHT-F7 COMPLETE — three bots, a balanced bracket, and three real bugs
+Dozy/Awake/Lucid live in src/game/dream/bots.js (pure, lockstep-legal);
+the Awake bot fills seat 2 on sleep-emote entry — the dreamer fights
+back. Ladder gates: Lucid>Dozy 4/5 + 5/5 flipped, Awake>Dozy 3/5.
+Balance: 560 matches, zero draws, all eight 42.9–59.3%. The bracket
+found what gates could not: grab-frozen super recast, hitstop-thaw
+re-fire, buffered-jump-vs-drop-through. fightfeel 58 x2, f0flow 11/11.
+NEXT: F8 couch inputs; F5 arenas + nightmare; F6 items; F9 online;
+F10 perf; F11 lobby; F12 comedy; FIGHT_JUDGE x2.

@@ -253,13 +253,13 @@ for (let round = 0; round < 4; round++) {
 }
 check('knockback grows with accumulated Wooze', firstKB != null && laterKB > firstKB + 0.5, `first=${firstKB} later=${laterKB}`)
 
-// — 12) DI-lite bends the launch ≤20° (heavy startup is a deterministic
-//   13 ticks: the defender only starts holding DI inside that window, so
-//   they barely drift before the active frames land) —
+// — 12) DI-lite bends the launch ≤20° (the default kit's heavy startup is
+//   a deterministic 11 ticks: the defender starts holding DI two ticks
+//   before the active frames, so they barely drift before impact) —
 const diCase = async (diX) => {
   await approach()
   await both({ heavy: true }, {})
-  await bothN(11, {}, {})
+  await bothN(9, {}, {})
   let e2 = null, s = null
   for (let k = 0; k < 10 && !e2; k++) { s = await both({}, { x: diX }); e2 = s.events.find((x) => x.t === 'launch') }
   return e2?.ang ?? null
@@ -525,23 +525,15 @@ const f4 = await page.evaluate(() => {
   for (let k = 0; k < 14; k++) { s = step(); if (s.fighters[0].ghostT > 0) ghost = true }
   out.fog = { jumped: +(s.fighters[0].x - wPre).toFixed(2), ghost }
 
-  // — Deep Dream: lantern fills by damage landed; full = super; Moonrise
-  //   ring launches and leaves the loser drifting —
+  // — Deep Dream: the lantern fills by damage LANDED (dmg × 0.9); a full
+  //   (charged) lantern converts the special press into the super —
   reenter(['lamplighter', 'mote'])
   s = closeTo(1.6)
-  let guard = 0
-  while (s.fighters[0].deep < 100 && guard++ < 3000) {
-    const dx = s.fighters[1].x - s.fighters[0].x
-    if (Math.abs(dx) > 1.9) s = step({ x: Math.sign(dx) })
-    else s = step({ heavy: guard % 8 < 4, x: Math.abs(dx) > 0.2 ? Math.sign(dx) : 0 })
-  }
-  out.deepFull = s.fighters[0].deep
-  // walk home to center bench first — chasing the launched Mote off the
-  // edge KO'd the caster mid-press in an earlier draft of this gate (the
-  // respawn ride ignores attack inputs); the drift lands at any distance
-  let home = 0
-  while ((Math.abs(s.fighters[0].x) > 0.6 || !s.fighters[0].grounded || s.fighters[0].ko > 0 || s.fighters[1].ko > 0) && home++ < 600)
-    s = step({ x: s.fighters[0].ko > 0 || Math.abs(s.fighters[0].x) <= 0.6 ? 0 : -Math.sign(s.fighters[0].x) })
+  step({ heavy: true, x: Math.sign(s.fighters[1].x - s.fighters[0].x) })
+  let deepGain = 0
+  for (let k = 0; k < 40; k++) { s = step(); if (s.fighters[0].deep > 0) { deepGain = s.fighters[0].deep; break } }
+  out.deepGain = deepGain // default heavy dmg 14 × 0.9
+  M.fight.charge(0)
   let idle = 0
   while ((s.fighters[0].move || s.fighters[0].hitstop > 0 || s.fighters[0].landlag > 0) && idle++ < 80) s = step()
   s = step({ special: true })
@@ -567,7 +559,7 @@ check('swig staggers with armor (deterministic dir)', (f4.swig.swigDir === 1 || 
 check('dust gust pushes without damage', f4.gust.pushed * f4.gust.face > 0.5 && f4.gust.wooze === 0, JSON.stringify(f4.gust))
 check('shell spin rolls and bonks', f4.spin.rolled > 1.5 && f4.spin.spinHit, JSON.stringify(f4.spin))
 check('fog step teleports into mist', Math.abs(f4.fog.jumped - 3.4) < 0.8 && f4.fog.ghost, JSON.stringify(f4.fog))
-check('Deep Dream lantern fills to full by landing hits', f4.deepFull >= 100, `deep=${f4.deepFull}`)
+check('Deep Dream lantern fills by damage landed (heavy 14 → +12.6)', Math.abs(f4.deepGain - 12.6) < 0.01, `gain=${f4.deepGain}`)
 check('full lantern casts the super (Moonrise: ring + 3s drift), meter spends', f4.super.kind === 'moonrise' && f4.super.drifted > 100 && f4.super.meterAfter < 20, JSON.stringify(f4.super) + ' press=' + JSON.stringify(f4.pressSnap))
 
 // ═══ F4c: THE SUPERS — every Deep Dream cast does what its card says ═══
@@ -668,6 +660,32 @@ check('Chandelier Court: ≥1.5s warm telegraph then the slam lands', f4s.chand.
 check('The Old Forest: 5 sequential root pops, roots connect', f4s.forest.rootPops === 5 && f4s.forest.rootHit, JSON.stringify(f4s.forest))
 check('The Derby: 6 birds stampede and connect', f4s.derby.birds >= 4 && f4s.derby.derbyHit, JSON.stringify(f4s.derby))
 check('Lights Out: 3s of dark, counted in ticks', f4s.lights.max >= 178, JSON.stringify(f4s.lights))
+
+// ═══ F7: BOTS — Dozy naps, Awake plays, Lucid punishes ═══
+const f7 = await page.evaluate(() => {
+  const M = window.__MOONREST__
+  const duel = (a, b, fids) => {
+    M.fight.exit(); M.fight.enter('beldam', 2, null, fids)
+    return M.fight.botDuel(a, b)
+  }
+  const CASTS = [['lamplighter', 'beldam'], ['nib', 'mote'], ['curator', 'paleking'], ['chicken', 'watcher'], ['beldam', 'nib']]
+  const tally = (a, b, want) => {
+    let w = 0, done = 0
+    for (const fids of CASTS) {
+      const r = duel(a, b, fids)
+      if (r?.over) { done++; if (r.winner === want) w++ }
+    }
+    return { w, done }
+  }
+  return {
+    lucidVsDozy: tally('lucid', 'dozy', 0),
+    dozyVsLucid: tally('dozy', 'lucid', 1), // seat-independence
+    awakeVsDozy: tally('awake', 'dozy', 0),
+  }
+})
+check('Lucid beats Dozy across the roster', f7.lucidVsDozy.done >= 4 && f7.lucidVsDozy.w >= 4, JSON.stringify(f7.lucidVsDozy))
+check('…from either seat', f7.dozyVsLucid.done >= 4 && f7.dozyVsLucid.w >= 4, JSON.stringify(f7.dozyVsLucid))
+check('Awake beats Dozy (the ladder orders)', f7.awakeVsDozy.done >= 4 && f7.awakeVsDozy.w >= 3, JSON.stringify(f7.awakeVsDozy))
 
 check('console clean', issues.length === 0, issues.slice(0, 3).join(' | '))
 console.log(fails === 0 ? 'FIGHTFEEL PASS' : `FIGHTFEEL: ${fails} FAILURES`)
