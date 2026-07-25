@@ -221,9 +221,8 @@ class DreamMode {
 
   // ——— fighters ———
   _spawnFighters(n, opts = {}) {
-    const specs = [{ stocks: opts.stocks }, { stocks: opts.stocks }, { stocks: opts.stocks }, { stocks: opts.stocks }]
     for (let i = 0; i < n; i++) {
-      const f = makeFighter(i, specs[i])
+      const f = makeFighter(i, { stocks: opts.stocks, fid: opts.fids?.[i] })
       const [sx, sy] = this.match.arena.spawns[i]
       f.x = sx; f.y = sy
       f.face = sx > 0 ? -1 : 1
@@ -328,13 +327,15 @@ class DreamMode {
     return {
       tick: this.match.tick,
       fighters: this.match.fighters.map((f) => ({
-        id: f.id, x: +f.x.toFixed(4), y: +f.y.toFixed(4), vx: +f.vx.toFixed(4), vy: +f.vy.toFixed(4),
+        id: f.id, fid: f.fid, x: +f.x.toFixed(4), y: +f.y.toFixed(4), vx: +f.vx.toFixed(4), vy: +f.vy.toFixed(4),
         grounded: f.grounded, coyote: f.coyote, jumpsLeft: f.jumpsLeft, jumpBuf: f.jumpBuf,
         landlag: f.landlag, fastfall: f.fastfall, face: f.face, wooze: f.wooze, stocks: f.stocks,
         hitstop: f.hitstop, move: f.move?.name ?? null, moveT: f.move?.t ?? 0, launched: f.launched,
         grab: f.grab, grabbing: f.grabbing, mash: f.mash, ko: f.ko, invuln: f.invuln,
+        deep: +f.deep.toFixed(2), armorT: f.armorT, ghostT: f.ghostT, slowFallT: f.slowFallT,
       })),
       over: !!this.match.over, winner: this.match.winner ?? null,
+      projs: this.match.projs.map((p) => ({ kind: p.kind, x: +p.x.toFixed(3), y: +p.y.toFixed(3), vx: +p.vx.toFixed(3), turned: !!p.turned })),
       events: this.match.events.slice(),
     }
   }

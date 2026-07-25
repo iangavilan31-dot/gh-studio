@@ -569,3 +569,19 @@ Dream item + ≤4s tunnel, exit ≤3s, fully skippable); (2) F4 roster
 via makeFighter spec + specials); (3) F7 bots (fightfeel driver IS
 proto-Dozy); (4) arenas/items/couch/online/balance; (5) FIGHT_JUDGE ×2.
 Re-read docs/DREAMSCRAP_PASS.md + this entry after any compaction.
+
+## FIGHT-F4 sim half: eight kits, eight specials, the Deep Dream lantern
+fightsim grew the roster registry (per-fighter kinematics + attack tables,
+weight classes divide knockback, Nib 7.9 vs Mote 4.4 run speed), a shared
+applyHit (armor absorption, meter fill), projectiles (flame dart 8m,
+boomerang hat that hits on the way home), 8 specials (swig armor-stagger
+with dnoise determinism, dust gust positional push — ground friction ate
+a velocity push, gate caught it — cape sweep royal armor, shell spin,
+peck flurry multi-hit, fog step ghost, dart, hat) and the Deep Dream
+super path (fill by damage landed ×0.9, full lantern converts the special
+press; Moonrise ships: ring + 180-tick slow-fall). fightfeel now 48
+checks ×2 deterministic. Gate archaeology: the super gate itself KO'd
+its caster chasing Mote off the edge — respawn rides ignore attack
+inputs; the gate now walks home first. NEXT: F4 visual half (rigs per
+fighter from npc builders, specials presentation, distinctness shots) →
+flip F4; then remaining supers ride with F5 arenas; F7 bots.
