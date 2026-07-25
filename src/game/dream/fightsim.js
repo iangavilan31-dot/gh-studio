@@ -70,13 +70,13 @@ export const FIGHTERS = {
   paleking: {
     name: 'The Pale King', archetype: 'heavy, armored',
     spec: { runSpeed: 5.0, weight: 1.45, jumpVel: 10.8, accel: 38 },
-    attacks: { light: { dmg: 10, baseKB: 4.8, startup: 5 }, heavy: { dmg: 17, baseKB: 8.8, startup: 14, recovery: 20, range: 1.7 } },
+    attacks: { light: { dmg: 9, baseKB: 4.8, startup: 5 }, heavy: { dmg: 17, baseKB: 8.8, startup: 14, recovery: 20, range: 1.7 } },
     special: 'capeSweep', superKind: 'chandeliers',
   },
   mote: {
     name: 'Mote', archetype: 'tank; hits like a landslide',
     spec: { runSpeed: 4.4, airSpeed: 4.0, weight: 1.38, jumpVel: 10.6, accel: 30 },
-    attacks: { light: { dmg: 8, baseKB: 5.2, startup: 7, recovery: 11 }, heavy: { dmg: 15, baseKB: 8.8, startup: 19, recovery: 24, hitstop: 7 } }, // 7 ticks = 116ms, INSIDE the 80-130 law (8 broke it)
+    attacks: { light: { dmg: 8, baseKB: 5.0, startup: 7, recovery: 11 }, heavy: { dmg: 15, baseKB: 8.8, startup: 19, recovery: 24, hitstop: 7 } }, // 7 ticks = 116ms, INSIDE the 80-130 law (8 broke it)
     special: 'shellSpin', superKind: 'oldForest',
   },
   chicken: {
@@ -88,7 +88,7 @@ export const FIGHTERS = {
   watcher: {
     name: 'The Watcher', archetype: 'mirror-spacing wraith', secret: true,
     spec: { runSpeed: 7.0, airSpeed: 5.8, weight: 1.0, gravity: -26 },
-    attacks: { light: { startup: 3, dmg: 7, baseKB: 4.7 }, heavy: { startup: 12, dmg: 17 } },
+    attacks: { light: { startup: 3, dmg: 8, baseKB: 4.7 }, heavy: { startup: 12, dmg: 17 } },
     special: 'fogStep', superKind: 'lightsOut',
   },
 }

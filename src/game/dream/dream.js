@@ -38,7 +38,7 @@ const DREAMS = {
   //   and the rain falls upward. —
   beldam: {
     palette: { fog: '#16303a', skyUp: '#4a6a72', ambient: '#a7bcb9', stops: ['#060d18', '#0a1620', '#10242c', '#182f38', '#16303a'] },
-    nightmare: { fog: '#0a161c', skyUp: '#2a434e', ambient: '#798f8c', stops: ['#020508', '#040a10', '#081218', '#0c181e', '#0a161c'] },
+    nightmare: { fog: '#0d1c23', skyUp: '#304d5a', ambient: '#8ba3a0', stops: ['#03080c', '#060e15', '#0b171f', '#101e26', '#0d1c23'] },
     ambient: 'rainUp',
     arena: {
       solids: [{ x: 0, y: 0, w: 26, h: 3.2 }],
@@ -96,7 +96,7 @@ const DREAMS = {
   //   star-lines draw and undraw as temporary platforms (2s telegraph). —
   nib: {
     palette: { fog: '#1a1836', skyUp: '#4a4880', ambient: '#b2aede', stops: ['#080718', '#100e28', '#181540', '#242054', '#1a1836'] },
-    nightmare: { fog: '#0c0b1c', skyUp: '#2c2a59', ambient: '#817cac', stops: ['#030308', '#070610', '#0c0a1c', '#100e26', '#0c0b1c'] },
+    nightmare: { fog: '#0f0e24', skyUp: '#333066', ambient: '#928dc0', stops: ['#04040c', '#090815', '#0f0d24', '#14122e', '#0f0e24'] },
     ambient: { color: '#cfd8ff', vel: [0, -0.45], rate: 12, size: 0.09, alpha: 0.5 },
     arena: {
       solids: [{ x: -6, y: 0, w: 10, h: 3 }, { x: 6, y: 0, w: 10, h: 3 }],
@@ -124,19 +124,33 @@ const DREAMS = {
         const rim = glowQuad('#8f98e8', 9.5, 0.5, 0.3)
         rim.position.set(rx, 0.1, 1.7); scene.add(rim)
       }
-      // the constellation is ENORMOUS and it is watching
-      const pts = [[-14, 9], [-7, 13], [0, 10.5], [7, 14], [14, 9.5]]
-      for (const [sx, sy] of pts) {
-        const s = glowQuad('#e8ecff', 1.7, 1.7, 0.9)
-        s.position.set(sx, sy, -7); scene.add(s)
+      // the constellation is ENORMOUS and it is watching — stars the size
+      // of houses, lines you could walk (judge pass 2: two faint dots and
+      // a dim thread read as empty navy; the Big Sky must LOOK big)
+      const figure = (pts, starW, lineW, lineA) => {
+        for (const [sx, sy] of pts) {
+          const s = glowQuad('#e8ecff', starW, starW, 0.95)
+          s.position.set(sx, sy, -7); scene.add(s)
+        }
+        for (let i = 0; i < pts.length - 1; i++) {
+          const [ax, ay] = pts[i], [bx, by] = pts[i + 1]
+          const len = Math.hypot(bx - ax, by - ay)
+          const line = glowQuad('#aab4f0', len, lineW, lineA)
+          line.position.set((ax + bx) / 2, (ay + by) / 2, -7.1)
+          line.rotation.z = Math.atan2(by - ay, bx - ax)
+          scene.add(line)
+        }
       }
-      for (let i = 0; i < pts.length - 1; i++) {
-        const [ax, ay] = pts[i], [bx, by] = pts[i + 1]
-        const len = Math.hypot(bx - ax, by - ay)
-        const line = glowQuad('#9aa4e8', len, 0.14, 0.35)
-        line.position.set((ax + bx) / 2, (ay + by) / 2, -7.1)
-        line.rotation.z = Math.atan2(by - ay, bx - ax)
-        scene.add(line)
+      // low enough that the fight camera actually SEES it (target y ~2.4,
+      // visible band tops out near y 8 — stars at y 13 played to nobody)
+      figure([[-14, 6.6], [-7, 9.2], [0, 7.4], [7, 9.6], [14, 6.9]], 2.6, 0.32, 0.6)
+      // a second, smaller watcher low on the right shoulder of the sky
+      figure([[10, 5.2], [13.5, 6.8], [16, 4.6], [12.5, 3.4]], 1.5, 0.2, 0.45)
+      // and the ordinary stars the constellations live among
+      const SCATTER = [[-18, 6.2, 0.7], [-16, 12.5, 0.5], [-11, 5.4, 0.6], [-9, 16, 0.8], [-4, 7.8, 0.5], [-2, 15.2, 0.6], [2, 6.6, 0.7], [4, 12.8, 0.5], [9, 8.9, 0.55], [11, 16.2, 0.7], [16, 11.8, 0.5], [18, 7.4, 0.65], [-19, 15, 0.5], [19, 14, 0.55], [-6, 11.2, 0.45], [6, 9.6, 0.45]]
+      for (const [sx, sy, sw] of SCATTER) {
+        const s = glowQuad('#c8d0f8', sw, sw, 0.55)
+        s.position.set(sx, sy, -7.3); scene.add(s)
       }
       // star-line platforms: the glow IS the floor (visibility sim-driven)
       D.timedPlats = []
@@ -158,7 +172,7 @@ const DREAMS = {
   //   applauding good hits. Her dream is the night the party never ended. —
   curator: {
     palette: { fog: '#122430', skyUp: '#3a5a68', ambient: '#a8c4cc', stops: ['#04101a', '#081a26', '#0e2432', '#14303e', '#122430'] },
-    nightmare: { fog: '#081218', skyUp: '#213843', ambient: '#768f97', stops: ['#020608', '#040c12', '#061218', '#0a181e', '#081218'] },
+    nightmare: { fog: '#0b171f', skyUp: '#26404d', ambient: '#87a3ac', stops: ['#03080c', '#061017', '#08171f', '#0d1e26', '#0b171f'] },
     ambient: { color: '#bfe0e8', vel: [0.08, 0.3], rate: 10, size: 0.08, alpha: 0.45 },
     arena: {
       solids: [{ x: 0, y: 0, w: 28, h: 3.2 }],
@@ -208,6 +222,11 @@ const DREAMS = {
         noble.position.set(nx + (i % 2) * 0.6, 0.85, -3.0)
         scene.add(noble)
         D.crowd.push(noble)
+        // a translucent head so they read as GUESTS, not grey traffic cones
+        const head = mesh(new THREE.SphereGeometry(0.15, 7, 5), gm, [0.66, 0.9, 0.94])
+        head.position.set(nx + (i % 2) * 0.6, 1.85, -3.0)
+        scene.add(head)
+        D.crowd.push(head)
       }
     },
   },
@@ -216,7 +235,7 @@ const DREAMS = {
   //   as platforms; the chandeliers swing and occasionally drop. —
   paleking: {
     palette: { fog: '#241a12', skyUp: '#54402a', ambient: '#c8ae8e', stops: ['#0e0804', '#1a100a', '#241810', '#302016', '#241a12'] },
-    nightmare: { fog: '#120c08', skyUp: '#322416', ambient: '#8f7961', stops: ['#040202', '#0a0604', '#100a06', '#16100a', '#120c08'] },
+    nightmare: { fog: '#170f0a', skyUp: '#3a2a1a', ambient: '#a38a6f', stops: ['#060303', '#0d0806', '#140d08', '#1b140d', '#170f0a'] },
     ambient: { color: '#e8a848', vel: [0.04, -0.28], rate: 10, size: 0.07, alpha: 0.4 },
     arena: {
       solids: [{ x: 0, y: 0, w: 28, h: 3.2 }],
@@ -237,7 +256,7 @@ const DREAMS = {
           const leg = mesh(new THREE.BoxGeometry(0.4, 2.0, 2.0), wood, [0.7, 0.62, 0.52])
           leg.position.set(lx, 1.0, 0); scene.add(leg)
         }
-        const candles = glowQuad('#f0c060', w - 1, 0.8, 0.4)
+        const candles = glowQuad('#f0c060', w - 1, 0.8, 0.55)
         candles.position.set(px, 2.7, 0.2); scene.add(candles)
       }
       const dais = mesh(new THREE.BoxGeometry(5, 0.5, 2.6), stone, [1.0, 0.95, 0.85])
@@ -255,12 +274,33 @@ const DREAMS = {
         scene.add(g)
         D.hallChands[cx] = g
       }
-      // silhouette feast-goers along the back tables
-      const dark = retroMaterial({ map: TEX.white(), emissive: 0x0a0806 })
-      for (let i = 0; i < 8; i++) {
-        const gx = -10.5 + i * 3
-        const goer = mesh(new THREE.ConeGeometry(0.42, 1.3, 6), dark, [0.16, 0.13, 0.1])
-        goer.position.set(gx, 0.65, -2.6); scene.add(goer)
+      // feast-goers along the back tables — WARM and CROWDED (Part 4.4):
+      // two rows, wine-and-amber robes, heads tipped toward the fight
+      // (judge pass 2, finding 5: grey headless cones read cold and empty)
+      const warm = retroMaterial({ map: TEX.white(), emissive: 0x241209 })
+      const ROBES = [[0.62, 0.28, 0.22], [0.66, 0.5, 0.24], [0.5, 0.32, 0.42], [0.42, 0.46, 0.28], [0.68, 0.4, 0.2], [0.55, 0.26, 0.3]]
+      for (let i = 0; i < 12; i++) {
+        const row = i % 2
+        const gx = -11.5 + i * 2.1 + row * 0.7
+        const sc = 0.9 + (i % 3) * 0.12
+        const tint = ROBES[i % ROBES.length]
+        const goer = mesh(new THREE.ConeGeometry(0.42 * sc, 1.3 * sc, 6), warm, tint)
+        goer.position.set(gx, 0.65 * sc, -2.6 - row * 0.9); scene.add(goer)
+        const head = mesh(new THREE.SphereGeometry(0.17 * sc, 7, 5), warm, [0.78, 0.62, 0.46])
+        head.position.set(gx, 1.42 * sc, -2.6 - row * 0.9); scene.add(head)
+      }
+      // banners over the feast: the hall dressed for a celebration
+      for (const [bx, tint] of [[-10, [0.6, 0.22, 0.18]], [-3.4, [0.72, 0.55, 0.2]], [3.4, [0.6, 0.22, 0.18]], [10, [0.72, 0.55, 0.2]]]) {
+        const banner = mesh(new THREE.BoxGeometry(1.5, 3.4, 0.06), warm, tint)
+        banner.position.set(bx, 6.4, -2.9); scene.add(banner)
+      }
+      // goblets catching candlelight along both tables
+      const brass = retroMaterial({ map: TEX.white(), emissive: 0x3a2810 })
+      for (const px of [-7, 7]) {
+        for (const off of [-1.8, 0, 1.8]) {
+          const cup = mesh(new THREE.CylinderGeometry(0.1, 0.07, 0.24, 6), brass, [0.85, 0.68, 0.3])
+          cup.position.set(px + off, 2.32, 0.5); scene.add(cup)
+        }
       }
       const pool = new THREE.Mesh(new THREE.CircleGeometry(6, 18), glowMat('#e8b868', 0.26))
       ensureVertexColors(pool.geometry)
@@ -272,7 +312,7 @@ const DREAMS = {
   //   bright ancient moon; the gate loops the arena edges (the only wrap). —
   mote: {
     palette: { fog: '#1c3424', skyUp: '#54785e', ambient: '#c2d8be', stops: ['#0a140c', '#122218', '#1a3022', '#223e2c', '#1c3424'] },
-    nightmare: { fog: '#0c1810', skyUp: '#2f483a', ambient: '#7c947c', stops: ['#030805', '#060f0a', '#0a1810', '#0e2016', '#0c1810'] },
+    nightmare: { fog: '#122415', skyUp: '#3e5e4b', ambient: '#98b295', stops: ['#050c08', '#0a1610', '#102418', '#162e20', '#122415'] },
     cam: { maxD: 19 }, // judge finding 8: never zoom out to fit the whole wrap — fighters stay person-sized
     ambient: { color: '#a8d890', vel: [0.06, 0.26], rate: 11, size: 0.08, alpha: 0.45 },
     arena: {
@@ -307,11 +347,15 @@ const DREAMS = {
       // the bright ancient moon — bigger and younger than the one we keep;
       // in Nightmare its face goes HOLLOW (Part 4.7)
       const moon = glowQuad('#eef4dc', 9, 9, 0.9)
+      moon.userData.noDim = true // the moon stays BRIGHT so the hollow face reads
       moon.position.set(0, 9.5, -8.5); scene.add(moon)
       if (D.nightmare) {
-        const hollow = new THREE.Mesh(new THREE.CircleGeometry(2.4, 16), retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.88, depthWrite: false, emissive: 0x04060a }))
+        const hollow = new THREE.Mesh(new THREE.CircleGeometry(3.2, 16), retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.92, depthWrite: false, emissive: 0x04060a }))
         ensureVertexColors(hollow.geometry, [0.02, 0.03, 0.05])
         hollow.position.set(0, 9.5, -8.4); scene.add(hollow)
+        const rim = glowQuad('#f4f8e4', 10.5, 10.5, 0.5)
+        rim.userData.noDim = true
+        rim.position.set(0, 9.5, -8.6); scene.add(rim)
       }
       const moonPool = new THREE.Mesh(new THREE.CircleGeometry(4.5, 18), glowMat('#d8e8c0', 0.3))
       ensureVertexColors(moonPool.geometry)
@@ -336,7 +380,7 @@ const DREAMS = {
   //   flour-dust ground fog, the bakery window as a huge warm moon. —
   chicken: {
     palette: { fog: '#2a1c10', skyUp: '#6a4c2a', ambient: '#d8b890', stops: ['#100a04', '#1e120a', '#2a1a0e', '#362415', '#2a1c10'] },
-    nightmare: { fog: '#140d08', skyUp: '#3d2c19', ambient: '#977e61', stops: ['#050302', '#0c0705', '#120c07', '#18100a', '#140d08'] },
+    nightmare: { fog: '#19110a', skyUp: '#46331d', ambient: '#ab8f6e', stops: ['#070403', '#0f0906', '#160f09', '#1d140c', '#19110a'] },
     ambient: { color: '#f0e0c0', vel: [0.22, 0.05], rate: 8, size: 0.5, alpha: 0.13, puff: true },
     arena: {
       solids: [{ x: 0, y: 0, w: 26, h: 3.2 }],
@@ -505,10 +549,12 @@ class DreamMode {
       // the crowd becomes shadows and the ARENA's authored glows drop to
       // coals — hazard telegraphs (FX pools, built before this) keep their
       // full warmth: even Nightmare stays fair (Part 7)
+      // 0.55, not 0.4 — judge pass 2: at 0.4 the forest was a black frame;
+      // the moon itself is exempt (userData.noDim) so "gone hollow" reads
       for (let i = preCount; i < scene.children.length; i++) {
         scene.children[i].traverse((o) => {
           const u = o.material?.uniforms
-          if (u?.uOpacity && o.material.blending === THREE.AdditiveBlending) u.uOpacity.value *= 0.4
+          if (u?.uOpacity && o.material.blending === THREE.AdditiveBlending && !o.userData.noDim) u.uOpacity.value *= 0.55
         })
       }
       if (this.crowd) for (const n of this.crowd) { const u = n.material.uniforms; if (u?.uOpacity) u.uOpacity.value = 0.1 }
@@ -592,7 +638,7 @@ class DreamMode {
       return q
     }
     const fx = (this.fx = { darts: [], hats: [], chands: [], warns: [], roots: [], birds: [], nobles: [], bottles: [], moon: null })
-    for (let i = 0; i < 3; i++) fx.darts.push(glow('#e8a848', 0.55, 0.55))
+    for (let i = 0; i < 3; i++) fx.darts.push(glow('#e8a848', 0.85, 0.85))
     for (let i = 0; i < 2; i++) {
       const hat = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.5, 6), retroMaterial({ map: TEX.white(), emissive: 0x1a1428 }))
       ensureVertexColors(hat.geometry, [0.32, 0.28, 0.45])
@@ -612,8 +658,12 @@ class DreamMode {
       fx.warns.push(w)
     }
     for (let i = 0; i < 5; i++) {
-      const root = new THREE.Mesh(new THREE.ConeGeometry(0.35, 1.6, 6), retroMaterial({ map: TEX.bark({ name: 'dreamroot' }), emissive: 0x0e1a10 }))
-      ensureVertexColors(root.geometry, [0.45, 0.55, 0.4])
+      // an ACTIVE hazard has to read hot (judge pass 2: black cones on a
+      // black bench) — ember bark, and each spike carries its own glow
+      const root = new THREE.Mesh(new THREE.ConeGeometry(0.35, 1.6, 6), retroMaterial({ map: TEX.bark({ name: 'dreamroot' }), emissive: 0x58281a }))
+      ensureVertexColors(root.geometry, [0.85, 0.62, 0.4])
+      const tip = glow('#e87838', 1.1, 1.4); tip.visible = true; tip.position.y = 0.5
+      root.add(tip)
       root.visible = false; scene.add(root); fx.roots.push(root)
     }
     for (let i = 0; i < 6; i++) {
@@ -690,8 +740,8 @@ class DreamMode {
         // the warm footprint trail (Part 3)
         this.embers?.spawn({
           pos: new THREE.Vector3(p.x, p.y - 0.05, 0.25), vel: new THREE.Vector3(0, 0.4, 0),
-          maxLife: 0.7, size: 0.09, alpha: 0.5, seed: (tick % 60) / 60,
-          update(pt, dt2) { pt.pos.y += pt.vel.y * dt2; pt.alpha = 0.5 * (1 - pt.life / pt.maxLife) },
+          maxLife: 0.9, size: 0.15, alpha: 0.7, seed: (tick % 60) / 60,
+          update(pt, dt2) { pt.pos.y += pt.vel.y * dt2; pt.alpha = 0.7 * (1 - pt.life / pt.maxLife) },
         })
       } else if (p.kind === 'hat' && hi < fx.hats.length) {
         const q = fx.hats[hi++]
@@ -839,12 +889,12 @@ class DreamMode {
     if (this._impactPop) {
       const P2 = this._impactPop
       P2.t += dt
-      const k = P2.t / 0.12
+      const k = P2.t / 0.2
       if (k >= 1) { this._impactPop = null; fx.pop.visible = false } else {
         fx.pop.visible = true
         fx.pop.position.set(P2.x, P2.y, 0.55)
-        fx.pop.scale.setScalar((P2.big ? 1.7 : 1.0) * (0.4 + k * 1.5))
-        fx.pop.material.uniforms.uOpacity.value = 0.85 * (1 - k)
+        fx.pop.scale.setScalar((P2.big ? 2.2 : 1.3) * (0.4 + k * 1.5))
+        fx.pop.material.uniforms.uOpacity.value = 0.9 * (1 - k)
       }
     } else fx.pop.visible = false
 
@@ -1091,16 +1141,16 @@ class DreamMode {
           const ix = atk ? (atk.x + dfd.x) / 2 : dfd.x
           const iy = dfd.y + 1.0
           const heavyish = (e.kb ?? 0) > 6
-          this._hitFlash.set(e.d, heavyish ? 0.12 : 0.07)
+          this._hitFlash.set(e.d, heavyish ? 0.22 : 0.13)
           this._impactPop = { x: ix, y: iy, t: 0, big: heavyish }
-          const n = heavyish ? 10 : 6
+          const n = heavyish ? 14 : 9
           for (let i = 0; i < n; i++) {
             const a = (i / n) * Math.PI * 2 + (this.match?.tick ?? 0) * 0.53
             this.sparks?.spawn({
               pos: new THREE.Vector3(ix, iy, 0.5),
-              vel: new THREE.Vector3(Math.cos(a) * (heavyish ? 7.5 : 5), Math.sin(a) * (heavyish ? 7.5 : 5), 0),
-              maxLife: 0.22, size: heavyish ? 0.17 : 0.11, alpha: 0.9, seed: i / n,
-              update(p, dt2) { p.pos.addScaledVector(p.vel, dt2); p.vel.multiplyScalar(0.86); p.alpha = 0.9 * (1 - p.life / p.maxLife) },
+              vel: new THREE.Vector3(Math.cos(a) * (heavyish ? 8.5 : 6), Math.sin(a) * (heavyish ? 8.5 : 6), 0),
+              maxLife: 0.42, size: heavyish ? 0.3 : 0.18, alpha: 0.95, seed: i / n,
+              update(p, dt2) { p.pos.addScaledVector(p.vel, dt2); p.vel.multiplyScalar(0.88); p.alpha = 0.95 * (1 - p.life / p.maxLife) },
             })
           }
         }
@@ -1296,9 +1346,19 @@ class DreamMode {
         applyPose(R.rig, st, 0)
         // swing overlay: the arm whips through the move, wooze sways the idle
         if (f.move) {
-          const A = { light: 15, heavy: 34, special: 24, super: 12 }[f.move.name] ?? 15
-          const ph = Math.min(1, f.move.t / A)
-          R.rig.bones.armR.rotation.x = -0.35 - Math.sin(ph * Math.PI) * (f.move.name === 'light' ? 1.7 : 2.4)
+          if (f.fid === 'beldam' && f.move.name === 'special') {
+            // the swig IS the joke: bottle to the sky, spine tipped back,
+            // a little wobble while she drinks (judge pass 2, finding 8)
+            const ph = Math.min(1, f.move.t / 22)
+            const tip2 = Math.sin(Math.min(1, ph * 1.6) * Math.PI / 2)
+            R.rig.bones.armR.rotation.x = -0.35 - tip2 * 2.5
+            R.rig.bones.spine.rotation.x -= tip2 * 0.34
+            R.rig.bones.spine.rotation.z += Math.sin(this.match.tick * 0.6) * 0.06 * tip2
+          } else {
+            const A = { light: 15, heavy: 34, special: 24, super: 12 }[f.move.name] ?? 15
+            const ph = Math.min(1, f.move.t / A)
+            R.rig.bones.armR.rotation.x = -0.35 - Math.sin(ph * Math.PI) * (f.move.name === 'light' ? 1.7 : 2.4)
+          }
         }
         if (f.wooze > 0) {
           const sway = Math.min(0.22, f.wooze * 0.0022)

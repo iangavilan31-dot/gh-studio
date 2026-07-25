@@ -79,7 +79,7 @@ await page.evaluate(() => {
   while (g++ < 40) { s = step(); if (s.events.some((e) => e.t === 'hit')) break }
   step(); step()
 })
-await shot('fight', 70) // fast shutter: sparks live 220ms, the pop 120ms
+await shot('fight', 40) // fast shutter: sparks live 420ms, the pop 200ms
 
 // the KO moment: moths just burst at the blast edge
 await page.evaluate(`(() => { ${DRIVER}
@@ -159,6 +159,7 @@ const arenaShot = async (id, prep) => {
   await page.evaluate(`(() => { const M = window.__MOONREST__; ${prep} })()`)
   await shot(`arena-${id}`)
 }
+await arenaShot('beldam', EXCHANGE)
 await arenaShot('curator', EXCHANGE)
 await arenaShot('paleking', EXCHANGE)
 await arenaShot('chicken', EXCHANGE)
@@ -181,6 +182,38 @@ await arenaShot('mote', `
     s = step({ x: s.fighters[0].x < -8.6 ? 1 : 0 }, { x: s.fighters[1].x > 8.6 ? -1 : 0 })
   step({ jump: true }); for (let k = 0; k < 18; k++) step({ x: 1 })
 `)
+
+// ——— the worst-case moment, on purpose: FOUR fighters piled center-hall,
+// items on the bench, chandeliers telegraphing, sparks mid-burst (judge
+// pass 2, finding 1: no 4P chaos capture existed) ———
+await page.evaluate(() => {
+  const M = window.__MOONREST__
+  M.fight.exit(); M.fight.enter('paleking', 4, 99, ['beldam', 'chicken', 'nib', 'paleking'])
+  M.fight.itemsOn(true)
+  M.fight.spawnItem('boot', 1.4)
+  M.fight.spawnItem('floatleaf', -2.6)
+  const step = (i) => M.fight.step(i ?? {})
+  // ride to the first chandelier warn window (period 780, warn 100)
+  for (let k = 0; k < 660; k++) step()
+  const marks = { 0: -3.2, 1: -1.1, 2: 1.1, 3: 3.2 }
+  let s = step(), g = 0
+  const done = () => [0, 1, 2, 3].every((i) => Math.abs(s.fighters[i].x - marks[i]) < 0.35)
+  while (!done() && g++ < 500) {
+    const inp = {}
+    for (let i = 0; i < 4; i++) {
+      const dx = marks[i] - s.fighters[i].x
+      inp[i] = { x: Math.abs(dx) < 0.35 ? 0 : Math.sign(dx) }
+    }
+    s = step(inp)
+  }
+  for (let k = 0; k < 10; k++) step()
+  // everyone swings at once; freeze two ticks into the first connect
+  step({ 0: { heavy: true, x: 1 }, 1: { light: true, x: 1 }, 2: { light: true, x: -1 }, 3: { heavy: true, x: -1 } })
+  s = step(); g = 0
+  while (g++ < 40) { s = step(); if (s.events.some((e) => e.t === 'hit')) break }
+  step(); step()
+})
+await shot('chaos-4p', 40)
 
 // ——— F6: brews on the bench, the Boot, and the bird (item table) ———
 await page.evaluate(() => {
@@ -210,10 +243,22 @@ for (const a of ['beldam', 'paleking']) {
 }
 await page.evaluate(() => { window.__FIGHT_HITBOXES__ = false })
 
-// the Young Forest under the hollow Nightmare moon
+// the Young Forest under the hollow Nightmare moon: both fighters at the
+// pit's inner edges, mid-jump against the moonlight (judge pass 2: the old
+// framing was a black smudge in a black frame)
 await page.evaluate(() => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('mote', 2, null, null, null, true) })
 await page.waitForTimeout(1500)
-await page.evaluate(() => { const M = window.__MOONREST__; for (let k = 0; k < 80; k++) M.fight.step({ 0: { x: 1 }, 1: {} }) })
+await page.evaluate(() => {
+  const M = window.__MOONREST__
+  const step = (a, b) => M.fight.step({ 0: a ?? {}, 1: b ?? {} })
+  for (let k = 0; k < 60; k++) step()
+  let s = step(), g = 0
+  while ((s.fighters[0].x < -8.4 || s.fighters[1].x > 8.4) && g++ < 200)
+    s = step({ x: s.fighters[0].x < -8.4 ? 1 : 0 }, { x: s.fighters[1].x > 8.4 ? -1 : 0 })
+  for (let j = 0; j < 8; j++) step()
+  step({ jump: true }, { jump: true })
+  for (let k = 0; k < 11; k++) step()
+})
 await shot('nightmare-forest')
 
 // ——— the supers, seen (F4 presentation evidence) ———
@@ -242,7 +287,7 @@ await superShot('super-chandeliers', ['paleking', 'lamplighter'], `${CLOSE}
   for (let k = 0; k < 128; k++) step()`)
 await superShot('super-derby', ['chicken', 'paleking'], `
   M.fight.charge(0); step({ special: true })
-  for (let k = 0; k < 105; k++) step()`)
+  for (let k = 0; k < 138; k++) step()`) // the whole flock inside ±9 of center
 await superShot('super-constellation', ['nib', 'mote'], `${CLOSE}
   M.fight.charge(0); step({ special: true })
   for (let k = 0; k < 60; k++) step()`)

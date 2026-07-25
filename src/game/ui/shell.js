@@ -40,6 +40,52 @@ const TRINKET_NAMES = {
   archstone: 'the Gatewalkers’ arch-stone',
 }
 
+// F11 dream-shelf figurines: each bested dreamer curls up as a tiny painted
+// sleeper — body mound, head, closed eye, their one identifying detail, zzz.
+const TROPHY_LOOKS = {
+  lamplighter: { body: '#c8a86a', trim: '#e8c26a', name: 'a tiny sleeping lamplighter', lantern: true },
+  beldam: { body: '#6a7690', trim: '#8fd4b4', name: 'a tiny snoring Beldam', bottle: true },
+  nib: { body: '#b05248', trim: '#e8ecff', name: 'a very tiny sleeping Nib', tiny: true, hat: true },
+  curator: { body: '#9fc4c8', trim: '#d8f0f0', name: 'a tiny translucent sleeper', ghost: true },
+  paleking: { body: '#d8d0bc', trim: '#e8c26a', name: 'a tiny crowned sleeper', crown: true },
+  mote: { body: '#8a9a6a', trim: '#57644a', name: 'a tiny tucked-in tortoise', shell: true },
+  chicken: { body: '#e8e0d0', trim: '#e88030', name: 'a tiny roosting chicken', beak: true },
+  watcher: { body: '#3a3448', trim: '#7a68b8', name: 'a tiny folded shadow', ghost: true },
+}
+function drawTrophyFigurine(t) {
+  const L = TROPHY_LOOKS[t] ?? { body: '#a0a0b0', trim: '#e8c26a' }
+  const c = document.createElement('canvas')
+  c.width = 52; c.height = 36
+  const g = c.getContext('2d')
+  g.globalAlpha = L.ghost ? 0.62 : 1
+  const s = L.tiny ? 0.72 : 1
+  const cx = 24, base = 31
+  // the curled body, tipped on its side (comedy law: creatures sleep sideways)
+  g.fillStyle = L.body
+  g.beginPath(); g.ellipse(cx - 2 * s, base - 5 * s, 12 * s, 6.5 * s, 0, 0, Math.PI * 2); g.fill()
+  if (L.shell) { // Mote keeps the shell on
+    g.strokeStyle = L.trim; g.lineWidth = 1.6
+    for (const r of [4, 7, 10]) { g.beginPath(); g.arc(cx - 2 * s, base - 4 * s, r * s, Math.PI, 0); g.stroke() }
+  }
+  // the head, resting at the right of the mound
+  g.beginPath(); g.arc(cx + 10 * s, base - 8 * s, 5 * s, 0, Math.PI * 2); g.fill()
+  // the closed eye
+  g.strokeStyle = '#141018'; g.lineWidth = 1.2
+  g.beginPath(); g.arc(cx + 11 * s, base - 8 * s, 2 * s, 0.15 * Math.PI, 0.85 * Math.PI); g.stroke()
+  // the one identifying detail
+  g.fillStyle = L.trim
+  if (L.hat) { g.beginPath(); g.moveTo(cx + 6 * s, base - 12 * s); g.lineTo(cx + 12 * s, base - 20 * s); g.lineTo(cx + 14 * s, base - 11 * s); g.fill() }
+  if (L.crown) for (const o of [-3, 0, 3]) { g.beginPath(); g.moveTo(cx + 8 + o, base - 13); g.lineTo(cx + 9.5 + o, base - 18); g.lineTo(cx + 11 + o, base - 13); g.fill() }
+  if (L.beak) { g.beginPath(); g.moveTo(cx + 14 * s, base - 9 * s); g.lineTo(cx + 19 * s, base - 7.5 * s); g.lineTo(cx + 14 * s, base - 6 * s); g.fill() }
+  if (L.bottle) { g.fillStyle = '#8fd4b4'; g.fillRect(cx - 18, base - 9, 4, 9); g.fillRect(cx - 17, base - 12, 2, 3) }
+  if (L.lantern) { g.fillStyle = '#ffe9b3'; g.beginPath(); g.arc(cx - 16, base - 5, 3, 0, Math.PI * 2); g.fill() }
+  // zzz drifting up
+  g.fillStyle = L.trim; g.textBaseline = 'alphabetic'
+  g.font = 'italic 9px Georgia, serif'; g.fillText('z', cx + 17, 13)
+  g.font = 'italic 7px Georgia, serif'; g.fillText('z', cx + 22, 8)
+  return c
+}
+
 export class Shell {
   // hooks: {startNight(fresh), hostNight()→Promise<code>, joinNight(code)→Promise,
   //         applySettings(s), getStats()→{lights,lightsTotal,brews,trinkets:[],code},
@@ -231,15 +277,18 @@ export class Shell {
     const shelf = this.el('div', 'shelf', null, card)
     if (!st.trinkets.length) this.el('div', 'shelfempty', 'nothing yet — the sleepers are still dreaming', shelf)
     for (const t of st.trinkets) this.el('div', 'trinket', TRINKET_NAMES[t] ?? t, shelf)
-    // F11: dream trophies — tiny sleeping figurines of everyone bested in
-    // the dreams. No stats, no ranks, no numbers (Part 6).
+    // F11: dream trophies — tiny sleeping FIGURINES of everyone bested in
+    // the dreams, drawn to canvas. No stats, no ranks, no numbers (Part 6).
     let dreamTrophies = []
     try { dreamTrophies = JSON.parse(localStorage.getItem('moonrest-dream-trophies') ?? '[]') } catch (e) { /* private mode */ }
     if (dreamTrophies.length) {
       this.el('div', 'h2', 'dream shelf', card)
       const dshelf = this.el('div', 'shelf', null, card)
-      const NAMES = { lamplighter: 'a tiny sleeping lamplighter', beldam: 'a tiny snoring Beldam', nib: 'a very tiny sleeping Nib', curator: 'a tiny translucent sleeper', paleking: 'a tiny crowned sleeper', mote: 'a tiny tucked-in tortoise', chicken: 'a tiny roosting chicken', watcher: 'a tiny folded shadow' }
-      for (const t of dreamTrophies) this.el('div', 'trinket', NAMES[t] ?? `a tiny sleeping ${t}`, dshelf)
+      for (const t of dreamTrophies) {
+        const chip = this.el('div', 'trophy', null, dshelf)
+        chip.appendChild(drawTrophyFigurine(t))
+        this.el('div', 'tname', (TROPHY_LOOKS[t]?.name) ?? `a tiny sleeping ${t}`, chip)
+      }
     }
     this.el('div', 'h2', 'the keeper’s hands', card)
     this.el('div', 'hint', 'WASD walk · Shift jog · mouse look · E kindle (hold) · Tab emote wheel · C sit/lie · Space hop · P photo · F3 lantern-keeper’s ledger', card)
