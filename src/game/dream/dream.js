@@ -321,17 +321,20 @@ const DREAMS = {
       // feast-goers along the back tables — WARM and CROWDED (Part 4.4):
       // two rows, wine-and-amber robes, heads tipped toward the fight
       // (judge pass 2, finding 5: grey headless cones read cold and empty)
-      const warm = retroMaterial({ map: TEX.white(), emissive: D.nightmare ? 0x090507 : 0x241209 })
-      const ROBES = [[0.62, 0.28, 0.22], [0.66, 0.5, 0.24], [0.5, 0.32, 0.42], [0.42, 0.46, 0.28], [0.68, 0.4, 0.2], [0.55, 0.26, 0.3]]
+      // the crowd is DEPTH, not cast — pushed well back (z −3.6..−5) and
+      // dimmed ~0.6 so the fighters at z 0 read against it, never compete
+      // with it (judge pass 9: warm cones were as saturated as fighters)
+      const warm = retroMaterial({ map: TEX.white(), emissive: D.nightmare ? 0x060305 : 0x160b05 })
+      const ROBES = [[0.37, 0.17, 0.13], [0.4, 0.3, 0.14], [0.3, 0.19, 0.25], [0.25, 0.28, 0.17], [0.41, 0.24, 0.12], [0.33, 0.16, 0.18]]
       for (let i = 0; i < 12; i++) {
         const row = i % 2
         const gx = -11.5 + i * 2.1 + row * 0.7
         const sc = 0.9 + (i % 3) * 0.12
         const tint = ROBES[i % ROBES.length]
         const goer = mesh(new THREE.ConeGeometry(0.42 * sc, 1.3 * sc, 6), warm, tint)
-        goer.position.set(gx, 0.65 * sc, -2.6 - row * 0.9); scene.add(goer)
-        const head = mesh(new THREE.SphereGeometry(0.17 * sc, 7, 5), warm, [0.78, 0.62, 0.46])
-        head.position.set(gx, 1.42 * sc, -2.6 - row * 0.9); scene.add(head)
+        goer.position.set(gx, 0.65 * sc, -3.6 - row * 1.1); scene.add(goer)
+        const head = mesh(new THREE.SphereGeometry(0.17 * sc, 7, 5), warm, [0.42, 0.33, 0.25])
+        head.position.set(gx, 1.42 * sc, -3.6 - row * 1.1); scene.add(head)
       }
       // banners over the feast: the hall dressed for a celebration
       // Nightmare signature (Part 4.7): the celebration is OVER — banners
@@ -1574,7 +1577,9 @@ class DreamMode {
         const nx = Math.max(-8, Math.min(8, wf.x))
         const win = f.id === v.winner
         const k = f.id < v.winner ? f.id : f.id - 1
-        g.position.set(win ? nx : nx + (k + 1) * 1.5 * (k % 2 ? 1 : -1), 0, 0)
+        // curl up CLOSE together, alternating sides (judge pass 9: the nap
+        // read spread out, not "everyone sleeping next to each other")
+        g.position.set(win ? nx : nx + (Math.floor(k / 2) + 1) * 1.05 * (k % 2 ? 1 : -1), 0, 0)
         if (R.kind === 'wizard') {
           st.action = win ? (v.t > 2.4 ? 'lie' : v.t > 1.0 ? 'sit' : null) : 'sleep'
           advanceAnim(st, dt, 0, false)

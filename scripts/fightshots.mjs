@@ -318,9 +318,15 @@ await superShot('super-constellation', ['nib', 'mote'], `${CLOSE}
 await superShot('super-party', ['curator', 'lamplighter'], `
   M.fight.charge(0); step({ special: true })
   for (let k = 0; k < 235; k++) step()`, 'curator')
-await superShot('super-roots', ['mote', 'paleking'], `${CLOSE}
-  M.fight.charge(0); step({ special: true })
-  for (let k = 0; k < 56; k++) step()`, 'mote') // roots 0-1 up, root 2 erupting w/ embers
+await superShot('super-roots', ['mote', 'paleking'], `
+  // stage it so the root LINE reads: Mote far on the left island, target
+  // just beyond the roots' reach (~+10.6 max) so no KO cuts the line short
+  let s = step(), g = 0
+  while ((s.fighters[0].x > -13.5 || s.fighters[1].x < -1.8 || s.fighters[1].x > -0.8) && g++ < 300)
+    s = step({ x: s.fighters[0].x > -13.5 ? -1 : 0 }, { x: s.fighters[1].x < -1.8 ? 1 : (s.fighters[1].x > -0.8 ? -1 : 0) })
+  for (let j = 0; j < 6; j++) s = step()
+  M.fight.charge(0); step({ special: true, x: 1 }) // face right — roots march the island
+  for (let k = 0; k < 70; k++) step()`, 'mote') // roots 0-3 erupted along the ground, no KO
 await superShot('super-lightsout', ['watcher', 'lamplighter'], `${CLOSE}
   M.fight.charge(0); step({ special: true })
   for (let k = 0; k < 40; k++) step()`, 'curator')
