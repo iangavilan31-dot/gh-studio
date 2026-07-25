@@ -134,6 +134,7 @@ export function makeFighter(id, spec = {}) {
     armorT: 0,                   // armor frames: absorb launches (Beldam swig, King cape)
     ghostT: 0,                   // fog-step mist: untargetable, deals nothing
     slowFallT: 0,                // Moonrise: enemies drift (gravity x0.35)
+    superFx: null,               // persistent super state {kind, t, ...}
     x: 0, y: 0, vx: 0, vy: 0,
     face: 1,                     // +1 right, -1 left
     grounded: false,
@@ -326,9 +327,10 @@ export function stepFighter(f, inp, arena, ev) {
 
 const a2 = (a) => a // clarity alias
 
-// The match container: fighters + arena + tick counter (+ live projectiles).
+// The match container: fighters + arena + tick counter (+ live projectiles
+// and super hazards: chandeliers, waltzing ghosts, roots, the Derby).
 export function makeMatch(arena, fighters) {
-  return { tick: 0, arena, fighters, events: [], projs: [] }
+  return { tick: 0, arena, fighters, events: [], projs: [], hazards: [], lightsOutT: 0 }
 }
 
 const deg = (d) => (d * Math.PI) / 180
@@ -463,6 +465,10 @@ export function stepMatch(m, inputsById) {
     }
   }
 
+  // — persistent supers + hazards (tornado pulses, chandeliers, roots,
+  //   waltzing nobles, the Derby) —
+  stepSuperFx(m, inputsById, ev)
+
   // — projectiles: darts fly, hats come back (id order = determinism) —
   if (m.projs.length) {
     for (const p of m.projs) {
@@ -501,10 +507,12 @@ export function stepMatch(m, inputsById) {
 // ═══ F4: shared hit application (melee, specials, projectiles) ═══
 // Keeps the F2 event shape exact; adds armor absorption + Deep Dream fill.
 function applyHit(f, d, m, inputsById, ev, A, cause, dirOverride = null) {
-  d.wooze += A.dmg
+  // Constellation Slam: while Nib IS the constellation, everything lands huge
+  const amp = f.superFx?.kind === 'constellation' ? 1.6 : 1
+  d.wooze += Math.round(A.dmg * amp)
   f.deep = Math.min(100, (f.deep ?? 0) + A.dmg * SUPER.fillPerDmg)
   if (d.grab >= 0) { m.fighters[d.grab].grabbing = -1; d.grab = -1 } // hits break grabs
-  const kb = (A.baseKB + d.wooze * A.growth) / d.k.weight
+  const kb = (A.baseKB * (amp > 1 ? 1.35 : 1) + d.wooze * A.growth) / d.k.weight
   const dir = dirOverride ?? f.face
   if (d.armorT > 0) {
     // armor frames: the wooze lands, the launch does not (royal/drunken poise)
@@ -614,19 +622,125 @@ function stepSpecial(f, m, inputsById, ev) {
 function castSuper(f, m, inputsById, ev) {
   const kind = (FIGHTERS[f.fid] ?? FIGHTERS.lamplighter).superKind
   ev.push({ t: 'super', id: f.id, kind })
-  if (kind === 'moonrise') {
-    // a mini moon rises: enemies drift for 3s + a knockback ring at cast
-    for (const d of m.fighters) {
-      if (d.id === f.id || d.stocks <= 0 || d.ko > 0) continue
-      d.slowFallT = 180
-      const dx = d.x - f.x, dy = d.y - f.y
-      if (dx * dx + dy * dy < 36 && d.invuln <= 0 && d.ghostT <= 0 && d.armorT <= 0) {
-        d.wooze += 10
-        launch(d, Math.sign(dx) || f.face, (9 + d.wooze * 0.12) / d.k.weight, 52, inputsById[d.id]?.x, ev, 'moonrise')
-        d.hitstop = 6
-        ev.push({ t: 'hit', a: f.id, d: d.id, move: 'moonrise', kb: +((9 + d.wooze * 0.12) / d.k.weight).toFixed(2), wooze: d.wooze, shake: 0.9, shakeTicks: 12 })
+  switch (kind) {
+    case 'moonrise': // a mini moon rises: enemies drift for 3s + a ring at cast
+      for (const d of m.fighters) {
+        if (d.id === f.id || d.stocks <= 0 || d.ko > 0) continue
+        d.slowFallT = 180
+        const dx = d.x - f.x, dy = d.y - f.y
+        if (dx * dx + dy * dy < 36 && d.invuln <= 0 && d.ghostT <= 0 && d.armorT <= 0) {
+          d.wooze += 10
+          launch(d, Math.sign(dx) || f.face, (9 + d.wooze * 0.12) / d.k.weight, 52, inputsById[d.id]?.x, ev, 'moonrise')
+          d.hitstop = 6
+          ev.push({ t: 'hit', a: f.id, d: d.id, move: 'moonrise', kb: +((9 + d.wooze * 0.12) / d.k.weight).toFixed(2), wooze: d.wooze, shake: 0.9, shakeTicks: 12 })
+        }
+      }
+      f.hitstop = 6
+      f.superFx = { kind, t: 180 } // the moon hangs for the drift's duration
+      break
+    case 'bottleTornado': // orbiting bottles; the screen sways for everyone
+      f.superFx = { kind, t: 150 }
+      break
+    case 'constellation': // Nib IS the constellation, briefly enormous
+      f.superFx = { kind, t: 240, restoreWeight: f.k.weight }
+      f.k.weight = f.k.weight * 1.45
+      break
+    case 'party': // ghost nobles waltz across the stage as moving hazards
+      for (let i = 0; i < 3; i++) {
+        m.hazards.push({ kind: 'waltz', owner: f.id, x: m.arena.blast.l - 2 - i * 4.5, y: 0, vx: 4.6, t: 0, warn: 0, hitIds: new Set() })
+      }
+      break
+    case 'chandeliers': // telegraphed spotlight slams (hazard law: 1.5s warm)
+      for (const ox of [-4.5, 0, 4.5]) {
+        const bb = m.arena.blast
+        m.hazards.push({ kind: 'chand', owner: f.id, x: Math.max(bb.l + 2, Math.min(bb.r - 2, f.x + ox)), y: 14, vy: 0, t: 0, warn: 90, hitIds: new Set() })
+      }
+      break
+    case 'oldForest': // roots erupt along the ground in sequence
+      for (let i = 0; i < 5; i++) {
+        m.hazards.push({ kind: 'root', owner: f.id, x: f.x + f.face * (1.8 + i * 2.2), y: 0, t: 0, warn: 30 + i * 12, hitIds: new Set() })
+      }
+      break
+    case 'derby': { // a stampede of chickens crosses the stage
+      const bb = m.arena.blast
+      for (let i = 0; i < 6; i++) {
+        m.hazards.push({ kind: 'derbybird', owner: f.id, x: (f.face > 0 ? bb.l - 1 : bb.r + 1) - f.face * i * 2.4, y: 0, vx: f.face * 11, t: 0, warn: 0, hitIds: new Set() })
+      }
+      break
+    }
+    case 'lightsOut': // the warm accents go out; only lantern pools remain
+      m.lightsOutT = 180
+      f.superFx = { kind, t: 180 }
+      break
+  }
+}
+
+// Persistent super effects + hazards, stepped once per tick.
+function stepSuperFx(m, inputsById, ev) {
+  for (const f of m.fighters) {
+    const fx = f.superFx
+    if (!fx) continue
+    fx.t--
+    if (fx.kind === 'bottleTornado' && f.stocks > 0 && f.ko <= 0) {
+      if (fx.t % 12 === 0) {
+        // orbiting bottles pulse a ring around Beldam herself
+        const save = f.hitIds
+        f.hitIds = new Set()
+        for (const d of m.fighters) {
+          if (d.id === f.id || d.ko > 0 || d.invuln > 0 || d.stocks <= 0 || d.ghostT > 0) continue
+          const dx = d.x - f.x, dy = d.y + 0.9 - (f.y + 1.0)
+          if (dx * dx + dy * dy > (2.3 + d.hurtR) ** 2) continue
+          applyHit(f, d, m, inputsById, ev, { dmg: 4, baseKB: 5, growth: 0.12, angleDeg: 55, hitstop: 3, r: 2.3 }, 'bottleTornado', Math.sign(dx) || f.face)
+        }
+        f.hitIds = save
+        ev.push({ t: 'tornadoPulse', id: f.id })
       }
     }
-    f.hitstop = 6
+    if (fx.t <= 0) {
+      if (fx.kind === 'constellation' && fx.restoreWeight != null) f.k.weight = fx.restoreWeight
+      f.superFx = null
+      ev.push({ t: 'superEnd', id: f.id, kind: fx.kind })
+    }
+  }
+  if (m.lightsOutT > 0) m.lightsOutT--
+
+  // — hazards —
+  if (m.hazards.length) {
+    const bb = m.arena.blast
+    for (const h of m.hazards) {
+      h.t++
+      if (h.warn > 0) { h.warn--; continue } // telegraphing in the warm accent
+      if (h.kind === 'waltz' || h.kind === 'derbybird') {
+        h.x += h.vx * TICK
+        // cull only past the FAR side — the parade spawns staggered behind
+        // the near line, and the first draft culled everyone but the leader
+        if (h.vx > 0 ? h.x > bb.r + 3 : h.x < bb.l - 3) h.dead = true
+      } else if (h.kind === 'chand') {
+        h.vy = Math.max(-22, h.vy - 60 * TICK)
+        h.y += h.vy * TICK
+        if (h.y <= 0.4) { h.strike = true }
+      } else if (h.kind === 'root') {
+        if (h.popT == null) { h.popT = h.t; ev.push({ t: 'rootPop', x: +h.x.toFixed(2) }) }
+        if (h.t - h.popT > 90) h.dead = true // pops, lingers a beat, fades
+      }
+      // contact — one hit per fighter per hazard
+      const spec = h.kind === 'waltz' ? { dmg: 6, baseKB: 5.5, growth: 0.14, angleDeg: 50, hitstop: 4, r: 0.9 }
+        : h.kind === 'derbybird' ? { dmg: 5, baseKB: 6, growth: 0.14, angleDeg: 44, hitstop: 4, r: 0.7 }
+          : h.kind === 'chand' ? { dmg: 14, baseKB: 9, growth: 0.2, angleDeg: 80, hitstop: 7, r: 1.4 }
+            : { dmg: 8, baseKB: 7, growth: 0.16, angleDeg: 85, hitstop: 5, r: 0.9 } // root
+      const active = h.kind === 'root' ? h.t - (h.popT ?? h.t) <= 26 : true
+      if (active) {
+        const owner = m.fighters[h.owner]
+        for (const d of m.fighters) {
+          if (d.id === h.owner || h.hitIds.has(d.id) || d.ko > 0 || d.invuln > 0 || d.stocks <= 0 || d.ghostT > 0 || d.armorT > 0) continue
+          const dx = d.x - h.x, dy = d.y + 0.9 - (h.y + (h.kind === 'root' ? 0.6 : 0.9))
+          if (dx * dx + dy * dy > (spec.r + d.hurtR) ** 2) continue
+          h.hitIds.add(d.id)
+          applyHit(owner ?? { id: h.owner, deep: 0, hitstop: 0, face: 1 }, d, m, inputsById, ev, spec, h.kind, Math.sign(h.vx ?? dx) || 1)
+        }
+      }
+      if (h.strike) h.dead = true
+    }
+    m.hazards = m.hazards.filter((h) => !h.dead)
   }
 }

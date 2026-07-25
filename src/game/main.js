@@ -1004,6 +1004,7 @@ window.__MOONREST__ = {
     get manual() { return dream.manual },
     step(inputsById = {}) { return dream.stepManual(inputsById) },
     state() { return dream.simState() },
+    charge(id = 0) { const f = dream.match?.fighters?.[id]; if (f) f.deep = 100; return !!f }, // gate rig: full lantern
     get lastShake() { return dream.lastShake ?? null },
   },
   // — F0 entry/exit test surface (tunnel timing is wall-clock, not ticks) —
