@@ -32,7 +32,7 @@ page.on('console', (m) => { if (m.type() === 'error') issues.push(m.text()) })
 
 await page.goto(`http://localhost:${PORT}/`)
 await page.waitForFunction(() => window.__MOONREST__?.ready)
-await page.evaluate(() => window.__MOONREST__.fight.enter('beldam', 2))
+await page.evaluate(() => window.__MOONREST__.fight.enter('beldam', 2, 99))
 
 let fails = 0
 const check = (name, ok, detail) => {
@@ -49,6 +49,17 @@ const steps = (n, inp) => page.evaluate(([n2, i2]) => {
 }, [n, inp])
 const step1 = (inp) => steps(1, inp)
 const settle = async () => { await steps(90, {}) } // fall to rest on the bench
+// normalize to the BENCH floor: respawns can park the fighter on a shelf —
+// drop through one-way platforms until standing at y=0
+const groundBench = async () => {
+  await settle()
+  for (let k = 0; k < 3; k++) {
+    const s = await step1({})
+    if (F(s).grounded && Math.abs(F(s).y) < 0.05) break
+    await step1({ down: true, jump: true })
+    await settle()
+  }
+}
 
 // — 1) run speed reaches spec —
 await settle()
@@ -99,7 +110,7 @@ check('tap 9 ticks before landing does NOT buffer (6-tick window)', await buffer
 
 // — 5) coyote: run off the bench edge; a late jump within 5 ticks is free —
 const coyoteCase = async (lateTicks) => {
-  await settle()
+  await groundBench()
   // run right toward the bench edge (x=13) until the 'edge' event fires
   let s = await step1({ x: 1 })
   let guard = 0
@@ -118,15 +129,15 @@ c = await coyoteCase(7)
 check('jump 7 ticks after the edge consumes the double jump (coyote=5 expired)', c.jumpsLeft === 0, JSON.stringify(c))
 
 // — 6) fast-fall multiplies descent —
-await settle()
+await groundBench()
 await step1({ jump: true })
-await steps(9, {})                              // near apex
-let s1 = await steps(8, {})
+await steps(22, {})                             // apex is 23 ticks at jumpVel 11.5
+let s1 = await steps(14, {})
 const slowDrop = F(s1).y
-await settle()
+await groundBench()
 await step1({ jump: true })
-await steps(9, {})
-let s2 = await steps(8, { down: true })
+await steps(22, {})
+let s2 = await steps(14, { down: true })
 check('fast-fall drops meaningfully faster', F(s2).y < slowDrop - 0.4, `ff=${F(s2).y.toFixed(2)} vs ${slowDrop.toFixed(2)}`)
 
 // — 7) ledge forgiveness: land with feet 0.3m past the platform edge —
@@ -154,11 +165,21 @@ const snapOK = await page.evaluate(() => {
   // still grounded at 13.3 (within snap) but airborne at 13.5 (beyond).
   return true
 })
-st = await steps(200, { x: 1 })                 // run right, off the bench, into the blast zone side
-check('no wall-stick: falling beside the bench slab keeps falling (vy grows)', F(st).vy < -4 && !F(st).grounded, `vy=${F(st).vy}`)
+// walk off the right edge, then hold BACK INTO the slab side while falling
+// beside it: pushed out (x pinned ~13.3), never stuck (vy keeps growing)
+await page.evaluate(() => { window.__MOONREST__.fight.exit(); window.__MOONREST__.fight.enter('beldam', 2, 99) })
+await settle()
+{
+  let sW = await step1({ x: 1 })
+  let g3 = 0
+  while (g3 < 600 && !sW.events.some((e) => e.t === 'edge' && e.id === 0)) { sW = await step1({ x: 1 }); g3++ }
+  sW = await steps(28, { x: -1 })               // drift back + press into the slab mid-fall
+  check('no wall-stick: held into the slab side, still falling (vy grows)', !F(sW).grounded && F(sW).vy <= -10 && Math.abs(F(sW).x - 13.3) < 0.6, `vy=${F(sW).vy} x=${F(sW).x}`)
+  await steps(120, {})                          // clear: fall to blast, respawn
+}
 
 // — 8) drop-through one-way platform (down+jump) —
-await page.evaluate(() => { window.__MOONREST__.fight.exit(); window.__MOONREST__.fight.enter('beldam', 2) })
+await page.evaluate(() => { window.__MOONREST__.fight.exit(); window.__MOONREST__.fight.enter('beldam', 2, 99) })
 await steps(90, {})                             // settle on bench from spawn
 // climb: double jump onto the left shelf (x=-7.5, y=3)
 await steps(10, { x: -1 })
@@ -176,7 +197,7 @@ if (F(st).grounded && Math.abs(F(st).y - 3.0) < 0.1) {
 }
 
 // ═══ F2: IMPACT FEEL ═══
-const reenter = () => page.evaluate(() => { window.__MOONREST__.fight.exit(); return window.__MOONREST__.fight.enter('beldam', 2) })
+const reenter = () => page.evaluate(() => { window.__MOONREST__.fight.exit(); return window.__MOONREST__.fight.enter('beldam', 2, 99) })
 const both = (a, b) => page.evaluate(([a2, b2]) => window.__MOONREST__.fight.step({ 0: a2, 1: b2 }), [a, b])
 const bothN = async (n, a, b) => { let s; for (let k = 0; k < n; k++) s = await both(a, b); return s }
 const approach = async () => {
@@ -303,6 +324,79 @@ for (let k = 0; k < 40 && !shR; k++) {
 }
 check('reduced motion zeroes the shake', shR && shR.ampM === 0 && shR.reduced === true, JSON.stringify(shR))
 await page.evaluate(() => { window.__REDUCED_MOTION__ = false })
+
+// ═══ F3: KO / STOCKS / RESPAWN / MATCH END (batched in-page for speed) ═══
+const f3 = await page.evaluate(() => {
+  const M = window.__MOONREST__
+  M.fight.exit(); M.fight.enter('beldam', 2)
+  const out = { koSides: [], checks: {} }
+  const F = (s, i) => s.fighters[i]
+  const step = (a, b) => M.fight.step({ 0: a ?? {}, 1: b ?? {} })
+  let s = step()
+  for (let k = 0; k < 90; k++) s = step()
+  // drive P1 to KO P2 three times
+  let kos = 0, guard = 0, koState = null, postKo = null
+  while (kos < 3 && guard < 30000) {
+    guard++
+    const p0 = F(s, 0), p1 = F(s, 1)
+    if (s.over) break
+    if (p1.ko > 0) { s = step(); continue }             // P2 riding the moon
+    const dx = p1.x - p0.x
+    const dy = p1.y - p0.y
+    // P2 approaches only when FAR (no DI pollution at the hit tick, no
+    // walking through the swing) and steps off any shelf a respawn parked
+    // it on; near range it stands and takes its licks
+    let p2inp = {}
+    if (!(p1.launched > 0 || p1.invuln > 60 || p1.ko > 0)) {
+      if (p1.y - p0.y > 1.6) p2inp = { x: p1.x >= 0 ? 1 : -1 }
+      else if (Math.abs(dx) > 3) {
+        const w2 = p0.x > p1.x ? 1 : -1
+        p2inp = { x: (w2 > 0 && p1.x > 11) || (w2 < 0 && p1.x < -11) ? 0 : w2 }
+      }
+    }
+    if (Math.abs(dx) > 1.9 || dy > 1.6) {
+      const want = dx > 0 ? 1 : -1
+      const clamped = (want > 0 && p0.x > 11) || (want < 0 && p0.x < -11) ? 0 : want
+      s = step({ x: clamped, jump: dy > 1.6 && guard % 2 === 0 }, p2inp)
+    } else s = step({ heavy: guard % 8 < 4, x: Math.abs(dx) > 0.2 ? (dx > 0 ? 1 : -1) : 0 }, p2inp) // pulse edges + keep FACING the target
+    const ko = s.events.find((e) => e.t === 'ko' && e.id === 1)
+    if (ko) {
+      kos++
+      out.koSides.push(ko.side)
+      if (kos === 1) {
+        koState = { stocks: F(s, 1).stocks, wooze: F(s, 1).wooze, ko: F(s, 1).ko, invuln: F(s, 1).invuln, x: F(s, 1).x }
+        // ride: x pinned to 0, y descending; then wait for auto-drop
+        let s2 = step(); let rideX = F(s2, 1).x, y0 = F(s2, 1).y
+        for (let k2 = 0; k2 < 95 && F(s2, 1).ko > 0; k2++) s2 = step()
+        postKo = { rideX, yStart: y0, invulnAfterDrop: F(s2, 1).invuln, dropped: F(s2, 1).ko === 0 }
+        // invuln protects: P1 walks to x=0 and swings while P2 descends
+        let s3 = s2
+        for (let k3 = 0; k3 < 160 && Math.abs(F(s3, 0).x) > 1.2; k3++) s3 = step({ x: F(s3, 0).x > 0 ? -1 : 1 }, {})
+        let hitDuringInvuln = false
+        for (let k3 = 0; k3 < 30; k3++) {
+          s3 = step({ light: true }, {})
+          if (F(s3, 1).invuln <= 0) break
+          if (s3.events.some((e) => e.t === 'hit')) hitDuringInvuln = true
+        }
+        postKo.hitDuringInvuln = hitDuringInvuln
+        s = s3
+      }
+    }
+  }
+  out.checks.koState = koState
+  out.checks.postKo = postKo
+  out.checks.kos = kos
+  out.checks.over = s.over
+  out.checks.winner = s.winner
+  out.checks.guard = guard
+  return out
+})
+check('KO detected and stock lost (3→2)', f3.checks.koState?.stocks === 2, JSON.stringify(f3.checks.koState))
+check('wooze resets to 0 on KO', f3.checks.koState?.wooze === 0)
+check('respawn rides the moon platform at x=0', f3.checks.postKo && Math.abs(f3.checks.postKo.rideX) < 0.01 && f3.checks.postKo.yStart > 10, JSON.stringify(f3.checks.postKo))
+check('2s invulnerable shimmer from the drop', f3.checks.postKo?.invulnAfterDrop > 100 && f3.checks.postKo?.invulnAfterDrop <= 120, `invuln=${f3.checks.postKo?.invulnAfterDrop}`)
+check('shimmer actually protects (no hit lands during invuln)', f3.checks.postKo?.hitDuringInvuln === false)
+check('three KOs end the match — last wizard dreaming wins', f3.checks.kos === 3 && f3.checks.over === true && f3.checks.winner === 0, JSON.stringify({ kos: f3.checks.kos, over: f3.checks.over, winner: f3.checks.winner }))
 
 check('console clean', issues.length === 0, issues.slice(0, 3).join(' | '))
 console.log(fails === 0 ? 'FIGHTFEEL PASS' : `FIGHTFEEL: ${fails} FAILURES`)

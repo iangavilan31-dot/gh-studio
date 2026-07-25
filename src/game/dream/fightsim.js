@@ -55,8 +55,9 @@ export function makeFighter(id, spec = {}) {
     hitstop: 0,                  // ticks frozen by impact (F2)
     launched: 0,                 // ticks of launch state remaining (F2)
     wooze: 0,                    // accumulated geek (F2)
-    stocks: 3,
+    stocks: spec.stocks ?? 3,
     ko: 0,                       // ticks of KO/respawn shimmer (F3)
+    invuln: 0,                   // respawn shimmer ticks (2s = 120)
     move: null,                  // {name, t} active attack state
     hitIds: null,                // opponents already struck by this swing
     grab: -1,                    // id of the fighter holding us (-1 free)
@@ -246,10 +247,65 @@ function launch(d, dir, kb, angleDeg, di, ev, cause) {
   ev.push({ t: 'launch', id: d.id, kb: +kb.toFixed(2), ang: +(ang * 180 / Math.PI).toFixed(2), cause })
 }
 
+const RESPAWN = { wait: 90, dropY: 13, restY: 6, invuln: 120 } // 1.5s ride, 2s shimmer
+
 export function stepMatch(m, inputsById) {
   m.events.length = 0
   const ev = m.events
-  for (const f of m.fighters) stepFighter(f, inputsById[f.id] ?? {}, m.arena, ev)
+  if (m.over) { m.tick++; return ev } // the dream is settling; nobody moves
+
+  for (const f of m.fighters) {
+    if (f.stocks <= 0) continue // gone until the victory nap
+    // — respawn ride: descending moon platform, drop off early with jump —
+    if (f.ko > 0) {
+      f.ko--
+      const t = 1 - f.ko / RESPAWN.wait
+      f.x = 0
+      f.y = RESPAWN.dropY - (RESPAWN.dropY - RESPAWN.restY) * t
+      f.vx = 0; f.vy = 0
+      const inp = inputsById[f.id] ?? {}
+      if ((inp.jump && !f.prev.jump) || f.ko === 0) {
+        f.ko = 0
+        f.grounded = false
+        f.jumpsLeft = 1
+        f.invuln = RESPAWN.invuln // exactly 2s of shimmer from the drop (Part 2)
+        ev.push({ t: 'respawnDrop', id: f.id })
+      }
+      f.prev.jump = !!inp.jump
+      continue
+    }
+    if (f.invuln > 0) f.invuln--
+    stepFighter(f, inputsById[f.id] ?? {}, m.arena, ev)
+  }
+
+  // — blast zones: KO, stock loss, respawn or elimination (F3) —
+  const b = m.arena.blast
+  for (const f of m.fighters) {
+    if (f.stocks <= 0 || f.ko > 0) continue
+    const out = (!m.arena.wrap && (f.x < b.l || f.x > b.r)) || f.y < b.b || (f.y > b.t && f.vy > 4)
+    if (!out) continue
+    f.stocks--
+    const side = f.y < b.b ? 'bottom' : f.y > b.t ? 'top' : f.x < b.l ? 'left' : 'right'
+    ev.push({ t: 'ko', id: f.id, side, x: +f.x.toFixed(2), y: +f.y.toFixed(2), stocks: f.stocks })
+    if (f.grab >= 0) { m.fighters[f.grab].grabbing = -1; f.grab = -1 }
+    if (f.grabbing >= 0) { m.fighters[f.grabbing].grab = -1; f.grabbing = -1 }
+    f.move = null; f.launched = 0; f.wooze = 0; f.fastfall = false
+    if (f.stocks > 0) {
+      f.ko = RESPAWN.wait
+      f.invuln = RESPAWN.wait + RESPAWN.invuln // shimmer runs through the ride + 2s free
+      f.x = 0; f.y = RESPAWN.dropY; f.vx = 0; f.vy = 0
+    } else {
+      ev.push({ t: 'eliminated', id: f.id })
+    }
+  }
+
+  // — last wizard still dreaming wins —
+  const alive = m.fighters.filter((f) => f.stocks > 0)
+  if (alive.length <= 1 && m.fighters.length > 1 && !m.over) {
+    m.over = true
+    m.winner = alive[0]?.id ?? -1
+    ev.push({ t: 'matchEnd', winner: m.winner })
+  }
 
   // — grabs: start / hold / escape / throw (gentle, per Part 3) —
   for (const f of m.fighters) {
@@ -260,7 +316,7 @@ export function stepMatch(m, inputsById) {
     // start a toss: press with a free opponent in reach
     if (tossPressed && f.grabbing < 0 && !f.move && f.landlag <= 0) {
       for (const d of m.fighters) {
-        if (d.id === f.id || d.grab >= 0 || d.ko > 0) continue
+        if (d.id === f.id || d.grab >= 0 || d.ko > 0 || d.stocks <= 0 || d.invuln > 0) continue
         if (Math.abs(d.x - f.x) <= TOSS.reach && Math.abs(d.y - f.y) < 1.2 && (d.x - f.x) * f.face >= -0.2) {
           if (d.noGrab) { ev.push({ t: 'nograb', id: d.id }); continue } // the Chicken, obviously
           f.grabbing = d.id; f.grabT = 0

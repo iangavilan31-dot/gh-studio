@@ -10,6 +10,7 @@ import * as TEX from '../art/textures.js'
 import { buildWizard, PLAYER_TINTS } from '../art/characters.js'
 import { makeAnimState, advanceAnim, applyPose } from '../systems/anim.js'
 import { Sky } from '../world/zonelight.js'
+import { ParticleSystem } from '../world/particles.js'
 import { TICK, makeFighter, makeArena, makeMatch, stepMatch } from './fightsim.js'
 
 // Beldam's Dream — the Endless Bench (the tutorial arena, Part 4.1):
@@ -100,15 +101,90 @@ class DreamMode {
     scene.add(jar)
     // upward rain (Beldam's dream logic) arrives with the F2 particle pass
 
+    // dream particles run on RENDER dt — they keep drifting through hitstop
+    // (Part 5's "particles NOT frozen"), and they sell every KO
+    this.moths = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#d8cfae' }), max: 90, additive: true })
+    this.zs = new ParticleSystem(scene, { tex: TEX.zGlyph(), max: 10, additive: false })
+
+    // moon respawn platforms (one per possible fighter)
+    this.moonPlats = []
+    for (let i = 0; i < 4; i++) {
+      const g = new THREE.Group()
+      const glow = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 2.8), (() => {
+        const m = retroMaterial({ map: TEX.glowDot({ color: '#c8d4f0' }), transparent: true, depthWrite: false, opacity: 0.7 })
+        m.blending = THREE.AdditiveBlending
+        return m
+      })())
+      ensureVertexColors(glow.geometry)
+      g.add(glow)
+      const slab = new THREE.Mesh(new THREE.BoxGeometry(2.0, 0.16, 1.2), retroMaterial({ map: TEX.white(), emissive: 0x8a86b8 }))
+      ensureVertexColors(slab.geometry, [0.8, 0.8, 0.95])
+      slab.position.y = -0.15
+      g.add(slab)
+      g.visible = false
+      scene.add(g)
+      this.moonPlats.push(g)
+    }
+    // invuln shimmer quads
+    this.shimmers = []
+    for (let i = 0; i < 4; i++) {
+      const m = retroMaterial({ map: TEX.glowDot({ color: '#bfe8ff' }), transparent: true, depthWrite: false, opacity: 0.4 })
+      m.blending = THREE.AdditiveBlending
+      const q = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 2.8), m)
+      ensureVertexColors(q.geometry)
+      q.visible = false
+      scene.add(q)
+      this.shimmers.push(q)
+    }
+
     this.camera = new THREE.PerspectiveCamera(38, 16 / 9, 0.1, 220)
     this.camera.position.set(0, 3.4, 17)
     this.camera.lookAt(0, 2.6, 0)
     return scene
   }
 
+  // the only HUD: bottle tints + stock moons, no numbers (Part 2)
+  _buildHud(n) {
+    const el = document.createElement('canvas')
+    el.id = 'dreamhud'
+    el.width = 340; el.height = 72
+    el.style.cssText = 'position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:40;image-rendering:pixelated;pointer-events:none'
+    document.getElementById('ui')?.appendChild(el)
+    this.hudEl = el
+    this.hudN = n
+  }
+
+  _drawHud() {
+    if (!this.hudEl || !this.match) return
+    const ctx = this.hudEl.getContext('2d')
+    ctx.clearRect(0, 0, 340, 72)
+    const tint = (w) => {
+      const t = Math.min(1, w / 140)
+      const lerp = (a, b) => Math.round(a + (b - a) * t)
+      return t < 0.5 ? `rgb(${lerp(127, 232)},${lerp(212, 168)},${lerp(212, 74)})` : `rgb(${lerp(127, 232)},${lerp(212, 102)},${lerp(212, 18)})`
+    }
+    this.match.fighters.forEach((f, i) => {
+      const x = 20 + i * 86
+      ctx.globalAlpha = f.stocks > 0 ? 1 : 0.25
+      // bottle
+      ctx.strokeStyle = '#d8cfae'; ctx.lineWidth = 2
+      ctx.strokeRect(x, 14, 18, 34)
+      ctx.strokeRect(x + 5, 8, 8, 6)
+      const fill = Math.min(1, f.wooze / 140)
+      ctx.fillStyle = tint(f.wooze)
+      ctx.fillRect(x + 2, 16 + (1 - fill) * 30, 14, fill * 30)
+      // stock moons
+      for (let s = 0; s < f.stocks; s++) {
+        ctx.fillStyle = '#c8d4f0'
+        ctx.beginPath(); ctx.arc(x + 30 + s * 12, 44, 4, 0, Math.PI * 2); ctx.fill()
+      }
+      ctx.globalAlpha = 1
+    })
+  }
+
   // ——— fighters ———
-  _spawnFighters(n) {
-    const specs = [{}, {}, {}, {}]
+  _spawnFighters(n, opts = {}) {
+    const specs = [{ stocks: opts.stocks }, { stocks: opts.stocks }, { stocks: opts.stocks }, { stocks: opts.stocks }]
     for (let i = 0; i < n; i++) {
       const f = makeFighter(i, specs[i])
       const [sx, sy] = this.match.arena.spawns[i]
@@ -122,15 +198,17 @@ class DreamMode {
     }
   }
 
-  enter(arenaId = 'beldam', players = 2, liveInput = null) {
+  enter(arenaId = 'beldam', players = 2, liveInput = null, opts = {}) {
     if (this.active) return false
     const def = BELDAM_DREAM // F1: one arena; the roster of dreams lands in F5
     this.def = def
     this.scene = this._buildScene(def)
     this.match = makeMatch(makeArena(def.arena), [])
-    this._spawnFighters(players)
+    this._spawnFighters(players, opts)
     this.liveInput = liveInput
     this.acc = 0
+    this.victory = null
+    this._buildHud(players)
     this.active = true
     return true
   }
@@ -142,6 +220,9 @@ class DreamMode {
     this.match = null
     this.rigs.clear()
     this.anims.clear()
+    this.victory = null
+    this.hudEl?.remove()
+    this.hudEl = null
     return true
   }
 
@@ -167,7 +248,22 @@ class DreamMode {
   // height, ≤200ms, and fully disabled by reduced motion.
   _consumeEvents(events) {
     for (const e of events) {
-      if (e.t === 'hit' || e.t === 'throw') {
+      if (e.t === 'ko') {
+        // poofed into moths + one drifting z (Part 1: nobody gets hurt)
+        const cx = Math.max(-18, Math.min(18, e.x)), cy = Math.max(-6, Math.min(16, e.y))
+        for (let i = 0; i < 16; i++) {
+          const a = (i / 16) * Math.PI * 2 + (this.match?.tick ?? 0) * 0.37
+          this.moths?.spawn({
+            pos: new THREE.Vector3(cx, cy + 1, 0.4),
+            vel: new THREE.Vector3(Math.cos(a) * (1.6 + (i % 3) * 0.7), Math.sin(a) * 1.4 + 1.8, 0),
+            maxLife: 1.2 + (i % 4) * 0.25, size: 0.14 + (i % 3) * 0.05, seed: i / 16,
+            update(p, dt2) { p.pos.x += p.vel.x * dt2; p.pos.y += p.vel.y * dt2; p.vel.y *= 0.985; p.vel.x *= 0.99 },
+          })
+        }
+        this.zs?.spawn({ pos: new THREE.Vector3(cx, cy + 1.6, 0.5), vel: new THREE.Vector3(0.3, 1.1, 0), maxLife: 2.2, size: 0.5, seed: 0.5 })
+      } else if (e.t === 'matchEnd') {
+        this.victory = { winner: e.winner, t: 0 }
+      } else if (e.t === 'hit' || e.t === 'throw') {
         const reduced = typeof window !== 'undefined' && window.__REDUCED_MOTION__
         const visH = 2 * 17 * Math.tan((this.camera?.fov ?? 38) * Math.PI / 360)
         const ampM = reduced ? 0 : (e.shake ?? 0.4) * 0.006 * visH
@@ -195,8 +291,9 @@ class DreamMode {
         grounded: f.grounded, coyote: f.coyote, jumpsLeft: f.jumpsLeft, jumpBuf: f.jumpBuf,
         landlag: f.landlag, fastfall: f.fastfall, face: f.face, wooze: f.wooze, stocks: f.stocks,
         hitstop: f.hitstop, move: f.move?.name ?? null, moveT: f.move?.t ?? 0, launched: f.launched,
-        grab: f.grab, grabbing: f.grabbing, mash: f.mash,
+        grab: f.grab, grabbing: f.grabbing, mash: f.mash, ko: f.ko, invuln: f.invuln,
       })),
+      over: !!this.match.over, winner: this.match.winner ?? null,
       events: this.match.events.slice(),
     }
   }
@@ -206,6 +303,26 @@ class DreamMode {
       const rig = this.rigs.get(f.id)
       const st = this.anims.get(f.id)
       if (!rig) continue
+      // eliminated wizards leave the dream until the victory nap gathers them
+      if (f.stocks <= 0 && !this.victory) { rig.group.visible = false; continue }
+      rig.group.visible = true
+      // — victory nap (Part 2): the winner yawns and lies down beside the
+      //   losers; every match ends cozy —
+      if (this.victory) {
+        const v = this.victory
+        const wf = this.match.fighters[v.winner] ?? this.match.fighters[0]
+        if (f.id === v.winner) {
+          st.action = v.t > 2.4 ? 'lie' : v.t > 1.0 ? 'sit' : null
+          rig.group.position.set(wf.x, Math.max(0, wf.y), 0)
+        } else {
+          st.action = 'sleep'
+          const k = f.id < v.winner ? f.id : f.id - 1
+          rig.group.position.set(wf.x + (k + 1) * 1.5 * (k % 2 ? 1 : -1), Math.max(0, wf.y), 0)
+        }
+        advanceAnim(st, dt, 0, false)
+        applyPose(rig, st, 0)
+        continue
+      }
       rig.group.position.set(f.x, f.y, 0)
       rig.group.rotation.y = f.face > 0 ? Math.PI / 2 : -Math.PI / 2
       advanceAnim(st, dt, Math.abs(f.vx), !f.grounded)
@@ -244,6 +361,30 @@ class DreamMode {
         this._consumeEvents(stepMatch(this.match, this._liveSnapshot()))
       }
     }
+    // render-dt presentation: particles DRIFT through hitstop (Part 5)
+    this.moths?.update(dt, this.camera)
+    this.zs?.update(dt, this.camera)
+    // moon respawn rides + invuln shimmers track sim state
+    this.match?.fighters.forEach((f, i) => {
+      const plat = this.moonPlats?.[i]
+      if (plat) {
+        plat.visible = f.ko > 0
+        if (f.ko > 0) plat.position.set(f.x, f.y - 0.35, 0)
+      }
+      const sh = this.shimmers?.[i]
+      if (sh) {
+        sh.visible = f.invuln > 0 && f.stocks > 0
+        if (sh.visible) {
+          sh.position.set(f.x, f.y + 1.1, 0.3)
+          sh.material.uniforms.uOpacity.value = 0.22 + 0.2 * Math.sin((this.match.tick + i * 5) * 0.6)
+        }
+      }
+    })
+    if (this.victory) {
+      this.victory.t += dt
+      if (this.victory.t > 5.2) { this.exit(); return }
+    }
+    this._drawHud()
     this._pose(dt)
     // dream palette holds while active (waking zoneLight is paused)
     globalUniforms.uFogColor.value.set(this.def.palette.fog)
