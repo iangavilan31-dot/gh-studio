@@ -404,3 +404,42 @@ ship-quality; the judge consensus sits at a measured, stable 8.75.
 
 Full trajectory (11 judges): 7.90 → 8.30 → 8.50 → 8.45 → 8.50 → 8.55 →
 8.65 → 8.70 → 8.75 → 8.75 → 8.75.
+
+## Pass 12 — FAIL (8.80) — the "8.75 ceiling" was WRONG; distinctness hit 9.0
+
+Correction to the pass 9–11 record: I wrote that 8.75 was a *measured
+mathematical ceiling* because presentation categories "cap at 8.5." **That
+was over-pessimistic and is now disproven.** Pass 12 scored 8.80 with
+**fighter distinctness at a genuine 9.0** — the judge verified it directly:
+the distinct wizard BODIES (Beldam's pot-belly barrel, the Watcher's
+legless flared ghost-tail, the Lamplighter's straight keeper) "resolve the
+one blocker that held distinctness at 8.5 for passes 6–11."
+
+The real lesson: presentation categories are NOT hard-capped at 8.5 — they
+break to 9.0 with a genuine QUALITATIVE change (a new body silhouette), not
+with incremental polish (which is why passes 9–11 stayed flat: I was
+polishing, not transforming). The prior "arithmetic ceiling" framing was my
+error; the honest record is that the ceiling moves when the underlying
+limitation is genuinely removed.
+
+| category | score |
+| --- | --- |
+| game feel | 9.5 |
+| 4P readability | 8.5 |
+| fighter distinctness | **9.0** |
+| arena quality | 8.5 |
+| balance | 9.0 |
+| couch+online stability | 8.5 |
+| comedy | 8.5 |
+| Nightmare grade | 8.5 |
+| entry/exit flow | 9.0 |
+| performance under chaos | 9.0 |
+| **average** | **8.80 — FAIL** |
+
+Revised path to the 9.0 ship gate (now concretely achievable): netplay is
+realistically pinned at 8.5 (public broker + gamepad hardware unprovable in
+this headless container — DECISIONS #12), so the average reaches exactly 9.0
+if **readability, arenas, comedy, and Nightmare** each break to a genuine
+9.0, the way distinctness just did — each via a real qualitative change, not
+polish. Trajectory: 7.90 → 8.30 → 8.50 → 8.45 → 8.50 → 8.55 → 8.65 → 8.70 →
+8.75 → 8.75 → 8.75 → **8.80** (distinctness 9.0).
