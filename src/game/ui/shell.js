@@ -124,7 +124,8 @@ export class Shell {
 
   onKey(e) {
     if (!this.screen) {
-      if (e.code === 'Escape') { e.preventDefault(); this.showPause() }
+      // while a dream (or its tunnel) is up, Escape belongs to the dream
+      if (e.code === 'Escape' && !this.h.dreamActive?.()) { e.preventDefault(); this.showPause() }
       return
     }
     const items = [...this.root.querySelectorAll('.mi')]
@@ -157,6 +158,9 @@ export class Shell {
     this.menuItem(list, 'New Night', () => this.begin(true))
     this.menuItem(list, 'Host Night', () => this.beginHost())
     this.menuItem(list, 'Join Night', () => this.showJoin())
+    // DREAMSCRAP F0: appears only once a dream has been found the honest
+    // way — by lying down beside a sleeper (Part 6 entry/exit)
+    if (this.s.dreamFound) this.menuItem(list, 'Dream', () => this.h.beginDream?.())
     this.menuItem(list, 'Fullscreen', () => this.toggleFullscreen())
     this.menuItem(list, 'Settings', () => this.showSettings('title'))
     this.menuItem(list, 'Credits', () => this.showCredits('title'))

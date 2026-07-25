@@ -1179,7 +1179,8 @@
     "waking world untouched (no combat refs; zero new waking verbs)",
     "discoverable via lie-down + friend"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "f0flow.mjs LIVE gates 11/11: sleep-emote within 3.5m of a sleeper (1.0s rest beat) opens the iris tunnel; entry tunnel 2905ms <= 4s (rest 1082ms, total 3986ms); Escape exit 2610ms <= 3s; player position bit-identical across enter+exit ([3.75,-0.152,-19.6] both sides \u2014 the waking sim never advanced); standing up mid-iris cancels (no fight entered, eye reopens 0.45s); discovery persists (title menu grows a 'Dream' item after reload, verified in DOM); sleepers carry arena ids beldam/nib/mote/curator (king joins in F5; chicken's Warm Oven too). Escape-vs-pause conflict found and fixed: shell now defers Escape to the dream via a dreamActive handler. Waking world untouched: entry adds ZERO new waking verbs (the sleep emote predates DREAMSCRAP); all fight code stays under src/game/dream/."
   },
   {
    "id": "FIGHT-F1",

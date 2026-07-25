@@ -25,6 +25,7 @@ import { Shell, loadSettings } from './ui/shell.js'
 import { audio } from './audio/engine.js'
 import { cues } from './audio/cues.js'
 import { dream } from './dream/dream.js'
+import { DreamTunnel } from './dream/tunnel.js'
 import { score } from './audio/score.js'
 import { beds } from './audio/beds.js'
 import { footstep, kindleChime } from './audio/sfx.js'
@@ -119,6 +120,20 @@ function doEmote(id) {
   player.setAction(id)
   if (net.active) net.request({ ev: 'emote', id })
 }
+// ——— DREAMSCRAP F0: lie down beside a dreamer and the dream reaches out ———
+const dreamTunnel = new DreamTunnel()
+let dreamRest = 0 // seconds spent asleep in a sleeper's orbit
+function beginDreamEntry(arenaId) {
+  if (dreamTunnel.active || dream.active) return false
+  if (!shell.s.dreamFound) { shell.s.dreamFound = true; shell.save() } // the title grows a 'Dream' item
+  dreamTunnel.begin('in', 1.4, () => {
+    endIntro(true)
+    if (mode === 'title') { shell.clear(); mode = 'game' }
+    dream.enter(arenaId, 2, input)
+  })
+  return true
+}
+
 function handleEmoteWheel() {
   if (input.down('Tab')) {
     if (!wheelOpen) { wheelOpen = true; wheelVec = [0, 0]; hud.showEmoteWheel(elapsed < giggleUntil) }
@@ -414,6 +429,8 @@ const shell = new Shell({
   startNight,
   hostNight: () => net.host(),
   joinNight: (code) => net.join(code),
+  beginDream: () => beginDreamEntry('beldam'), // F0: the title remembers the discovered dream
+  dreamActive: () => dream.active || dreamTunnel.active, // Escape belongs to the dream while it's up
   applySettings,
   getStats: () => ({ lights: world.kindledCount, lightsTotal: world.lights.length, brews: world.brewCount, trinkets: progress.trinkets, code: net.code }),
   hasSave: () => { try { return !!localStorage.getItem('moonrest-save-v1') } catch (e) { return false } },
@@ -619,12 +636,20 @@ function tick() {
 
   // ——— DREAMSCRAP (Part 1): while dreaming, the dream owns the frame — the
   // waking world pauses whole (no sim, no combat verbs ever added to it)
+  dreamTunnel.update(dt) // the iris draws over whichever world is up
   if (dream.active) {
-    dream.update(dt)
-    if (input.pressed('Escape')) dream.exit() // F0 minimal exit; menu lands later
-    input.endFrame()
-    pipeline.render(dream.scene, dream.camera, elapsed)
-    return
+    dream.update(dt) // may end itself (the victory nap fades the dream)
+    if (dream.active && input.pressed('Escape') && !dreamTunnel.active) dream.exit() // F0: skippable any time
+    if (dream.active) {
+      input.endFrame()
+      pipeline.render(dream.scene, dream.camera, elapsed)
+      return
+    }
+    // the dream just ended: the eye opens back on the waking night, the
+    // sleeper sits up, and nothing in the world has moved an inch
+    if (!dreamTunnel.active) dreamTunnel.begin('out', 0.9)
+    if (player.anim.action === 'sleep' || player.anim.action === 'lie') player.setAction(null)
+    dreamRest = 0
   }
 
   // photo mode toggle (in the night, no menu up)
@@ -674,6 +699,22 @@ function tick() {
     handleEmoteWheel() // consumes the look while open, so the camera holds still
     orbit.update(player.pos, player.yaw, jogging, wheelOpen ? [0, 0] : input.consumeLook(), dt, world.interactables)
     if (!wheelOpen) interact.update(input, dt)
+    // F0: sleeping beside a dreamer for a slow breath opens the tunnel;
+    // standing back up at ANY point (even mid-iris) cancels it — the cozy
+    // night never commits you to a fight
+    const slAct = player.anim.action
+    if ((slAct === 'sleep' || slAct === 'lie') && !dream.active) {
+      if (!dreamTunnel.active) {
+        const near = npcs.sleepers.find((s) => (s.x - player.pos.x) ** 2 + (s.z - player.pos.z) ** 2 < 3.5 * 3.5)
+        if (near) {
+          dreamRest += dt
+          if (dreamRest > 1.0) { dreamRest = 0; beginDreamEntry(near.id) }
+        } else dreamRest = 0
+      }
+    } else {
+      dreamRest = 0
+      if (dreamTunnel.active && dreamTunnel.dir === 'in' && dreamTunnel.phase === 'close') dreamTunnel.cancel()
+    }
     // the woozy wink (4.1): warm bloom + gentle camera roll, then it passes
     if (winkT > 0) {
       winkT = Math.max(0, winkT - dt * 0.4)
@@ -964,6 +1005,15 @@ window.__MOONREST__ = {
     step(inputsById = {}) { return dream.stepManual(inputsById) },
     state() { return dream.simState() },
     get lastShake() { return dream.lastShake ?? null },
+  },
+  // — F0 entry/exit test surface (tunnel timing is wall-clock, not ticks) —
+  f0: {
+    sleepers: () => npcs.sleepers,
+    pos: () => [+player.pos.x.toFixed(3), +player.pos.y.toFixed(3), +player.pos.z.toFixed(3)],
+    emote: (id) => { doEmote(id); return true },
+    tunnel: () => (dreamTunnel.active ? { phase: dreamTunnel.phase, dir: dreamTunnel.dir, t: +dreamTunnel.t.toFixed(3) } : null),
+    rest: () => +dreamRest.toFixed(3),
+    dreamFound: () => !!shell.s.dreamFound,
   },
   skipTo(min) { night.skipTo(min); return true },
   autopilot() { return autopilot() },
