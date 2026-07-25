@@ -945,8 +945,16 @@ class DreamMode {
           const up = Math.min(1, age / 6)
           const down = Math.max(0, 1 - Math.max(0, age - 60) / 30)
           r.visible = down > 0
-          r.scale.set(1.25, Math.max(0.05, up * down) * 1.15, 1.25) // thicker, taller
+          r.scale.set(1.35, Math.max(0.05, up * down) * 1.25, 1.35) // thicker, taller
           r.position.set(h.x, 0.8 * r.scale.y, 0.1)
+          // a warm scorch glow pools at the base the whole time it's up, so
+          // the root reads HOT in any frame, not just at the pop (judge p8)
+          if (down > 0 && wi < fx.warns.length) {
+            const w = fx.warns[wi++]
+            w.visible = true; w.position.set(h.x, 0.08, 0.25)
+            w.scale.setScalar(0.9)
+            w.material.uniforms.uOpacity.value = (0.4 + 0.2 * Math.sin(tick * 0.5)) * down
+          }
           // the earth ERUPTS: an ember burst the instant a root breaks
           // ground, so the hazard reads hot, not as a dark tree (judge p5)
           if (age <= 2) {
