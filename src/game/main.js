@@ -963,6 +963,7 @@ window.__MOONREST__ = {
     get manual() { return dream.manual },
     step(inputsById = {}) { return dream.stepManual(inputsById) },
     state() { return dream.simState() },
+    get lastShake() { return dream.lastShake ?? null },
   },
   skipTo(min) { night.skipTo(min); return true },
   autopilot() { return autopilot() },

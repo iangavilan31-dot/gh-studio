@@ -30,6 +30,14 @@ export const BASE = {
   weight: 1,          // knockback divisor
 }
 
+// Attack data (F2): phases in ticks; hitstop per Part 5 (lights 40–70ms =
+// 3–4 ticks, heavies 80–130ms = 5–8); aerialLag = landing lag by weight 2–8.
+export const ATTACKS = {
+  light: { startup: 4, active: 3, recovery: 8, dmg: 6, baseKB: 4.4, growth: 0.13, angleDeg: 38, hitstop: 3, aerialLag: 3, range: 1.15, r: 0.85 },
+  heavy: { startup: 13, active: 4, recovery: 17, dmg: 13, baseKB: 7.6, growth: 0.24, angleDeg: 44, hitstop: 6, aerialLag: 7, range: 1.45, r: 1.05 },
+}
+export const TOSS = { reach: 1.25, holdTicks: 45, throwKB: 5.2, throwAngleDeg: 55, escBase: 5, escPerWooze: 20 }
+
 // One fighter's mutable sim state.
 export function makeFighter(id, spec = {}) {
   return {
@@ -49,7 +57,12 @@ export function makeFighter(id, spec = {}) {
     wooze: 0,                    // accumulated geek (F2)
     stocks: 3,
     ko: 0,                       // ticks of KO/respawn shimmer (F3)
-    prev: { jump: false, light: false, heavy: false, special: false },
+    move: null,                  // {name, t} active attack state
+    hitIds: null,                // opponents already struck by this swing
+    grab: -1,                    // id of the fighter holding us (-1 free)
+    grabbing: -1,                // id we are holding
+    grabT: 0, mash: 0,
+    prev: { jump: false, light: false, heavy: false, special: false, toss: false },
   }
 }
 
@@ -88,6 +101,30 @@ export function stepFighter(f, inp, arena, ev) {
   const dt = TICK
   const pressed = (name) => inp[name] && !f.prev[name]
 
+  // — held in a grab: only mashing counts (escape scales with Wooze) —
+  if (f.grab >= 0) {
+    if (pressed('jump') || pressed('light') || pressed('heavy') || pressed('special') || pressed('toss')) f.mash++
+    f.prev = { jump: !!inp.jump, light: !!inp.light, heavy: !!inp.heavy, special: !!inp.special, toss: !!inp.toss }
+    return
+  }
+
+  // — attacks: light/heavy start when free; aerials pre-pay landing lag —
+  if (!f.move && f.landlag <= 0 && f.launched <= 0) {
+    const want = pressed('light') ? 'light' : pressed('heavy') ? 'heavy' : null
+    if (want) {
+      f.move = { name: want, t: 0 }
+      f.hitIds = new Set()
+      if (!f.grounded) f.aerialWeight = ATTACKS[want].aerialLag
+      ev?.push({ t: 'swing', id: f.id, move: want })
+    }
+  }
+  if (f.move) {
+    const A = ATTACKS[f.move.name]
+    f.move.t++
+    if (f.move.t >= A.startup + A.active + A.recovery) f.move = null
+  }
+  if (f.launched > 0) f.launched--
+
   // — buffered jump: a press is remembered for BUFFER ticks —
   if (pressed('jump')) f.jumpBuf = FEEL.BUFFER
   else if (f.jumpBuf > 0) f.jumpBuf--
@@ -96,9 +133,11 @@ export function stepFighter(f, inp, arena, ev) {
     f.landlag--
     f.vx = 0
   } else {
-    // — horizontal control —
-    const target = (inp.x ?? 0) * (f.grounded ? f.k.runSpeed : f.k.airSpeed)
-    const a = (f.grounded ? f.k.accel : f.k.airAccel) * dt
+    // — horizontal control (damped mid-move on the ground; drift in the air;
+    //   reduced while launched — DI already bent the trajectory at impact) —
+    const ctl = f.move && f.grounded ? 0.15 : f.launched > 0 ? 0.3 : 1
+    const target = (inp.x ?? 0) * (f.grounded ? f.k.runSpeed : f.k.airSpeed) * ctl
+    const a = (f.grounded ? f.k.accel : f.k.airAccel) * dt * (ctl < 1 ? ctl * 2 : 1)
     if (f.vx < target) f.vx = Math.min(target, f.vx + a)
     else if (f.vx > target) f.vx = Math.max(target, f.vx - a)
     if (inp.x) f.face = inp.x > 0 ? 1 : -1
@@ -181,7 +220,7 @@ export function stepFighter(f, inp, arena, ev) {
     ev?.push({ t: 'edge', id: f.id })
   } else if (f.coyote > 0) f.coyote--
 
-  f.prev = { jump: !!inp.jump, light: !!inp.light, heavy: !!inp.heavy, special: !!inp.special }
+  f.prev = { jump: !!inp.jump, light: !!inp.light, heavy: !!inp.heavy, special: !!inp.special, toss: !!inp.toss }
 }
 
 const a2 = (a) => a // clarity alias
@@ -191,9 +230,91 @@ export function makeMatch(arena, fighters) {
   return { tick: 0, arena, fighters, events: [] }
 }
 
+const deg = (d) => (d * Math.PI) / 180
+
+// Apply a launch to `d` from direction `dir` with knockback kb; the
+// defender's held stick bends the trajectory by up to DI_MAX (DI-lite).
+function launch(d, dir, kb, angleDeg, di, ev, cause) {
+  let ang = deg(angleDeg)
+  const bend = Math.max(-1, Math.min(1, di ?? 0)) * FEEL.DI_MAX
+  ang += bend
+  d.vx = Math.cos(ang) * kb * dir
+  d.vy = Math.sin(ang) * kb
+  d.grounded = false
+  d.launched = Math.round(kb * 2.2)
+  d.fastfall = false
+  ev.push({ t: 'launch', id: d.id, kb: +kb.toFixed(2), ang: +(ang * 180 / Math.PI).toFixed(2), cause })
+}
+
 export function stepMatch(m, inputsById) {
   m.events.length = 0
-  for (const f of m.fighters) stepFighter(f, inputsById[f.id] ?? {}, m.arena, m.events)
+  const ev = m.events
+  for (const f of m.fighters) stepFighter(f, inputsById[f.id] ?? {}, m.arena, ev)
+
+  // — grabs: start / hold / escape / throw (gentle, per Part 3) —
+  for (const f of m.fighters) {
+    const inp = inputsById[f.id] ?? {}
+    const tossPressed = !!inp.toss && !f.tossHeld
+    f.tossHeld = !!inp.toss
+    if (f.grab >= 0 || f.hitstop > 0) continue
+    // start a toss: press with a free opponent in reach
+    if (tossPressed && f.grabbing < 0 && !f.move && f.landlag <= 0) {
+      for (const d of m.fighters) {
+        if (d.id === f.id || d.grab >= 0 || d.ko > 0) continue
+        if (Math.abs(d.x - f.x) <= TOSS.reach && Math.abs(d.y - f.y) < 1.2 && (d.x - f.x) * f.face >= -0.2) {
+          if (d.noGrab) { ev.push({ t: 'nograb', id: d.id }); continue } // the Chicken, obviously
+          f.grabbing = d.id; f.grabT = 0
+          d.grab = f.id; d.mash = 0
+          ev.push({ t: 'grab', a: f.id, d: d.id })
+          break
+        }
+      }
+    } else if (f.grabbing >= 0) {
+      const d = m.fighters[f.grabbing]
+      f.grabT++
+      d.x = f.x + f.face * 0.95
+      d.y = f.y
+      d.vx = 0; d.vy = 0
+      const need = TOSS.escBase + Math.floor(d.wooze / TOSS.escPerWooze)
+      if (d.mash >= need) {
+        // escaped: both shove apart, no damage — a gentle system
+        d.grab = -1; f.grabbing = -1
+        d.vx = f.face * 3.2; f.vx = -f.face * 2.2
+        ev.push({ t: 'tossEscape', id: d.id, mashed: d.mash, needed: need })
+      } else if (f.grabT >= TOSS.holdTicks || (tossPressed && f.grabT > 8)) {
+        const dir = (inp.x ?? 0) < 0 ? -1 : f.face
+        d.grab = -1; f.grabbing = -1
+        d.wooze += 4
+        launch(d, dir, TOSS.throwKB + d.wooze * 0.06, TOSS.throwAngleDeg, inputsById[d.id]?.x, ev, 'toss')
+        d.hitstop = 3; f.hitstop = 3
+        ev.push({ t: 'throw', a: f.id, d: d.id })
+      }
+    }
+  }
+
+  // — hitboxes: active swing frames vs free opponents (id order = determinism) —
+  for (const f of m.fighters) {
+    if (!f.move || f.hitstop > 0) continue
+    const A = ATTACKS[f.move.name]
+    if (f.move.t <= A.startup || f.move.t > A.startup + A.active) continue
+    const hx = f.x + f.face * A.range, hy = f.y + 1.0
+    for (const d of m.fighters) {
+      if (d.id === f.id || f.hitIds.has(d.id) || d.ko > 0 || d.invuln > 0) continue
+      const dx = d.x - hx, dy = d.y + 0.9 - hy
+      if (dx * dx + dy * dy > (A.r + 0.45) ** 2) continue
+      f.hitIds.add(d.id)
+      d.wooze += A.dmg
+      if (d.grab >= 0) { m.fighters[d.grab].grabbing = -1; d.grab = -1 } // hits break grabs
+      const kb = (A.baseKB + d.wooze * A.growth) / d.k.weight
+      launch(d, f.face, kb, A.angleDeg, inputsById[d.id]?.x, ev, f.move.name)
+      // Part 5: BOTH parties frozen; particles keep drifting (presentation)
+      d.hitstop = A.hitstop
+      f.hitstop = A.hitstop
+      // shake command: amplitude scales with kb, presentation-capped
+      ev.push({ t: 'hit', a: f.id, d: d.id, move: f.move.name, kb: +kb.toFixed(2), wooze: d.wooze, shake: Math.min(1, kb / 16), shakeTicks: Math.min(12, 4 + Math.round(kb)) })
+    }
+  }
+
   m.tick++
-  return m.events
+  return ev
 }

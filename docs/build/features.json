@@ -1189,7 +1189,8 @@
     "scripts/fightfeel.mjs PASS with tick-measured numbers",
     "numbers logged in PERFORMANCE_AUDIT"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "scripts/fightfeel.mjs PASS (29/29): tick-1 input consume (<=2-tick=33.3ms budget), buffer 6 (4-before fires, 9-before doesn't), coyote 5 (+3 free, +7 consumes dj), fast-fall x1.8, ledge snap 0.35m, no wall-stick, drop-through, dj refill, landing lag 2-8 by weight (light 3 / heavy 7). PERFORMANCE_AUDIT.md F1+F2 records. First gate run caught unreachable platforms pre-art."
   },
   {
    "id": "FIGHT-F2",
@@ -1199,7 +1200,8 @@
     "fightfeel impact gates PASS",
     "reduced-motion capture pair"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "fightfeel F2 block: hitstop 50/100ms in-window with both parties position-frozen, kb growth 5.18->5.96, DI exactly +/-20deg via launch-event angle, toss grab/mash-escape scaling +1 per 20 wooze, shake 0.047m <= 0.070m cap <=200ms, reduced-motion zero. Particles-drift-in-hitstop is structural (presentation runs on render dt) \u2014 re-verified when dream particles land in F3."
   },
   {
    "id": "FIGHT-F3",

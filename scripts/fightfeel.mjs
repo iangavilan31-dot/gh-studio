@@ -175,6 +175,135 @@ if (F(st).grounded && Math.abs(F(st).y - 3.0) < 0.1) {
   check('down+jump drops through the one-way shelf (climb failed — route)', false, `y=${F(st).y} grounded=${F(st).grounded}`)
 }
 
+// ═══ F2: IMPACT FEEL ═══
+const reenter = () => page.evaluate(() => { window.__MOONREST__.fight.exit(); return window.__MOONREST__.fight.enter('beldam', 2) })
+const both = (a, b) => page.evaluate(([a2, b2]) => window.__MOONREST__.fight.step({ 0: a2, 1: b2 }), [a, b])
+const bothN = async (n, a, b) => { let s; for (let k = 0; k < n; k++) s = await both(a, b); return s }
+const approach = async () => {
+  await reenter()
+  await bothN(90, {}, {})                        // settle both on the bench
+  let s = await both({}, {})
+  let guard = 0
+  while (Math.abs(s.fighters[1].x - s.fighters[0].x) > 1.9 && guard < 200) { s = await bothN(1, { x: 1 }, { x: -1 }); guard++ }
+  await bothN(6, {}, {})                         // bleed speed
+  return s
+}
+
+// — 9) light hit: hitstop 3 ticks (50ms ∈ 40–70), both frozen, positions locked —
+await approach()
+let hitEv = null
+let sA = await both({ light: true }, {})
+for (let k = 0; k < 12 && !hitEv; k++) { sA = await both({ light: true }, {}); hitEv = sA.events.find((e) => e.t === 'hit') }
+check('light connects', !!hitEv, JSON.stringify(sA.events))
+if (hitEv) {
+  check('light hitstop = 3 ticks (50ms ∈ 40–70ms)', sA.fighters[0].hitstop === 3 && sA.fighters[1].hitstop === 3, `a=${sA.fighters[0].hitstop} d=${sA.fighters[1].hitstop}`)
+  const px = [sA.fighters[0].x, sA.fighters[1].x]
+  const s2 = await bothN(3, {}, {})
+  check('both parties frozen through hitstop (positions locked)', Math.abs(s2.fighters[0].x - px[0]) < 1e-9 && Math.abs(s2.fighters[1].x - px[1]) < 1e-9, `moved ${Math.abs(s2.fighters[1].x - px[1])}`)
+  const s3 = await bothN(2, {}, {})
+  check('defender launches after hitstop', !s3.fighters[1].grounded || Math.abs(s3.fighters[1].vx) > 1, `vx=${s3.fighters[1].vx} vy=${s3.fighters[1].vy}`)
+}
+
+// — 10) heavy: hitstop 6 ticks (100ms ∈ 80–130), kb > light kb —
+const lightKB = hitEv?.kb ?? 0
+await approach()
+let hEv = null, sH = null
+for (let k = 0; k < 40 && !hEv; k++) { sH = await both({ heavy: true }, {}); hEv = sH.events.find((e) => e.t === 'hit') }
+check('heavy connects', !!hEv)
+if (hEv) {
+  check('heavy hitstop = 6 ticks (100ms ∈ 80–130ms)', sH.fighters[1].hitstop === 6, `d=${sH.fighters[1].hitstop}`)
+  check('heavy knockback > light knockback', hEv.kb > lightKB + 1, `heavy=${hEv.kb} light=${lightKB}`)
+}
+
+// — 11) knockback grows with Wooze —
+await approach()
+let firstKB = null, laterKB = null
+for (let round = 0; round < 4; round++) {
+  let ev2 = null
+  for (let k = 0; k < 60 && !ev2; k++) {
+    const s = await both({ light: true }, {})
+    ev2 = s.events.find((e) => e.t === 'hit')
+  }
+  if (ev2) { if (firstKB == null) firstKB = ev2.kb; laterKB = ev2.kb }
+  // walk back into range for the next round
+  let s = await both({}, {})
+  let g2 = 0
+  while (Math.abs(s.fighters[1].x - s.fighters[0].x) > 1.9 && g2 < 400) { s = await bothN(1, { x: s.fighters[1].x > s.fighters[0].x ? 1 : -1 }, {}); g2++ }
+}
+check('knockback grows with accumulated Wooze', firstKB != null && laterKB > firstKB + 0.5, `first=${firstKB} later=${laterKB}`)
+
+// — 12) DI-lite bends the launch ≤20° (heavy startup is a deterministic
+//   13 ticks: the defender only starts holding DI inside that window, so
+//   they barely drift before the active frames land) —
+const diCase = async (diX) => {
+  await approach()
+  await both({ heavy: true }, {})
+  await bothN(11, {}, {})
+  let e2 = null, s = null
+  for (let k = 0; k < 10 && !e2; k++) { s = await both({}, { x: diX }); e2 = s.events.find((x) => x.t === 'launch') }
+  return e2?.ang ?? null
+}
+const angPlus = await diCase(1), angMinus = await diCase(-1)
+const diDelta = angPlus != null && angMinus != null ? Math.abs(angPlus - angMinus) : -1
+check('DI-lite bends trajectory (measurable, ≤ 2×20°)', diDelta > 6 && diDelta <= 41, `+1→${angPlus}° −1→${angMinus}° Δ=${diDelta.toFixed(1)}°`)
+
+// — 13) landing lag by move weight: aerial light 3 ticks, aerial heavy 7 (2–8) —
+const lagCase = async (move) => {
+  await reenter()
+  await bothN(90, {}, {})
+  await both({ jump: true }, {})
+  await bothN(2, {}, {})
+  await both({ [move]: true }, {})               // start the aerial
+  let s = await both({}, {})
+  let guard = 0, lag = null
+  while (guard < 200) {
+    s = await both({}, {})
+    const land = s.events.find((e) => e.t === 'land' && e.id === 0)
+    if (land) { lag = land.lag; break }
+    guard++
+  }
+  return lag
+}
+const lagL = await lagCase('light'), lagH = await lagCase('heavy')
+check('aerial light landing lag = 3 ticks', lagL === 3, `lag=${lagL}`)
+check('aerial heavy landing lag = 7 ticks (2–8 by weight)', lagH === 7, `lag=${lagH}`)
+
+// — 14) toss: grab, escape scales with Wooze —
+await approach()
+let s4 = await both({ toss: true }, {})
+let grabbed = s4.events.some((e) => e.t === 'grab') || s4.fighters[1].grab === 0
+for (let k = 0; k < 6 && !grabbed; k++) { s4 = await both({ toss: true }, {}); grabbed = s4.fighters[1].grab === 0 }
+check('toss grabs in reach', grabbed, JSON.stringify(s4.fighters.map((f) => [f.grab, f.grabbing])))
+if (grabbed) {
+  // fresh defender (low wooze from earlier lights): mash out in ~5 presses
+  let escaped = false
+  for (let k = 0; k < 14; k++) {
+    s4 = await both({}, { jump: k % 2 === 0 })   // alternating edges = mashes
+    if (s4.events.some((e) => e.t === 'tossEscape')) { escaped = true; break }
+    if (s4.events.some((e) => e.t === 'throw')) break
+  }
+  check('mash escapes a fresh grab (esc base ≈5 presses)', escaped, `escaped=${escaped}`)
+}
+
+// — 15) shake surface: capped, short, reduced-motion honors zero —
+await approach()
+let sh = null
+for (let k = 0; k < 40 && !sh; k++) {
+  const s = await both({ heavy: true }, {})
+  if (s.events.some((e) => e.t === 'hit')) sh = await page.evaluate(() => window.__MOONREST__.fight.lastShake)
+}
+check('shake amplitude ≤ 0.6% of frame height', sh && sh.ampM <= sh.capM + 1e-6, JSON.stringify(sh))
+check('shake duration ≤ 12 ticks (200ms)', sh && sh.ticks <= 12, `ticks=${sh?.ticks}`)
+await page.evaluate(() => { window.__REDUCED_MOTION__ = true })
+await approach()
+let shR = null
+for (let k = 0; k < 40 && !shR; k++) {
+  const s = await both({ heavy: true }, {})
+  if (s.events.some((e) => e.t === 'hit')) shR = await page.evaluate(() => window.__MOONREST__.fight.lastShake)
+}
+check('reduced motion zeroes the shake', shR && shR.ampM === 0 && shR.reduced === true, JSON.stringify(shR))
+await page.evaluate(() => { window.__REDUCED_MOTION__ = false })
+
 check('console clean', issues.length === 0, issues.slice(0, 3).join(' | '))
 console.log(fails === 0 ? 'FIGHTFEEL PASS' : `FIGHTFEEL: ${fails} FAILURES`)
 await browser.close()
