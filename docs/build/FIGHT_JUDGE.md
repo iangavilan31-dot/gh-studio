@@ -263,3 +263,44 @@ Post-fix verification: fightfeel PASS, f0flow PASS, fightonline PASS,
 fightshots COMPLETE console-clean, build exit 0. Recaptures read
 personally — the Party reads festive, the Forest is lush, the wizards read
 apart, backgrounds are no longer black.
+
+## Pass 6 — FAIL (8.55)
+
+Fresh-eyes adversarial subagent; ran balance + fightfeel personally (both
+PASS). Distinctness rose to 8.5 (the body silhouettes landed). The plateau
+held: "the FAIL is robust, not knife-edge." Sharpest diagnosis yet of the
+darkness — the UPPER sky was brightened but `stops[0]`, the lower band
+where the fight happens, stayed near-black; and the eight supers were all
+shot on the same dark bench.
+
+| category | score |
+| --- | --- |
+| game feel | **9.5** |
+| 4P readability | 8.0 |
+| fighter distinctness | 8.5 |
+| arena quality | 8.0 |
+| balance | 9.0 |
+| couch+online stability | 8.5 |
+| comedy | 8.0 |
+| Nightmare grade | 8.0 |
+| entry/exit flow | 9.0 |
+| performance under chaos | 9.0 |
+| **average** | **8.55 — FAIL** |
+
+Follow-through (all re-verified in pixels): (1) lower sky bands lifted
+~2× across the six day palettes so the play-plane backdrop reads, not just
+the sky; (2) each super captured on its OWN dream where one exists —
+chandeliers in the hall, roots in the forest, derby/moonrise in the oven,
+constellation in the Big Sky, party in the ruins — so the reel shows six
+arenas instead of one dark bench; (3) the moonrise ring blooms at the
+caster's feet face-on.
+
+Note: six independent fresh-eyes judges now (7.90 → 8.30 → 8.50 → 8.45 →
+8.50 → 8.55) converge on the SAME structural read — systems ship-quality
+(feel 9.5, balance/flow/perf 9.0, netplay/distinctness 8.5), every
+PRESENTATION category at 8.0 — attributed each time to the spec-mandated
+cozy-dread / procedural-only / no-realtime-lights aesthetic. The 9.0-avg
+bar sits in real tension with the spec's own darkness mandate.
+
+Post-fix verification: fightfeel PASS, build exit 0, fightshots COMPLETE
+console-clean.
