@@ -226,3 +226,40 @@ Post-fix verification: fightfeel PASS, balance PASS, f0flow PASS (entry
 2.5s / exit 2.3s), fightonline PASS (three-way hashes identical),
 fightshots COMPLETE console-clean, build exit 0. Every recapture read
 personally.
+
+## Pass 5 — FAIL (8.50)
+
+Fresh-eyes adversarial subagent; ran balance + fightfeel personally (both
+PASS), read all 30 shots. Comedy recovered to 8.0 (victory-nap + swig
+confirmed landed). Verdict: the same shape as passes 1–4 — "the sim is
+ship-quality; every PRESENTATION category sits at 8.0 — dark reel,
+wizard-triplet blur, weak-reading roots/moonrise/party, subtle nightmare."
+
+| category | score |
+| --- | --- |
+| game feel | **9.5** |
+| 4P readability | 8.0 |
+| fighter distinctness | 8.0 |
+| arena quality | 8.0 |
+| balance | 9.0 |
+| couch+online stability | 8.5 |
+| comedy | 8.0 |
+| Nightmare grade | 8.0 |
+| entry/exit flow | 9.0 |
+| performance under chaos | 9.0 |
+| **average** | **8.50 — FAIL** |
+
+Findings → the presentation overhaul that followed (all re-proven in
+pixels): (1) pervasive darkness / near-black backgrounds → the six day
+palettes' skyUp + upper stops brightened ~40% (readable-dark, mood + the
+nightmare regrade preserved); (2) wizard-triplet shares one body → distinct
+SILHOUETTES: tall hooded Watcher, short stout Beldam, tall-hatted
+Lamplighter; (3) arena-curator doesn't read as a party → festival lights +
+braziers; (4) arena-mote is a dark void → layered fir treeline + fireflies;
+(5) roots read as dark trees → ember-hot + eruption burst; (6) moonrise has
+no ring → a knockback shockwave. Plus the f0flow cancel-test robustness.
+
+Post-fix verification: fightfeel PASS, f0flow PASS, fightonline PASS,
+fightshots COMPLETE console-clean, build exit 0. Recaptures read
+personally — the Party reads festive, the Forest is lush, the wizards read
+apart, backgrounds are no longer black.
