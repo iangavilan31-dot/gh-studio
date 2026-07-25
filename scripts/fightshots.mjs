@@ -317,20 +317,11 @@ await superShot('comedy-swig', ['beldam', 'lamplighter'], `${CLOSE}
   step({ special: true, x: d })
   for (let k = 0; k < 14; k++) step()`)
 
-// ——— F11: the dream shelf (trophies over the pause menu) ———
-await page.evaluate(() => {
-  const M = window.__MOONREST__
-  M.fight.exit()
-  try { localStorage.setItem('moonrest-dream-trophies', JSON.stringify(['beldam', 'chicken', 'mote'])) } catch (e) {}
-  M.openPause()
-})
-await page.waitForTimeout(500)
-await page.screenshot({ path: `${root}/docs/build/shots/dream/trophy-shelf.png` })
-await page.evaluate(() => { const e = new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape', bubbles: true }); window.dispatchEvent(e) })
-await page.waitForTimeout(300)
-
-// the victory nap: hand the match over, then let the real-time victory
-// scene play — winner lies down beside the loser (~3s in)
+// the victory nap: hand the match over, then STEP the victory scene by
+// ticks (manual mode drives victory.t) until the winner has lain down
+// beside the loser — deterministic, no real-time race, no auto-exit drift.
+// Captured BEFORE the pause-menu shot below: openPause + its Escape once
+// bled a latched menu/exit into this frame.
 const end = await page.evaluate(() => {
   const M = window.__MOONREST__
   M.fight.exit()
@@ -340,10 +331,24 @@ const end = await page.evaluate(() => {
   M.fight.winNow(0)
   let s = null
   for (let k = 0; k < 10; k++) { s = step(); if (s?.over) break }
+  // victory.t advances one TICK per manual step; the winner reaches 'lie'
+  // past 2.4s → ~150 ticks, hold ~40 more so the pose fully settles
+  for (let k = 0; k < 190; k++) step()
   return { over: s?.over ?? false, winner: s?.winner ?? null }
 })
 if (!end.over) issues.push('victory scene never began')
-await shot('victory-nap', 3300)
+await shot('victory-nap', 600) // short settle: the lie pose is already baked
+
+// ——— F11: the dream shelf (trophies over the pause menu) — LAST, since it
+// leaves a menu up; nothing captures after it ———
+await page.evaluate(() => {
+  const M = window.__MOONREST__
+  M.fight.exit()
+  try { localStorage.setItem('moonrest-dream-trophies', JSON.stringify(['beldam', 'chicken', 'mote'])) } catch (e) {}
+  M.openPause()
+})
+await page.waitForTimeout(500)
+await page.screenshot({ path: `${root}/docs/build/shots/dream/trophy-shelf.png` })
 
 await browser.close(); preview.kill()
 console.log(issues.length ? 'ISSUES: ' + issues.slice(0, 2).join('|') : 'FIGHTSHOTS COMPLETE (console clean)')
