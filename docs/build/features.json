@@ -1323,7 +1323,8 @@
       "steps": [
         "judge records with evidence"
       ],
-      "passes": false
+      "passes": true,
+      "evidence": "FIGHT_JUDGE.md records TWO CONSECUTIVE passing reviews by independent fresh-eyes adversarial subagents: pass 16 (9.00) and pass 17 (9.00). Both meet DREAMSCRAP Part 8: average >= 9.0, no category below 8.0 (min 8.5), game-feel >= 9.5. Each judge read the full spec, ledger, DECISIONS and PERFORMANCE_AUDIT, ran balance.mjs + fightfeel.mjs itself, and read all 33 money shots. Pass-17 category scores: feel 9.5, readability 9.0, distinctness 9.0, arenas 9.0, balance 9.0, netplay 8.5, comedy 9.0, nightmare 9.0, flow 9.0, perf 9.0. Netplay is the sole sub-9.0 in both passes, capped by production dependencies (public PeerJS broker + gamepad hardware) that are structurally unprovable in a headless container (DECISIONS #12) -- an honest environment limit, not a defect. The 17-judge arc (7.90 -> ... -> 9.00 -> 9.00) is recorded in full, including a mistaken '8.75 ceiling' claim at passes 9-11 that pass 12 disproved. Verified on the final state: fightfeel PASS (74/74), balance PASS, f0flow PASS, fightonline PASS, npm run build exit 0."
     }
   ]
 }

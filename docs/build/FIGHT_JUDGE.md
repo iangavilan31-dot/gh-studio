@@ -471,3 +471,37 @@ a headless container — DECISIONS #12), which is why the average is exactly
 more ≥9.0 pass closes FIGHT-F13. Full trajectory (16 judges): 7.90 → 8.30
 → 8.50 → 8.45 → 8.50 → 8.55 → 8.65 → 8.70 → 8.75 → 8.75 → 8.75 → 8.80 →
 8.80 → 8.85 → 8.90 → **9.00**.
+
+## Pass 17 — PASS (9.00) — SECOND consecutive passing review — FIGHT-F13 MET
+
+Independent fresh-eyes adversarial judge, explicitly told not to anchor to
+pass 16. Ran balance.mjs + fightfeel.mjs personally (both PASS), read all
+33 shots, inspected source. Scored each category on merit within the
+mandated cozy-dread/procedural/no-realtime-lights aesthetic and confirmed
+the five-layer fighter-ID stack (distinct bodies + HUD tints + seat halo +
+under-glow + the seat-colored marker with a SOLID hue-keeping core) reads
+in day chaos and the darkest hall.
+
+**Pass 17 scores:** feel 9.5, readability 9.0, distinctness 9.0, arenas
+9.0, balance 9.0, netplay 8.5, comedy 9.0, Nightmare 9.0, flow 9.0, perf
+9.0 → **AVG 9.00, VERDICT PASS.**
+
+**Two consecutive passing reviews achieved:**
+- Pass 16 — 9.00 PASS
+- Pass 17 — 9.00 PASS
+
+Both meet the DREAMSCRAP Part 8 ship bar: average ≥ 9.0, no category below
+8.0 (min 8.5), game-feel ≥ 9.5. Netplay sits at 8.5 in both — the sole
+sub-9.0, capped by production dependencies (public PeerJS broker + gamepad
+hardware) that are structurally unprovable in a headless container
+(DECISIONS #12), an honest environment limit, not a defect. **FIGHT-F13 is
+satisfied.**
+
+The full 17-judge arc — an honest record, including a mistaken "8.75 ceiling"
+call at passes 9–11 that pass 12 disproved: 7.90 → 8.30 → 8.50 → 8.45 →
+8.50 → 8.55 → 8.65 → 8.70 → 8.75 → 8.75 → 8.75 → 8.80 → 8.80 → 8.85 → 8.90
+→ **9.00 → 9.00**. The last stretch climbed because each pass named the ONE
+concrete art-staging fix per category and it got executed: distinct wizard
+BODIES (distinctness 9.0), warm legible Party (arenas 9.0), the drunken-swig
+bottle silhouette (comedy 9.0), and the seat-colored markers (readability +
+Nightmare 9.0).
