@@ -82,17 +82,25 @@ const cancel = await page.evaluate(() => new Promise((done) => {
   const M = window.__MOONREST__
   M.f0.emote('sleep')
   const out = { sawDream: false }
-  setTimeout(() => {
-    out.tunnelAtCancel = M.f0.tunnel()
-    M.f0.emote('wave') // the sleeper stirs — that's a no
-    const t0 = performance.now()
-    const poll = () => {
-      if (M.fight.active) out.sawDream = true
-      if (!M.f0.tunnel() && performance.now() - t0 > 1200) done(out)
-      else if (performance.now() - t0 > 6000) { out.timeout = true; done(out) } else requestAnimationFrame(poll)
-    }
-    requestAnimationFrame(poll)
-  }, 1900) // rest 1.2s + ~0.7s into the 1.4s close
+  // POLL for the close phase and cancel the instant we catch it — a fixed
+  // sleep timer raced the (now wall-clock) tunnel + clamped-dt rest and
+  // sometimes sampled after the iris shut. Deterministic; same assertion.
+  const t0 = performance.now()
+  const waitForClose = () => {
+    const tun = M.f0.tunnel()
+    if (tun && tun.phase === 'close') {
+      out.tunnelAtCancel = tun
+      M.f0.emote('wave') // the sleeper stirs — that's a no
+      const tc = performance.now()
+      const poll = () => {
+        if (M.fight.active) out.sawDream = true
+        if (!M.f0.tunnel() && performance.now() - tc > 1200) done(out)
+        else if (performance.now() - tc > 6000) { out.timeout = true; done(out) } else requestAnimationFrame(poll)
+      }
+      requestAnimationFrame(poll)
+    } else if (performance.now() - t0 > 8000) { done(out) } else requestAnimationFrame(waitForClose)
+  }
+  requestAnimationFrame(waitForClose)
 }))
 check('cancel caught the tunnel mid-close', !!cancel.tunnelAtCancel && cancel.tunnelAtCancel.phase === 'close', JSON.stringify(cancel.tunnelAtCancel))
 check('standing up cancels the descent — no fight, eye reopens', cancel.sawDream === false && !cancel.timeout)
