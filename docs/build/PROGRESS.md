@@ -632,3 +632,10 @@ Hitbox overlay (flat emissive debug ink after glowDot stretched to
 nothing) proves identical layouts in pair-*-day/night.png. 73 gates x2.
 NEXT: F6 items (brews + Boot + neutral chicken); F9 online; F10 perf;
 F11 lobby+rematch; F12 comedy; FIGHT_JUDGE x2.
+
+## FIGHT-F6 COMPLETE — the brews, the Boot, the bird
+Five brews + the skipping Boot + the unhittable leader-pecking neutral
+chicken, all deterministic, live-match-only so gates and the bracket
+stay pure. 9 new gates green; items.png reads.
+NEXT: F9 online lockstep; F10 perf; F11 lobby+rematch; F12 comedy;
+FIGHT_JUDGE x2. Re-read DREAMSCRAP_PASS.md after compaction.
