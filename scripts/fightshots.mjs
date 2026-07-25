@@ -43,7 +43,7 @@ const DRIVER = `
         const want = dx > 0 ? 1 : -1
         const clamped = (want > 0 && p0.x > 11) || (want < 0 && p0.x < -11) ? 0 : want
         s = step({ x: clamped, jump: dy > 1.6 && guard % 2 === 0 }, p2inp)
-      } else s = step({ heavy: guard % 8 < 4, x: Math.abs(dx) > 0.2 ? (dx > 0 ? 1 : -1) : 0 }, p2inp)
+      } else s = step({ heavy: guard % 8 < 4, x: dx >= 0 ? 1 : -1 }, p2inp) // ALWAYS face the target — a 0.2m deadlock once heavied the air for 25k ticks
     }
     return s
   }
@@ -92,8 +92,52 @@ await shot('ko-moths')
 await page.evaluate(() => { const M = window.__MOONREST__; for (let k = 0; k < 40; k++) M.fight.step({}) })
 await shot('respawn-moon')
 
-// the victory nap: drive the match to its end, then let the real-time
+// the roster reads: four different creatures converge on one bench
+await page.evaluate(() => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('beldam', 4, 99, ['lamplighter', 'beldam', 'nib', 'paleking']) })
+await page.waitForTimeout(1400)
+await page.evaluate(() => {
+  const M = window.__MOONREST__
+  const step = (i) => M.fight.step(i ?? {})
+  for (let k = 0; k < 70; k++) step()
+  // walk each to their own mark so all four silhouettes read apart
+  const marks = { 0: -4.2, 1: -1.4, 2: 1.6, 3: 4.6 }
+  let s = step(), g = 0
+  const done = () => [0, 1, 2, 3].every((i) => Math.abs(s.fighters[i].x - marks[i]) < 0.3)
+  while (!done() && g++ < 400) {
+    const inp = {}
+    for (let i = 0; i < 4; i++) {
+      const dx = marks[i] - s.fighters[i].x
+      inp[i] = { x: Math.abs(dx) < 0.3 ? 0 : Math.sign(dx) }
+    }
+    s = step(inp)
+  }
+  for (let k = 0; k < 12; k++) step()
+  // face center + a swing each side of the frame
+  step({ 0: { heavy: true, x: 1 }, 2: { light: true, x: 1 }, 1: { x: 1 }, 3: { x: -1 } })
+  for (let k = 0; k < 14; k++) step()
+})
+await shot('roster')
+
+// comedy pair: Mote shell-spins in, the Chicken answers with the flurry
+await page.evaluate(() => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('beldam', 2, 99, ['chicken', 'mote']) })
+await page.waitForTimeout(900)
+await page.evaluate(() => {
+  const M = window.__MOONREST__
+  const step = (a, b) => M.fight.step({ 0: a ?? {}, 1: b ?? {} })
+  for (let k = 0; k < 60; k++) step()
+  let s = step(), g = 0
+  while (Math.abs(s.fighters[1].x - s.fighters[0].x) > 3.6 && g++ < 240) s = step({ x: s.fighters[1].x > s.fighters[0].x ? 1 : -1 }, {})
+  for (let j = 0; j < 8; j++) s = step()
+  const d = Math.sign(s.fighters[0].x - s.fighters[1].x)
+  step({ special: true, x: -d }, { special: true, x: d })
+  for (let k = 0; k < 16; k++) step()
+})
+await shot('critters')
+
+// the victory nap: drive a fresh duel to its end, then let the real-time
 // victory scene play — winner lies down beside the loser (~3s in)
+await page.evaluate(() => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('beldam', 2) })
+await page.waitForTimeout(600)
 const end = await page.evaluate(`(() => { ${DRIVER}
   const s = drive((s2) => s2.over)
   return { over: s.over, winner: s.winner }
