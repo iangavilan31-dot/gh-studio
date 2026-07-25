@@ -957,7 +957,7 @@ window.__MOONREST__ = {
   kindle(id) { return net.active ? net.requestKindle(id) : world.kindle(id, { remote: true }) }, // rig path: no C.4 head-yank
   // ——— DREAMSCRAP test surface (DECISIONS #8: tick-measured feel gates) ———
   fight: {
-    enter(arena = 'beldam', players = 2) { endIntro(true); if (mode === 'title') { shell.clear(); mode = 'game' } return dream.enter(arena, players, input) },
+    enter(arena = 'beldam', players = 2, stocks = null) { endIntro(true); if (mode === 'title') { shell.clear(); mode = 'game' } return dream.enter(arena, players, input, stocks ? { stocks } : {}) },
     exit() { return dream.exit() },
     get active() { return dream.active },
     get manual() { return dream.manual },

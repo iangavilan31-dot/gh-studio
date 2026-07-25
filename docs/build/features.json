@@ -1212,7 +1212,8 @@
     "victory-nap capture",
     "bottle HUD readable at a glance"
    ],
-   "passes": false
+   "passes": false,
+   "evidence": "SIM HALF GREEN (fightfeel 34/34 x2 deterministic): KO at blast bounds, stock loss, wooze reset, moon-platform ride at x=0 (y 13->6, early-drop with jump), invuln exactly 120 ticks from drop and verified protective, matchEnd -> winner. Bottle HUD + moon slab READ in shots/dream/ko-moths.png. NOT YET: victory-nap capture + KO moths visible (dream scene needs its F5 light pass first \u2014 arena is blockout-dark). passes flips when the visual half is captured."
   },
   {
    "id": "FIGHT-F4",

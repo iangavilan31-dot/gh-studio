@@ -533,3 +533,22 @@ Part 5 numeric feel gates BEFORE roster breadth. 14 FIGHT- ledger entries
 seeded. Build order: F0 entry/exit shell -> F1 fixed-step kinematics + feel
 harness -> F2 impact feel -> F3 wooze/KO loop -> bots/couch -> roster ->
 arenas -> items -> online -> balance -> judge loop.
+
+## DREAMSCRAP F1–F3: the fight sim is REAL and its gates are green
+scripts/fightfeel.mjs: 34/34 twice (deterministic). Kinematics (latency
+tick-1, buffer 6, coyote 5, fast-fall, ledge snap, no wall-stick,
+drop-through), impact (hitstop 50/100ms both-frozen, wooze knockback
+growth, DI exactly ±20°, toss mash-escapes scaling, shake capped 0.6%
+≤200ms reduced-motion-aware), match loop (KO→moth poof→moon-platform
+ride→120-tick shimmer→stocks→last-wizard-wins). Harness lessons all
+encoded in the driver (pulse edges, face the target, P2 approaches only
+when far, fresh re-enters between phases).
+NEXT (in order): (1) F5-lite LIGHT PASS on Beldam's arena — vertex-bake
+warm pools under the jar + brighter plank tints + rim so fighters and
+moths READ (ko-moths.png is blockout-dark), then victory-nap capture →
+flip F3; (2) F0 entry/exit (sleep-emote near sleeper + title Dream item
++ ≤4s tunnel, exit ≤3s); (3) F4 roster (Beldam/Nib/King/Chicken first —
+reuse npc builders, per-fighter specs via makeFighter spec + specials);
+(4) F7 bots (the fightfeel driver IS proto-Dozy); (5) arenas/items/
+couch/online/balance; (6) FIGHT_JUDGE loop ×2.
+Re-read docs/DREAMSCRAP_PASS.md + this entry after any compaction.
