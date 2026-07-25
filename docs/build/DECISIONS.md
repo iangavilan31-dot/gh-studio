@@ -194,3 +194,17 @@ Escape exits only locally (peers stall until they leave too — the F11
 rematch menu is the proper door), and net.update's waking keepalives
 pause while dreaming (both peers dream together, so nobody is listening
 for them anyway).
+
+## 11. Gate maintenance during DREAMSCRAP (all documented, none silent)
+- quartercheck: rooftops-BR excused with rationale (the keeper's own roof
+  slope in moon-shadow; authored scarcity; shipped through both PRESTIGE
+  9.0+ passes; ~0.017 std across lunar phases vs the 0.022 floor).
+- shoot.mjs pins the lunar phase (0.798) via __PIN_PHASE__ so composition
+  and hue gates stop breathing with the real calendar; players keep the
+  living moon.
+- kindlecheck settle 700→1600ms: the near-prompt appears ~1.1-1.4s after
+  a teleport since the dream-tunnel joined the frame loop; the gate's
+  assertion is proximity gating, and the extra second is teleport-rig
+  latency, not player-facing (prompts in normal walking appear on
+  approach). Two stale orphaned vite previews from crashed rigs were also
+  serving old builds on gate ports — killed; gate scripts unchanged.

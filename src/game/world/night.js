@@ -112,7 +112,9 @@ export class Night {
     // must occlude the moon, never the reverse
     this.dist = 205
     this.warmBias = 0
-    this.setPhase(lunarAge())
+    // rigs may pin the phase: composition/hue gates must not breathe with
+    // the real calendar (players keep the living moon)
+    this.setPhase(typeof window !== 'undefined' && window.__PIN_PHASE__ != null ? window.__PIN_PHASE__ : lunarAge())
 
     const faceMat = retroMaterial({ map: moonFaceTexture(), emissive: 0x9d97c2, alphaTest: 0.3, noFog: true, depthWrite: false })
     this.face = new THREE.Mesh(new THREE.PlaneGeometry(42, 42), faceMat)
