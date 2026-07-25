@@ -182,6 +182,22 @@ await arenaShot('mote', `
   step({ jump: true }); for (let k = 0; k < 18; k++) step({ x: 1 })
 `)
 
+// ——— Nightmare regrades: identical hitboxes, only the light changes ———
+for (const a of ['beldam', 'paleking']) {
+  for (const [suffix, nm] of [['day', 0], ['night', 1]]) {
+    await page.evaluate(([a2, nm2]) => {
+      const M = window.__MOONREST__
+      window.__FIGHT_HITBOXES__ = true
+      M.fight.exit()
+      M.fight.enter(a2, 2, null, null, null, !!nm2)
+    }, [a, nm])
+    await page.waitForTimeout(1100)
+    await page.evaluate(() => { const M = window.__MOONREST__; for (let k = 0; k < 40; k++) M.fight.step({}) })
+    await shot(`pair-${a}-${suffix}`)
+  }
+}
+await page.evaluate(() => { window.__FIGHT_HITBOXES__ = false })
+
 // ——— the supers, seen (F4 presentation evidence) ———
 const superShot = async (name, fids, prep) => {
   await page.evaluate(([f]) => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('beldam', 2, 99, f) }, [fids])

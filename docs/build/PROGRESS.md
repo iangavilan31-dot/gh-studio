@@ -624,3 +624,11 @@ sleeper). Shots: arena-*.png x5 captured and READ (star-line bridge
 fight, moonwell party, warm hall, great-moon islands, bakery comedy).
 NEXT: Nightmare regrades + hitbox-overlay pairs -> flip F5; F6 items;
 F9 online; F10 perf; F11 lobby; F12 comedy; FIGHT_JUDGE x2.
+
+## FIGHT-F5 COMPLETE — six dreams + the Nightmare dial
+Nightmare regrades per dream (authored darkest palettes, shadow crowds,
+glows to coals — telegraphs keep full warmth: fair even at midnight).
+Hitbox overlay (flat emissive debug ink after glowDot stretched to
+nothing) proves identical layouts in pair-*-day/night.png. 73 gates x2.
+NEXT: F6 items (brews + Boot + neutral chicken); F9 online; F10 perf;
+F11 lobby+rematch; F12 comedy; FIGHT_JUDGE x2.

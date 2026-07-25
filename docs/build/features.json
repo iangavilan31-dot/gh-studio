@@ -1236,7 +1236,8 @@
     "hazard telegraph timing gate",
     "nightmare overlay pairs"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "Six dreams live (DREAMS registry, authored layouts, per-dream palettes + ambient drift): Endless Bench, Big Sky (timed star-line plats through platOn/landTop \u2014 solid 380/600 ticks, 120-tick warn breathe, gates prove hold-then-undraw with a fighter falling), the Party (moonwell behind the fight plane, applauding ghost nobles on hit events), Full Hall (scripted neutral chandeliers: spawn tick 781, warn 99 >= 1.5s law, owner -1 hits everyone), Young Forest (the only wrap stage; islands run to the wrap line \u2014 gate walks off the left edge and lands grounded on the right island; leaning saplings), Warm Oven (pie plats, bakery-window moon, oven embers). Gates: 4 fighters settle in all six arenas; 73-check suite x2 green. Shots: arena-*.png x5 all read (star-line bridge fight, moonwell party, warm hall, great-moon islands, bakery). Nightmare (Part 4.7): per-dream darkest regrades, arena glows drop to coals while hazard TELEGRAPHS keep full warmth (fairness), crowd goes shadow; hitbox-overlay proof pairs pair-{beldam,paleking}-{day,night}.png show byte-identical sim surfaces (white landing lines, yellow plat bars, blast frame) under both grades \u2014 the overlay itself needed flat emissive fills after glowDot textures diluted invisible over 26m quads. Honest deferral: per-arena dungeon-synth music variants land with the audio pass if the judges demand them."
   },
   {
    "id": "FIGHT-F6",

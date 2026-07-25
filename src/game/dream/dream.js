@@ -38,6 +38,7 @@ const DREAMS = {
   //   and the rain falls upward. —
   beldam: {
     palette: { fog: '#16303a', skyUp: '#4a6a72', ambient: '#a7bcb9', stops: ['#060d18', '#0a1620', '#10242c', '#182f38', '#16303a'] },
+    nightmare: { fog: '#0a161c', skyUp: '#1e3038', ambient: '#5a6a68', stops: ['#020508', '#040a10', '#081218', '#0c181e', '#0a161c'] },
     ambient: 'rainUp',
     arena: {
       solids: [{ x: 0, y: 0, w: 26, h: 3.2 }],
@@ -95,6 +96,7 @@ const DREAMS = {
   //   star-lines draw and undraw as temporary platforms (2s telegraph). —
   nib: {
     palette: { fog: '#1a1836', skyUp: '#4a4880', ambient: '#b2aede', stops: ['#080718', '#100e28', '#181540', '#242054', '#1a1836'] },
+    nightmare: { fog: '#0c0b1c', skyUp: '#201e40', ambient: '#605c80', stops: ['#030308', '#070610', '#0c0a1c', '#100e26', '#0c0b1c'] },
     ambient: { color: '#cfd8ff', vel: [0, -0.45], rate: 12, size: 0.09, alpha: 0.5 },
     arena: {
       solids: [{ x: -6, y: 0, w: 10, h: 3 }, { x: 6, y: 0, w: 10, h: 3 }],
@@ -156,6 +158,7 @@ const DREAMS = {
   //   applauding good hits. Her dream is the night the party never ended. —
   curator: {
     palette: { fog: '#122430', skyUp: '#3a5a68', ambient: '#a8c4cc', stops: ['#04101a', '#081a26', '#0e2432', '#14303e', '#122430'] },
+    nightmare: { fog: '#081218', skyUp: '#182830', ambient: '#586a70', stops: ['#020608', '#040c12', '#061218', '#0a181e', '#081218'] },
     ambient: { color: '#bfe0e8', vel: [0.08, 0.3], rate: 10, size: 0.08, alpha: 0.45 },
     arena: {
       solids: [{ x: 0, y: 0, w: 28, h: 3.2 }],
@@ -213,6 +216,7 @@ const DREAMS = {
   //   as platforms; the chandeliers swing and occasionally drop. —
   paleking: {
     palette: { fog: '#241a12', skyUp: '#54402a', ambient: '#c8ae8e', stops: ['#0e0804', '#1a100a', '#241810', '#302016', '#241a12'] },
+    nightmare: { fog: '#120c08', skyUp: '#241a10', ambient: '#6a5a48', stops: ['#040202', '#0a0604', '#100a06', '#16100a', '#120c08'] },
     ambient: { color: '#e8a848', vel: [0.04, -0.28], rate: 10, size: 0.07, alpha: 0.4 },
     arena: {
       solids: [{ x: 0, y: 0, w: 28, h: 3.2 }],
@@ -268,6 +272,7 @@ const DREAMS = {
   //   bright ancient moon; the gate loops the arena edges (the only wrap). —
   mote: {
     palette: { fog: '#1c3424', skyUp: '#54785e', ambient: '#c2d8be', stops: ['#0a140c', '#122218', '#1a3022', '#223e2c', '#1c3424'] },
+    nightmare: { fog: '#0c1810', skyUp: '#22342a', ambient: '#5c6e5c', stops: ['#030805', '#060f0a', '#0a1810', '#0e2016', '#0c1810'] },
     ambient: { color: '#a8d890', vel: [0.06, 0.26], rate: 11, size: 0.08, alpha: 0.45 },
     arena: {
       wrap: true,
@@ -324,6 +329,7 @@ const DREAMS = {
   //   flour-dust ground fog, the bakery window as a huge warm moon. —
   chicken: {
     palette: { fog: '#2a1c10', skyUp: '#6a4c2a', ambient: '#d8b890', stops: ['#100a04', '#1e120a', '#2a1a0e', '#362415', '#2a1c10'] },
+    nightmare: { fog: '#140d08', skyUp: '#2c2012', ambient: '#705e48', stops: ['#050302', '#0c0705', '#120c07', '#18100a', '#140d08'] },
     ambient: { color: '#f0e0c0', vel: [0.22, 0.05], rate: 8, size: 0.5, alpha: 0.13, puff: true },
     arena: {
       solids: [{ x: 0, y: 0, w: 26, h: 3.2 }],
@@ -418,7 +424,7 @@ class DreamMode {
   _buildScene(def) {
     const scene = new THREE.Scene()
     this.sky = new Sky(scene)
-    const P = def.palette
+    const P = this.nightmare && def.nightmare ? def.nightmare : def.palette
     this.sky.uniforms.uStops.value.forEach((c, i) => c.set(P.stops[i]))
 
     // dream palette takes the shared uniforms while the dream is up; the
@@ -437,6 +443,7 @@ class DreamMode {
     this._buildFxPools(scene)
     this.baseAmbient = new THREE.Color(P.ambient)
     this.baseSkyUp = new THREE.Color(P.skyUp)
+    this.fogColor = P.fog
     this.dimF = 1
     this.rng = worldRNG.fork('dream/ambient')
     this.rainAcc = 0
@@ -458,7 +465,49 @@ class DreamMode {
       })
     }
     // — this dream's own furniture —
+    const preCount = scene.children.length
     def.build(scene, this)
+    if (this.nightmare) {
+      // the crowd becomes shadows and the ARENA's authored glows drop to
+      // coals — hazard telegraphs (FX pools, built before this) keep their
+      // full warmth: even Nightmare stays fair (Part 7)
+      for (let i = preCount; i < scene.children.length; i++) {
+        scene.children[i].traverse((o) => {
+          const u = o.material?.uniforms
+          if (u?.uOpacity && o.material.blending === THREE.AdditiveBlending) u.uOpacity.value *= 0.4
+        })
+      }
+      if (this.crowd) for (const n of this.crowd) { const u = n.material.uniforms; if (u?.uOpacity) u.uOpacity.value = 0.1 }
+    }
+    // — hitbox overlay (test rig): the sim's exact surfaces, drawn hot —
+    // used for the Nightmare regrade proof pairs (identical layout, only
+    // the presentation changes)
+    if (typeof window !== 'undefined' && window.__FIGHT_HITBOXES__) {
+      // flat emissive fills — a glowDot texture stretched over a 26m quad
+      // fades to nothing, which hid the whole overlay in the first pairs
+      const dbgQuad = (hex, w, h, opacity) => {
+        const m = retroMaterial({ map: TEX.white(), transparent: true, depthWrite: false, opacity, emissive: hex, noFog: true })
+        m.blending = THREE.AdditiveBlending
+        const q = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m)
+        ensureVertexColors(q.geometry, [0, 0, 0]) // emissive-only: debug ink
+        return q
+      }
+      for (const so of def.arena.solids) {
+        const q = dbgQuad('#661a33', so.w, so.h, 0.5)
+        q.position.set(so.x, so.y - so.h / 2, 2.4); scene.add(q)
+        const topLine = dbgQuad('#ffffff', so.w, 0.14, 0.8)
+        topLine.position.set(so.x, so.y, 2.45); scene.add(topLine)
+      }
+      for (const pl of def.arena.plats) {
+        const q = dbgQuad('#8a7a20', pl.w, 0.2, 0.85)
+        q.position.set(pl.x, pl.y, 2.4); scene.add(q)
+      }
+      const b = def.arena.blast
+      for (const [x, y, w, h] of [[b.l, (b.t + b.b) / 2, 0.3, b.t - b.b], [b.r, (b.t + b.b) / 2, 0.3, b.t - b.b], [(b.l + b.r) / 2, b.t, b.r - b.l, 0.3], [(b.l + b.r) / 2, b.b, b.r - b.l, 0.3]]) {
+        const q = dbgQuad('#7a1414', w, h, 0.8)
+        q.position.set(x, y, 2.4); scene.add(q)
+      }
+    }
 
     // moon respawn platforms (one per possible fighter)
     this.moonPlats = []
@@ -730,6 +779,9 @@ class DreamMode {
     this.arenaId = DREAMS[arenaId] ? arenaId : 'beldam'
     const def = DREAMS[this.arenaId]
     this.def = def
+    // the Nightmare dial (Part 4.7): darkest regrade, shadow crowds, hollow
+    // glow — PRESENTATION only; the arena def is byte-identical
+    this.nightmare = !!opts.nightmare
     this.scene = this._buildScene(def)
     this.match = makeMatch(makeArena(def.arena), [])
     this._spawnFighters(players, opts)
@@ -1107,7 +1159,7 @@ class DreamMode {
     this._drawHud()
     this._pose(dt)
     // dream palette holds while active (waking zoneLight is paused)
-    globalUniforms.uFogColor.value.set(this.def.palette.fog)
+    globalUniforms.uFogColor.value.set(this.fogColor ?? this.def.palette.fog)
   }
 }
 
