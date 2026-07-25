@@ -112,3 +112,60 @@ the recaptured pixels):
 Post-fix verification: fightfeel PASS (after the watcher revert), balance
 PASS, fightshots COMPLETE console-clean ×2, f0flow PASS, fightonline PASS,
 build exit 0. All recaptures read personally before recording this entry.
+
+## Pass 3 — FAIL (8.50)
+
+Fresh-eyes adversarial subagent; ran balance + fightfeel personally (both
+PASS, table verified against the ledger exactly), read all 30 shots,
+audited every pass-2 fix. Feel bar MET (9.5), no category below 8.0 —
+only the 9.0 average missed. "Trajectory 7.90 → 8.30 → 8.50 is honest
+work, but the same two presentation artifacts (impact read, swig) have
+now missed their own proof twice."
+
+| category | score |
+| --- | --- |
+| game feel | **9.5** |
+| 4P readability | 8.0 |
+| fighter distinctness | 8.0 |
+| arena quality | 8.0 |
+| balance | 9.0 |
+| couch+online stability | 8.5 |
+| comedy | 8.0 |
+| Nightmare grade | 8.0 |
+| entry/exit flow | 9.0 |
+| performance under chaos | 9.0 |
+| **average** | **8.50 — FAIL** |
+
+Findings → fixes (pass-3 fix cycle, every one re-proven in pixels):
+
+1. **fight.png impact erased by SwiftShader's ~100ms frames** (root cause
+   found by the judge: render-dt decay) → flash + pop are TICK-ANCHORED
+   to the freeze: they hold at full strength exactly as long as the
+   defender's hitstop holds, on any renderer at any frame rate, then
+   decay in render time; sparks stay render-dt (drifting through the
+   freeze IS the law). Spark life 0.6s. fight.png finally shows the ring.
+2. **Wizard triplet shares one silhouette** → hat language: Lamplighter
+   tall keeper's point, Beldam wide floppy brim + chunkier bottle,
+   Watcher's hat snapped sideways + bigger wisp.
+3. **No seat identity in-world** → each human seat's fighter gets a
+   seat-colored firefly familiar at the hat-tip (HUD palette); bots none.
+4. **Dead-void compositions** → Bench hanging jar-lanterns, Big Sky
+   horizon band + constellations lowered again (y ≤ 7.6) + scatter
+   pulled into frame, Young Forest treeline + pit mist.
+5. **Nightmare only signatures the forest** → per-dream signatures:
+   ember-red firefly jar, red constellation eye, violet moonwell, dark
+   banners + guttered candles + shadow crowd, hollow moon, dead bakery
+   window; per-arena dungeon-synth drone roots (six voicings).
+6. **Swig still doesn't read** → head tips back, spine 0.5 rad, and the
+   bottle grows comically (×2.1) during the drink; comedy-swig.png now
+   shows an unmistakable drink.
+7. **Chicken fighter vs neutral critter confusable** → the critter wears
+   a little red kerchief (she is staff).
+8. **Moonrise never captured** → super-moonrise.png added.
+
+Post-fix verification: fightfeel PASS, f0flow PASS, fightonline PASS,
+fightshots COMPLETE console-clean, build exit 0; balance untouched (zero
+sim changes this cycle — dream.js presentation + capture scripts only).
+All recaptures read personally: fight.png (spark ring + held glow),
+comedy-swig.png (the drink), chaos-4p.png, pair-*-night (signatures),
+super-moonrise.png, critters/items, nightmare-forest.
