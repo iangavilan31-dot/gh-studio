@@ -1000,7 +1000,7 @@ window.__MOONREST__ = {
   kindle(id) { return net.active ? net.requestKindle(id) : world.kindle(id, { remote: true }) }, // rig path: no C.4 head-yank
   // ——— DREAMSCRAP test surface (DECISIONS #8: tick-measured feel gates) ———
   fight: {
-    enter(arena = 'beldam', players = 2, stocks = null, fids = null, bots = null) { endIntro(true); if (mode === 'title') { shell.clear(); mode = 'game' } return dream.enter(arena, players, input, { ...(stocks ? { stocks } : {}), ...(fids ? { fids } : {}), ...(bots ? { bots } : {}) }) },
+    enter(arena = 'beldam', players = 2, stocks = null, fids = null, bots = null, nightmare = false) { endIntro(true); if (mode === 'title') { shell.clear(); mode = 'game' } return dream.enter(arena, players, input, { ...(stocks ? { stocks } : {}), ...(fids ? { fids } : {}), ...(bots ? { bots } : {}), ...(nightmare ? { nightmare: true } : {}) }) },
     exit() { return dream.exit() },
     get active() { return dream.active },
     get manual() { return dream.manual },
@@ -1008,6 +1008,7 @@ window.__MOONREST__ = {
     state() { return dream.simState() },
     charge(id = 0) { const f = dream.match?.fighters?.[id]; if (f) f.deep = 100; return !!f }, // gate rig: full lantern
     botDuel(a = 'lucid', b = 'dozy', ticks = 14400) { return dream.botDuel(a, b, ticks) },
+    sceneCount() { return dream.scene?.children.length ?? -1 },
     get lastShake() { return dream.lastShake ?? null },
   },
   // — F0 entry/exit test surface (tunnel timing is wall-clock, not ticks) —
