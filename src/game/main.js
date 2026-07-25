@@ -1049,6 +1049,7 @@ window.__MOONREST__ = {
     netHash(tick) { return dream.net?.hashes?.[tick] ?? null },
     get netStalled() { return dream.net?.stalled ?? null },
     spawnItem(kind = 'floatleaf', x = 0) { if (!dream.match) return false; dream.match.items.push({ kind, x, y: 8, vy: 0, t: 0 }); return true },
+    winNow(id = 0) { return dream.winNow(id) },
     get lastShake() { return dream.lastShake ?? null },
   },
   // — F0 entry/exit test surface (tunnel timing is wall-clock, not ticks) —

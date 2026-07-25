@@ -814,6 +814,16 @@ class DreamMode {
       }
       ctx.globalAlpha = 1
     })
+    // F11: the rematch whisper during the victory nap
+    if (this.victory && !this.net) {
+      ctx.globalAlpha = Math.min(1, this.victory.t * 1.2)
+      ctx.fillStyle = '#d8cfae'
+      ctx.font = '11px monospace'
+      ctx.textAlign = 'center'
+      ctx.fillText('F — dream again · Esc — wake', 170, 66)
+      ctx.textAlign = 'left'
+      ctx.globalAlpha = 1
+    }
   }
 
   // ——— fighters ———
@@ -837,6 +847,7 @@ class DreamMode {
 
   enter(arenaId = 'beldam', players = 2, liveInput = null, opts = {}) {
     if (this.active) return false
+    this.lastEnter = { arenaId, players, opts } // F11: the rematch remembers
     this.arenaId = DREAMS[arenaId] ? arenaId : 'beldam'
     const def = DREAMS[this.arenaId]
     this.def = def
@@ -967,6 +978,17 @@ class DreamMode {
         this.zs?.spawn({ pos: new THREE.Vector3(cx, cy + 1.6, 0.5), vel: new THREE.Vector3(0.3, 1.1, 0), maxLife: 2.2, size: 0.5, seed: 0.5 })
       } else if (e.t === 'matchEnd') {
         this.victory = { winner: e.winner, t: 0 }
+        // F11: a tiny sleeping figurine of everyone you bested joins the
+        // pause shelf (live play only; the gates win nothing)
+        const localSeat = this.net?.seat ?? 0
+        if (!this.manual && e.winner === localSeat && typeof localStorage !== 'undefined') {
+          try {
+            const key = 'moonrest-dream-trophies'
+            const cur = new Set(JSON.parse(localStorage.getItem(key) ?? '[]'))
+            for (const f of this.match.fighters) if (f.id !== e.winner && f.stocks <= 0) cur.add(f.fid)
+            localStorage.setItem(key, JSON.stringify([...cur]))
+          } catch (err) { /* private mode */ }
+        }
       } else if (e.t === 'brew' && e.kind === 'humble') {
         // the modest moth cloud arrives
         const f = this.match?.fighters?.[e.id]
@@ -1043,6 +1065,20 @@ class DreamMode {
       toss: inp.down('KeyH'),
       special: inp.down('KeyR'),
     }
+  }
+
+  _rematch() {
+    const a = this.lastEnter
+    const inp = this.liveInput
+    this.exit()
+    this.enter(a.arenaId, a.players, inp, a.opts)
+  }
+
+  // gate rig: hand the match to a seat so victory flows can be tested fast
+  winNow(id = 0) {
+    if (!this.match) return false
+    for (const f of this.match.fighters) if (f.id !== id) { f.stocks = 0; f.ko = 0 }
+    return true
   }
 
   // headless bot duel on the current match (feel-gate rig for F7)
@@ -1316,6 +1352,9 @@ class DreamMode {
     })
     if (this.victory) {
       this.victory.t += dt
+      // F11: the quick rematch — F goes again (couch/solo; online redeal
+      // comes from the host), Escape wakes, silence drifts back to the night
+      if (!this.net && this.liveInput?.pressed?.('KeyF') && this.victory.t > 0.6) { this._rematch(); return }
       if (this.victory.t > 5.2) { this.exit(); return }
     }
     this._drawHud()

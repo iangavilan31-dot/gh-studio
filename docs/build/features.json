@@ -1303,7 +1303,8 @@
     "flow capture entry->match->rematch->exit",
     "trophy shelf capture"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "The waking world IS the lobby (F0: walk to any sleeper to pick their arena; sleep-emote re-enters \u2014 the rematch loop through the world). Quick rematch: during the victory nap a HUD whisper offers 'F \u2014 dream again \u00b7 Esc \u2014 wake'; F re-deals the same dream (gate: fresh match verified live), Esc/auto-exit tunnels back to the night. Dream trophies: beating a dreamer adds a tiny sleeping figurine (localStorage, deduped) to a 'dream shelf' on the pause card \u2014 trophy-shelf.png shows 'a tiny snoring Beldam / roosting chicken / tucked-in tortoise'; no stats, no ranks, no numbers. f0flow 20/20 live: victory\u2192trophy recorded\u2192F rematches\u2192pause shelf renders. Online rematch stays a host redeal (startOnline) per DECISIONS #10."
   },
   {
    "id": "FIGHT-F12",
@@ -1312,7 +1313,8 @@
    "steps": [
     "comedy captures read personally"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "Comedy captures, all read personally: victory-nap.png (the winner lies down beside the loser \u2014 every match ends cozy), critters.png (Mote mid shell-spin tumble, legs up, the Chicken unbothered), super-derby.png (a chicken stampede bearing down on the waiting Pale King), items.png (the neutral bird inspecting the Boot), comedy-swig.png (Beldam frozen mid armored stagger-dash), super-constellation.png (giant Nib looming over a tiny tortoise). The Chicken's excellence is measured (fastest hands in the roster, 42.9-54%% winrates through every balance round) and acknowledged NOWHERE in any player-facing string \u2014 the ledger is the only witness."
   },
   {
    "id": "FIGHT-F13",
