@@ -208,3 +208,18 @@ for them anyway).
   latency, not player-facing (prompts in normal walking appear on
   approach). Two stale orphaned vite previews from crashed rigs were also
   serving old builds on gate ports — killed; gate scripts unchanged.
+- dream-tunnel now runs on WALL-CLOCK dt, not the sim's clamped dt. The
+  main loop clamps dt to 0.1 so a stall can't explode physics; the tunnel
+  accumulates dt, so on a sub-10fps GPU a 1.4s iris dragged to ~4s (and
+  false-failed f0flow's entry≤4s/exit≤3s). Fixed at the source (main.js
+  passes an un-sim-clamped dtTunnel capped at 0.25): the iris tracks real
+  time down to ~4fps. This is a genuine low-end-hardware fix, not a
+  threshold tweak — f0flow thresholds are unchanged and now pass with
+  margin (entry 2.5s, exit 2.3s).
+- fightonline observation window 4200→7000ms: the sim is 0.018ms/tick, but
+  four browser contexts + broker + vite on one throttled runner drop the
+  effective rAF rate, so the lockstep advanced ~85 ticks in 4.2s (under
+  the 120-tick assertion) even though peers stayed in lockstep (Δ=2) and
+  the three-way state hashes matched exactly. Only the wall-clock budget
+  grew; every real assertion (advance, sync, three-way determinism) is
+  unchanged and now passes (156 ticks, 2/2 hash checkpoints identical).

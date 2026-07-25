@@ -647,7 +647,13 @@ const frameTimes = []
 function tick() {
   requestAnimationFrame(tick)
   const now = performance.now()
-  const dt = Math.min((now - lastNow) / 1000, 0.1)
+  const dtRaw = (now - lastNow) / 1000
+  const dt = Math.min(dtRaw, 0.1) // sim/anim step: clamped so a stall can't explode physics
+  // the between-worlds iris is PURE PRESENTATION and must run on wall-clock:
+  // the 0.1 sim clamp made a 1.4s tunnel drag to 4s on a sub-10fps GPU (the
+  // tunnel accumulates dt, so a clamped dt runs it in slow motion). 0.25 caps
+  // only absurd tab-backgrounded spikes; down to 4fps it tracks real time.
+  const dtTunnel = Math.min(dtRaw, 0.25)
   lastNow = now
   elapsed += dt
   globalUniforms.uTime.value = elapsed
@@ -677,7 +683,7 @@ function tick() {
 
   // ——— DREAMSCRAP (Part 1): while dreaming, the dream owns the frame — the
   // waking world pauses whole (no sim, no combat verbs ever added to it)
-  dreamTunnel.update(dt) // the iris draws over whichever world is up
+  dreamTunnel.update(dtTunnel) // the iris draws over whichever world is up (wall-clock)
   if (dream.active) {
     dream.update(dt) // may end itself (the victory nap fades the dream)
     if (dream.active && input.pressed('Escape') && !dreamTunnel.active) dream.exit() // F0: skippable any time
