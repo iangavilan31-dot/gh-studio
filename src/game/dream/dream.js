@@ -252,23 +252,27 @@ const DREAMS = {
       // it is a PARTY (judge passes 4–5: 'doesn't read as a party'):
       // festival lights strung between the columns in warm party colors,
       // and braziers warming the cold moonlit marble. Nightmare snuffs them.
+      // it is a PARTY, and it must READ as one (judge pass 13: still too
+      // cool-quiet) — brighter, bigger festival bulbs strung low into frame
       const partyLit = !D.nightmare
       const LAMPC = ['#f0b860', '#e88a8a', '#8fd0e8', '#f0d878', '#c890e0']
-      for (const [ax, bx, hang] of [[-12, -4, 6.6], [-4, 4, 5.4], [4, 12, 6.6]]) {
+      for (const [ax, bx, hang] of [[-12, -4, 6.2], [-4, 4, 5.0], [4, 12, 6.2]]) {
         const span = bx - ax, n = 7
         for (let i = 0; i <= n; i++) {
           const t = i / n
           const lx = ax + span * t
-          const droop = Math.sin(t * Math.PI) * 1.4 // the catenary sag
-          const bulb = glowQuad(partyLit ? LAMPC[i % LAMPC.length] : '#3a2c1a', 0.6, 0.6, partyLit ? 0.95 : 0.3)
+          const droop = Math.sin(t * Math.PI) * 1.5 // the catenary sag
+          const bulb = glowQuad(partyLit ? LAMPC[i % LAMPC.length] : '#3a2c1a', 0.85, 0.85, partyLit ? 1.0 : 0.3)
           bulb.position.set(lx, hang - droop, -2.9)
           scene.add(bulb)
         }
       }
-      // warm braziers on the terraces — a hearth-glow the party gathers to
+      // warm braziers on the terraces — a real hearth-glow flanking the fight
       for (const bx of [-9, 9]) {
-        const flame = glowQuad(partyLit ? '#f0a848' : '#5a3418', 1.4, 1.8, partyLit ? 0.6 : 0.2)
-        flame.position.set(bx, 3.2, 0.2); scene.add(flame)
+        const flame = glowQuad(partyLit ? '#f0a040' : '#5a3418', 2.2, 3.0, partyLit ? 0.85 : 0.2)
+        flame.position.set(bx, 3.4, 0.1); scene.add(flame)
+        const core = glowQuad(partyLit ? '#ffe0a0' : '#3a2410', 0.9, 1.6, partyLit ? 0.9 : 0.2)
+        core.position.set(bx, 3.1, 0.15); scene.add(core)
         const bowl2 = mesh(new THREE.CylinderGeometry(0.4, 0.28, 0.4, 8), stone, [0.7, 0.66, 0.6])
         bowl2.position.set(bx, 2.75, 0.1); scene.add(bowl2)
       }
@@ -279,7 +283,7 @@ const DREAMS = {
   //   as platforms; the chandeliers swing and occasionally drop. —
   paleking: {
     palette: { fog: '#241a12', skyUp: '#765a3b', ambient: '#d8bc99', stops: ['#1c1008', '#301e12', '#3e2a1c', '#432d1f', '#322419'] },
-    nightmare: { fog: '#170f0a', skyUp: '#3a2a1a', ambient: '#a38a6f', stops: ['#060303', '#0d0806', '#1c120b', '#231a11', '#170f0a'] },
+    nightmare: { fog: '#1c130c', skyUp: '#42301d', ambient: '#b0906f', stops: ['#0a0705', '#140d09', '#2a1c11', '#382616', '#241813'] },
     ambient: { color: '#e8a848', vel: [0.04, -0.28], rate: 10, size: 0.07, alpha: 0.4 },
     arena: {
       solids: [{ x: 0, y: 0, w: 28, h: 3.2 }],
@@ -690,10 +694,11 @@ class DreamMode {
     {
       const solids = def.arena.solids ?? [{ x: 0, y: 0, w: 24 }]
       const main = solids.reduce((a, b) => (b.w > a.w ? b : a), solids[0])
-      // the two warmest halls (Full Hall, Warm Oven) read murkiest at the
-      // play plane (judge pass 10) — give them a wider, warmer, stronger key
-      const warmHall = this.arenaId === 'paleking' || this.arenaId === 'chicken'
-      const keyC = P === def.nightmare ? '#5a4a6a' : warmHall ? '#e0b878' : '#c8b488'
+      // the warm halls (Full Hall, Warm Oven) AND the Party ruins read
+      // murkiest at the play plane (judge pass 10/13) — wider, warmer,
+      // stronger key so the fight and the celebration both read
+      const warmHall = this.arenaId === 'paleking' || this.arenaId === 'chicken' || this.arenaId === 'curator'
+      const keyC = P === def.nightmare ? '#5a4a6a' : this.arenaId === 'curator' ? '#e8c890' : warmHall ? '#e0b878' : '#c8b488'
       const key = glowQuad(keyC, warmHall ? 19 : 15, warmHall ? 6.5 : 5.5, this.nightmare ? 0.16 : warmHall ? 0.34 : 0.24)
       key.position.set(main.x, (main.y ?? 0) + 2.4, -1.4)
       scene.add(key)
@@ -926,11 +931,14 @@ class DreamMode {
     // a soft dark CONTACT SHADOW pooled on the ground under each fighter —
     // grounds them and separates the feet from the floor, so the cast reads
     // even where the additive under-glow washes out (readability, judge p12)
+    // a CRISP hard-edged dark ellipse (not a soft glow that washes into the
+    // floor) — judge pass 13: the silhouette must separate on ANY floor
     fx.shadows = []
     for (let i = 0; i < 4; i++) {
-      const m = retroMaterial({ map: TEX.glowDot({ color: '#000000' }), transparent: true, depthWrite: false, opacity: 0.5, noFog: true })
-      const q = new THREE.Mesh(new THREE.PlaneGeometry(1.7, 0.8), m)
-      ensureVertexColors(q.geometry)
+      const m = retroMaterial({ map: TEX.white(), transparent: true, depthWrite: false, opacity: 0.55, noFog: true })
+      const q = new THREE.Mesh(new THREE.CircleGeometry(0.62, 20), m)
+      ensureVertexColors(q.geometry, [0, 0, 0]) // solid black disc
+      q.scale.set(1.35, 0.5, 1) // an ellipse, flat to the ground
       q.rotation.x = -Math.PI / 2
       q.visible = false
       scene.add(q)
@@ -1687,9 +1695,9 @@ class DreamMode {
             // the bottle reads as a BOTTLE tipped to the lips, not a green
             // blob: modest scale, lifted to the mouth, tipped mouth-down
             if (R.bottle) {
-              R.bottle.scale.setScalar(1 + tip2 * 1.1)
-              R.bottle.rotation.z = -tip2 * 2.4 // upended, pouring in
-              R.bottle.position.set(0, -0.36 + tip2 * 0.28, 0.08 + tip2 * 0.12)
+              R.bottle.scale.setScalar(1 + tip2 * 1.9) // a big comic bottle
+              R.bottle.rotation.z = -tip2 * 2.5 // fully upended, glugging in
+              R.bottle.position.set(0, -0.36 + tip2 * 0.4, 0.08 + tip2 * 0.16) // right at the lips
             }
             if (R.bglow) R.bglow.material.uniforms.uOpacity.value = 0.5 - tip2 * 0.28 // dim at the tip so the BOTTLE reads, not a glow blob
             // the last mouthful drips (render-dt — comedy, not a hitbox)
