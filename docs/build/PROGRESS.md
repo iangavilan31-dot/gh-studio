@@ -688,3 +688,51 @@ spec). The game is, in every buildable and playable sense, done and
 excellent — the judge consensus sits at a stable, honest 8.75. This is a
 decision for the owner: accept the game at its measured 8.75 ship-quality,
 or relax either the 9.0 judge bar or the darkness mandate that caps it.
+
+## DREAMSCRAP — FINAL MORNING REPORT (supersedes the earlier "ceiling" note)
+
+The earlier morning report above called the 9.0 judge bar "structurally
+unreachable" after eleven judges plateaued at 8.75. **That call was wrong,
+and I'm glad I kept working rather than shipping the pessimism.** The
+plateau was not a hard ceiling — it was the difference between polish and
+genuine QUALITATIVE change. Once each category's real blocker was removed,
+the score climbed and crossed the bar.
+
+**FIGHT-F13 is met. DREAMSCRAP passes.** Two consecutive independent
+fresh-eyes adversarial judges scored the game **9.00** (pass 16 and pass
+17), each meeting DREAMSCRAP Part 8: average >= 9.0, no category below 8.0
+(min 8.5), game-feel >= 9.5. Pass-17 categories: feel 9.5; readability,
+distinctness, arenas, balance, comedy, Nightmare, flow, perf all 9.0;
+netplay 8.5 (the sole sub-9.0, honestly capped by the public PeerJS broker
++ gamepad hardware being unprovable in a headless container — DECISIONS
+#12, not a defect).
+
+What broke the plateau — one genuine qualitative change per category, each
+the concrete art-staging fix the judges kept naming:
+- **distinctness 9.0** — the three wizards given genuinely distinct BODIES
+  (Beldam's pot-belly barrel, the Watcher's legless flared ghost-tail, the
+  Lamplighter's straight keeper), not just hats.
+- **arenas 9.0** — the Party made a warm, legible celebration (warm
+  play-plane key, brighter festival bulbs, braziers); six story-rich stages.
+- **comedy 9.0** — the drunken-swig bottle rebuilt with a real silhouette
+  (body + neck + shoulder) so it reads upended at the lips, atop the
+  derby/nap/trophy portfolio.
+- **readability + Nightmare 9.0** — a bright seat-colored MARKER (soft glow
+  + a solid hue-keeping core) above every fighter, so colour-ID survives day
+  chaos AND the darkest hall.
+
+The full arc (17 judges), recorded honestly in FIGHT_JUDGE.md including the
+mistaken ceiling call: 7.90 -> 8.30 -> 8.50 -> 8.45 -> 8.50 -> 8.55 -> 8.65
+-> 8.70 -> 8.75 -> 8.75 -> 8.75 -> 8.80 -> 8.80 -> 8.85 -> 8.90 -> 9.00 ->
+9.00.
+
+Every gate is green on the shipped state: FIGHT-F0..F13 all pass with
+evidence in features.json; fightfeel PASS (74/74, every Part 5 number
+tick-measured), balance PASS (44.3-55.7%, chicken secretly best), f0flow
+PASS, fightonline PASS (three-way lockstep hash equality), coopcheck 17/17,
+the full waking-world gate suite green, npm run build exit 0. 100%
+procedural (canvas textures, primitive meshes, WebAudio), three + peerjs
+only, 480x270 nearest target, no realtime lights. The waking world stays
+combat-free; fighting exists only inside dreams. Artifact republished.
+
+DREAMSCRAP COMPLETE — SHIP
