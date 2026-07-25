@@ -53,3 +53,16 @@ contention-proof.
 - KO poof clamps to ±14/-4..13 (just inside the widest frame) so the
   blast-edge burst is SEEN — before this, x=±18 was off-screen at every
   zoom, which is why ko-moths.png used to read empty.
+
+## F7 record: the round-robin as a bug hunt
+560 bot matches at full sim speed (2.0s in node — fightsim imports clean,
+no three/DOM) surfaced three determinism-preserving sim bugs the tick
+gates never tripped: (1) a fighter GRABBED at exactly the super's cast
+tick recast it every tick (1278 Moonrises); (2) the hitstop-expiry tick
+returned before advancing move.t, so edge-triggered move ticks re-fired
+when their own hitstop thawed (3859 darts) — fixed with a thawed flag the
+resolution loop respects, freeze length bit-identical; (3) the buffered
+jump outranked drop-through, so down+jump on a shelf pogoed instead of
+descending (28% of the bracket drew). After fixes: zero draws in 560.
+Final winrates all 40–60: lamp/beldam/nib 47.1, curator 59.3, king 52.9,
+mote 52.9, chicken 42.9, watcher 50.7.

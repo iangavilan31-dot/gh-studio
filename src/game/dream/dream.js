@@ -14,6 +14,7 @@ import { Sky } from '../world/zonelight.js'
 import { ParticleSystem } from '../world/particles.js'
 import { worldRNG } from '../core/rng.js'
 import { TICK, makeFighter, makeArena, makeMatch, stepMatch } from './fightsim.js'
+import { makeBot } from './bots.js'
 
 // Beldam's Dream — the Endless Bench (the tutorial arena, Part 4.1):
 // the Park's Long Bench forty meters long, bottle towers as platforms.
@@ -462,6 +463,9 @@ class DreamMode {
     this.victory = null
     this.cam = null
     this.shake = null
+    // bots fill the seats nobody's sitting in (Part 6): {id: 'dozy'|'awake'|'lucid'}
+    this.bots = new Map()
+    for (const [bid, level] of Object.entries(opts.bots ?? {})) this.bots.set(+bid, makeBot(level, +bid))
     this._buildHud(players)
     this.active = true
     return true
@@ -527,6 +531,17 @@ class DreamMode {
         this.lastShake = { amp01: e.shake ?? 0.4, ampM: +ampM.toFixed(4), ticks: e.shakeTicks ?? 6, capM: +(0.006 * visH).toFixed(4), reduced: !!reduced }
       }
     }
+  }
+
+  // headless bot duel on the current match (feel-gate rig for F7)
+  botDuel(levelA = 'lucid', levelB = 'dozy', maxTicks = 14400) {
+    if (!this.active) return null
+    const bots = [makeBot(levelA, 0), makeBot(levelB, 1)]
+    let t = 0
+    while (!this.match.over && t++ < maxTicks) {
+      this._consumeEvents(stepMatch(this.match, { 0: bots[0](this.match), 1: bots[1](this.match) }))
+    }
+    return { over: !!this.match.over, winner: this.match.over ? this.match.winner : null, ticks: t }
   }
 
   // one manual tick for the feel gates (DECISIONS #8)
@@ -688,7 +703,9 @@ class DreamMode {
       this.acc = Math.min(this.acc + dt, 0.25)
       while (this.acc >= TICK) {
         this.acc -= TICK
-        this._consumeEvents(stepMatch(this.match, this._liveSnapshot()))
+        const inputs = this._liveSnapshot()
+        for (const [bid, bot] of this.bots) inputs[bid] = bot(this.match) // per-TICK: lockstep-legal
+        this._consumeEvents(stepMatch(this.match, inputs))
       }
     }
     // render-dt presentation: particles DRIFT through hitstop (Part 5)

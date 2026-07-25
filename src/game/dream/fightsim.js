@@ -45,46 +45,50 @@ export const TOSS = { reach: 1.25, holdTicks: 45, throwKB: 5.2, throwAngleDeg: 5
 export const FIGHTERS = {
   lamplighter: {
     name: 'The Lamplighter', archetype: 'all-rounder',
-    spec: {}, special: 'flameDart', superKind: 'moonrise',
+    spec: {},
+    attacks: { light: { dmg: 7, baseKB: 4.7 }, heavy: { startup: 11, dmg: 14 } },
+    special: 'flameDart', superKind: 'moonrise',
   },
   beldam: {
     name: 'Beldam', archetype: 'drunken master',
-    spec: { runSpeed: 6.0, accel: 42 },
-    attacks: { light: { angleDeg: 30 }, heavy: { baseKB: 8.0, startup: 15 } },
+    spec: { runSpeed: 6.3, accel: 42 },
+    attacks: { light: { dmg: 8, baseKB: 4.9, angleDeg: 30 }, heavy: { baseKB: 8.0, startup: 11 } },
     special: 'swig', superKind: 'bottleTornado',
   },
   nib: {
     name: 'Nib', archetype: 'tiny, fastest, lightest',
     spec: { runSpeed: 7.9, airSpeed: 6.6, weight: 0.78, jumpVel: 12.1, djVel: 11.0, accel: 60 },
-    attacks: { light: { dmg: 5, baseKB: 3.9, range: 0.95 }, heavy: { dmg: 11, baseKB: 6.8, startup: 10, range: 1.2 } },
+    attacks: { light: { dmg: 6, baseKB: 3.9, range: 0.95 }, heavy: { dmg: 11, baseKB: 7.4, startup: 10, range: 1.2 } },
     hurtR: 0.32, special: 'hatThrow', superKind: 'constellation',
   },
   curator: {
     name: 'The Curator', archetype: 'zoner, floaty',
     spec: { gravity: -21, maxFall: -9, airSpeed: 6.0, runSpeed: 5.6, weight: 0.95 },
+    attacks: { light: { dmg: 7, baseKB: 4.8, startup: 3 }, heavy: { dmg: 16, baseKB: 8.2, startup: 11 } },
     special: 'dustGust', superKind: 'party',
   },
   paleking: {
     name: 'The Pale King', archetype: 'heavy, armored',
-    spec: { runSpeed: 5.0, weight: 1.35, jumpVel: 10.8, accel: 38 },
-    attacks: { light: { dmg: 7, baseKB: 4.8, startup: 6 }, heavy: { dmg: 16, baseKB: 8.8, startup: 16, recovery: 20, range: 1.7 } },
+    spec: { runSpeed: 5.0, weight: 1.45, jumpVel: 10.8, accel: 38 },
+    attacks: { light: { dmg: 10, baseKB: 4.8, startup: 5 }, heavy: { dmg: 17, baseKB: 8.8, startup: 14, recovery: 20, range: 1.7 } },
     special: 'capeSweep', superKind: 'chandeliers',
   },
   mote: {
     name: 'Mote', archetype: 'tank; hits like a landslide',
-    spec: { runSpeed: 4.4, airSpeed: 4.0, weight: 1.6, jumpVel: 10.6, accel: 30 },
-    attacks: { light: { dmg: 8, baseKB: 5.2, startup: 7, recovery: 11 }, heavy: { dmg: 18, baseKB: 9.6, startup: 19, recovery: 24, hitstop: 8 } },
+    spec: { runSpeed: 4.4, airSpeed: 4.0, weight: 1.38, jumpVel: 10.6, accel: 30 },
+    attacks: { light: { dmg: 8, baseKB: 5.2, startup: 7, recovery: 11 }, heavy: { dmg: 15, baseKB: 8.8, startup: 19, recovery: 24, hitstop: 8 } },
     special: 'shellSpin', superKind: 'oldForest',
   },
   chicken: {
     name: 'The Chicken', archetype: 'joke character',
-    spec: { runSpeed: 7.4, airSpeed: 6.2, weight: 0.85, jumpVel: 11.9, djVel: 10.9, accel: 64 },
-    attacks: { light: { startup: 3, recovery: 6, dmg: 5, baseKB: 3.6, range: 0.9 }, heavy: { startup: 9, dmg: 12, baseKB: 7.2, range: 1.1 } },
+    spec: { runSpeed: 7.4, airSpeed: 6.2, weight: 0.78, jumpVel: 11.9, djVel: 10.9, accel: 64 },
+    attacks: { light: { startup: 3, recovery: 9, dmg: 4, baseKB: 3.2, range: 0.9 }, heavy: { startup: 9, dmg: 8, baseKB: 6.1, range: 1.1 } },
     noGrab: true, hurtR: 0.3, special: 'peckFlurry', superKind: 'derby',
   },
   watcher: {
     name: 'The Watcher', archetype: 'mirror-spacing wraith', secret: true,
-    spec: { runSpeed: 6.6, airSpeed: 5.8, weight: 0.92, gravity: -26 },
+    spec: { runSpeed: 7.0, airSpeed: 5.8, weight: 1.0, gravity: -26 },
+    attacks: { light: { startup: 3, dmg: 7, baseKB: 4.7 }, heavy: { startup: 12, dmg: 17 } },
     special: 'fogStep', superKind: 'lightsOut',
   },
 }
@@ -190,7 +194,12 @@ const landTop = (f, a, prevY) => {
 // Advance ONE tick. inputs: {x:-1..1, down, jump, light, heavy, special, toss}
 // Returns a list of events for presentation ('jump','djump','land','ko',...).
 export function stepFighter(f, inp, arena, ev) {
-  if (f.hitstop > 0) { f.hitstop--; return } // frozen mid-impact (F2)
+  // frozen mid-impact (F2). thawed flags the EXPIRY tick: move.t hasn't
+  // advanced yet, so the resolution loop must not read it — an edge-
+  // triggered cast tick re-fired forever when its own hitstop expired
+  // (2163 Moonrises / 3859 darts in one bot match)
+  if (f.hitstop > 0) { f.hitstop--; f.thawed = true; return }
+  f.thawed = false
   const dt = TICK
   const pressed = (name) => inp[name] && !f.prev[name]
 
@@ -240,8 +249,16 @@ export function stepFighter(f, inp, arena, ev) {
     else if (f.vx > target) f.vx = Math.max(target, f.vx - a)
     if (inp.x) f.face = inp.x > 0 ? 1 : -1
 
-    // — jumps: grounded (or coyote), else double-jump —
-    if (f.jumpBuf > 0) {
+    // — down+jump while grounded means DROP THROUGH, never hop: the buffered
+    //   jump used to win this race and a bot on the jar shelf pogoed in
+    //   place for four sim-minutes instead of descending to the fight —
+    if (f.grounded && inp.down && f.jumpBuf > 0) {
+      f.dropThru = 8
+      f.grounded = false
+      f.y -= 0.02
+      f.jumpBuf = 0
+    } else if (f.jumpBuf > 0) {
+      // — jumps: grounded (or coyote), else double-jump —
       if (f.grounded || f.coyote > 0) {
         f.vy = f.k.jumpVel
         f.grounded = false
@@ -256,13 +273,6 @@ export function stepFighter(f, inp, arena, ev) {
         f.fastfall = false
         ev?.push({ t: 'djump', id: f.id })
       }
-    }
-    // drop through one-way platforms: hold down + press jump while grounded
-    if (f.grounded && inp.down && pressed('jump')) {
-      f.dropThru = 8
-      f.grounded = false
-      f.y -= 0.02
-      f.jumpBuf = 0
     }
   }
 
@@ -423,6 +433,7 @@ export function stepMatch(m, inputsById) {
           if (d.noGrab) { ev.push({ t: 'nograb', id: d.id }); continue } // the Chicken, obviously
           f.grabbing = d.id; f.grabT = 0
           d.grab = f.id; d.mash = 0
+          d.move = null // a grab interrupts whatever was winding up
           ev.push({ t: 'grab', a: f.id, d: d.id })
           break
         }
@@ -452,7 +463,10 @@ export function stepMatch(m, inputsById) {
 
   // — hitboxes: active swing frames vs free opponents (id order = determinism) —
   for (const f of m.fighters) {
-    if (!f.move || f.hitstop > 0 || f.stocks <= 0 || f.ko > 0) continue
+    // f.grab guard is load-bearing: a fighter grabbed at EXACTLY the super's
+    // cast tick froze move.t there and recast every tick — 1278 Moonrises
+    // in one bot match before the round-robin caught it
+    if (!f.move || f.hitstop > 0 || f.thawed || f.stocks <= 0 || f.ko > 0 || f.grab >= 0) continue
     if (f.move.name === 'light' || f.move.name === 'heavy') {
       const A = f.atk[f.move.name]
       if (f.move.t <= A.startup || f.move.t > A.startup + A.active) continue
@@ -512,6 +526,7 @@ function applyHit(f, d, m, inputsById, ev, A, cause, dirOverride = null) {
   d.wooze += Math.round(A.dmg * amp)
   f.deep = Math.min(100, (f.deep ?? 0) + A.dmg * SUPER.fillPerDmg)
   if (d.grab >= 0) { m.fighters[d.grab].grabbing = -1; d.grab = -1 } // hits break grabs
+  if (d.grabbing >= 0) { m.fighters[d.grabbing].grab = -1; d.grabbing = -1 } // launched grabbers let go
   const kb = (A.baseKB * (amp > 1 ? 1.35 : 1) + d.wooze * A.growth) / d.k.weight
   const dir = dirOverride ?? f.face
   if (d.armorT > 0) {
@@ -630,6 +645,8 @@ function castSuper(f, m, inputsById, ev) {
         const dx = d.x - f.x, dy = d.y - f.y
         if (dx * dx + dy * dy < 36 && d.invuln <= 0 && d.ghostT <= 0 && d.armorT <= 0) {
           d.wooze += 10
+          if (d.grab >= 0) { m.fighters[d.grab].grabbing = -1; d.grab = -1 }
+          if (d.grabbing >= 0) { m.fighters[d.grabbing].grab = -1; d.grabbing = -1 }
           launch(d, Math.sign(dx) || f.face, (9 + d.wooze * 0.12) / d.k.weight, 52, inputsById[d.id]?.x, ev, 'moonrise')
           d.hitstop = 6
           ev.push({ t: 'hit', a: f.id, d: d.id, move: 'moonrise', kb: +((9 + d.wooze * 0.12) / d.k.weight).toFixed(2), wooze: d.wooze, shake: 0.9, shakeTicks: 12 })
