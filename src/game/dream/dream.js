@@ -11,6 +11,7 @@ import { buildWizard, PLAYER_TINTS } from '../art/characters.js'
 import { makeAnimState, advanceAnim, applyPose } from '../systems/anim.js'
 import { Sky } from '../world/zonelight.js'
 import { ParticleSystem } from '../world/particles.js'
+import { worldRNG } from '../core/rng.js'
 import { TICK, makeFighter, makeArena, makeMatch, stepMatch } from './fightsim.js'
 
 // Beldam's Dream — the Endless Bench (the tutorial arena, Part 4.1):
@@ -118,12 +119,29 @@ class DreamMode {
       rim.position.set(sx, 3.15, 0.2)
       scene.add(rim)
     }
-    // upward rain (Beldam's dream logic) arrives with the F2 particle pass
-
     // dream particles run on RENDER dt — they keep drifting through hitstop
     // (Part 5's "particles NOT frozen"), and they sell every KO
     this.moths = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#d8cfae' }), max: 90, additive: true })
     this.zs = new ParticleSystem(scene, { tex: TEX.zGlyph(), max: 10, additive: false })
+    // the rain falls upward (Part 4.1 — Beldam's dream logic)
+    this.rainUp = new ParticleSystem(scene, { tex: TEX.streak(), max: 240, additive: false, stretchY: 2.6, fogInfluence: 0.4 })
+    this.rng = worldRNG.fork('dream/ambient')
+    this.rainAcc = 0
+    // moths orbit the firefly jar — the stage light is alive
+    const mrng = worldRNG.fork('dream/jarmoths')
+    for (let i = 0; i < 12; i++) {
+      this.moths.spawn({
+        pos: new THREE.Vector3(0, 7.2, 0.4), vel: new THREE.Vector3(),
+        maxLife: 9e9, size: mrng.range(0.07, 0.12), seed: mrng.next(),
+        update(p, dt2) {
+          const t = p.life * (0.6 + p.seed * 0.7) + p.seed * 40
+          p.pos.x = Math.sin(t * 0.9 + p.seed * 9) * (1.1 + p.seed * 1.4)
+          p.pos.y = 7.0 + Math.sin(t * 1.3 + p.seed * 5) * 0.8
+          p.pos.z = 0.3 + Math.cos(t * 0.7) * 0.5
+          p.alpha = 0.35 + 0.65 * Math.max(0, Math.sin(t * 2.1))
+        },
+      })
+    }
 
     // moon respawn platforms (one per possible fighter)
     this.moonPlats = []
@@ -227,6 +245,8 @@ class DreamMode {
     this.liveInput = liveInput
     this.acc = 0
     this.victory = null
+    this.cam = null
+    this.shake = null
     this._buildHud(players)
     this.active = true
     return true
@@ -268,8 +288,10 @@ class DreamMode {
   _consumeEvents(events) {
     for (const e of events) {
       if (e.t === 'ko') {
-        // poofed into moths + one drifting z (Part 1: nobody gets hurt)
-        const cx = Math.max(-18, Math.min(18, e.x)), cy = Math.max(-6, Math.min(16, e.y))
+        // poofed into moths + one drifting z (Part 1: nobody gets hurt);
+        // clamped just inside the widest camera frame so the blast-edge
+        // poof is SEEN, Smash-style, not swallowed off-screen
+        const cx = Math.max(-14, Math.min(14, e.x)), cy = Math.max(-4, Math.min(13, e.y))
         for (let i = 0; i < 16; i++) {
           const a = (i / 16) * Math.PI * 2 + (this.match?.tick ?? 0) * 0.37
           this.moths?.spawn({
@@ -284,7 +306,7 @@ class DreamMode {
         this.victory = { winner: e.winner, t: 0 }
       } else if (e.t === 'hit' || e.t === 'throw') {
         const reduced = typeof window !== 'undefined' && window.__REDUCED_MOTION__
-        const visH = 2 * 17 * Math.tan((this.camera?.fov ?? 38) * Math.PI / 360)
+        const visH = 2 * (this.cam?.d ?? 17) * Math.tan((this.camera?.fov ?? 38) * Math.PI / 360)
         const ampM = reduced ? 0 : (e.shake ?? 0.4) * 0.006 * visH
         this.shake = { ampM, ticks: e.shakeTicks ?? 6, left: e.shakeTicks ?? 6, seed: (e.d ?? 0) * 7 + (this.match?.tick ?? 0) % 13 }
         this.lastShake = { amp01: e.shake ?? 0.4, ampM: +ampM.toFixed(4), ticks: e.shakeTicks ?? 6, capM: +(0.006 * visH).toFixed(4), reduced: !!reduced }
@@ -330,13 +352,15 @@ class DreamMode {
       if (this.victory) {
         const v = this.victory
         const wf = this.match.fighters[v.winner] ?? this.match.fighters[0]
+        // the nap gathers at center bench, never at a blast-edge or shelf
+        const nx = Math.max(-8, Math.min(8, wf.x))
         if (f.id === v.winner) {
           st.action = v.t > 2.4 ? 'lie' : v.t > 1.0 ? 'sit' : null
-          rig.group.position.set(wf.x, Math.max(0, wf.y), 0)
+          rig.group.position.set(nx, 0, 0)
         } else {
           st.action = 'sleep'
           const k = f.id < v.winner ? f.id : f.id - 1
-          rig.group.position.set(wf.x + (k + 1) * 1.5 * (k % 2 ? 1 : -1), Math.max(0, wf.y), 0)
+          rig.group.position.set(nx + (k + 1) * 1.5 * (k % 2 ? 1 : -1), 0, 0)
         }
         advanceAnim(st, dt, 0, false)
         applyPose(rig, st, 0)
@@ -358,17 +382,44 @@ class DreamMode {
         rig.bones.spine.rotation.z += Math.sin((this.match.tick + f.id * 17) * 0.11) * sway
       }
     }
-    // camera shake decay (presentation only)
-    if (this.shake && this.shake.left > 0 && this.camera) {
+    // — dynamic fight camera: frame every wizard still dreaming, zoom with
+    //   the spread (readable chaos, Part 1.2); shake rides on top —
+    if (!this.camera) return
+    const tanH = Math.tan((this.camera.fov * Math.PI) / 360)
+    let tgt
+    if (this.victory) {
+      const wf = this.match.fighters[this.victory.winner] ?? this.match.fighters[0]
+      const nx = Math.max(-8, Math.min(8, wf.x))
+      tgt = { x: nx, y: 2.4, d: 14.5 } // gentle push-in on the nap
+    } else {
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity
+      for (const f of this.match.fighters) {
+        if (f.stocks <= 0) continue
+        minX = Math.min(minX, f.x); maxX = Math.max(maxX, f.x)
+        minY = Math.min(minY, f.y); maxY = Math.max(maxY, f.y)
+      }
+      if (minX === Infinity) { minX = maxX = 0; minY = maxY = 2 }
+      const fitW = ((maxX - minX) / 2 + 3.4) / (tanH * (16 / 9))
+      const fitH = ((maxY - minY) / 2 + 2.6) / tanH
+      tgt = {
+        x: (minX + maxX) / 2,
+        y: Math.max(2.6, (minY + maxY) / 2 + 0.9),
+        d: Math.min(24, Math.max(13, fitW, fitH)),
+      }
+    }
+    const c = this.cam ?? (this.cam = { ...tgt })
+    const ck = 1 - Math.exp(-dt / 0.28)
+    c.x += (tgt.x - c.x) * ck; c.y += (tgt.y - c.y) * ck; c.d += (tgt.d - c.d) * ck
+    let nx = 0, ny = 0
+    if (this.shake && this.shake.left > 0) {
       const s = this.shake
       s.left--
-      const k = s.left / s.ticks
-      const n = Math.sin(s.seed + s.left * 2.7) * s.ampM * k
-      const n2 = Math.cos(s.seed * 1.3 + s.left * 3.1) * s.ampM * k * 0.6
-      this.camera.position.set(n, 3.4 + n2, 17)
-    } else if (this.camera) {
-      this.camera.position.set(0, 3.4, 17)
+      const kk = s.left / s.ticks
+      nx = Math.sin(s.seed + s.left * 2.7) * s.ampM * kk
+      ny = Math.cos(s.seed * 1.3 + s.left * 3.1) * s.ampM * kk * 0.6
     }
+    this.camera.position.set(c.x + nx, c.y + ny, c.d)
+    this.camera.lookAt(c.x, c.y - 0.4, 0)
   }
 
   update(dt) {
@@ -381,8 +432,23 @@ class DreamMode {
       }
     }
     // render-dt presentation: particles DRIFT through hitstop (Part 5)
+    // upward rain streams past the bench the whole dream long
+    if (this.rainUp) {
+      this.rainAcc += dt * 55
+      const rng = this.rng
+      while (this.rainAcc >= 1) {
+        this.rainAcc -= 1
+        this.rainUp.spawn({
+          pos: new THREE.Vector3(rng.range(-20, 20), rng.range(-9, -6), rng.range(-4, 5)),
+          vel: new THREE.Vector3(rng.range(-0.2, 0.2), rng.range(4.5, 7.5), 0),
+          maxLife: 4.2, size: rng.range(0.09, 0.15), alpha: 0.38, seed: rng.next(),
+          update(p, dt2) { p.pos.addScaledVector(p.vel, dt2); if (p.pos.y > 17) p.life = p.maxLife },
+        })
+      }
+    }
     this.moths?.update(dt, this.camera)
     this.zs?.update(dt, this.camera)
+    this.rainUp?.update(dt, this.camera)
     // moon respawn rides + invuln shimmers track sim state
     this.match?.fighters.forEach((f, i) => {
       const plat = this.moonPlats?.[i]

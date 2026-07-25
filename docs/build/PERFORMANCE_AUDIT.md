@@ -34,3 +34,22 @@ contention-proof.
   +1 per 20 wooze ✓ (hits break grabs; the Chicken will be ungrabbable)
 - screenshake: amp01→meters capped at 0.6% of visible frame height
   (0.047m ≤ 0.070m cap), ≤12 ticks = 200ms, reduced-motion zeroes it ✓
+
+## F3 visual-half record + the landing-teleport fix
+- The money-shot pass caught a REAL sim bug the deterministic gates never
+  tripped: wall pushout ran before landing resolution with no side-entry
+  guard, so the one integration frame that dips a hair below a slab top
+  (landing from a low knockback arc) matched the "inside the slab band"
+  test and teleported the fighter to the slab's nearer END face — on the
+  26m bench that was x 0.95 → 13.3 in one tick, read as "a jab sends you
+  half the stage". Fix: pushout requires prevY already below the top
+  (true side entry). Tick-trace after fix: jab at 6 wooze travels
+  0.49 → 0.96 (~0.5m) and lands clean; wall-stick gate still green
+  (fall-beside-slab has prevY below top every frame). 34/34 ×2.
+- Dynamic fight camera: frames all living fighters, d ∈ [13, 24]
+  (fitW/fitH against fov 38°), exp-smoothed τ=0.28s; shake offsets ride
+  on top; victory push-in to d=14.5. Shake cap now measured against the
+  CURRENT camera distance (cap grows with zoom-out, stays 0.6% of frame).
+- KO poof clamps to ±14/-4..13 (just inside the widest frame) so the
+  blast-edge burst is SEEN — before this, x=±18 was off-screen at every
+  zoom, which is why ko-moths.png used to read empty.

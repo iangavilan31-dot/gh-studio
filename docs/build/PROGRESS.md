@@ -552,3 +552,20 @@ reuse npc builders, per-fighter specs via makeFighter spec + specials);
 (4) F7 bots (the fightfeel driver IS proto-Dozy); (5) arenas/items/
 couch/online/balance; (6) FIGHT_JUDGE loop ×2.
 Re-read docs/DREAMSCRAP_PASS.md + this entry after any compaction.
+
+## FIGHT-F3 COMPLETE — the KO loop is seen, and the shots caught a real bug
+The visual half is captured (shots/dream/): fight.png two wizards frozen
+mid-heavy in hitstop center stage; ko-moths.png moth-burst + moon-slab
+rider + HUD stock 3→2; respawn-moon.png shimmer aura mid-descent + z;
+victory-nap.png winner lying beside the loser in the jar pool. New this
+cycle: upward rain (Part 4.1), 12 jar moths, DYNAMIC fight camera
+(frame-all-fighters, d 13–24, victory push-in), KO poof clamped into
+frame. And the money-shot pass caught a landing-teleport bug the gates
+missed (wall pushout ate the landing frame → x 0.95→13.3 in one tick);
+fixed with a prevY side-entry guard, tick-trace verified, 34/34 ×2.
+NEXT (in order): (1) F0 entry/exit (sleep-emote near sleeper + title
+Dream item + ≤4s tunnel, exit ≤3s, fully skippable); (2) F4 roster
+(Beldam/Nib/King/Chicken first — reuse npc builders, per-fighter specs
+via makeFighter spec + specials); (3) F7 bots (fightfeel driver IS
+proto-Dozy); (4) arenas/items/couch/online/balance; (5) FIGHT_JUDGE ×2.
+Re-read docs/DREAMSCRAP_PASS.md + this entry after any compaction.
