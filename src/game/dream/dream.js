@@ -1628,7 +1628,7 @@ class DreamMode {
         advanceAnim(st, dt, Math.abs(f.vx), !f.grounded)
         applyPose(R.rig, st, 0)
         // swing overlay: the arm whips through the move, wooze sways the idle
-        if (R.bottle) { R.bottle.scale.setScalar(1); R.bottle.rotation.z = 0 }
+        if (R.bottle) { R.bottle.scale.setScalar(1); R.bottle.rotation.z = 0; R.bottle.position.set(0, -0.36, 0.08) }
         if (R.bglow) R.bglow.material.uniforms.uOpacity.value = 0.6
         if (f.move) {
           if (f.fid === 'beldam' && f.move.name === 'special') {
@@ -1638,13 +1638,19 @@ class DreamMode {
             // down (judge passes 2–4: this must read in ONE frozen frame)
             const ph = Math.min(1, f.move.t / 22)
             const tip2 = Math.sin(Math.min(1, ph * 1.6) * Math.PI / 2)
-            R.rig.bones.armR.rotation.x = -0.35 - tip2 * 3.2 // up and over
+            R.rig.bones.armR.rotation.x = -0.35 - tip2 * 2.5 // hand to the mouth, not over
             R.rig.bones.spine.rotation.x -= tip2 * 0.95 // thrown WAY back — a real tip-back
             R.rig.bones.head.rotation.x = -tip2 * 1.15 // chin to the sky
             R.rig.bones.hips.rotation.x = tip2 * 0.28 // belly out, the drunkard's arch
             R.rig.bones.spine.rotation.z += Math.sin(this.match.tick * 0.6) * 0.1 * tip2
-            if (R.bottle) { R.bottle.scale.setScalar(1 + tip2 * 1.9); R.bottle.rotation.z = -tip2 * 2.2 } // tipped to pour
-            if (R.bglow) R.bglow.material.uniforms.uOpacity.value = 0.6 + tip2 * 0.35
+            // the bottle reads as a BOTTLE tipped to the lips, not a green
+            // blob: modest scale, lifted to the mouth, tipped mouth-down
+            if (R.bottle) {
+              R.bottle.scale.setScalar(1 + tip2 * 1.1)
+              R.bottle.rotation.z = -tip2 * 2.4 // upended, pouring in
+              R.bottle.position.set(0, -0.36 + tip2 * 0.28, 0.08 + tip2 * 0.12)
+            }
+            if (R.bglow) R.bglow.material.uniforms.uOpacity.value = 0.5 - tip2 * 0.28 // dim at the tip so the BOTTLE reads, not a glow blob
             // the last mouthful drips (render-dt — comedy, not a hitbox)
             if (tip2 > 0.6 && this.match.tick % 3 === 0) {
               const hx = f.x + f.face * 0.1
