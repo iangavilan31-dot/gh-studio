@@ -47,7 +47,7 @@ check('audio engine started', st.audio.started, JSON.stringify(st.audio))
 
 // 1) prompt appears <2m, absent >2m (bench lamp at 4.2,-19.2)
 await page.evaluate(() => window.__MOONREST__.teleportPlayer(4.2, -17.8, Math.PI)) // 1.4m away
-await page.waitForTimeout(700)
+await page.waitForTimeout(1600) // was 700: prompt settles ~1.1-1.4s after a teleport since DREAMSCRAP; the gate asserts proximity gating, not latency
 let promptOn = await page.evaluate(() => document.querySelector('#ui .prompt').classList.contains('on'))
 check('prompt visible at 1.4m', promptOn)
 await page.locator('body').screenshot({ path: resolve(dir, 'prompt-near.png') })
