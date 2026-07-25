@@ -24,6 +24,7 @@ import { Net } from './net/coop.js'
 import { Shell, loadSettings } from './ui/shell.js'
 import { audio } from './audio/engine.js'
 import { cues } from './audio/cues.js'
+import { dream } from './dream/dream.js'
 import { score } from './audio/score.js'
 import { beds } from './audio/beds.js'
 import { footstep, kindleChime } from './audio/sfx.js'
@@ -616,6 +617,16 @@ function tick() {
   const inputActive = input.keys.size > 0 || input.justPressed.size > 0
   if (inputActive) nightflow.noteInput()
 
+  // ——— DREAMSCRAP (Part 1): while dreaming, the dream owns the frame — the
+  // waking world pauses whole (no sim, no combat verbs ever added to it)
+  if (dream.active) {
+    dream.update(dt)
+    if (input.pressed('Escape')) dream.exit() // F0 minimal exit; menu lands later
+    input.endFrame()
+    pipeline.render(dream.scene, dream.camera, elapsed)
+    return
+  }
+
   // photo mode toggle (in the night, no menu up)
   if (mode === 'game' && !shell.screen && !cinematic && input.pressed('KeyP')) togglePhoto(!photo.on)
   // a menu/cinematic interrupting a Tab-hold discards the wheel, emoting nothing
@@ -944,6 +955,15 @@ window.__MOONREST__ = {
     }
   },
   kindle(id) { return net.active ? net.requestKindle(id) : world.kindle(id, { remote: true }) }, // rig path: no C.4 head-yank
+  // ——— DREAMSCRAP test surface (DECISIONS #8: tick-measured feel gates) ———
+  fight: {
+    enter(arena = 'beldam', players = 2) { endIntro(true); if (mode === 'title') { shell.clear(); mode = 'game' } return dream.enter(arena, players, input) },
+    exit() { return dream.exit() },
+    get active() { return dream.active },
+    get manual() { return dream.manual },
+    step(inputsById = {}) { return dream.stepManual(inputsById) },
+    state() { return dream.simState() },
+  },
   skipTo(min) { night.skipTo(min); return true },
   autopilot() { return autopilot() },
   setPhase(age) { night.setPhase(age); return true },
