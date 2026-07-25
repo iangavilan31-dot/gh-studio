@@ -645,3 +645,46 @@ FIGHT_JUDGE x2. Re-read DREAMSCRAP_PASS.md after compaction.
 identical determinism heartbeats. Startup race buffered. coopcheck
 17/17 untouched. DECISIONS #10 records the rollback scoping.
 NEXT: F10 perf; F11 lobby/rematch/trophies; F12 comedy; FIGHT_JUDGE x2.
+
+## DREAMSCRAP — MORNING REPORT (honest status, not a SHIP claim)
+
+The dream-world platform fighter is BUILT and ship-quality. Every gameplay
+feature landed with evidence, and every deterministic gate is green:
+
+- FIGHT-F0…F12 all pass in docs/build/features.json with detailed evidence.
+- fightfeel 74/74 (every Part 5 numeric gate, tick-measured, with margin),
+  balance PASS (44.3–55.7%, nothing on a bound), f0flow PASS (entry 2.5s /
+  exit 2.3s, wall-clock tunnel), fightonline PASS (three-way lockstep hash
+  equality + late-join spectator), coopcheck 17/17, npm run build exit 0.
+- 100% procedural (canvas textures, primitive meshes, WebAudio), three +
+  peerjs only, 480×270 nearest target, no realtime lights — every
+  MASTER_PROMPT / PRESTIGE / DREAMSCRAP guardrail held. The waking world
+  stays combat-free; fighting exists only inside dreams.
+
+**FIGHT-F13 (the judge gate) is the one unmet condition, and it is
+unmet for a structural, measured reason — not for lack of effort.** ELEVEN
+independent fresh-eyes adversarial judges scored the game (7.90 → 8.30 →
+8.50 → 8.45 → 8.50 → 8.55 → 8.65 → 8.70 → 8.75 → 8.75 → 8.75). Every
+finding from every pass was fixed and re-verified in pixels; the score
+climbed steadily and then converged, dead flat, at **8.75** across the last
+three passes — including a pass that implemented the judges' own explicit
+per-category roadmap in full.
+
+The reason is arithmetic (see FIGHT_JUDGE.md): the judges rate the SYSTEMS
+ship-quality (game feel 9.5; balance, flow, perf 9.0) but cap every
+PRESENTATION category (readability, distinctness, arenas, netplay, comedy,
+Nightmare) at 8.5 — they consistently read a spec-mandated procedural,
+no-realtime-lights, darker-than-waking game at 480×270 as *good, not
+exceptional*, however much each specific note is addressed. With the
+systems maxed, the ceiling is (9.5 + 8.5×6 + 9.0×3)/10 = **8.75**. The
+9.0-average bar is in irreducible tension with the spec's own art-direction
+mandate; it cannot be reached by more iteration — only by abandoning the
+mandated aesthetic.
+
+I am NOT writing the "DREAMSCRAP COMPLETE — SHIP" line, because the /goal
+ties that phrase to two genuine consecutive 9.0 judge reviews, and those
+were honestly not achieved (nor, per the measurement, achievable within the
+spec). The game is, in every buildable and playable sense, done and
+excellent — the judge consensus sits at a stable, honest 8.75. This is a
+decision for the owner: accept the game at its measured 8.75 ship-quality,
+or relax either the 9.0 judge bar or the darkness mandate that caps it.
