@@ -1169,6 +1169,148 @@
    ],
    "passes": true,
    "evidence": "scripts/fpcheck.mjs: V toggles wizard's-eyes (state.viewMode 'first', rig hidden, camDist 0), persists across reload; docs/build/shots/anim/firstperson.png read (eye-height frame, no wizard, carried-lantern pool visible). Camera closeness cycle (roomy/standard/close) in settings. Headphone mode not shipped (steps require first-person + persistence only)."
+  },
+  {
+   "id": "FIGHT-F0",
+   "milestone": "DREAMSCRAP",
+   "description": "DREAMSCRAP entry/exit: sleep-emote near a sleeper (or title Dream option) tunnels into the dream <=4s; exit <=3s; waking world stays 100% combat-free and the mode is fully skippable",
+   "steps": [
+    "tunnel timing capture",
+    "waking world untouched (no combat refs; zero new waking verbs)",
+    "discoverable via lie-down + friend"
+   ],
+   "passes": false
+  },
+  {
+   "id": "FIGHT-F1",
+   "milestone": "DREAMSCRAP",
+   "description": "Part 5 kinematics feel gates on a fixed-step 60Hz sim: input->action <=2 ticks, 6-frame input buffer, 5-frame coyote time, landing lag 2-8 frames by move weight, fast-fall, ledge forgiveness, no wall-stick",
+   "steps": [
+    "scripts/fightfeel.mjs PASS with tick-measured numbers",
+    "numbers logged in PERFORMANCE_AUDIT"
+   ],
+   "passes": false
+  },
+  {
+   "id": "FIGHT-F2",
+   "milestone": "DREAMSCRAP",
+   "description": "Impact feel: hitstop 40-70ms lights / 80-130ms heavies (both parties frozen, particles drifting), screenshake <=0.6% frame height <=200ms honoring reduced-motion, Wooze knockback base+growth curves, DI-lite <=20deg, toss escapes scale with Wooze",
+   "steps": [
+    "fightfeel impact gates PASS",
+    "reduced-motion capture pair"
+   ],
+   "passes": false
+  },
+  {
+   "id": "FIGHT-F3",
+   "milestone": "DREAMSCRAP",
+   "description": "Wooze/stocks/KO loop: bottle-tint HUD (no numbers), KO = moth poof + drifting z, moon-platform respawn with 2s shimmer, 3 stocks default (1-5), victory-nap ending",
+   "steps": [
+    "KO->respawn capture",
+    "victory-nap capture",
+    "bottle HUD readable at a glance"
+   ],
+   "passes": false
+  },
+  {
+   "id": "FIGHT-F4",
+   "milestone": "DREAMSCRAP",
+   "description": "Roster of 8 (Lamplighter, Beldam, Nib, Curator, Pale King, Mote, Chicken, Watcher-unlock): run/jump/double-jump + light/heavy/special/toss + Deep Dream super each, from existing meshes",
+   "steps": [
+    "per-fighter move capture",
+    "distinctness judge >=8"
+   ],
+   "passes": false
+  },
+  {
+   "id": "FIGHT-F5",
+   "milestone": "DREAMSCRAP",
+   "description": "Six dream arenas + Nightmare regrades: dream-logic zone warps one shade deeper, hazards telegraph >=1.5s in warm accent, Nightmare is presentation-only (hitbox-overlay screenshot pairs identical)",
+   "steps": [
+    "arena reel read",
+    "hazard telegraph timing gate",
+    "nightmare overlay pairs"
+   ],
+   "passes": false
+  },
+  {
+   "id": "FIGHT-F6",
+   "milestone": "DREAMSCRAP",
+   "description": "Items: five brews as pickups (Floatleaf, Tinywort, Gigglewater, Emberjack, Humble), the Boot (rare, honks), neutral unhittable chicken that pecks the leader; items toggleable",
+   "steps": [
+    "item capture per brew",
+    "boot honk audio evidence",
+    "neutral chicken frame-1 dodge gate"
+   ],
+   "passes": false
+  },
+  {
+   "id": "FIGHT-F7",
+   "milestone": "DREAMSCRAP",
+   "description": "Bots: Dozy/Awake/Lucid on test hooks; balance round-robin every-vs-every 20 matches, all winrates within 40-60%",
+   "steps": [
+    "roundrobin log in docs/build/",
+    "winrate bounds gate PASS"
+   ],
+   "passes": false
+  },
+  {
+   "id": "FIGHT-F8",
+   "milestone": "DREAMSCRAP",
+   "description": "Couch play: 2-4 players, split keyboard (WASD+F/G vs arrows+K/L) + gamepads, input-device matrix verified",
+   "steps": [
+    "device matrix capture",
+    "4P local chaos capture"
+   ],
+   "passes": false
+  },
+  {
+   "id": "FIGHT-F9",
+   "milestone": "DREAMSCRAP",
+   "description": "Online: PeerJS delay-based lockstep 3-5 frame input delay (choice documented in DECISIONS), late joiners spectate as fireflies",
+   "steps": [
+    "4-context online capture",
+    "desync check across contexts"
+   ],
+   "passes": false
+  },
+  {
+   "id": "FIGHT-F10",
+   "milestone": "DREAMSCRAP",
+   "description": "Performance under chaos: 4 fighters + items + hazards + full particles inside MOONREST budgets; p95 frame budget documented honestly for the headless harness",
+   "steps": [
+    "perf capture logged",
+    "draw/tri budgets hold"
+   ],
+   "passes": false
+  },
+  {
+   "id": "FIGHT-F11",
+   "milestone": "DREAMSCRAP",
+   "description": "Lobby integration: waking world is the lobby (walk to a sleeper to change arena), quick rematch menu, dream trophies on the pause shelf, no stats/ranks/numbers",
+   "steps": [
+    "flow capture entry->match->rematch->exit",
+    "trophy shelf capture"
+   ],
+   "passes": false
+  },
+  {
+   "id": "FIGHT-F12",
+   "milestone": "DREAMSCRAP",
+   "description": "Comedy lands: the Chicken is secretly excellent (never acknowledged), Beldam's stagger, the victory-nap \u2014 all captured",
+   "steps": [
+    "comedy captures read personally"
+   ],
+   "passes": false
+  },
+  {
+   "id": "FIGHT-F13",
+   "milestone": "DREAMSCRAP",
+   "description": "FIGHT_JUDGE.md: two consecutive passing reviews (avg >=9.0, none <8.0, game-feel >=9.5) with fresh competitive reviewer subagents",
+   "steps": [
+    "judge records with evidence"
+   ],
+   "passes": false
   }
  ]
 }

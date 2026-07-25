@@ -522,3 +522,14 @@ non-blocking by the passing reviews; deferrals reasoned in DECISIONS).
 The artifact republish follows this commit. Good morning.
 
 PRESTIGE PASS COMPLETE — SHIP
+
+---
+
+# DREAMSCRAP PASS — begun 2026-07-24 ~10:5x UTC
+
+docs/DREAMSCRAP_PASS.md merged and read in full. All prior law holds; the
+waking world stays combat-free (fighting only inside dreams). Owner priority:
+Part 5 numeric feel gates BEFORE roster breadth. 14 FIGHT- ledger entries
+seeded. Build order: F0 entry/exit shell -> F1 fixed-step kinematics + feel
+harness -> F2 impact feel -> F3 wooze/KO loop -> bots/couch -> roster ->
+arenas -> items -> online -> balance -> judge loop.
