@@ -320,7 +320,7 @@ await superShot('super-party', ['curator', 'lamplighter'], `
   for (let k = 0; k < 235; k++) step()`, 'curator')
 await superShot('super-roots', ['mote', 'paleking'], `${CLOSE}
   M.fight.charge(0); step({ special: true })
-  for (let k = 0; k < 78; k++) step()`, 'mote')
+  for (let k = 0; k < 56; k++) step()`, 'mote') // roots 0-1 up, root 2 erupting w/ embers
 await superShot('super-lightsout', ['watcher', 'lamplighter'], `${CLOSE}
   M.fight.charge(0); step({ special: true })
   for (let k = 0; k < 40; k++) step()`, 'curator')
@@ -351,7 +351,9 @@ await superShot('comedy-swig', ['beldam', 'lamplighter'], `${CLOSE}
 const end = await page.evaluate(() => {
   const M = window.__MOONREST__
   M.fight.exit()
-  M.fight.enter('beldam', 2)
+  // FOUR sleepers so the nap reads as everyone-curled-up-together, not one
+  // figure (judge passes 7–8): the winner lies, the others sleep beside her
+  M.fight.enter('beldam', 4, 99, ['beldam', 'mote', 'chicken', 'nib'])
   const step = () => M.fight.step({})
   for (let k = 0; k < 60; k++) step()
   M.fight.winNow(0)
