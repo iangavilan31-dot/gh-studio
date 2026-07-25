@@ -8,6 +8,7 @@ import * as THREE from 'three'
 import { retroMaterial, ensureVertexColors, globalUniforms } from '../art/materials.js'
 import * as TEX from '../art/textures.js'
 import { buildWizard, PLAYER_TINTS } from '../art/characters.js'
+import { buildGnome, buildCurator, buildPaleKing, buildMote, buildChicken } from '../systems/npc.js'
 import { makeAnimState, advanceAnim, applyPose } from '../systems/anim.js'
 import { Sky } from '../world/zonelight.js'
 import { ParticleSystem } from '../world/particles.js'
@@ -30,6 +31,41 @@ const BELDAM_DREAM = {
     spawns: [[-6, 1], [6, 1], [-10, 4], [10, 4]],
   },
 }
+
+// ═══ F4 rigs: every fighter is an EXISTING creature standing its ground ═══
+// outer group carries position + facing; the pose node carries pitch (lean
+// into the fight, local x) and roll (tumbles, Mote's spin, the victory
+// tip-over, local z) — clean axes at ±90° facing.
+function genericRig(built, { scale = 1, standX = 0, lift = 0, accent = null, roller = false, pivot = 0.5 } = {}) {
+  const outer = new THREE.Group()
+  const pose = new THREE.Group()
+  built.group.rotation.x = standX
+  built.group.position.y = lift - pivot // pose pivots at mid-body: pitch reads
+  pose.position.y = pivot               // as a lean, rolls read as a wheel —
+  pose.add(built.group)                 // never a cartwheel through the floor
+  outer.add(pose)
+  outer.scale.setScalar(scale)
+  return { kind: 'generic', group: outer, pose, accent, roller, spin: 0 }
+}
+
+function makeDreamRig(fid, idx) {
+  switch (fid) {
+    case 'nib': { // the garden gnome stands up to fight
+      const r = buildGnome()
+      return genericRig(r, { scale: 2.1, standX: -Math.PI / 2, lift: 0.26, accent: r.hatBone, pivot: 0.22 })
+    }
+    case 'curator': { const r = buildCurator(); return genericRig(r, { accent: r.armR, pivot: 0.8 }) }
+    case 'paleking': { const r = buildPaleKing(); return genericRig(r, { scale: 1.25, accent: r.crown, pivot: 0.6 }) }
+    case 'mote': { const r = buildMote(); return genericRig(r, { scale: 0.8, accent: r.headBone, roller: true, pivot: 0.45 }) }
+    case 'chicken': { const r = buildChicken(); return genericRig(r, { scale: 1.5, accent: r.headBone, pivot: 0.25 }) }
+    case 'watcher': { const rig = buildWizard({ tint: '#20242e', withStaff: false }); return { kind: 'wizard', rig, group: rig.group } }
+    case 'beldam': { const rig = buildWizard({ tint: '#3a4258', beardLength: 0.62, withStaff: false }); return { kind: 'wizard', rig, group: rig.group } }
+    default: { const rig = buildWizard({ tint: PLAYER_TINTS[idx % PLAYER_TINTS.length], withStaff: false }); return { kind: 'wizard', rig, group: rig.group } }
+  }
+}
+
+// entering a sleeper's dream means fighting the dreamer (Part 4)
+const DREAM_HOST = { beldam: 'beldam', nib: 'nib', mote: 'mote', curator: 'curator', king: 'paleking', chicken: 'chicken' }
 
 class DreamMode {
   constructor() {
@@ -210,8 +246,8 @@ class DreamMode {
       const fill = Math.min(1, f.wooze / 140)
       ctx.fillStyle = tint(f.wooze)
       ctx.fillRect(x + 2, 16 + (1 - fill) * 30, 14, fill * 30)
-      // stock moons
-      for (let s = 0; s < f.stocks; s++) {
+      // stock moons (capped at 5 drawn — test matches run 99 stocks)
+      for (let s = 0; s < Math.min(f.stocks, 5); s++) {
         ctx.fillStyle = '#c8d4f0'
         ctx.beginPath(); ctx.arc(x + 30 + s * 12, 44, 4, 0, Math.PI * 2); ctx.fill()
       }
@@ -221,22 +257,27 @@ class DreamMode {
 
   // ——— fighters ———
   _spawnFighters(n, opts = {}) {
+    // default cast: you are the Lamplighter; the dreamer meets you in their
+    // own dream; couch seats 3/4 fill from the roster
+    const host = DREAM_HOST[this.arenaId] ?? 'beldam'
+    const fids = opts.fids ?? ['lamplighter', host, host === 'nib' ? 'chicken' : 'nib', host === 'paleking' ? 'mote' : 'paleking']
     for (let i = 0; i < n; i++) {
-      const f = makeFighter(i, { stocks: opts.stocks, fid: opts.fids?.[i] })
+      const f = makeFighter(i, { stocks: opts.stocks, fid: fids[i] })
       const [sx, sy] = this.match.arena.spawns[i]
       f.x = sx; f.y = sy
       f.face = sx > 0 ? -1 : 1
       this.match.fighters.push(f)
-      const rig = buildWizard({ tint: PLAYER_TINTS[i % PLAYER_TINTS.length], withStaff: false })
-      this.scene.add(rig.group)
-      this.rigs.set(i, rig)
+      const R = makeDreamRig(f.fid, i)
+      this.scene.add(R.group)
+      this.rigs.set(i, R)
       this.anims.set(i, makeAnimState())
     }
   }
 
   enter(arenaId = 'beldam', players = 2, liveInput = null, opts = {}) {
     if (this.active) return false
-    const def = BELDAM_DREAM // F1: one arena; the roster of dreams lands in F5
+    this.arenaId = arenaId
+    const def = BELDAM_DREAM // one arena def for now; the roster of dreams lands in F5
     this.def = def
     this.scene = this._buildScene(def)
     this.match = makeMatch(makeArena(def.arena), [])
@@ -342,12 +383,13 @@ class DreamMode {
 
   _pose(dt) {
     for (const f of this.match.fighters) {
-      const rig = this.rigs.get(f.id)
+      const R = this.rigs.get(f.id)
       const st = this.anims.get(f.id)
-      if (!rig) continue
-      // eliminated wizards leave the dream until the victory nap gathers them
-      if (f.stocks <= 0 && !this.victory) { rig.group.visible = false; continue }
-      rig.group.visible = true
+      if (!R) continue
+      const g = R.group
+      // eliminated fighters leave the dream until the victory nap gathers them
+      if (f.stocks <= 0 && !this.victory) { g.visible = false; continue }
+      g.visible = true
       // — victory nap (Part 2): the winner yawns and lies down beside the
       //   losers; every match ends cozy —
       if (this.victory) {
@@ -355,32 +397,63 @@ class DreamMode {
         const wf = this.match.fighters[v.winner] ?? this.match.fighters[0]
         // the nap gathers at center bench, never at a blast-edge or shelf
         const nx = Math.max(-8, Math.min(8, wf.x))
-        if (f.id === v.winner) {
-          st.action = v.t > 2.4 ? 'lie' : v.t > 1.0 ? 'sit' : null
-          rig.group.position.set(nx, 0, 0)
+        const win = f.id === v.winner
+        const k = f.id < v.winner ? f.id : f.id - 1
+        g.position.set(win ? nx : nx + (k + 1) * 1.5 * (k % 2 ? 1 : -1), 0, 0)
+        if (R.kind === 'wizard') {
+          st.action = win ? (v.t > 2.4 ? 'lie' : v.t > 1.0 ? 'sit' : null) : 'sleep'
+          advanceAnim(st, dt, 0, false)
+          applyPose(R.rig, st, 0)
         } else {
-          st.action = 'sleep'
-          const k = f.id < v.winner ? f.id : f.id - 1
-          rig.group.position.set(nx + (k + 1) * 1.5 * (k % 2 ? 1 : -1), 0, 0)
+          // creatures tip gently onto their side to sleep (comedy law)
+          const want = win ? (v.t > 2.4 ? 1 : 0) : 1
+          R.pose.rotation.x = 0
+          R.pose.rotation.z += (want * Math.PI / 2 - R.pose.rotation.z) * Math.min(1, dt * 4)
         }
-        advanceAnim(st, dt, 0, false)
-        applyPose(rig, st, 0)
         continue
       }
-      rig.group.position.set(f.x, f.y, 0)
-      rig.group.rotation.y = f.face > 0 ? Math.PI / 2 : -Math.PI / 2
-      advanceAnim(st, dt, Math.abs(f.vx), !f.grounded)
-      applyPose(rig, st, 0)
-      // swing overlay (readability blockout; real move poses land in F4):
-      // the arm whips through the active window, wooze sways the idle
-      if (f.move) {
-        const A = { light: 15, heavy: 34 }[f.move.name] ?? 15
-        const ph = Math.min(1, f.move.t / A)
-        rig.bones.armR.rotation.x = -0.35 - Math.sin(ph * Math.PI) * (f.move.name === 'heavy' ? 2.4 : 1.7)
-      }
-      if (f.wooze > 0) {
-        const sway = Math.min(0.22, f.wooze * 0.0022)
-        rig.bones.spine.rotation.z += Math.sin((this.match.tick + f.id * 17) * 0.11) * sway
+      g.position.set(f.x, f.y, 0)
+      g.rotation.y = f.face > 0 ? Math.PI / 2 : -Math.PI / 2
+      if (R.kind === 'wizard') {
+        advanceAnim(st, dt, Math.abs(f.vx), !f.grounded)
+        applyPose(R.rig, st, 0)
+        // swing overlay: the arm whips through the move, wooze sways the idle
+        if (f.move) {
+          const A = { light: 15, heavy: 34, special: 24, super: 12 }[f.move.name] ?? 15
+          const ph = Math.min(1, f.move.t / A)
+          R.rig.bones.armR.rotation.x = -0.35 - Math.sin(ph * Math.PI) * (f.move.name === 'light' ? 1.7 : 2.4)
+        }
+        if (f.wooze > 0) {
+          const sway = Math.min(0.22, f.wooze * 0.0022)
+          R.rig.bones.spine.rotation.z += Math.sin((this.match.tick + f.id * 17) * 0.11) * sway
+        }
+      } else {
+        // — generic creature pose: lean, waddle, lunge, tumble —
+        const tick = this.match.tick
+        let pitch = 0, roll = 0
+        const sp = Math.abs(f.vx)
+        if (f.grounded && sp > 0.5) { pitch += Math.min(0.2, sp * 0.028) + Math.sin(tick * 0.55 + f.id) * 0.05 }
+        if (!f.grounded) pitch -= 0.12
+        if (f.launched > 0) roll += Math.sin(tick * 0.6 + f.id * 3) * 0.35
+        if (f.move) {
+          if (R.roller && f.move.name === 'special') {
+            R.spin -= 0.42 // Mote's shell spin cartwheels through the screen plane
+            roll += R.spin
+          } else {
+            const A = { light: 12, heavy: 22, special: 20, super: 10 }[f.move.name] ?? 12
+            const ph = Math.min(1, f.move.t / A)
+            pitch += Math.sin(ph * Math.PI) * 0.55
+            if (R.accent) R.accent.rotation.x = -Math.sin(ph * Math.PI) * 1.1
+          }
+        } else {
+          R.spin *= 0.86
+          roll += R.spin
+          if (R.accent) R.accent.rotation.x *= 0.8
+          pitch += Math.sin(tick * 0.045 + f.id * 2) * 0.03 // idle breath
+        }
+        if (f.wooze > 0) roll += Math.sin((tick + f.id * 17) * 0.11) * Math.min(0.2, f.wooze * 0.002)
+        R.pose.rotation.x = pitch
+        R.pose.rotation.z = roll
       }
     }
     // — dynamic fight camera: frame every wizard still dreaming, zoom with
