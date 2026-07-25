@@ -152,7 +152,9 @@ await page.evaluate(() => {
   for (let j = 0; j < 8; j++) s = step()
   const d = Math.sign(s.fighters[0].x - s.fighters[1].x)
   step({ special: true, x: -d }, { special: true, x: d })
-  for (let k = 0; k < 16; k++) step()
+  // Mote's shell-spin rolls ~0.42rad/tick; ~tick 8 it's fully upside-down,
+  // legs flailing at the sky — a helpless tortoise, the Chicken pecking on
+  for (let k = 0; k < 8; k++) step()
 })
 await shot('critters')
 
