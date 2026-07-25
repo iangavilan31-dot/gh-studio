@@ -980,6 +980,19 @@ export class NPCSystem {
     }
   }
 
+  // DREAMSCRAP F0: the dreamers you can fall asleep beside — each carries
+  // the key of the arena their dream becomes (Part 4)
+  get sleepers() {
+    const out = []
+    const add = (id, obj) => {
+      const p = obj?.rig?.group?.position
+      if (p) out.push({ id, x: p.x, z: p.z })
+    }
+    add('beldam', this.beldam); add('nib', this.nib); add('mote', this.mote)
+    add('curator', this.curator); add('king', this.king)
+    return out
+  }
+
   // AA.5 wander-test surface: where the sleepers (and their small comedies) live
   get anchors() {
     const a = []
