@@ -170,3 +170,13 @@ run on a 2020 laptop should confirm; flagged in the Morning Report.
    size.** Terrain must occlude the moon, never the reverse; 205 clears every
    silhouette inside the 220 far plane (isle headland was drawing behind the
    flare's transparent pass at 165).
+8. **DREAMSCRAP runs on a fixed-timestep 60Hz deterministic sim** (accumulator
+   over wall dt, ticks are the unit of truth). Every Part 5 feel number is
+   measured in TICKS via a manual-step test hook — contention-proof gates
+   (the wall-clock dt-clamp poison that plagued early MOONREST gates cannot
+   touch them) — and the same determinism is the foundation for delay-based
+   lockstep online (Part 6) without a rewrite.
+9. **The dream is a second THREE.Scene on the same pipeline.** Waking-world
+   sim pauses during a dream (audio beds crossfade); no waking system gains
+   combat verbs — integration law Part 7 enforced structurally by keeping
+   all fight code under src/game/dream/.
