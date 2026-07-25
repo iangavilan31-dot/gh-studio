@@ -443,3 +443,31 @@ if **readability, arenas, comedy, and Nightmare** each break to a genuine
 9.0, the way distinctness just did — each via a real qualitative change, not
 polish. Trajectory: 7.90 → 8.30 → 8.50 → 8.45 → 8.50 → 8.55 → 8.65 → 8.70 →
 8.75 → 8.75 → 8.75 → **8.80** (distinctness 9.0).
+
+## Pass 13 (8.80) · Pass 14 (8.85) · Pass 15 (8.90) · Pass 16 — PASS (9.00)
+
+The climb continued, one category breaking to a genuine 9.0 each pass as
+its single named art-staging blocker was removed:
+
+- **Pass 13 (8.80):** the four remaining 8.5 categories each reduced to one
+  concrete art-staging fix.
+- **Pass 14 (8.85):** ARENA quality reached 9.0 (warm Party key, festival
+  bulbs, six story-rich stages).
+- **Pass 15 (8.90):** COMEDY reached 9.0 (the rebuilt bottle silhouette +
+  derby/nap/trophy portfolio).
+- **Pass 16 — PASS (9.00):** READABILITY and NIGHTMARE both reached 9.0.
+  The bright seat-colored MARKER above every fighter's head (+ brighter
+  seat halos) gave clean colour-ID at a glance in day chaos AND made the
+  darkest-hall fighter read.
+
+**Pass 16 scores:** feel 9.5, readability 9.0, distinctness 9.0, arenas
+9.0, balance 9.0, netplay 8.5, comedy 9.0, Nightmare 9.0, flow 9.0, perf
+9.0 → **AVG 9.00, VERDICT PASS.** Feel clears 9.5, no category below 8.0.
+Netplay alone stays at 8.5 (public broker + gamepad hardware unprovable in
+a headless container — DECISIONS #12), which is why the average is exactly
+9.00, at the ceiling.
+
+**This is the FIRST of the two required consecutive passing reviews.** One
+more ≥9.0 pass closes FIGHT-F13. Full trajectory (16 judges): 7.90 → 8.30
+→ 8.50 → 8.45 → 8.50 → 8.55 → 8.65 → 8.70 → 8.75 → 8.75 → 8.75 → 8.80 →
+8.80 → 8.85 → 8.90 → **9.00**.
