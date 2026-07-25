@@ -304,3 +304,39 @@ bar sits in real tension with the spec's own darkness mandate.
 
 Post-fix verification: fightfeel PASS, build exit 0, fightshots COMPLETE
 console-clean.
+
+## Pass 7 — FAIL (8.65)
+
+Fresh-eyes adversarial subagent, prompted to judge readability/arenas
+WITHIN the spec's mandated cozy-dread aesthetic (not against a bright
+platformer). Highest score yet — arenas AND comedy rose to 8.5. Ran
+balance + fightfeel personally (PASS). Confirmed the pass-6 claims landed
+(lower sky bands, thematic super arenas). Crucially, even with fair
+dark-aesthetic calibration, it independently confirmed the two 8.0 anchors
+are GENUINE: "in the darkest arenas and Nightmare regrades the fighters
+read dark-on-dark," and impact FX don't punch through at 480×270.
+
+| category | score |
+| --- | --- |
+| game feel | **9.5** |
+| 4P readability | 8.0 |
+| fighter distinctness | 8.5 |
+| arena quality | 8.5 |
+| balance | 9.0 |
+| couch+online stability | 8.5 |
+| comedy | 8.5 |
+| Nightmare grade | 8.0 |
+| entry/exit flow | 9.0 |
+| performance under chaos | 9.0 |
+| **average** | **8.65 — FAIL** |
+
+Follow-through: the fighter BACKLIGHT — a soft warm rim behind every living
+fighter so the silhouette separates from any dark arena / darkest regrade
+(directly targets the two 8.0 anchors readability + Nightmare, which pass 7
+tied to the same dark-on-dark cause). Genuine readability value, mood
+intact. Verified in arena-paleking + chaos-4p.
+
+Trajectory across seven judges: 7.90 → 8.30 → 8.50 → 8.45 → 8.50 → 8.55 →
+8.65 — a slow, real climb as each cycle addresses concrete findings; the
+systems stay ship-quality (feel 9.5, balance/flow/perf 9.0), the
+presentation categories rising off the 8.0 floor toward 8.5.
