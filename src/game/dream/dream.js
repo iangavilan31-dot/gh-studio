@@ -37,7 +37,7 @@ const DREAMS = {
   //   long, bottle towers as platforms, the firefly jar as the stage light,
   //   and the rain falls upward. —
   beldam: {
-    palette: { fog: '#16303a', skyUp: '#6894a0', ambient: '#b4cbc8', stops: ['#060d18', '#0a1620', '#16323e', '#22424e', '#1f4351'] },
+    palette: { fog: '#16303a', skyUp: '#6894a0', ambient: '#b4cbc8', stops: ['#0c1a30', '#12293b', '#1c3e4e', '#22424e', '#1f4351'] },
     nightmare: { fog: '#0d1c23', skyUp: '#304d5a', ambient: '#8ba3a0', stops: ['#03080c', '#060e15', '#0b171f', '#101e26', '#0d1c23'] },
     ambient: 'rainUp',
     arena: {
@@ -109,7 +109,7 @@ const DREAMS = {
   // — Nib's Dream: the Big Sky. Rooftops among ENORMOUS constellations;
   //   star-lines draw and undraw as temporary platforms (2s telegraph). —
   nib: {
-    palette: { fog: '#1a1836', skyUp: '#6865b3', ambient: '#c0bcf0', stops: ['#080718', '#100e28', '#221d5a', '#322d76', '#24224c'] },
+    palette: { fog: '#1a1836', skyUp: '#6865b3', ambient: '#c0bcf0', stops: ['#100e30', '#1e1a4a', '#2a2470', '#322d76', '#24224c'] },
     nightmare: { fog: '#0f0e24', skyUp: '#333066', ambient: '#928dc0', stops: ['#04040c', '#090815', '#0f0d24', '#14122e', '#0f0e24'] },
     ambient: { color: '#cfd8ff', vel: [0, -0.45], rate: 12, size: 0.09, alpha: 0.5 },
     arena: {
@@ -189,7 +189,7 @@ const DREAMS = {
   //   and gleaming, the moonwell fountaining, ghost nobles politely
   //   applauding good hits. Her dream is the night the party never ended. —
   curator: {
-    palette: { fog: '#122430', skyUp: '#517e92', ambient: '#b5d4dc', stops: ['#04101a', '#081a26', '#143246', '#1c4357', '#193243'] },
+    palette: { fog: '#122430', skyUp: '#517e92', ambient: '#b5d4dc', stops: ['#082034', '#0f3046', '#193e58', '#1c4357', '#193243'] },
     nightmare: { fog: '#0b171f', skyUp: '#26404d', ambient: '#87a3ac', stops: ['#03080c', '#061017', '#08171f', '#0d1e26', '#0b171f'] },
     ambient: { color: '#bfe0e8', vel: [0.08, 0.3], rate: 10, size: 0.08, alpha: 0.45 },
     arena: {
@@ -278,7 +278,7 @@ const DREAMS = {
   // — The Pale King's Dream: the Full Hall, warm and crowded. Feast tables
   //   as platforms; the chandeliers swing and occasionally drop. —
   paleking: {
-    palette: { fog: '#241a12', skyUp: '#765a3b', ambient: '#d8bc99', stops: ['#0e0804', '#1a100a', '#322216', '#432d1f', '#322419'] },
+    palette: { fog: '#241a12', skyUp: '#765a3b', ambient: '#d8bc99', stops: ['#1c1008', '#301e12', '#3e2a1c', '#432d1f', '#322419'] },
     nightmare: { fog: '#170f0a', skyUp: '#3a2a1a', ambient: '#a38a6f', stops: ['#060303', '#0d0806', '#140d08', '#1b140d', '#170f0a'] },
     ambient: { color: '#e8a848', vel: [0.04, -0.28], rate: 10, size: 0.07, alpha: 0.4 },
     arena: {
@@ -360,7 +360,7 @@ const DREAMS = {
   // — Mote's Dream: the Young Forest. The Mosswood as saplings under a
   //   bright ancient moon; the gate loops the arena edges (the only wrap). —
   mote: {
-    palette: { fog: '#1c3424', skyUp: '#76a884', ambient: '#d2e9cd', stops: ['#0a140c', '#122218', '#244330', '#30573e', '#274932'] },
+    palette: { fog: '#1c3424', skyUp: '#76a884', ambient: '#d2e9cd', stops: ['#142818', '#213f2c', '#2d543c', '#30573e', '#274932'] },
     nightmare: { fog: '#122415', skyUp: '#3e5e4b', ambient: '#98b295', stops: ['#050c08', '#0a1610', '#102418', '#162e20', '#122415'] },
     cam: { maxD: 19 }, // judge finding 8: never zoom out to fit the whole wrap — fighters stay person-sized
     ambient: { color: '#a8d890', vel: [0.06, 0.26], rate: 11, size: 0.08, alpha: 0.45 },
@@ -458,7 +458,7 @@ const DREAMS = {
   // — The Chicken's Dream: the Warm Oven. A giant bakery; pie platforms,
   //   flour-dust ground fog, the bakery window as a huge warm moon. —
   chicken: {
-    palette: { fog: '#2a1c10', skyUp: '#946a3b', ambient: '#e9c79c', stops: ['#100a04', '#1e120a', '#3b2414', '#4c321d', '#3b2716'] },
+    palette: { fog: '#2a1c10', skyUp: '#946a3b', ambient: '#e9c79c', stops: ['#201408', '#382112', '#4a2d19', '#4c321d', '#3b2716'] },
     nightmare: { fog: '#19110a', skyUp: '#46331d', ambient: '#ab8f6e', stops: ['#070403', '#0f0906', '#160f09', '#1d140c', '#19110a'] },
     ambient: { color: '#f0e0c0', vel: [0.22, 0.05], rate: 8, size: 0.5, alpha: 0.13, puff: true },
     arena: {
@@ -837,8 +837,8 @@ class DreamMode {
     }
     fx.moon = glow('#c8d4f0', 6.5, 6.5)
     // moonrise gets a knockback SHOCKWAVE (judge pass 5: 'no visible ring')
-    fx.moonRing = glow('#dfe8ff', 3, 3)
-    fx.moonRing.rotation.x = -Math.PI / 2
+    // — face-on so it reads as a burst, not a flat ground disc
+    fx.moonRing = glow('#dfe8ff', 3.4, 3.4)
     // — F6 items: bottled brews, one comically load-bearing boot, and the
     //   neutral chicken who is not participating (officially) —
     fx.itemMeshes = []
@@ -979,12 +979,14 @@ class DreamMode {
         fx.moon.material.uniforms.uOpacity.value = 0.7 * Math.min(1, (1 - rise) * 4)
         // the knockback shockwave: a bright ring blooms out along the
         // ground as the moon crests (rise → 0)
-        const bloom = Math.max(0, 1 - rise * 2.2) // 0 until the moon is high
+        const bloom = Math.max(0, 1 - rise * 2.4) // 0 until the moon is high
         fx.moonRing.visible = bloom > 0.02
         if (bloom > 0.02) {
-          fx.moonRing.position.set(f.x, 0.08, 0)
-          fx.moonRing.scale.setScalar(1 + bloom * 5)
-          fx.moonRing.material.uniforms.uOpacity.value = 0.85 * (1 - bloom)
+          // bloom at the caster's FEET (grounded or on a platform), a bright
+          // vertical shockwave that reads face-on, not a flat ground disc
+          fx.moonRing.position.set(f.x, f.y + 0.6, 0.3)
+          fx.moonRing.scale.setScalar(1 + bloom * 6)
+          fx.moonRing.material.uniforms.uOpacity.value = 0.95 * (1 - bloom)
         }
       }
       if (f.superFx?.kind === 'bottleTornado') tornado = f
