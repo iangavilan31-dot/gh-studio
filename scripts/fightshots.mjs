@@ -134,6 +134,54 @@ await page.evaluate(() => {
 })
 await shot('critters')
 
+// ——— the six dreams, seen (F5 presentation evidence) ———
+const EXCHANGE = `
+  const step = (a, b) => M.fight.step({ 0: a ?? {}, 1: b ?? {} })
+  for (let k = 0; k < 60; k++) step()
+  let s = step(), g = 0
+  while (Math.abs(s.fighters[1].x - s.fighters[0].x) > 1.7 && g++ < 240)
+    s = step({ x: s.fighters[1].x > s.fighters[0].x ? 1 : -1 }, { x: s.fighters[0].x > s.fighters[1].x ? 1 : -1 })
+  for (let j = 0; j < 10; j++) s = step()
+  const d = Math.sign(s.fighters[1].x - s.fighters[0].x) || 1
+  step({ light: true, x: d }); for (let j = 0; j < 26; j++) step()
+  s = step(); g = 0
+  while (Math.abs(s.fighters[1].x - s.fighters[0].x) > 1.7 && g++ < 240)
+    s = step({ x: s.fighters[1].x > s.fighters[0].x ? 1 : -1 }, { x: s.fighters[0].x > s.fighters[1].x ? 1 : -1 })
+  const d2 = Math.sign(s.fighters[1].x - s.fighters[0].x) || 1
+  step({ heavy: true, x: d2 })
+  g = 0
+  while (g++ < 40) { s = step(); if (s.events.some((e) => e.t === 'hit')) break }
+  step(); step()
+`
+const arenaShot = async (id, prep) => {
+  await page.evaluate(([a]) => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter(a, 2) }, [id])
+  await page.waitForTimeout(1700)
+  await page.evaluate(`(() => { const M = window.__MOONREST__; ${prep} })()`)
+  await shot(`arena-${id}`)
+}
+await arenaShot('curator', EXCHANGE)
+await arenaShot('paleking', EXCHANGE)
+await arenaShot('chicken', EXCHANGE)
+// the split stages fight at their inner edges instead of walking the pit
+await arenaShot('nib', `
+  const step = (a, b) => M.fight.step({ 0: a ?? {}, 1: b ?? {} })
+  for (let k = 0; k < 60; k++) step()
+  let s = step(), g = 0
+  while ((s.fighters[0].x < -2.6 || s.fighters[1].x > 2.6) && g++ < 200)
+    s = step({ x: s.fighters[0].x < -2.6 ? 1 : 0 }, { x: s.fighters[1].x > 2.6 ? -1 : 0 })
+  for (let j = 0; j < 10; j++) s = step()
+  step({ jump: true, x: 1 })
+  for (let k = 0; k < 16; k++) step({ x: 1 })
+`)
+await arenaShot('mote', `
+  const step = (a, b) => M.fight.step({ 0: a ?? {}, 1: b ?? {} })
+  for (let k = 0; k < 60; k++) step()
+  let s = step(), g = 0
+  while ((s.fighters[0].x < -8.6 || s.fighters[1].x > 8.6) && g++ < 200)
+    s = step({ x: s.fighters[0].x < -8.6 ? 1 : 0 }, { x: s.fighters[1].x > 8.6 ? -1 : 0 })
+  step({ jump: true }); for (let k = 0; k < 18; k++) step({ x: 1 })
+`)
+
 // ——— the supers, seen (F4 presentation evidence) ———
 const superShot = async (name, fids, prep) => {
   await page.evaluate(([f]) => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('beldam', 2, 99, f) }, [fids])

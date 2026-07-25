@@ -661,6 +661,54 @@ check('The Old Forest: 5 sequential root pops, roots connect', f4s.forest.rootPo
 check('The Derby: 6 birds stampede and connect', f4s.derby.birds >= 4 && f4s.derby.derbyHit, JSON.stringify(f4s.derby))
 check('Lights Out: 3s of dark, counted in ticks', f4s.lights.max >= 178, JSON.stringify(f4s.lights))
 
+// ═══ F5: THE DREAMS — six arenas, the wrap, star-lines, hall chandeliers ═══
+const f5 = await page.evaluate(() => {
+  const M = window.__MOONREST__
+  const step = (a, b) => M.fight.step({ 0: a ?? {}, 1: b ?? {} })
+  const out = { settled: {} }
+  for (const id of ['beldam', 'nib', 'curator', 'paleking', 'mote', 'chicken']) {
+    M.fight.exit()
+    const ok = M.fight.enter(id, 4, 99)
+    let s = null
+    for (let k = 0; k < 130; k++) s = step()
+    out.settled[id] = ok && s.fighters.length === 4 && s.fighters.every((f) => f.grounded)
+  }
+  // — Mote's gate: walk off the left edge of the world, arrive on the right —
+  M.fight.exit(); M.fight.enter('mote', 2, 99)
+  let s = step()
+  let wrapped = false, koed = false
+  for (let k = 0; k < 700; k++) {
+    s = step({ x: -1 })
+    if (s.events.some((e) => e.t === 'ko' && e.id === 0)) { koed = true; break }
+    if (s.fighters[0].x > 15) { wrapped = true; break }
+  }
+  out.wrap = { wrapped, koed, grounded: s.fighters[0].grounded }
+  // — Nib's star-lines: solid early, undrawn after tick 380 —
+  M.fight.exit(); M.fight.enter('nib', 4, 99)
+  for (let k = 0; k < 90; k++) s = step()
+  const early = s.fighters[2]
+  out.star = { onLine: early.grounded && Math.abs(early.y - 2.6) < 0.05 }
+  while (s.tick < 386) s = step()
+  for (let k = 0; k < 12; k++) s = step()
+  out.star.undrawn = !s.fighters[2].grounded || s.fighters[2].y < 2.5
+  // — the Full Hall drops its own chandeliers on schedule, warm-warned —
+  M.fight.exit(); M.fight.enter('paleking', 2, 99)
+  s = step()
+  let spawnedAt = 0, warnSeen = 0
+  while (s.tick < 1000) {
+    s = step()
+    const ch = s.hazards.find((h) => h.kind === 'chand')
+    if (ch) { if (!spawnedAt) spawnedAt = s.tick; warnSeen = Math.max(warnSeen, ch.warn) }
+  }
+  out.hall = { spawnedAt, warnSeen }
+  return out
+})
+for (const [id, ok] of Object.entries(f5.settled)) check(`${id}'s dream stands (4 fighters settle on its floors)`, ok === true)
+check('the Young Forest loops: off the left edge, onto the right island', f5.wrap.wrapped && !f5.wrap.koed && f5.wrap.grounded, JSON.stringify(f5.wrap))
+check('star-lines hold early…', f5.star.onLine === true)
+check('…and undraw on schedule (fighter falls with the line)', f5.star.undrawn === true)
+check('the Full Hall drops chandeliers on its own clock, ≥1.5s warm', f5.hall.spawnedAt === 781 && f5.hall.warnSeen >= 89, JSON.stringify(f5.hall))
+
 // ═══ F7: BOTS — Dozy naps, Awake plays, Lucid punishes ═══
 const f7 = await page.evaluate(() => {
   const M = window.__MOONREST__

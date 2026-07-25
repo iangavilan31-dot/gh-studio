@@ -607,3 +607,20 @@ found what gates could not: grab-frozen super recast, hitstop-thaw
 re-fire, buffered-jump-vs-drop-through. fightfeel 58 x2, f0flow 11/11.
 NEXT: F8 couch inputs; F5 arenas + nightmare; F6 items; F9 online;
 F10 perf; F11 lobby; F12 comedy; FIGHT_JUDGE x2.
+
+## FIGHT-F5 sim+layouts: all six dreams stand
+DREAMS registry: Endless Bench, Big Sky (timed star-line plats, 2s warn,
+platOn in landTop), the Party (moonwell moved BEHIND the fight plane
+after it swallowed center-stage exchanges; applauding ghost nobles),
+Full Hall (scripted neutral chandeliers on a 780-tick clock, 100-tick
+warm warn, owner -1 hits everyone), Young Forest (islands run TO the
+wrap line — first draft dumped wrappers into the void; leaning
+saplings), Warm Oven (pie plats, bakery-window moon, oven embers).
+Per-dream palettes + ambient drift systems. Gates: 4 fighters settle in
+all six; the wrap walks left edge → right island grounded; star-lines
+hold then undraw on schedule; hall chandeliers spawn tick 781 warn 99.
+DREAM_HOST fixed ('paleking' arena id now maps; 'king' stays for the
+sleeper). Shots: arena-*.png x5 captured and READ (star-line bridge
+fight, moonwell party, warm hall, great-moon islands, bakery comedy).
+NEXT: Nightmare regrades + hitbox-overlay pairs -> flip F5; F6 items;
+F9 online; F10 perf; F11 lobby; F12 comedy; FIGHT_JUDGE x2.

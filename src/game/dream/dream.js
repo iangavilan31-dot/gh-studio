@@ -13,23 +13,355 @@ import { makeAnimState, advanceAnim, applyPose } from '../systems/anim.js'
 import { Sky } from '../world/zonelight.js'
 import { ParticleSystem } from '../world/particles.js'
 import { worldRNG } from '../core/rng.js'
-import { TICK, makeFighter, makeArena, makeMatch, stepMatch } from './fightsim.js'
+import { TICK, makeFighter, makeArena, makeMatch, stepMatch, platOn } from './fightsim.js'
 import { makeBot } from './bots.js'
 
-// Beldam's Dream — the Endless Bench (the tutorial arena, Part 4.1):
-// the Park's Long Bench forty meters long, bottle towers as platforms.
-// One shade deeper than the waking park palette.
-const BELDAM_DREAM = {
-  palette: { fog: '#16303a', skyUp: '#4a6a72', ambient: '#a7bcb9', stops: ['#060d18', '#0a1620', '#10242c', '#182f38', '#16303a'] },
-  arena: {
-    solids: [{ x: 0, y: 0, w: 26, h: 3.2 }],           // the great bench seat
-    plats: [
-      { x: -7.5, y: 3.0, w: 5 },                        // bottle-tower shelves
-      { x: 7.5, y: 3.0, w: 5 },
-      { x: 0, y: 5.6, w: 6 },                           // the jar shelf
-    ],
-    blast: { l: -21, r: 21, t: 20, b: -9 },
-    spawns: [[-6, 1], [6, 1], [-10, 4], [10, 4]],
+// ═══ F5: THE DREAMS (Part 4) — each sleeper's familiar zone warped one
+// shade deeper. Shared blast box; layouts are authored, not generated. ═══
+const BLAST = { l: -21, r: 21, t: 20, b: -9 }
+
+const mesh = (geo, mat, tint) => { const m = new THREE.Mesh(geo, mat); ensureVertexColors(m.geometry, tint); return m }
+const glowMat = (color, opacity) => {
+  const m = retroMaterial({ map: TEX.glowDot({ color }), transparent: true, depthWrite: false, opacity })
+  m.blending = THREE.AdditiveBlending
+  return m
+}
+const glowQuad = (color, w, h, opacity) => {
+  const q = new THREE.Mesh(new THREE.PlaneGeometry(w, h), glowMat(color, opacity))
+  ensureVertexColors(q.geometry)
+  return q
+}
+
+const DREAMS = {
+  // — Beldam's Dream: the Endless Bench. The Park's Long Bench forty meters
+  //   long, bottle towers as platforms, the firefly jar as the stage light,
+  //   and the rain falls upward. —
+  beldam: {
+    palette: { fog: '#16303a', skyUp: '#4a6a72', ambient: '#a7bcb9', stops: ['#060d18', '#0a1620', '#10242c', '#182f38', '#16303a'] },
+    ambient: 'rainUp',
+    arena: {
+      solids: [{ x: 0, y: 0, w: 26, h: 3.2 }],
+      plats: [{ x: -7.5, y: 3.0, w: 5 }, { x: 7.5, y: 3.0, w: 5 }, { x: 0, y: 5.6, w: 6 }],
+      blast: BLAST,
+      spawns: [[-6, 1], [6, 1], [-10, 4], [10, 4]],
+    },
+    build(scene, D) {
+      const plankMat = retroMaterial({ map: TEX.plank({ name: 'dreambench' }) })
+      const seat = mesh(new THREE.BoxGeometry(26, 0.5, 3.4), plankMat, [0.95, 0.9, 0.85])
+      seat.position.set(0, -0.25, 0); scene.add(seat)
+      const back = mesh(new THREE.BoxGeometry(26, 2.2, 0.24), plankMat, [0.8, 0.76, 0.72])
+      back.position.set(0, 0.9, -1.9); scene.add(back)
+      for (let i = -3; i <= 3; i++) {
+        const leg = mesh(new THREE.BoxGeometry(0.5, 2.8, 2.8), plankMat, [0.6, 0.56, 0.52])
+        leg.position.set(i * 4.2, -1.9, 0); scene.add(leg)
+      }
+      const glassMat = retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.6, emissive: 0x2a5040 })
+      for (const sx of [-7.5, 7.5]) {
+        for (let i = 0; i < 3; i++) {
+          const bottle = mesh(new THREE.CylinderGeometry(0.42 - i * 0.08, 0.5 - i * 0.08, 1.0, 8), glassMat, [0.5, 0.72, 0.62])
+          bottle.position.set(sx + (i % 2 ? 0.3 : -0.3), 0.5 + i * 1.0, 0); scene.add(bottle)
+        }
+        const shelf = mesh(new THREE.BoxGeometry(5, 0.22, 2.2), plankMat, [0.9, 0.86, 0.8])
+        shelf.position.set(sx, 2.9, 0); scene.add(shelf)
+        const rim = glowQuad('#7fd4d4', 4.6, 1.4, 0.3)
+        rim.position.set(sx, 3.15, 0.2); scene.add(rim)
+      }
+      const jarShelf = mesh(new THREE.BoxGeometry(6, 0.22, 2.2), plankMat, [0.9, 0.86, 0.8])
+      jarShelf.position.set(0, 5.5, 0); scene.add(jarShelf)
+      const jar = glowQuad('#d8e858', 4.2, 4.2, 0.8)
+      jar.position.set(0, 7.2, -0.5); scene.add(jar)
+      const pool = new THREE.Mesh(new THREE.CircleGeometry(6.5, 20), glowMat('#d8e858', 0.34))
+      ensureVertexColors(pool.geometry)
+      pool.rotation.x = -Math.PI / 2; pool.position.set(0, 0.03, 0); scene.add(pool)
+      // moths orbit the firefly jar — the stage light is alive
+      const mrng = worldRNG.fork('dream/jarmoths')
+      for (let i = 0; i < 12; i++) {
+        D.moths.spawn({
+          pos: new THREE.Vector3(0, 7.2, 0.4), vel: new THREE.Vector3(),
+          maxLife: 9e9, size: mrng.range(0.07, 0.12), seed: mrng.next(),
+          update(p, dt2) {
+            const t = p.life * (0.6 + p.seed * 0.7) + p.seed * 40
+            p.pos.x = Math.sin(t * 0.9 + p.seed * 9) * (1.1 + p.seed * 1.4)
+            p.pos.y = 7.0 + Math.sin(t * 1.3 + p.seed * 5) * 0.8
+            p.pos.z = 0.3 + Math.cos(t * 0.7) * 0.5
+            p.alpha = 0.35 + 0.65 * Math.max(0, Math.sin(t * 2.1))
+          },
+        })
+      }
+    },
+  },
+
+  // — Nib's Dream: the Big Sky. Rooftops among ENORMOUS constellations;
+  //   star-lines draw and undraw as temporary platforms (2s telegraph). —
+  nib: {
+    palette: { fog: '#1a1836', skyUp: '#4a4880', ambient: '#b2aede', stops: ['#080718', '#100e28', '#181540', '#242054', '#1a1836'] },
+    ambient: { color: '#cfd8ff', vel: [0, -0.45], rate: 12, size: 0.09, alpha: 0.5 },
+    arena: {
+      solids: [{ x: -6, y: 0, w: 10, h: 3 }, { x: 6, y: 0, w: 10, h: 3 }],
+      plats: [
+        { x: 0, y: 2.6, w: 5, timed: { period: 600, on: 380, offset: 0 } },
+        { x: -8, y: 4.2, w: 4, timed: { period: 600, on: 380, offset: 200 } },
+        { x: 8, y: 4.2, w: 4, timed: { period: 600, on: 380, offset: 400 } },
+      ],
+      blast: BLAST,
+      spawns: [[-6, 1], [6, 1], [-2, 4], [2, 4]],
+    },
+    build(scene, D) {
+      const shMat = retroMaterial({ map: TEX.shingle({ name: 'dreamroof', base: '#2c3248' }) })
+      for (const rx of [-6, 6]) {
+        const roof = mesh(new THREE.BoxGeometry(10, 3.0, 3.2), shMat, [0.9, 0.9, 1.05])
+        roof.position.set(rx, -1.5, 0); scene.add(roof)
+        const ridge = mesh(new THREE.BoxGeometry(10.4, 0.24, 0.5), shMat, [1.1, 1.1, 1.2])
+        ridge.position.set(rx, 0.06, -1.5); scene.add(ridge)
+        const chim = mesh(new THREE.BoxGeometry(0.8, 1.5, 0.8), shMat, [0.8, 0.78, 0.95])
+        chim.position.set(rx + (rx < 0 ? -3.2 : 3.2), 0.75, -1.1); scene.add(chim)
+        // starlight pools on the shingles: the fight reads on both roofs
+        const pool = new THREE.Mesh(new THREE.CircleGeometry(4.2, 16), glowMat('#aeb6f0', 0.3))
+        ensureVertexColors(pool.geometry)
+        pool.rotation.x = -Math.PI / 2; pool.position.set(rx, 0.04, 0); scene.add(pool)
+        const rim = glowQuad('#8f98e8', 9.5, 0.5, 0.3)
+        rim.position.set(rx, 0.1, 1.7); scene.add(rim)
+      }
+      // the constellation is ENORMOUS and it is watching
+      const pts = [[-14, 9], [-7, 13], [0, 10.5], [7, 14], [14, 9.5]]
+      for (const [sx, sy] of pts) {
+        const s = glowQuad('#e8ecff', 1.7, 1.7, 0.9)
+        s.position.set(sx, sy, -7); scene.add(s)
+      }
+      for (let i = 0; i < pts.length - 1; i++) {
+        const [ax, ay] = pts[i], [bx, by] = pts[i + 1]
+        const len = Math.hypot(bx - ax, by - ay)
+        const line = glowQuad('#9aa4e8', len, 0.14, 0.35)
+        line.position.set((ax + bx) / 2, (ay + by) / 2, -7.1)
+        line.rotation.z = Math.atan2(by - ay, bx - ax)
+        scene.add(line)
+      }
+      // star-line platforms: the glow IS the floor (visibility sim-driven)
+      D.timedPlats = []
+      for (const p of D.def.arena.plats) {
+        if (!p.timed) continue
+        const line = glowQuad('#dfe6ff', p.w, 0.34, 0.9)
+        line.position.set(p.x, p.y, 0); scene.add(line)
+        const warn = glowQuad('#8890c8', p.w, 0.22, 0.3)
+        warn.position.set(p.x, p.y, -0.15); scene.add(warn)
+        const endA = glowQuad('#ffffff', 0.5, 0.5, 0.9); endA.position.set(p.x - p.w / 2, p.y, 0.05); scene.add(endA)
+        const endB = glowQuad('#ffffff', 0.5, 0.5, 0.9); endB.position.set(p.x + p.w / 2, p.y, 0.05); scene.add(endB)
+        D.timedPlats.push({ p, line, warn, ends: [endA, endB] })
+      }
+    },
+  },
+
+  // — The Curator's Dream: the Party, 10,000 Years Ago. The Ruins intact
+  //   and gleaming, the moonwell fountaining, ghost nobles politely
+  //   applauding good hits. Her dream is the night the party never ended. —
+  curator: {
+    palette: { fog: '#122430', skyUp: '#3a5a68', ambient: '#a8c4cc', stops: ['#04101a', '#081a26', '#0e2432', '#14303e', '#122430'] },
+    ambient: { color: '#bfe0e8', vel: [0.08, 0.3], rate: 10, size: 0.08, alpha: 0.45 },
+    arena: {
+      solids: [{ x: 0, y: 0, w: 28, h: 3.2 }],
+      plats: [{ x: 0, y: 3.4, w: 4 }, { x: -9, y: 2.4, w: 5 }, { x: 9, y: 2.4, w: 5 }],
+      blast: BLAST,
+      spawns: [[-6, 1], [6, 1], [-10, 3.4], [10, 3.4]],
+    },
+    build(scene, D) {
+      const marble = retroMaterial({ map: TEX.plaster({ name: 'dreammarble' }) })
+      const stone = retroMaterial({ map: TEX.stoneBlock({ name: 'dreamstone', base: '#5a6a72' }) })
+      const floor = mesh(new THREE.BoxGeometry(28, 3.2, 3.6), marble, [0.95, 1.0, 1.05])
+      floor.position.set(0, -1.6, 0); scene.add(floor)
+      for (const cx of [-12, -4, 4, 12]) {
+        const col = mesh(new THREE.CylinderGeometry(0.55, 0.62, 9, 9), marble, [0.85, 0.92, 0.98])
+        col.position.set(cx, 4.5, -3.4); scene.add(col)
+        const cap = mesh(new THREE.BoxGeometry(1.6, 0.4, 1.6), stone, [0.9, 0.95, 1.0])
+        cap.position.set(cx, 9.1, -3.4); scene.add(cap)
+      }
+      for (const [px, py, w] of [[-9, 2.4, 5], [9, 2.4, 5]]) {
+        const terr = mesh(new THREE.BoxGeometry(w, 0.4, 2.4), stone, [0.85, 0.92, 0.98])
+        terr.position.set(px, py - 0.2, 0); scene.add(terr)
+      }
+      // the moonwell fountains BEHIND the fight plane (it once stood at
+      // z 0 and swallowed every center-stage exchange); a floating marble
+      // rim at z 0 is what the fighters actually stand on
+      const bowl = mesh(new THREE.CylinderGeometry(2.1, 1.7, 0.8, 10), stone, [0.85, 0.95, 1.05])
+      bowl.position.set(0, 3.0, -2.6); scene.add(bowl)
+      const stem = mesh(new THREE.CylinderGeometry(0.5, 0.7, 2.8, 8), stone, [0.7, 0.8, 0.9])
+      stem.position.set(0, 1.4, -2.6); scene.add(stem)
+      const beam = glowQuad('#bfe8f0', 1.6, 6.5, 0.22)
+      beam.position.set(0, 6.8, -2.7); scene.add(beam)
+      const wellGlow = glowQuad('#bfe8f0', 4.5, 2.0, 0.4)
+      wellGlow.position.set(0, 3.7, -2.4); scene.add(wellGlow)
+      const rimSlab = mesh(new THREE.BoxGeometry(4, 0.24, 1.8), marble, [0.95, 1.02, 1.08])
+      rimSlab.position.set(0, 3.28, 0); scene.add(rimSlab)
+      const rimGlow = glowQuad('#bfe8f0', 4.4, 0.5, 0.3)
+      rimGlow.position.set(0, 3.45, 0.3); scene.add(rimGlow)
+      const pool = new THREE.Mesh(new THREE.CircleGeometry(5.5, 18), glowMat('#9fd0dc', 0.22))
+      ensureVertexColors(pool.geometry)
+      pool.rotation.x = -Math.PI / 2; pool.position.set(0, 0.03, 0); scene.add(pool)
+      // the crowd: ghost nobles watching from the colonnade, ready to applaud
+      D.crowd = []
+      const gm = retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.32, depthWrite: false, emissive: 0x1c3038 })
+      for (let i = 0; i < 9; i++) {
+        const nx = -12 + i * 3
+        const noble = mesh(new THREE.ConeGeometry(0.4, 1.7, 7), gm, [0.6, 0.85, 0.9])
+        noble.position.set(nx + (i % 2) * 0.6, 0.85, -3.0)
+        scene.add(noble)
+        D.crowd.push(noble)
+      }
+    },
+  },
+
+  // — The Pale King's Dream: the Full Hall, warm and crowded. Feast tables
+  //   as platforms; the chandeliers swing and occasionally drop. —
+  paleking: {
+    palette: { fog: '#241a12', skyUp: '#54402a', ambient: '#c8ae8e', stops: ['#0e0804', '#1a100a', '#241810', '#302016', '#241a12'] },
+    ambient: { color: '#e8a848', vel: [0.04, -0.28], rate: 10, size: 0.07, alpha: 0.4 },
+    arena: {
+      solids: [{ x: 0, y: 0, w: 28, h: 3.2 }],
+      plats: [{ x: -7, y: 2.2, w: 6 }, { x: 7, y: 2.2, w: 6 }, { x: 0, y: 4.6, w: 5 }],
+      blast: BLAST,
+      spawns: [[-6, 1], [6, 1], [-9, 2.4], [9, 2.4]],
+      chand: { period: 780, warn: 100, xs: [-6, 0, 6] },
+    },
+    build(scene, D) {
+      const stone = retroMaterial({ map: TEX.stoneBlock({ name: 'dreamhall', base: '#4a4038' }) })
+      const wood = retroMaterial({ map: TEX.plank({ name: 'dreamtable' }) })
+      const floor = mesh(new THREE.BoxGeometry(28, 3.2, 3.6), stone, [0.9, 0.85, 0.8])
+      floor.position.set(0, -1.6, 0); scene.add(floor)
+      for (const [px, w] of [[-7, 6], [7, 6]]) {
+        const top = mesh(new THREE.BoxGeometry(w, 0.3, 2.4), wood, [1.0, 0.92, 0.8])
+        top.position.set(px, 2.05, 0); scene.add(top)
+        for (const lx of [px - w / 2 + 0.5, px + w / 2 - 0.5]) {
+          const leg = mesh(new THREE.BoxGeometry(0.4, 2.0, 2.0), wood, [0.7, 0.62, 0.52])
+          leg.position.set(lx, 1.0, 0); scene.add(leg)
+        }
+        const candles = glowQuad('#f0c060', w - 1, 0.8, 0.4)
+        candles.position.set(px, 2.7, 0.2); scene.add(candles)
+      }
+      const dais = mesh(new THREE.BoxGeometry(5, 0.5, 2.6), stone, [1.0, 0.95, 0.85])
+      dais.position.set(0, 4.35, 0); scene.add(dais)
+      // the hall's own chandeliers, hanging until they don't
+      D.hallChands = {}
+      for (const cx of [-6, 0, 6]) {
+        const g = new THREE.Group()
+        const cone = mesh(new THREE.ConeGeometry(0.9, 0.8, 7), retroMaterial({ map: TEX.white(), emissive: 0x3a2c10 }), [0.85, 0.7, 0.3])
+        cone.rotation.x = Math.PI; g.add(cone)
+        const halo = glowQuad('#e8c26a', 2.4, 2.4, 0.5); g.add(halo)
+        const chain = mesh(new THREE.BoxGeometry(0.08, 6, 0.08), stone, [0.5, 0.45, 0.4])
+        chain.position.y = 3.4; g.add(chain)
+        g.position.set(cx, 8.2, -0.4)
+        scene.add(g)
+        D.hallChands[cx] = g
+      }
+      // silhouette feast-goers along the back tables
+      const dark = retroMaterial({ map: TEX.white(), emissive: 0x0a0806 })
+      for (let i = 0; i < 8; i++) {
+        const gx = -10.5 + i * 3
+        const goer = mesh(new THREE.ConeGeometry(0.42, 1.3, 6), dark, [0.16, 0.13, 0.1])
+        goer.position.set(gx, 0.65, -2.6); scene.add(goer)
+      }
+      const pool = new THREE.Mesh(new THREE.CircleGeometry(6, 18), glowMat('#e8b868', 0.26))
+      ensureVertexColors(pool.geometry)
+      pool.rotation.x = -Math.PI / 2; pool.position.set(0, 0.03, 0); scene.add(pool)
+    },
+  },
+
+  // — Mote's Dream: the Young Forest. The Mosswood as saplings under a
+  //   bright ancient moon; the gate loops the arena edges (the only wrap). —
+  mote: {
+    palette: { fog: '#1c3424', skyUp: '#54785e', ambient: '#c2d8be', stops: ['#0a140c', '#122218', '#1a3022', '#223e2c', '#1c3424'] },
+    ambient: { color: '#a8d890', vel: [0.06, 0.26], rate: 11, size: 0.08, alpha: 0.45 },
+    arena: {
+      wrap: true,
+      // the islands RUN TO the wrap line: walk off the left edge of the
+      // world and you're standing on the right island, mid-stride — the
+      // center gap is the only pit
+      solids: [{ x: -14, y: 0, w: 14, h: 3.2 }, { x: 14, y: 0, w: 14, h: 3.2 }],
+      plats: [{ x: -6, y: 2.8, w: 4 }, { x: 6, y: 2.8, w: 4 }],
+      blast: BLAST,
+      spawns: [[-11, 1], [11, 1], [-16, 1], [16, 1]],
+    },
+    build(scene, D) {
+      const grass = retroMaterial({ map: TEX.grass({ name: 'dreamgrass', a: '#24402e', b: '#3a5a40' }) })
+      const bark = retroMaterial({ map: TEX.bark({ name: 'dreambark' }) })
+      const canopyMat = retroMaterial({ map: TEX.canopy({ name: 'dreamcanopy', base: '#1e3a2a', light: '#4a7a54' }) })
+      for (const ix of [-14, 14]) {
+        const isle = mesh(new THREE.BoxGeometry(14, 3.2, 3.6), grass, [0.9, 1.0, 0.9])
+        isle.position.set(ix, -1.6, 0); scene.add(isle)
+      }
+      // saplings — the two standable crowns lean out from the island edges
+      // over the pit (nothing grows from a bottomless gap, even in a dream)
+      for (const [sx, h, deco] of [[-6, 2.8, false], [6, 2.8, false], [-16, 2.0, true], [16, 2.2, true], [-10.5, 1.6, true], [11.5, 1.5, true]]) {
+        const rootX = deco ? sx : sx < 0 ? sx - 1.6 : sx + 1.6
+        const trunk = mesh(new THREE.CylinderGeometry(0.14, 0.2, h + (deco ? 0 : 0.4), 6), bark, [0.8, 0.75, 0.65])
+        trunk.position.set(rootX, h / 2, deco ? -2.2 : 0)
+        if (!deco) trunk.rotation.z = sx < 0 ? -0.5 : 0.5 // the lean
+        scene.add(trunk)
+        const crown = mesh(new THREE.ConeGeometry(deco ? 0.9 : 2.0, deco ? 1.4 : 0.7, 7), canopyMat, [0.85, 1.0, 0.85])
+        crown.position.set(sx, h + (deco ? 0.7 : 0.25), deco ? -2.2 : 0); scene.add(crown)
+      }
+      // the bright ancient moon — bigger and younger than the one we keep
+      const moon = glowQuad('#eef4dc', 9, 9, 0.9)
+      moon.position.set(0, 9.5, -8.5); scene.add(moon)
+      const moonPool = new THREE.Mesh(new THREE.CircleGeometry(4.5, 18), glowMat('#d8e8c0', 0.3))
+      ensureVertexColors(moonPool.geometry)
+      moonPool.rotation.x = -Math.PI / 2; moonPool.position.set(0, -8.2, 0); scene.add(moonPool)
+      // moonlight pools on both islands: the fight reads wherever it goes
+      for (const ix of [-14, 14]) {
+        const p2 = new THREE.Mesh(new THREE.CircleGeometry(5, 16), glowMat('#d8e8c0', 0.28))
+        ensureVertexColors(p2.geometry)
+        p2.rotation.x = -Math.PI / 2; p2.position.set(ix, 0.04, 0); scene.add(p2)
+      }
+      // the gate posts mark the loop (walk off left, appear right)
+      for (const gx of [-20.5, 20.5]) {
+        const post = mesh(new THREE.CylinderGeometry(0.3, 0.36, 5.5, 7), bark, [0.7, 0.68, 0.6])
+        post.position.set(gx, 2.75, -0.5); scene.add(post)
+        const gGlow = glowQuad('#a8d890', 1.6, 5.5, 0.28)
+        gGlow.position.set(gx, 2.75, -0.3); scene.add(gGlow)
+      }
+    },
+  },
+
+  // — The Chicken's Dream: the Warm Oven. A giant bakery; pie platforms,
+  //   flour-dust ground fog, the bakery window as a huge warm moon. —
+  chicken: {
+    palette: { fog: '#2a1c10', skyUp: '#6a4c2a', ambient: '#d8b890', stops: ['#100a04', '#1e120a', '#2a1a0e', '#362415', '#2a1c10'] },
+    ambient: { color: '#f0e0c0', vel: [0.22, 0.05], rate: 8, size: 0.5, alpha: 0.13, puff: true },
+    arena: {
+      solids: [{ x: 0, y: 0, w: 26, h: 3.2 }],
+      plats: [{ x: -7, y: 2.6, w: 4.5 }, { x: 7, y: 2.6, w: 4.5 }, { x: 0, y: 5.0, w: 5 }],
+      blast: BLAST,
+      spawns: [[-6, 1], [6, 1], [-8, 3.4], [8, 3.4]],
+    },
+    build(scene, D) {
+      const wood = retroMaterial({ map: TEX.plank({ name: 'dreamcounter' }) })
+      const crust = retroMaterial({ map: TEX.plaster({ name: 'dreamcrust' }) })
+      const counter = mesh(new THREE.BoxGeometry(26, 3.2, 3.6), wood, [1.0, 0.9, 0.75])
+      counter.position.set(0, -1.6, 0); scene.add(counter)
+      // pies you can stand on (the crust is load-bearing)
+      for (const [px, py, r] of [[-7, 2.6, 2.3], [7, 2.6, 2.3], [0, 5.0, 2.6]]) {
+        const tin = mesh(new THREE.CylinderGeometry(r, r * 0.82, 0.55, 12), crust, [0.95, 0.78, 0.5])
+        tin.position.set(px, py - 0.35, 0); scene.add(tin)
+        const filling = mesh(new THREE.CylinderGeometry(r * 0.88, r * 0.88, 0.14, 12), crust, [0.75, 0.4, 0.28])
+        filling.position.set(px, py - 0.04, 0); scene.add(filling)
+      }
+      // the bakery window: a huge warm moon with mullions
+      const win = glowQuad('#f0b860', 9, 6, 0.6)
+      win.position.set(0, 8, -6); scene.add(win)
+      const dark = retroMaterial({ map: TEX.white(), emissive: 0x0a0604 })
+      for (const [w2, h2, ox, oy] of [[0.35, 6, 0, 0], [9, 0.35, 0, 0]]) {
+        const bar = mesh(new THREE.BoxGeometry(w2, h2, 0.1), dark, [0.1, 0.08, 0.06])
+        bar.position.set(ox, 8 + oy, -5.9); scene.add(bar)
+      }
+      // oven mouths along the back wall, ember-warm
+      for (const ox of [-9, 0, 9]) {
+        const mouth = mesh(new THREE.BoxGeometry(3.4, 2.2, 0.4), dark, [0.12, 0.09, 0.07])
+        mouth.position.set(ox, 1.1, -3.2); scene.add(mouth)
+        const emberG = glowQuad('#e86830', 2.6, 1.4, 0.35)
+        emberG.position.set(ox, 0.9, -2.95); scene.add(emberG)
+      }
+      const pool = new THREE.Mesh(new THREE.CircleGeometry(6, 18), glowMat('#f0c078', 0.3))
+      ensureVertexColors(pool.geometry)
+      pool.rotation.x = -Math.PI / 2; pool.position.set(0, 0.03, 0); scene.add(pool)
+    },
   },
 }
 
@@ -65,8 +397,9 @@ function makeDreamRig(fid, idx) {
   }
 }
 
-// entering a sleeper's dream means fighting the dreamer (Part 4)
-const DREAM_HOST = { beldam: 'beldam', nib: 'nib', mote: 'mote', curator: 'curator', king: 'paleking', chicken: 'chicken' }
+// entering a sleeper's dream means fighting the dreamer (Part 4) — 'king'
+// is the waking sleeper's name, 'paleking' the arena/fighter id
+const DREAM_HOST = { beldam: 'beldam', nib: 'nib', mote: 'mote', curator: 'curator', king: 'paleking', paleking: 'paleking', chicken: 'chicken' }
 
 class DreamMode {
   constructor() {
@@ -96,68 +429,8 @@ class DreamMode {
     globalUniforms.uAmbient.value.set(P.ambient)
     globalUniforms.uSkyUp.value.set(P.skyUp)
 
-    // — the Endless Bench: plank slab + legs marching into fog —
-    const plankMat = retroMaterial({ map: TEX.plank({ name: 'dreambench' }) })
-    const seat = new THREE.Mesh(new THREE.BoxGeometry(26, 0.5, 3.4), plankMat)
-    ensureVertexColors(seat.geometry, [0.95, 0.9, 0.85])
-    seat.position.set(0, -0.25, 0)
-    scene.add(seat)
-    const back = new THREE.Mesh(new THREE.BoxGeometry(26, 2.2, 0.24), plankMat)
-    ensureVertexColors(back.geometry, [0.8, 0.76, 0.72])
-    back.position.set(0, 0.9, -1.9)
-    scene.add(back)
-    for (let i = -3; i <= 3; i++) {
-      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.8, 2.8), plankMat)
-      ensureVertexColors(leg.geometry, [0.6, 0.56, 0.52])
-      leg.position.set(i * 4.2, -1.9, 0)
-      scene.add(leg)
-    }
-    // bottle-tower platforms: stacked glass bottles under a plank shelf
-    const glassMat = retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.6, emissive: 0x2a5040 })
-    for (const sx of [-7.5, 7.5]) {
-      for (let i = 0; i < 3; i++) {
-        const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.42 - i * 0.08, 0.5 - i * 0.08, 1.0, 8), glassMat)
-        ensureVertexColors(bottle.geometry, [0.5, 0.72, 0.62])
-        bottle.position.set(sx + (i % 2 ? 0.3 : -0.3), 0.5 + i * 1.0, 0)
-        scene.add(bottle)
-      }
-      const shelf = new THREE.Mesh(new THREE.BoxGeometry(5, 0.22, 2.2), plankMat)
-      ensureVertexColors(shelf.geometry, [0.9, 0.86, 0.8])
-      shelf.position.set(sx, 2.9, 0)
-      scene.add(shelf)
-    }
-    const jarShelf = new THREE.Mesh(new THREE.BoxGeometry(6, 0.22, 2.2), plankMat)
-    ensureVertexColors(jarShelf.geometry, [0.9, 0.86, 0.8])
-    jarShelf.position.set(0, 5.5, 0)
-    scene.add(jarShelf)
-    // the firefly jar is the center stage light
-    const jarGlowMat = retroMaterial({ map: TEX.glowDot({ color: '#d8e858' }), transparent: true, depthWrite: false, opacity: 0.8 })
-    jarGlowMat.blending = THREE.AdditiveBlending
-    const jar = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 4.2), jarGlowMat)
-    ensureVertexColors(jar.geometry)
-    jar.position.set(0, 7.2, -0.5)
-    scene.add(jar)
-    // the jar's pool: the stage light lands on the bench (readability anchor)
-    const poolMat = retroMaterial({ map: TEX.glowDot({ color: '#d8e858' }), transparent: true, depthWrite: false, opacity: 0.34 })
-    poolMat.blending = THREE.AdditiveBlending
-    const pool = new THREE.Mesh(new THREE.CircleGeometry(6.5, 20), poolMat)
-    ensureVertexColors(pool.geometry)
-    pool.rotation.x = -Math.PI / 2
-    pool.position.set(0, 0.03, 0)
-    scene.add(pool)
-    // cool rims on the side shelves so the towers read at a glance
-    for (const sx of [-7.5, 7.5]) {
-      const rim = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 1.4), (() => {
-        const m = retroMaterial({ map: TEX.glowDot({ color: '#7fd4d4' }), transparent: true, depthWrite: false, opacity: 0.3 })
-        m.blending = THREE.AdditiveBlending
-        return m
-      })())
-      ensureVertexColors(rim.geometry)
-      rim.position.set(sx, 3.15, 0.2)
-      scene.add(rim)
-    }
-    // dream particles run on RENDER dt — they keep drifting through hitstop
-    // (Part 5's "particles NOT frozen"), and they sell every KO
+    // shared dream furniture first (particles, FX pools) — arena builders
+    // may use them (Beldam's jar moths ride this.moths)
     this.moths = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#d8cfae' }), max: 90, additive: true })
     this.zs = new ParticleSystem(scene, { tex: TEX.zGlyph(), max: 10, additive: false })
     this.embers = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#e8a848' }), max: 70, additive: true })
@@ -165,25 +438,27 @@ class DreamMode {
     this.baseAmbient = new THREE.Color(P.ambient)
     this.baseSkyUp = new THREE.Color(P.skyUp)
     this.dimF = 1
-    // the rain falls upward (Part 4.1 — Beldam's dream logic)
-    this.rainUp = new ParticleSystem(scene, { tex: TEX.streak(), max: 240, additive: false, stretchY: 2.6, fogInfluence: 0.4 })
     this.rng = worldRNG.fork('dream/ambient')
     this.rainAcc = 0
-    // moths orbit the firefly jar — the stage light is alive
-    const mrng = worldRNG.fork('dream/jarmoths')
-    for (let i = 0; i < 12; i++) {
-      this.moths.spawn({
-        pos: new THREE.Vector3(0, 7.2, 0.4), vel: new THREE.Vector3(),
-        maxLife: 9e9, size: mrng.range(0.07, 0.12), seed: mrng.next(),
-        update(p, dt2) {
-          const t = p.life * (0.6 + p.seed * 0.7) + p.seed * 40
-          p.pos.x = Math.sin(t * 0.9 + p.seed * 9) * (1.1 + p.seed * 1.4)
-          p.pos.y = 7.0 + Math.sin(t * 1.3 + p.seed * 5) * 0.8
-          p.pos.z = 0.3 + Math.cos(t * 0.7) * 0.5
-          p.alpha = 0.35 + 0.65 * Math.max(0, Math.sin(t * 2.1))
-        },
+    this.timedPlats = null
+    this.crowd = null
+    this.crowdPulse = 0
+    this.hallChands = null
+    // per-dream ambient particles: Beldam's upward rain gets streaks; every
+    // other dream drifts its own dust (color + direction from the def)
+    if (def.ambient === 'rainUp') {
+      this.rainUp = new ParticleSystem(scene, { tex: TEX.streak(), max: 240, additive: false, stretchY: 2.6, fogInfluence: 0.4 })
+      this.drift = null
+    } else {
+      this.rainUp = null
+      const a = def.ambient
+      this.drift = new ParticleSystem(scene, {
+        tex: a.puff ? TEX.puff({ name: 'dreamdust', color: a.color }) : TEX.glowDot({ color: a.color }),
+        max: 90, additive: !a.puff,
       })
     }
+    // — this dream's own furniture —
+    def.build(scene, this)
 
     // moon respawn platforms (one per possible fighter)
     this.moonPlats = []
@@ -452,8 +727,8 @@ class DreamMode {
 
   enter(arenaId = 'beldam', players = 2, liveInput = null, opts = {}) {
     if (this.active) return false
-    this.arenaId = arenaId
-    const def = BELDAM_DREAM // one arena def for now; the roster of dreams lands in F5
+    this.arenaId = DREAMS[arenaId] ? arenaId : 'beldam'
+    const def = DREAMS[this.arenaId]
     this.def = def
     this.scene = this._buildScene(def)
     this.match = makeMatch(makeArena(def.arena), [])
@@ -556,6 +831,7 @@ class DreamMode {
       } else if (e.t === 'matchEnd') {
         this.victory = { winner: e.winner, t: 0 }
       } else if (e.t === 'hit' || e.t === 'throw') {
+        if (this.crowd) this.crowdPulse = Math.min(1.6, this.crowdPulse + 0.7) // polite applause
         const reduced = typeof window !== 'undefined' && window.__REDUCED_MOTION__
         const visH = 2 * (this.cam?.d ?? 17) * Math.tan((this.camera?.fov ?? 38) * Math.PI / 360)
         const ampM = reduced ? 0 : (e.shake ?? 0.4) * 0.006 * visH
@@ -741,7 +1017,7 @@ class DreamMode {
       }
     }
     // render-dt presentation: particles DRIFT through hitstop (Part 5)
-    // upward rain streams past the bench the whole dream long
+    // Beldam's rain falls upward; every other dream drifts its own dust
     if (this.rainUp) {
       this.rainAcc += dt * 55
       const rng = this.rng
@@ -754,12 +1030,60 @@ class DreamMode {
           update(p, dt2) { p.pos.addScaledVector(p.vel, dt2); if (p.pos.y > 17) p.life = p.maxLife },
         })
       }
+    } else if (this.drift) {
+      const a = this.def.ambient
+      this.rainAcc += dt * a.rate
+      const rng = this.rng
+      while (this.rainAcc >= 1) {
+        this.rainAcc -= 1
+        this.drift.spawn({
+          pos: new THREE.Vector3(rng.range(-18, 18), rng.range(a.vel[1] > 0 ? -1 : 4, a.vel[1] > 0 ? 6 : 14), rng.range(-4, 4)),
+          vel: new THREE.Vector3(a.vel[0] + rng.range(-0.08, 0.08), a.vel[1] + rng.range(-0.08, 0.08), 0),
+          maxLife: rng.range(5, 9), size: (a.size ?? 0.08) * rng.range(0.8, 1.3), alpha: a.alpha ?? 0.4, seed: rng.next(),
+          update(p, dt2) {
+            p.pos.addScaledVector(p.vel, dt2)
+            p.pos.x += Math.sin(p.life * 1.1 + p.seed * 9) * 0.2 * dt2
+            p.alpha = (p.aBase ?? (p.aBase = p.alpha)) * Math.sin((p.life / p.maxLife) * Math.PI)
+          },
+        })
+      }
     }
     this.moths?.update(dt, this.camera)
     this.zs?.update(dt, this.camera)
     this.rainUp?.update(dt, this.camera)
+    this.drift?.update(dt, this.camera)
     this.embers?.update(dt, this.camera)
     this._updateFx(dt)
+    // — Nib's star-line platforms: solid when the sim says so; the warn
+    //   glow breathes for the 2s before each redraw (Part 4.2 telegraph) —
+    if (this.timedPlats) {
+      const tick = this.match.tick
+      for (const tp of this.timedPlats) {
+        const T = tp.p.timed
+        const t = (tick + (T.offset ?? 0)) % T.period
+        const on = platOn(tp.p, tick)
+        tp.line.visible = on
+        for (const e of tp.ends) e.visible = on
+        const warnIn = T.period - t // ticks until redraw
+        tp.warn.visible = !on && warnIn <= 120
+        if (tp.warn.visible) tp.warn.material.uniforms.uOpacity.value = 0.2 + 0.25 * Math.sin(tick * 0.35)
+        if (on) tp.line.material.uniforms.uOpacity.value = t > T.on - 60 ? 0.9 * ((T.on - t) / 60) : 0.9 // fade out before undraw
+      }
+    }
+    // the Full Hall hides a hanging chandelier while its ghost is falling
+    if (this.hallChands) {
+      const falling = new Set(this.match.hazards.filter((h) => h.kind === 'chand').map((h) => h.x))
+      for (const [cx, g] of Object.entries(this.hallChands)) g.visible = !falling.has(+cx)
+    }
+    // the Party applauds a good hit, politely
+    if (this.crowd) {
+      this.crowdPulse = Math.max(0, this.crowdPulse - dt * 1.4)
+      const k = this.crowdPulse
+      this.crowd.forEach((n, i) => {
+        n.scale.y = 1 + k * 0.12 * Math.abs(Math.sin(this.match.tick * 0.5 + i))
+        n.rotation.z = Math.sin(this.match.tick * 0.02 + i * 1.7) * 0.05
+      })
+    }
     // moon respawn rides + invuln shimmers track sim state
     this.match?.fighters.forEach((f, i) => {
       const plat = this.moonPlats?.[i]
