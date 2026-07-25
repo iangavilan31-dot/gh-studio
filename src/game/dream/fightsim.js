@@ -38,11 +38,102 @@ export const ATTACKS = {
 }
 export const TOSS = { reach: 1.25, holdTicks: 45, throwKB: 5.2, throwAngleDeg: 55, escBase: 5, escPerWooze: 20 }
 
-// One fighter's mutable sim state.
+// ═══ F4: THE ROSTER (Part 3) — all sim-side data, rigs live in dream.js ═══
+// Every fighter: light/heavy/special/toss + a Deep Dream super charged by
+// landing hits. Balance philosophy: no infinites, toss-escapes at high
+// wooze, and the Chicken is genuinely good. That last part is just how it is.
+export const FIGHTERS = {
+  lamplighter: {
+    name: 'The Lamplighter', archetype: 'all-rounder',
+    spec: {}, special: 'flameDart', superKind: 'moonrise',
+  },
+  beldam: {
+    name: 'Beldam', archetype: 'drunken master',
+    spec: { runSpeed: 6.0, accel: 42 },
+    attacks: { light: { angleDeg: 30 }, heavy: { baseKB: 8.0, startup: 15 } },
+    special: 'swig', superKind: 'bottleTornado',
+  },
+  nib: {
+    name: 'Nib', archetype: 'tiny, fastest, lightest',
+    spec: { runSpeed: 7.9, airSpeed: 6.6, weight: 0.78, jumpVel: 12.1, djVel: 11.0, accel: 60 },
+    attacks: { light: { dmg: 5, baseKB: 3.9, range: 0.95 }, heavy: { dmg: 11, baseKB: 6.8, startup: 10, range: 1.2 } },
+    hurtR: 0.32, special: 'hatThrow', superKind: 'constellation',
+  },
+  curator: {
+    name: 'The Curator', archetype: 'zoner, floaty',
+    spec: { gravity: -21, maxFall: -9, airSpeed: 6.0, runSpeed: 5.6, weight: 0.95 },
+    special: 'dustGust', superKind: 'party',
+  },
+  paleking: {
+    name: 'The Pale King', archetype: 'heavy, armored',
+    spec: { runSpeed: 5.0, weight: 1.35, jumpVel: 10.8, accel: 38 },
+    attacks: { light: { dmg: 7, baseKB: 4.8, startup: 6 }, heavy: { dmg: 16, baseKB: 8.8, startup: 16, recovery: 20, range: 1.7 } },
+    special: 'capeSweep', superKind: 'chandeliers',
+  },
+  mote: {
+    name: 'Mote', archetype: 'tank; hits like a landslide',
+    spec: { runSpeed: 4.4, airSpeed: 4.0, weight: 1.6, jumpVel: 10.6, accel: 30 },
+    attacks: { light: { dmg: 8, baseKB: 5.2, startup: 7, recovery: 11 }, heavy: { dmg: 18, baseKB: 9.6, startup: 19, recovery: 24, hitstop: 8 } },
+    special: 'shellSpin', superKind: 'oldForest',
+  },
+  chicken: {
+    name: 'The Chicken', archetype: 'joke character',
+    spec: { runSpeed: 7.4, airSpeed: 6.2, weight: 0.85, jumpVel: 11.9, djVel: 10.9, accel: 64 },
+    attacks: { light: { startup: 3, recovery: 6, dmg: 5, baseKB: 3.6, range: 0.9 }, heavy: { startup: 9, dmg: 12, baseKB: 7.2, range: 1.1 } },
+    noGrab: true, hurtR: 0.3, special: 'peckFlurry', superKind: 'derby',
+  },
+  watcher: {
+    name: 'The Watcher', archetype: 'mirror-spacing wraith', secret: true,
+    spec: { runSpeed: 6.6, airSpeed: 5.8, weight: 0.92, gravity: -26 },
+    special: 'fogStep', superKind: 'lightsOut',
+  },
+}
+
+// Special-move frame data (phases in ticks, aerialLag = landing-lag weight).
+export const SPECIALS = {
+  flameDart: { startup: 9, active: 2, recovery: 12, aerialLag: 4 },
+  swig: { startup: 6, active: 16, recovery: 10, aerialLag: 5 },
+  hatThrow: { startup: 8, active: 2, recovery: 10, aerialLag: 4 },
+  dustGust: { startup: 7, active: 14, recovery: 9, aerialLag: 4 },
+  capeSweep: { startup: 12, active: 5, recovery: 16, aerialLag: 6 },
+  shellSpin: { startup: 8, active: 30, recovery: 12, aerialLag: 6 },
+  peckFlurry: { startup: 4, active: 18, recovery: 9, aerialLag: 3, interval: 5 },
+  fogStep: { startup: 8, active: 1, recovery: 7, aerialLag: 3 },
+}
+// Deep Dream meter: fills by damage LANDED (dmg * FILL_PER_DMG, cap 100);
+// pressing special at full lantern casts the super instead.
+export const SUPER = { castStartup: 6, castActive: 1, castRecovery: 14, aerialLag: 4, fillPerDmg: 0.9 }
+
+// Deterministic per-tick noise (Beldam's stagger, item wobble): no
+// Math.random in the sim, ever — lockstep depends on it.
+export function dnoise(tick, id, salt = 0) {
+  let h = (tick * 374761393 + id * 668265263 + (salt + 1) * 974634541) | 0
+  h = Math.imul(h ^ (h >>> 13), 1274126177)
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296
+}
+
+// One fighter's mutable sim state. spec.fid picks a FIGHTERS kit; other
+// spec keys override kinematics directly (stocks, test tweaks).
 export function makeFighter(id, spec = {}) {
+  const fid = spec.fid ?? 'lamplighter'
+  const def = FIGHTERS[fid] ?? FIGHTERS.lamplighter
+  const { fid: _f, stocks: _s, ...kOverrides } = spec
   return {
     id,
-    k: { ...BASE, ...spec },     // kinematic + weight spec
+    fid,
+    k: { ...BASE, ...def.spec, ...kOverrides }, // kinematic + weight spec
+    atk: {
+      light: { ...ATTACKS.light, ...(def.attacks?.light ?? {}) },
+      heavy: { ...ATTACKS.heavy, ...(def.attacks?.heavy ?? {}) },
+      special: { ...(SPECIALS[def.special] ?? SPECIALS.flameDart) },
+      super: { startup: SUPER.castStartup, active: SUPER.castActive, recovery: SUPER.castRecovery, aerialLag: SUPER.aerialLag },
+    },
+    noGrab: !!def.noGrab,        // the Chicken, obviously
+    hurtR: def.hurtR ?? 0.45,
+    deep: 0,                     // Deep Dream lantern 0..100 (fills on hits landed)
+    armorT: 0,                   // armor frames: absorb launches (Beldam swig, King cape)
+    ghostT: 0,                   // fog-step mist: untargetable, deals nothing
+    slowFallT: 0,                // Moonrise: enemies drift (gravity x0.35)
     x: 0, y: 0, vx: 0, vy: 0,
     face: 1,                     // +1 right, -1 left
     grounded: false,
@@ -109,22 +200,27 @@ export function stepFighter(f, inp, arena, ev) {
     return
   }
 
-  // — attacks: light/heavy start when free; aerials pre-pay landing lag —
+  // — attacks: light/heavy/special start when free; a full lantern turns
+  //   the special press into the Deep Dream super; aerials pre-pay lag —
   if (!f.move && f.landlag <= 0 && f.launched <= 0) {
-    const want = pressed('light') ? 'light' : pressed('heavy') ? 'heavy' : null
+    const want = pressed('light') ? 'light' : pressed('heavy') ? 'heavy'
+      : pressed('special') ? (f.deep >= 100 ? 'super' : 'special') : null
     if (want) {
       f.move = { name: want, t: 0 }
       f.hitIds = new Set()
-      if (!f.grounded) f.aerialWeight = ATTACKS[want].aerialLag
-      ev?.push({ t: 'swing', id: f.id, move: want })
+      if (!f.grounded) f.aerialWeight = f.atk[want].aerialLag
+      ev?.push({ t: 'swing', id: f.id, move: want, fid: f.fid })
     }
   }
   if (f.move) {
-    const A = ATTACKS[f.move.name]
+    const A = f.atk[f.move.name]
     f.move.t++
     if (f.move.t >= A.startup + A.active + A.recovery) f.move = null
   }
   if (f.launched > 0) f.launched--
+  if (f.armorT > 0) f.armorT--
+  if (f.ghostT > 0) f.ghostT--
+  if (f.slowFallT > 0) f.slowFallT--
 
   // — buffered jump: a press is remembered for BUFFER ticks —
   if (pressed('jump')) f.jumpBuf = FEEL.BUFFER
@@ -169,11 +265,12 @@ export function stepFighter(f, inp, arena, ev) {
     }
   }
 
-  // — gravity, fast-fall —
+  // — gravity, fast-fall (Moonrise slow-fall drifts its victims) —
   if (!f.grounded) {
     if (inp.down && f.vy < 2 && !f.fastfall) { f.fastfall = true; ev?.push({ t: 'fastfall', id: f.id }) }
-    const g = f.k.gravity * (f.fastfall ? FEEL.FASTFALL : 1) * dt
-    f.vy = Math.max(f.k.maxFall * (f.fastfall ? FEEL.FASTFALL : 1), f.vy + g)
+    const drift = f.slowFallT > 0 ? 0.35 : 1
+    const g = f.k.gravity * (f.fastfall ? FEEL.FASTFALL : 1) * drift * dt
+    f.vy = Math.max(f.k.maxFall * (f.fastfall ? FEEL.FASTFALL : 1) * drift, f.vy + g)
   }
   if (f.dropThru > 0) f.dropThru--
 
@@ -229,9 +326,9 @@ export function stepFighter(f, inp, arena, ev) {
 
 const a2 = (a) => a // clarity alias
 
-// The match container: fighters + arena + tick counter.
+// The match container: fighters + arena + tick counter (+ live projectiles).
 export function makeMatch(arena, fighters) {
-  return { tick: 0, arena, fighters, events: [] }
+  return { tick: 0, arena, fighters, events: [], projs: [] }
 }
 
 const deg = (d) => (d * Math.PI) / 180
@@ -353,27 +450,183 @@ export function stepMatch(m, inputsById) {
 
   // — hitboxes: active swing frames vs free opponents (id order = determinism) —
   for (const f of m.fighters) {
-    if (!f.move || f.hitstop > 0) continue
-    const A = ATTACKS[f.move.name]
-    if (f.move.t <= A.startup || f.move.t > A.startup + A.active) continue
-    const hx = f.x + f.face * A.range, hy = f.y + 1.0
-    for (const d of m.fighters) {
-      if (d.id === f.id || f.hitIds.has(d.id) || d.ko > 0 || d.invuln > 0) continue
-      const dx = d.x - hx, dy = d.y + 0.9 - hy
-      if (dx * dx + dy * dy > (A.r + 0.45) ** 2) continue
-      f.hitIds.add(d.id)
-      d.wooze += A.dmg
-      if (d.grab >= 0) { m.fighters[d.grab].grabbing = -1; d.grab = -1 } // hits break grabs
-      const kb = (A.baseKB + d.wooze * A.growth) / d.k.weight
-      launch(d, f.face, kb, A.angleDeg, inputsById[d.id]?.x, ev, f.move.name)
-      // Part 5: BOTH parties frozen; particles keep drifting (presentation)
-      d.hitstop = A.hitstop
-      f.hitstop = A.hitstop
-      // shake command: amplitude scales with kb, presentation-capped
-      ev.push({ t: 'hit', a: f.id, d: d.id, move: f.move.name, kb: +kb.toFixed(2), wooze: d.wooze, shake: Math.min(1, kb / 16), shakeTicks: Math.min(12, 4 + Math.round(kb)) })
+    if (!f.move || f.hitstop > 0 || f.stocks <= 0 || f.ko > 0) continue
+    if (f.move.name === 'light' || f.move.name === 'heavy') {
+      const A = f.atk[f.move.name]
+      if (f.move.t <= A.startup || f.move.t > A.startup + A.active) continue
+      hitCircle(f, m, inputsById, ev, A, f.move.name)
+    } else if (f.move.name === 'special') {
+      stepSpecial(f, m, inputsById, ev)
+    } else if (f.move.name === 'super' && f.move.t === f.atk.super.startup + 1) {
+      f.deep = 0
+      castSuper(f, m, inputsById, ev)
     }
+  }
+
+  // — projectiles: darts fly, hats come back (id order = determinism) —
+  if (m.projs.length) {
+    for (const p of m.projs) {
+      p.t++
+      if (p.kind === 'hat') {
+        p.vx -= p.face * 0.34 // boomerang: decelerate, turn, hit on the way home
+        if (!p.turned && p.vx * p.face <= 0) { p.turned = true; p.hitIds.clear() }
+      }
+      p.x += p.vx * TICK
+      p.y += (p.vy ?? 0) * TICK
+      if (p.kind === 'dart' && p.t % 6 === 0) ev.push({ t: 'dartTrail', x: +p.x.toFixed(2), y: +p.y.toFixed(2) })
+      if (p.kind === 'hat' && p.turned) {
+        const o = m.fighters[p.owner]
+        if (o && Math.abs(o.x - p.x) < 0.7 && Math.abs(o.y + 1.3 - p.y) < 1.2) { p.dead = true; ev.push({ t: 'hatCatch', id: p.owner }) }
+      }
+      const bb = m.arena.blast
+      if (p.x < bb.l - 1 || p.x > bb.r + 1 || p.t >= p.life) p.dead = true
+      for (const d of m.fighters) {
+        if (p.dead || d.id === p.owner || p.hitIds.has(d.id) || d.ko > 0 || d.invuln > 0 || d.stocks <= 0 || d.ghostT > 0) continue
+        const dx = d.x - p.x, dy = d.y + 0.9 - p.y
+        if (dx * dx + dy * dy > (0.5 + d.hurtR) ** 2) continue
+        p.hitIds.add(d.id)
+        const o = m.fighters[p.owner]
+        applyHit(o ?? { id: p.owner, deep: 0, hitstop: 0, face: Math.sign(p.vx) || 1 }, d, m, inputsById, ev,
+          { dmg: p.dmg, baseKB: p.kb, growth: 0.1, angleDeg: p.ang, hitstop: 3, r: 0.5 }, p.kind, Math.sign(p.vx) || 1)
+        if (p.kind === 'dart') p.dead = true
+      }
+    }
+    m.projs = m.projs.filter((p) => !p.dead)
   }
 
   m.tick++
   return ev
+}
+
+// ═══ F4: shared hit application (melee, specials, projectiles) ═══
+// Keeps the F2 event shape exact; adds armor absorption + Deep Dream fill.
+function applyHit(f, d, m, inputsById, ev, A, cause, dirOverride = null) {
+  d.wooze += A.dmg
+  f.deep = Math.min(100, (f.deep ?? 0) + A.dmg * SUPER.fillPerDmg)
+  if (d.grab >= 0) { m.fighters[d.grab].grabbing = -1; d.grab = -1 } // hits break grabs
+  const kb = (A.baseKB + d.wooze * A.growth) / d.k.weight
+  const dir = dirOverride ?? f.face
+  if (d.armorT > 0) {
+    // armor frames: the wooze lands, the launch does not (royal/drunken poise)
+    f.hitstop = Math.max(f.hitstop, 2)
+    ev.push({ t: 'armored', id: d.id, cause })
+  } else {
+    launch(d, dir, kb, A.angleDeg, inputsById[d.id]?.x, ev, cause)
+    // Part 5: BOTH parties frozen; particles keep drifting (presentation)
+    d.hitstop = A.hitstop
+    f.hitstop = Math.max(f.hitstop, A.hitstop)
+  }
+  // shake command: amplitude scales with kb, presentation-capped
+  ev.push({ t: 'hit', a: f.id, d: d.id, move: cause, kb: +kb.toFixed(2), wooze: d.wooze, shake: Math.min(1, kb / 16), shakeTicks: Math.min(12, 4 + Math.round(kb)) })
+}
+
+function hitCircle(f, m, inputsById, ev, A, cause) {
+  const hx = f.x + f.face * (A.range ?? 1.0), hy = f.y + 1.0
+  for (const d of m.fighters) {
+    if (d.id === f.id || f.hitIds.has(d.id) || d.ko > 0 || d.invuln > 0 || d.stocks <= 0 || d.ghostT > 0) continue
+    const dx = d.x - hx, dy = d.y + 0.9 - hy
+    if (dx * dx + dy * dy > (A.r + d.hurtR) ** 2) continue
+    f.hitIds.add(d.id)
+    applyHit(f, d, m, inputsById, ev, A, cause)
+  }
+}
+
+// ═══ F4: the eight specials (Part 3) — each runs inside move 'special' ═══
+function stepSpecial(f, m, inputsById, ev) {
+  const kind = (FIGHTERS[f.fid] ?? FIGHTERS.lamplighter).special
+  const S = f.atk.special
+  const t = f.move.t
+  const inActive = t > S.startup && t <= S.startup + S.active
+  switch (kind) {
+    case 'flameDart': // a warm dart that flies true and leaves a footprint trail
+      if (t === S.startup + 1) {
+        m.projs.push({ kind: 'dart', owner: f.id, x: f.x + f.face * 0.7, y: f.y + 1.1, vx: f.face * 11, vy: 0, life: 44, dmg: 5, kb: 3.9, ang: 30, t: 0, hitIds: new Set() })
+        ev.push({ t: 'proj', kind: 'dart', id: f.id })
+      }
+      break
+    case 'swig': { // drunken stagger-dash: armored, direction is her business
+      if (t === S.startup + 1) {
+        f.swigDir = dnoise(m.tick, f.id, 3) < 0.35 ? -f.face : f.face
+        ev.push({ t: 'swig', id: f.id, dir: f.swigDir })
+      }
+      if (inActive) {
+        f.armorT = 2
+        f.vx = f.swigDir * (7.5 + dnoise(m.tick, f.id, 5) * 3)
+        hitCircle(f, m, inputsById, ev, { range: 0.5, r: 0.9, dmg: 8, baseKB: 6.0, growth: 0.17, angleDeg: 46, hitstop: 5 }, 'swig')
+      }
+      break
+    }
+    case 'hatThrow': // the hat comes back; so does the hitbox
+      if (t === S.startup + 1) {
+        m.projs.push({ kind: 'hat', owner: f.id, face: f.face, x: f.x + f.face * 0.6, y: f.y + 1.3, vx: f.face * 9.5, vy: 0, life: 90, dmg: 4, kb: 3.4, ang: 42, t: 0, hitIds: new Set() })
+        ev.push({ t: 'proj', kind: 'hat', id: f.id })
+      }
+      break
+    case 'dustGust': // pushes without damage — polite, devastating near ledges
+      if (inActive) {
+        for (const d of m.fighters) {
+          if (d.id === f.id || d.stocks <= 0 || d.ko > 0 || d.invuln > 0 || d.ghostT > 0) continue
+          const dx = d.x - f.x
+          if (dx * f.face > 0 && Math.abs(dx) < 2.8 && Math.abs(d.y - f.y) < 1.6) {
+            // positional shove: ground friction can't eat it — the gust WINS
+            d.x += f.face * 3.0 * TICK
+            d.vx += f.face * 9 * TICK
+            if (!d.grounded) d.vy += 5 * TICK
+            if (t === S.startup + 1) ev.push({ t: 'gust', a: f.id, d: d.id })
+          }
+        }
+      }
+      break
+    case 'capeSweep': // royal armor through the whole gesture
+      if (t <= S.startup + S.active) f.armorT = 2
+      if (inActive) hitCircle(f, m, inputsById, ev, { range: 1.75, r: 1.2, dmg: 12, baseKB: 8.2, growth: 0.22, angleDeg: 50, hitstop: 6 }, 'capeSweep')
+      break
+    case 'shellSpin': // rolls, bonks, can't stop well
+      if (inActive) {
+        f.vx = f.face * 7.2
+        hitCircle(f, m, inputsById, ev, { range: 0.4, r: 1.0, dmg: 9, baseKB: 6.2, growth: 0.18, angleDeg: 40, hitstop: 5 }, 'shellSpin')
+      }
+      break
+    case 'peckFlurry': { // many tiny nos, then one big one
+      if (inActive) {
+        const step = t - S.startup
+        if (step % (S.interval ?? 5) === 1) f.hitIds.clear()
+        const last = step > S.active - (S.interval ?? 5)
+        hitCircle(f, m, inputsById, ev, last
+          ? { range: 1.0, r: 0.8, dmg: 4, baseKB: 5.6, growth: 0.16, angleDeg: 42, hitstop: 4 }
+          : { range: 1.0, r: 0.8, dmg: 2, baseKB: 1.6, growth: 0.02, angleDeg: 18, hitstop: 2 }, 'peck')
+      }
+      break
+    }
+    case 'fogStep': // a short step through somewhere colder
+      if (t === S.startup + 1) {
+        const bb = m.arena.blast
+        f.x = Math.max(bb.l + 1.5, Math.min(bb.r - 1.5, f.x + f.face * 3.4))
+        f.ghostT = 10
+        ev.push({ t: 'fogstep', id: f.id, x: +f.x.toFixed(2) })
+      }
+      break
+  }
+}
+
+// ═══ F4: Deep Dream supers — cast at full lantern (effects land per kind;
+// the ones not yet built still cast, spend the meter, and announce) ═══
+function castSuper(f, m, inputsById, ev) {
+  const kind = (FIGHTERS[f.fid] ?? FIGHTERS.lamplighter).superKind
+  ev.push({ t: 'super', id: f.id, kind })
+  if (kind === 'moonrise') {
+    // a mini moon rises: enemies drift for 3s + a knockback ring at cast
+    for (const d of m.fighters) {
+      if (d.id === f.id || d.stocks <= 0 || d.ko > 0) continue
+      d.slowFallT = 180
+      const dx = d.x - f.x, dy = d.y - f.y
+      if (dx * dx + dy * dy < 36 && d.invuln <= 0 && d.ghostT <= 0 && d.armorT <= 0) {
+        d.wooze += 10
+        launch(d, Math.sign(dx) || f.face, (9 + d.wooze * 0.12) / d.k.weight, 52, inputsById[d.id]?.x, ev, 'moonrise')
+        d.hitstop = 6
+        ev.push({ t: 'hit', a: f.id, d: d.id, move: 'moonrise', kb: +((9 + d.wooze * 0.12) / d.k.weight).toFixed(2), wooze: d.wooze, shake: 0.9, shakeTicks: 12 })
+      }
+    }
+    f.hitstop = 6
+  }
 }

@@ -398,6 +398,178 @@ check('2s invulnerable shimmer from the drop', f3.checks.postKo?.invulnAfterDrop
 check('shimmer actually protects (no hit lands during invuln)', f3.checks.postKo?.hitDuringInvuln === false)
 check('three KOs end the match — last wizard dreaming wins', f3.checks.kos === 3 && f3.checks.over === true && f3.checks.winner === 0, JSON.stringify({ kos: f3.checks.kos, over: f3.checks.over, winner: f3.checks.winner }))
 
+// ═══ F4: THE ROSTER — kits, specials, armor, projectiles, Deep Dream ═══
+const f4 = await page.evaluate(() => {
+  const M = window.__MOONREST__
+  const out = {}
+  const step = (a, b) => M.fight.step({ 0: a ?? {}, 1: b ?? {} })
+  const reenter = (fids) => { M.fight.exit(); M.fight.enter('beldam', 2, 99, fids); for (let k = 0; k < 60; k++) step() }
+  const closeTo = (gap) => { // walk P1 to P2 until |dx| <= gap, then brake
+    let s = step(), g = 0
+    while (Math.abs(s.fighters[1].x - s.fighters[0].x) > gap && g++ < 300) s = step({ x: s.fighters[1].x > s.fighters[0].x ? 1 : -1 })
+    for (let j = 0; j < 10; j++) s = step()
+    return s
+  }
+
+  // — kits move differently: Nib sprints, Mote lumbers —
+  reenter(['nib', 'mote'])
+  let s = step()
+  for (let k = 0; k < 40; k++) s = step({ x: 1 }, { x: 1 })
+  out.nibSpeed = Math.abs(s.fighters[0].vx)
+  out.moteSpeed = Math.abs(s.fighters[1].vx)
+
+  // — weight divides knockback: same light, lighter fighter flies farther —
+  reenter(['lamplighter', 'nib'])
+  closeTo(1.6)
+  step({ light: true, x: 1 })
+  let kbNib = 0
+  for (let k = 0; k < 20; k++) { s = step(); const h = s.events.find((e) => e.t === 'hit'); if (h) { kbNib = h.kb; break } }
+  reenter(['lamplighter', 'mote'])
+  closeTo(1.6)
+  step({ light: true, x: 1 })
+  let kbMote = 0
+  for (let k = 0; k < 20; k++) { s = step(); const h = s.events.find((e) => e.t === 'hit'); if (h) { kbMote = h.kb; break } }
+  out.kbNib = kbNib; out.kbMote = kbMote
+
+  // — the Chicken cannot be grabbed (obviously) —
+  reenter(['lamplighter', 'chicken'])
+  s = closeTo(1.1)
+  let sawNoGrab = false, everGrabbed = false
+  s = step({ toss: true }) // events are per-tick: the nograb fires ON the press
+  if (s.events.some((e) => e.t === 'nograb')) sawNoGrab = true
+  for (let k = 0; k < 10; k++) { s = step(); if (s.events.some((e) => e.t === 'nograb')) sawNoGrab = true; if (s.fighters[1].grab >= 0) everGrabbed = true }
+  out.chicken = { sawNoGrab, everGrabbed }
+
+  // — flame dart: flies, hits at range (a zoner's ~8m), dies on impact —
+  reenter(['lamplighter', 'lamplighter'])
+  s = closeTo(5)
+  const gap0 = s.fighters[1].x - s.fighters[0].x
+  step({ special: true, x: Math.sign(gap0) })
+  let dartHit = null, dartSeen = false
+  for (let k = 0; k < 80; k++) {
+    s = step()
+    if (s.projs.some((p) => p.kind === 'dart')) dartSeen = true
+    const h = s.events.find((e) => e.t === 'hit' && e.move === 'dart')
+    if (h) { dartHit = { wooze: h.wooze, projsAfter: s.projs.length }; break }
+  }
+  out.dart = { dartSeen, dartHit, gap: +gap0.toFixed(1) }
+
+  // — hat throw: turns around and can catch on the way home —
+  reenter(['nib', 'mote'])
+  step({ special: true, x: 1 })
+  let turned = false, caught = false
+  for (let k = 0; k < 120; k++) {
+    s = step()
+    if (s.projs.some((p) => p.kind === 'hat' && p.turned)) turned = true
+    if (s.events.some((e) => e.t === 'hatCatch')) { caught = true; break }
+  }
+  out.hat = { turned, caught }
+
+  // — royal armor: a light lands on the King mid-cape-sweep, no launch —
+  reenter(['paleking', 'lamplighter'])
+  s = closeTo(1.6)
+  step({ special: true, x: 1 }) // King begins the sweep (armor through it)
+  step(); step(); step()
+  step({}, { light: true, x: -1 }) // P2 jabs into the armor
+  let armored = false, kingLaunched = false
+  for (let k = 0; k < 14; k++) {
+    s = step()
+    if (s.events.some((e) => e.t === 'armored' && e.id === 0)) armored = true
+    if (s.events.some((e) => e.t === 'launch' && e.id === 0)) kingLaunched = true
+  }
+  out.armor = { armored, kingLaunched, kingWooze: s.fighters[0].wooze }
+
+  // — peck flurry: multiple hits from one press —
+  reenter(['chicken', 'mote'])
+  s = closeTo(1.2)
+  step({ special: true, x: 1 })
+  let pecks = 0
+  for (let k = 0; k < 40; k++) { s = step(); pecks += s.events.filter((e) => e.t === 'hit' && e.move === 'peck').length }
+  out.pecks = pecks
+
+  // — swig: armored stagger-dash, deterministic across runs —
+  reenter(['beldam', 'mote'])
+  step({ special: true, x: 1 })
+  let swigDir = null, beldamArmor = false
+  for (let k = 0; k < 24; k++) {
+    s = step()
+    const sw = s.events.find((e) => e.t === 'swig')
+    if (sw) swigDir = sw.dir
+    if (s.fighters[0].armorT > 0) beldamArmor = true
+  }
+  out.swig = { swigDir, beldamArmor }
+
+  // — dust gust: pushes without damage —
+  reenter(['curator', 'lamplighter'])
+  s = closeTo(2.2)
+  const preX = s.fighters[1].x, preW = s.fighters[1].wooze
+  step({ special: true, x: Math.sign(s.fighters[1].x - s.fighters[0].x) })
+  for (let k = 0; k < 30; k++) s = step()
+  out.gust = { pushed: +(s.fighters[1].x - preX).toFixed(2), wooze: s.fighters[1].wooze - preW, face: s.fighters[0].face }
+
+  // — shell spin rolls forward and bonks (start far: the roll IS the range) —
+  reenter(['mote', 'paleking'])
+  s = closeTo(4.5)
+  const motePre = s.fighters[0].x
+  step({ special: true, x: Math.sign(s.fighters[1].x - s.fighters[0].x) })
+  let spinHit = false
+  for (let k = 0; k < 50; k++) { s = step(); if (s.events.some((e) => e.t === 'hit' && e.move === 'shellSpin')) { spinHit = true; break } }
+  out.spin = { rolled: +Math.abs(s.fighters[0].x - motePre).toFixed(2), spinHit }
+
+  // — fog step: teleports ~3.4m and mists out —
+  reenter(['watcher', 'lamplighter'])
+  s = step()
+  const wPre = s.fighters[0].x
+  step({ special: true, x: 1 })
+  let ghost = false
+  for (let k = 0; k < 14; k++) { s = step(); if (s.fighters[0].ghostT > 0) ghost = true }
+  out.fog = { jumped: +(s.fighters[0].x - wPre).toFixed(2), ghost }
+
+  // — Deep Dream: lantern fills by damage landed; full = super; Moonrise
+  //   ring launches and leaves the loser drifting —
+  reenter(['lamplighter', 'mote'])
+  s = closeTo(1.6)
+  let guard = 0
+  while (s.fighters[0].deep < 100 && guard++ < 3000) {
+    const dx = s.fighters[1].x - s.fighters[0].x
+    if (Math.abs(dx) > 1.9) s = step({ x: Math.sign(dx) })
+    else s = step({ heavy: guard % 8 < 4, x: Math.abs(dx) > 0.2 ? Math.sign(dx) : 0 })
+  }
+  out.deepFull = s.fighters[0].deep
+  // walk home to center bench first — chasing the launched Mote off the
+  // edge KO'd the caster mid-press in an earlier draft of this gate (the
+  // respawn ride ignores attack inputs); the drift lands at any distance
+  let home = 0
+  while ((Math.abs(s.fighters[0].x) > 0.6 || !s.fighters[0].grounded || s.fighters[0].ko > 0 || s.fighters[1].ko > 0) && home++ < 600)
+    s = step({ x: s.fighters[0].ko > 0 || Math.abs(s.fighters[0].x) <= 0.6 ? 0 : -Math.sign(s.fighters[0].x) })
+  let idle = 0
+  while ((s.fighters[0].move || s.fighters[0].hitstop > 0 || s.fighters[0].landlag > 0) && idle++ < 80) s = step()
+  s = step({ special: true })
+  out.pressSnap = { move: s.fighters[0].move, moveT: s.fighters[0].moveT, deep: s.fighters[0].deep, landlag: s.fighters[0].landlag, launched: s.fighters[0].launched, hitstop: s.fighters[0].hitstop, grounded: s.fighters[0].grounded, idleSpun: idle }
+  let superEv = s.events.find((e) => e.t === 'super')?.kind ?? null, drifted = 0
+  for (let k = 0; k < 20; k++) {
+    s = step()
+    const su = s.events.find((e) => e.t === 'super')
+    if (su) superEv = su.kind
+    if (s.fighters[1].slowFallT > 0) drifted = s.fighters[1].slowFallT
+  }
+  out.super = { kind: superEv, drifted, meterAfter: s.fighters[0].deep }
+  return out
+})
+check('kits differ: Nib sprints (7.9) while Mote lumbers (4.4)', Math.abs(f4.nibSpeed - 7.9) < 0.1 && Math.abs(f4.moteSpeed - 4.4) < 0.1, `nib=${f4.nibSpeed} mote=${f4.moteSpeed}`)
+check('weight divides knockback (same jab: Nib flies farther than Mote)', f4.kbNib > 0 && f4.kbMote > 0 && f4.kbNib > f4.kbMote * 1.5, `nib=${f4.kbNib} mote=${f4.kbMote}`)
+check('the Chicken cannot be grabbed', f4.chicken.sawNoGrab === true && f4.chicken.everGrabbed === false, JSON.stringify(f4.chicken))
+check('flame dart crosses the stage and lands (projectile framework)', f4.dart.dartSeen && f4.dart.dartHit && f4.dart.dartHit.projsAfter === 0, JSON.stringify(f4.dart))
+check('hat throw boomerangs back and is caught', f4.hat.turned && f4.hat.caught, JSON.stringify(f4.hat))
+check('royal armor absorbs the launch, keeps the wooze', f4.armor.armored && !f4.armor.kingLaunched && f4.armor.kingWooze > 0, JSON.stringify(f4.armor))
+check('peck flurry multi-hits from one press', f4.pecks >= 3, `pecks=${f4.pecks}`)
+check('swig staggers with armor (deterministic dir)', (f4.swig.swigDir === 1 || f4.swig.swigDir === -1) && f4.swig.beldamArmor, JSON.stringify(f4.swig))
+check('dust gust pushes without damage', f4.gust.pushed * f4.gust.face > 0.5 && f4.gust.wooze === 0, JSON.stringify(f4.gust))
+check('shell spin rolls and bonks', f4.spin.rolled > 1.5 && f4.spin.spinHit, JSON.stringify(f4.spin))
+check('fog step teleports into mist', Math.abs(f4.fog.jumped - 3.4) < 0.8 && f4.fog.ghost, JSON.stringify(f4.fog))
+check('Deep Dream lantern fills to full by landing hits', f4.deepFull >= 100, `deep=${f4.deepFull}`)
+check('full lantern casts the super (Moonrise: ring + 3s drift), meter spends', f4.super.kind === 'moonrise' && f4.super.drifted > 100 && f4.super.meterAfter < 20, JSON.stringify(f4.super) + ' press=' + JSON.stringify(f4.pressSnap))
+
 check('console clean', issues.length === 0, issues.slice(0, 3).join(' | '))
 console.log(fails === 0 ? 'FIGHTFEEL PASS' : `FIGHTFEEL: ${fails} FAILURES`)
 await browser.close()
