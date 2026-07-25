@@ -75,7 +75,7 @@ try {
     throw new Error('dream never entered')
   }
   check('lockstep advances on both peers', sA.tick > 120 && sB.tick > 120, `tickA=${sA.tick} tickB=${sB.tick}`)
-  check('peers run within a breath of each other', Math.abs(sA.tick - sB.tick) < 90, `Δ=${Math.abs(sA.tick - sB.tick)}`)
+  check('peers run within a breath of each other', Math.abs(sA.tick - sB.tick) < 45, `Δ=${Math.abs(sA.tick - sB.tick)}`)
   check("A's fighter walked right on A's keys", sA.fighters[0].x > -5.5, `x=${sA.fighters[0].x}`)
   check("B's REMOTE input moved seat 2 on A's sim", sA.fighters[1].x < 5.5, `x=${sA.fighters[1].x}`)
 
@@ -94,7 +94,7 @@ try {
   }
   check(`determinism heartbeats MATCH three-way (${hashTicks.length} shared ticks)`, allMatch, detail.join(' ; ') || `${hashTicks.length}/${hashTicks.length} identical`)
   const stalledA = await A.page.evaluate(() => window.__MOONREST__.fight.netStalled)
-  check('stall count stays sane on a local wire', stalledA != null && stalledA < 900, `stalled=${stalledA}`)
+  check('stall count stays sane on a local wire', stalledA != null && stalledA < 400, `stalled=${stalledA}`)
 
   // — the fourth lantern arrives LATE and spectates as a firefly —
   const D = await boot('D')

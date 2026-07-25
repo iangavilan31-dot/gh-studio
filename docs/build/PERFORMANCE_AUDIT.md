@@ -63,9 +63,15 @@ returned before advancing move.t, so edge-triggered move ticks re-fired
 when their own hitstop thawed (3859 darts) — fixed with a thawed flag the
 resolution loop respects, freeze length bit-identical; (3) the buffered
 jump outranked drop-through, so down+jump on a shelf pogoed instead of
-descending (28% of the bracket drew). After fixes: zero draws in 560.
-Final winrates all 40–60: lamp/beldam/nib 47.1, curator 59.3, king 52.9,
-mote 52.9, chicken 42.9, watcher 50.7.
+descending (28% of the bracket drew). After fixes: 1 draw in 560.
+The table was re-shaped twice by judge findings: the melee-special pulse
+(judge 1) put swig/cape/spin/peck/gust/fog-step into the bracket, and the
+judge-2 retune pulled the bounds-huggers off the rails (paleking light
+10→9, mote light kb 5.2→5.0, watcher light dmg 7→8 — a watcher heavy
+startup 12→11 buff was tried first and REVERTED: it re-created the
+startup-race metronome and broke the Lucid-beats-Dozy ladder).
+Final winrates, all mid-band: lamplighter 50.0, beldam 44.3, nib 45.0,
+curator 52.1, paleking 51.4, mote 52.1, chicken 55.7, watcher 48.6.
 
 ## F10 chaos record
 - pure sim (node): 4 Lucid bots + items + critter + supers, 14400 ticks
