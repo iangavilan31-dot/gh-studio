@@ -118,6 +118,28 @@ await page.evaluate(() => {
 })
 await shot('roster')
 
+// the OTHER four (a match holds four seats, so the roster is two shots):
+// the Curator, Mote, the Chicken, the Watcher — all read apart (judge p8)
+await page.evaluate(() => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('beldam', 4, 99, ['curator', 'mote', 'chicken', 'watcher']) })
+await page.waitForTimeout(1400)
+await page.evaluate(() => {
+  const M = window.__MOONREST__
+  const step = (i) => M.fight.step(i ?? {})
+  for (let k = 0; k < 70; k++) step()
+  const marks = { 0: -4.2, 1: -1.4, 2: 1.6, 3: 4.6 }
+  let s = step(), g = 0
+  const done = () => [0, 1, 2, 3].every((i) => Math.abs(s.fighters[i].x - marks[i]) < 0.3)
+  while (!done() && g++ < 400) {
+    const inp = {}
+    for (let i = 0; i < 4; i++) { const dx = marks[i] - s.fighters[i].x; inp[i] = { x: Math.abs(dx) < 0.3 ? 0 : Math.sign(dx) } }
+    s = step(inp)
+  }
+  for (let k = 0; k < 12; k++) step()
+  step({ 0: { x: 1 }, 1: { special: true, x: 1 }, 2: { light: true, x: 1 }, 3: { x: -1 } })
+  for (let k = 0; k < 12; k++) step()
+})
+await shot('roster-b')
+
 // comedy pair: Mote shell-spins in, the Chicken answers with the flurry
 await page.evaluate(() => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('beldam', 2, 99, ['chicken', 'mote']) })
 await page.waitForTimeout(900)
