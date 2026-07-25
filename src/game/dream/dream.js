@@ -879,6 +879,16 @@ class DreamMode {
     fx.spect = glow('#d8e858', 0.5, 0.5) // the visiting firefly (late joiner)
     // seat fireflies: each HUMAN seat's familiar, in that seat's color
     fx.seatFlies = SEATC.map((c) => glow(c, 0.42, 0.42))
+    // a soft backlight behind EVERY living fighter so the silhouette always
+    // separates from a dark arena or the darkest Nightmare regrade (judge
+    // passes 1–7: fighters read dark-on-dark in the murk). Warm-neutral,
+    // low, sits BEHIND the fighter — a rim, not a spotlight; mood intact.
+    fx.halos = []
+    for (let i = 0; i < 4; i++) {
+      const h = glow('#e8dcc0', 1.7, 2.5)
+      h.material.uniforms.uOpacity.value = 0.3
+      fx.halos.push(h)
+    }
   }
 
   // position the pools from live sim state (render dt — drifts through hitstop)
@@ -1085,6 +1095,19 @@ class DreamMode {
         fx.pop.material.uniforms.uOpacity.value = 0.9 * (1 - k)
       }
     } else fx.pop.visible = false
+
+    // — the fighter backlight: a soft rim behind each living fighter so
+    //   the silhouette reads against any dark arena / darkest Nightmare —
+    if (fx.halos) {
+      for (let i = 0; i < fx.halos.length; i++) {
+        const h = fx.halos[i]
+        const f = this.match.fighters[i]
+        if (!f || f.stocks <= 0 || f.ko > 0) { h.visible = false; continue }
+        h.visible = true
+        h.position.set(f.x, f.y + 1.0, -0.25) // behind the fighter
+        h.material.uniforms.uOpacity.value = 0.3 * (this.dimF ?? 1) + 0.06 // survives LightsOut a touch
+      }
+    }
 
     // — seat fireflies: each human player's familiar bobs at their hat-tip
     //   in the seat color, so 'which one am I' survives any scramble —
