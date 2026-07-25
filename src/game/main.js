@@ -125,6 +125,7 @@ const dreamTunnel = new DreamTunnel()
 let dreamRest = 0 // seconds spent asleep in a sleeper's orbit
 // F9: a synchronized dream — all human seats over delay-based lockstep
 let pendingFightFrames = []
+let lastDreamDeal = null // re-dealt to late joiners as spectate
 function beginNetDream(arenaId, players, mySeat, humanSeats, fids = null) {
   if (dream.active) return false
   endIntro(true)
@@ -212,8 +213,11 @@ function applyNetEvent(ev) {
   if (ev.ev === 'dreamStart') {
     // F9: every peer tunnels into the same dream; seats follow the roster
     // order the host dealt. Local human plays their seat on the P1 keys.
+    // Late joiners get the deal re-sent with spectate: they drift in as
+    // fireflies until the next match (Part 6).
     const seats = ev.seats ?? []
-    const mySeat = Math.max(0, seats.indexOf(net.myId ?? 0))
+    const idx = seats.indexOf(net.myId ?? 0)
+    const mySeat = ev.spectate ? -1 : Math.max(0, idx)
     beginNetDream(ev.arena ?? 'beldam', seats.length, mySeat, seats.map((_, i) => i), ev.fids)
     return
   }
@@ -273,7 +277,13 @@ const net = new Net({
   getCatPos: () => (npcs.ghostCat?.state === 'follow' ? npcs.ghostCat.rig.group.position.toArray().map((v) => +v.toFixed(2)) : null),
   setCatTarget: (arr) => { npcs.catNetTarget = arr },
   onFightInput: (m) => { if (!dream.netInput(m) && pendingFightFrames.length < 900) pendingFightFrames.push(m) }, // F9 lockstep frames (buffer the startup race)
-  onPeerJoin: () => hud.say('another lantern joins the night.', 3.5),
+  onPeerJoin: (p) => {
+    hud.say('another lantern joins the night.', 3.5)
+    // mid-dream arrivals spectate as fireflies until the next match
+    if (dream.active && net.role === 'host' && lastDreamDeal && p?.id != null) {
+      net.sendEventTo?.(p.id, { ...lastDreamDeal, spectate: true })
+    }
+  },
   onPeerLeave: () => hud.say('a lantern drifts away, fireflies now.', 3.5),
   onHostLost: () => {
     hud.say('the night drifts on without its keeper.', 5)
@@ -672,6 +682,7 @@ function tick() {
     dream.update(dt) // may end itself (the victory nap fades the dream)
     if (dream.active && input.pressed('Escape') && !dreamTunnel.active) dream.exit() // F0: skippable any time
     if (dream.active) {
+      hud.hidePrompt() // the waking kindle whisper has no place in a fight
       input.endFrame()
       pipeline.render(dream.scene, dream.camera, elapsed)
       return
@@ -1043,11 +1054,13 @@ window.__MOONREST__ = {
     startOnline(arena = 'beldam') {
       if (net.role !== 'host') return false
       const seats = [net.myId ?? 0, ...net.remotes.keys()]
-      net.broadcastEvent({ ev: 'dreamStart', arena, seats })
+      lastDreamDeal = { ev: 'dreamStart', arena, seats }
+      net.broadcastEvent(lastDreamDeal)
       return true
     },
     netHash(tick) { return dream.net?.hashes?.[tick] ?? null },
     get netStalled() { return dream.net?.stalled ?? null },
+    get netSeat() { return dream.net?.seat ?? null },
     spawnItem(kind = 'floatleaf', x = 0) { if (!dream.match) return false; dream.match.items.push({ kind, x, y: 8, vy: 0, t: 0 }); return true },
     winNow(id = 0) { return dream.winNow(id) },
     get lastShake() { return dream.lastShake ?? null },

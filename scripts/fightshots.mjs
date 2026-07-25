@@ -79,7 +79,7 @@ await page.evaluate(() => {
   while (g++ < 40) { s = step(); if (s.events.some((e) => e.t === 'hit')) break }
   step(); step()
 })
-await shot('fight')
+await shot('fight', 70) // fast shutter: sparks live 220ms, the pop 120ms
 
 // the KO moment: moths just burst at the blast edge
 await page.evaluate(`(() => { ${DRIVER}
@@ -210,6 +210,12 @@ for (const a of ['beldam', 'paleking']) {
 }
 await page.evaluate(() => { window.__FIGHT_HITBOXES__ = false })
 
+// the Young Forest under the hollow Nightmare moon
+await page.evaluate(() => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('mote', 2, null, null, null, true) })
+await page.waitForTimeout(1500)
+await page.evaluate(() => { const M = window.__MOONREST__; for (let k = 0; k < 80; k++) M.fight.step({ 0: { x: 1 }, 1: {} }) })
+await shot('nightmare-forest')
+
 // ——— the supers, seen (F4 presentation evidence) ———
 const superShot = async (name, fids, prep) => {
   await page.evaluate(([f]) => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('beldam', 2, 99, f) }, [fids])
@@ -275,15 +281,20 @@ await page.screenshot({ path: `${root}/docs/build/shots/dream/trophy-shelf.png` 
 await page.evaluate(() => { const e = new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape', bubbles: true }); window.dispatchEvent(e) })
 await page.waitForTimeout(300)
 
-// the victory nap: drive a fresh duel to its end, then let the real-time
-// victory scene play — winner lies down beside the loser (~3s in)
-await page.evaluate(() => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('beldam', 2) })
-await page.waitForTimeout(600)
-const end = await page.evaluate(`(() => { ${DRIVER}
-  const s = drive((s2) => s2.over)
-  return { over: s.over, winner: s.winner }
-})()`)
-if (!end.over) issues.push('victory driver never finished the match')
+// the victory nap: hand the match over, then let the real-time victory
+// scene play — winner lies down beside the loser (~3s in)
+const end = await page.evaluate(() => {
+  const M = window.__MOONREST__
+  M.fight.exit()
+  M.fight.enter('beldam', 2)
+  const step = () => M.fight.step({})
+  for (let k = 0; k < 60; k++) step()
+  M.fight.winNow(0)
+  let s = null
+  for (let k = 0; k < 10; k++) { s = step(); if (s?.over) break }
+  return { over: s?.over ?? false, winner: s?.winner ?? null }
+})
+if (!end.over) issues.push('victory scene never began')
 await shot('victory-nap', 3300)
 
 await browser.close(); preview.kill()

@@ -58,7 +58,7 @@ export const FIGHTERS = {
   nib: {
     name: 'Nib', archetype: 'tiny, fastest, lightest',
     spec: { runSpeed: 7.9, airSpeed: 6.6, weight: 0.78, jumpVel: 12.1, djVel: 11.0, accel: 60 },
-    attacks: { light: { dmg: 6, baseKB: 3.9, range: 0.95 }, heavy: { dmg: 11, baseKB: 7.4, startup: 10, range: 1.2 } },
+    attacks: { light: { dmg: 6, baseKB: 4.1, range: 0.95 }, heavy: { dmg: 11, baseKB: 7.8, startup: 10, range: 1.2 } },
     hurtR: 0.32, special: 'hatThrow', superKind: 'constellation',
   },
   curator: {
@@ -76,13 +76,13 @@ export const FIGHTERS = {
   mote: {
     name: 'Mote', archetype: 'tank; hits like a landslide',
     spec: { runSpeed: 4.4, airSpeed: 4.0, weight: 1.38, jumpVel: 10.6, accel: 30 },
-    attacks: { light: { dmg: 8, baseKB: 5.2, startup: 7, recovery: 11 }, heavy: { dmg: 15, baseKB: 8.8, startup: 19, recovery: 24, hitstop: 8 } },
+    attacks: { light: { dmg: 8, baseKB: 5.2, startup: 7, recovery: 11 }, heavy: { dmg: 15, baseKB: 8.8, startup: 19, recovery: 24, hitstop: 7 } }, // 7 ticks = 116ms, INSIDE the 80-130 law (8 broke it)
     special: 'shellSpin', superKind: 'oldForest',
   },
   chicken: {
     name: 'The Chicken', archetype: 'joke character',
     spec: { runSpeed: 7.4, airSpeed: 6.2, weight: 0.78, jumpVel: 11.9, djVel: 10.9, accel: 64 },
-    attacks: { light: { startup: 3, recovery: 9, dmg: 4, baseKB: 3.2, range: 0.9 }, heavy: { startup: 9, dmg: 8, baseKB: 6.1, range: 1.1 } },
+    attacks: { light: { startup: 3, recovery: 9, dmg: 4, baseKB: 3.4, range: 0.9 }, heavy: { startup: 9, dmg: 9, baseKB: 6.4, range: 1.1 } },
     noGrab: true, hurtR: 0.3, special: 'peckFlurry', superKind: 'derby',
   },
   watcher: {
