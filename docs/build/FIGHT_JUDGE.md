@@ -169,3 +169,60 @@ sim changes this cycle — dream.js presentation + capture scripts only).
 All recaptures read personally: fight.png (spark ring + held glow),
 comedy-swig.png (the drink), chaos-4p.png, pair-*-night (signatures),
 super-moonrise.png, critters/items, nightmare-forest.
+
+## Pass 4 — FAIL (8.45)
+
+Fresh-eyes adversarial subagent; ran balance + fightfeel personally (both
+PASS), read all 30 shots, audited pass-3 fixes in pixels. Feel held 9.5;
+comedy dipped BELOW the floor to 7.5 on two named-capture failures, and the
+average plateaued. Verdict: "the deterministic sim is ship-quality; the
+presentation categories all sit in the low-8s — dark shots, the two lead
+wizards blur, two spec-named comedy captures still under-deliver."
+
+| category | score |
+| --- | --- |
+| game feel | **9.5** |
+| 4P readability | 8.0 |
+| fighter distinctness | 8.0 |
+| arena quality | 8.0 |
+| balance | 9.0 |
+| couch+online stability | 8.5 |
+| comedy | **7.5** |
+| Nightmare grade | 8.0 |
+| entry/exit flow | 9.0 |
+| performance under chaos | 9.0 |
+| **average** | **8.45 — FAIL** |
+
+Findings → fixes (all re-proven in the recaptured pixels this cycle):
+
+1. **victory-nap.png captured the WRONG scene** (the waking-world exit
+   iris, not the nap) — a proof-integrity bug, and F3/F12 cite it. Root
+   cause: a latched Escape keydown from the trophy-shelf pause (no keyup)
+   fired dream.exit() on the first frame the next dream became active. The
+   capture now runs BEFORE the pause-menu shot and drives the nap
+   deterministically by manual ticks (stepManual advances victory.t);
+   dream.update hardened (victory.t += min(dt,0.25); manual matches never
+   auto-exit). victory-nap.png now shows the cozy nap.
+2. **Pervasive darkness / black-on-black fighters** (the systemic ceiling
+   four judges flagged) → a modest warm combat-key wash on each play plane
+   + a zero-cost ambient nudge on day palettes + brighter/wider floor
+   pools. Curator and Pale King went from near-black to clearly lit.
+3. **The two lead wizards blur** → each wizard carries a signature LIGHT
+   (Watcher wisp, Beldam green bottle-glow, Lamplighter warm lantern);
+   seat-colored fireflies at each human fighter's hat-tip.
+4. **comedy-swig doesn't read (4th miss)** → bottle hoisted over the head,
+   tipped to the lips, comically bigger + brighter, drip sparkles.
+5. **Nightmare beldam signature "just dimmer"** → noDim ember-red firefly
+   jar + hanging lanterns survive the dim; reads at a glance in the pair.
+6. **Chicken vs neutral critter confusable** → red kerchief on the critter.
+7. **Moonrise weak / roots dark** → moonrise reframed, roots ember-hot.
+
+Also — pass 4's throttled-container timing exposed a REAL bug: the tunnel
+accumulated the sim's clamped dt, so on a slow GPU a 1.4s iris dragged to
+~4s. Fixed to run on wall-clock (a low-end-hardware win, not a threshold
+change). See DECISIONS #11.
+
+Post-fix verification: fightfeel PASS, balance PASS, f0flow PASS (entry
+2.5s / exit 2.3s), fightonline PASS (three-way hashes identical),
+fightshots COMPLETE console-clean, build exit 0. Every recapture read
+personally.
