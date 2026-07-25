@@ -17,7 +17,7 @@ import { TICK, makeFighter, makeArena, makeMatch, stepMatch } from './fightsim.j
 // the Park's Long Bench forty meters long, bottle towers as platforms.
 // One shade deeper than the waking park palette.
 const BELDAM_DREAM = {
-  palette: { fog: '#16303a', skyUp: '#31454c', ambient: '#8fa6a3', stops: ['#060d18', '#0a1620', '#10242c', '#182f38', '#16303a'] },
+  palette: { fog: '#16303a', skyUp: '#4a6a72', ambient: '#a7bcb9', stops: ['#060d18', '#0a1620', '#10242c', '#182f38', '#16303a'] },
   arena: {
     solids: [{ x: 0, y: 0, w: 26, h: 3.2 }],           // the great bench seat
     plats: [
@@ -75,7 +75,7 @@ class DreamMode {
       scene.add(leg)
     }
     // bottle-tower platforms: stacked glass bottles under a plank shelf
-    const glassMat = retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.55, emissive: 0x1a3028 })
+    const glassMat = retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.6, emissive: 0x2a5040 })
     for (const sx of [-7.5, 7.5]) {
       for (let i = 0; i < 3; i++) {
         const bottle = new THREE.Mesh(new THREE.CylinderGeometry(0.42 - i * 0.08, 0.5 - i * 0.08, 1.0, 8), glassMat)
@@ -95,10 +95,29 @@ class DreamMode {
     // the firefly jar is the center stage light
     const jarGlowMat = retroMaterial({ map: TEX.glowDot({ color: '#d8e858' }), transparent: true, depthWrite: false, opacity: 0.8 })
     jarGlowMat.blending = THREE.AdditiveBlending
-    const jar = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), jarGlowMat)
+    const jar = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 4.2), jarGlowMat)
     ensureVertexColors(jar.geometry)
     jar.position.set(0, 7.2, -0.5)
     scene.add(jar)
+    // the jar's pool: the stage light lands on the bench (readability anchor)
+    const poolMat = retroMaterial({ map: TEX.glowDot({ color: '#d8e858' }), transparent: true, depthWrite: false, opacity: 0.34 })
+    poolMat.blending = THREE.AdditiveBlending
+    const pool = new THREE.Mesh(new THREE.CircleGeometry(6.5, 20), poolMat)
+    ensureVertexColors(pool.geometry)
+    pool.rotation.x = -Math.PI / 2
+    pool.position.set(0, 0.03, 0)
+    scene.add(pool)
+    // cool rims on the side shelves so the towers read at a glance
+    for (const sx of [-7.5, 7.5]) {
+      const rim = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 1.4), (() => {
+        const m = retroMaterial({ map: TEX.glowDot({ color: '#7fd4d4' }), transparent: true, depthWrite: false, opacity: 0.3 })
+        m.blending = THREE.AdditiveBlending
+        return m
+      })())
+      ensureVertexColors(rim.geometry)
+      rim.position.set(sx, 3.15, 0.2)
+      scene.add(rim)
+    }
     // upward rain (Beldam's dream logic) arrives with the F2 particle pass
 
     // dream particles run on RENDER dt — they keep drifting through hitstop
