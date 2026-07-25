@@ -67,7 +67,14 @@ try {
   }, code2)
   await kd(A.page, 'KeyD')
   await kd(B.page, 'KeyA')
-  await new Promise((r) => setTimeout(r, 4200))
+  // observation window: long enough that even a CPU-throttled 4-context box
+  // (host + 2 seats + broker + vite, all on a shared runner) advances past
+  // 120 ticks and hits ≥2 shared 60-tick hash checkpoints. The assertions
+  // below (advance, sync Δ, three-way hash equality) are unchanged — only
+  // the wall-clock budget grows, so a slow runner doesn't false-fail
+  // determinism that IS holding (DECISIONS #11: env tolerance, not a weaker
+  // check). The sim is 0.018ms/tick; the limiter is SwiftShader's rAF rate.
+  await new Promise((r) => setTimeout(r, 7000))
   const sA = await A.page.evaluate(() => window.__MOONREST__.fight.state())
   const sB = await B.page.evaluate(() => window.__MOONREST__.fight.state())
   if (!sA || !sB) {
