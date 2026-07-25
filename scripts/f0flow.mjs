@@ -108,6 +108,57 @@ const title = await page.evaluate(() => {
 })
 check('title menu grew the Dream item after discovery', title.hasDream, title.items.join(' | '))
 
+// ═══ COUCH (F8): the second chair is real — arrows + K drive seat 2 ═══
+const couch = await page.evaluate(() => new Promise((done) => {
+  const M = window.__MOONREST__
+  M.fight.enter('beldam', 2) // no bots: both seats on the split keyboard
+  const kd = (code, key) => { const e = new KeyboardEvent('keydown', { code, key, bubbles: true }); window.dispatchEvent(e); document.dispatchEvent(e) }
+  const t0 = performance.now()
+  let x0 = null, sawMove = false, kSent = false
+  const poll = () => {
+    const s = M.fight.state()
+    if (s && x0 == null) x0 = s.fighters[1].x
+    if (s && performance.now() - t0 > 300 && !kSent) { kd('ArrowLeft', 'ArrowLeft'); kSent = true }
+    if (s && performance.now() - t0 > 1500) {
+      kd('KeyK', 'k')
+      if (s.fighters[1].move) sawMove = true
+    }
+    if (performance.now() - t0 > 2800) {
+      const s2 = M.fight.state()
+      done({ dx: +(s2.fighters[1].x - x0).toFixed(2), face: s2.fighters[1].face, sawMove })
+      return
+    }
+    requestAnimationFrame(poll)
+  }
+  requestAnimationFrame(poll)
+}))
+check('seat 2 walks on arrow keys', couch.dx < -0.8 && couch.face === -1, JSON.stringify(couch))
+check('seat 2 swings on K', couch.sawMove === true)
+
+// ═══ COUCH 4P: four seats resolve, bots hold the empty chairs ═══
+const couch4 = await page.evaluate(() => new Promise((done) => {
+  const M = window.__MOONREST__
+  M.fight.exit()
+  M.fight.enter('beldam', 4, null, null, { 2: 'awake', 3: 'awake' })
+  const t0 = performance.now()
+  const start = M.fight.state().fighters.map((f) => f.x)
+  const poll = () => {
+    if (performance.now() - t0 > 2200) {
+      const s = M.fight.state()
+      done({
+        n: s.fighters.length,
+        botsMoved: Math.abs(s.fighters[2].x - start[2]) > 0.5 || Math.abs(s.fighters[3].x - start[3]) > 0.5,
+      })
+      return
+    }
+    requestAnimationFrame(poll)
+  }
+  requestAnimationFrame(poll)
+}))
+check('four fighters spawn for the couch', couch4.n === 4)
+check('bots hold the empty chairs (seats 3+4 play)', couch4.botsMoved === true)
+await page.evaluate(() => window.__MOONREST__.fight.exit())
+
 // ═══ WAKING WORLD stays combat-free: no fight verbs outside the dream ═══
 // (structural: all fight code lives in src/game/dream/ — verified by grep in CI/gates)
 

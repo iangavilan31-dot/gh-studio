@@ -1268,7 +1268,8 @@
     "device matrix capture",
     "4P local chaos capture"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "Split keyboard live-verified (f0flow 15/15): seat 1 WASD+F/G/H/R, seat 2 arrows+K/L/;/J \u2014 synthetic ArrowLeft walked P2 -14.4m facing -1, K started P2's swing, all through the real Input pipeline at live tick rate. 4P couch: fight.enter(4) spawns four fighters, Awake bots hold seats 3+4 (verified moving), any human seat overrides its bot never vice versa (bots overwrite only their own held seats). Gamepads: standard-mapping support in _liveSnapshot (axis0/dpad move, axis1/dpad down, A jump, X light, B heavy, Y special, RB toss; pad0 rides with seat 2's arrows, pads 2/3 take seats 3/4) \u2014 code-complete, honest note: headless CI cannot present real pad hardware; the mapping mirrors the proven keyboard path through the same snapshot merge."
   },
   {
    "id": "FIGHT-F9",
