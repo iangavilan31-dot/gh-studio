@@ -484,21 +484,53 @@ class DreamMode {
     return true
   }
 
-  // live P1 mapping (couch spec: WASD + F/G; H tosses) — snapshot per tick
+  // F8 couch (Part 6, the design target): split keyboard — WASD+F/G/H/R vs
+  // arrows+K/L/;/J — plus gamepads. Pad 0 rides along with seat 2's arrows;
+  // extra pads take seats 3 and 4. Bots overwrite any seat they hold.
   _liveSnapshot() {
     const inp = this.liveInput
     if (!inp) return {}
-    const left = inp.down('KeyA'), right = inp.down('KeyD')
-    return {
-      0: {
-        x: (right ? 1 : 0) - (left ? 1 : 0),
-        down: inp.down('KeyS'),
-        jump: inp.down('KeyW', 'Space'),
-        light: inp.down('KeyF'),
-        heavy: inp.down('KeyG'),
-        toss: inp.down('KeyH'),
-      },
+    const out = {}
+    const KB = [
+      { left: 'KeyA', right: 'KeyD', down: 'KeyS', jump: ['KeyW', 'Space'], light: 'KeyF', heavy: 'KeyG', toss: 'KeyH', special: 'KeyR' },
+      { left: 'ArrowLeft', right: 'ArrowRight', down: 'ArrowDown', jump: ['ArrowUp'], light: 'KeyK', heavy: 'KeyL', toss: 'Semicolon', special: 'KeyJ' },
+    ]
+    const n = this.match?.fighters.length ?? 2
+    for (let seat = 0; seat < Math.min(2, n); seat++) {
+      const k = KB[seat]
+      out[seat] = {
+        x: (inp.down(k.right) ? 1 : 0) - (inp.down(k.left) ? 1 : 0),
+        down: inp.down(k.down),
+        jump: inp.down(...k.jump),
+        light: inp.down(k.light),
+        heavy: inp.down(k.heavy),
+        toss: inp.down(k.toss),
+        special: inp.down(k.special),
+      }
     }
+    const pads = typeof navigator !== 'undefined' && navigator.getGamepads ? navigator.getGamepads() : []
+    let seat = 1
+    for (const p of pads ?? []) {
+      if (!p || !p.connected) continue
+      if (seat >= n) break
+      const ax = p.axes?.[0] ?? 0
+      const dpx = (p.buttons?.[15]?.pressed ? 1 : 0) - (p.buttons?.[14]?.pressed ? 1 : 0)
+      const g = {
+        x: Math.abs(ax) > 0.35 ? Math.sign(ax) : dpx,
+        down: (p.axes?.[1] ?? 0) > 0.5 || !!p.buttons?.[13]?.pressed,
+        jump: !!p.buttons?.[0]?.pressed,
+        light: !!p.buttons?.[2]?.pressed,
+        heavy: !!p.buttons?.[1]?.pressed,
+        special: !!p.buttons?.[3]?.pressed,
+        toss: !!p.buttons?.[5]?.pressed,
+      }
+      const cur = out[seat]
+      out[seat] = cur
+        ? { x: cur.x || g.x, down: cur.down || g.down, jump: cur.jump || g.jump, light: cur.light || g.light, heavy: cur.heavy || g.heavy, special: cur.special || g.special, toss: cur.toss || g.toss }
+        : g
+      seat++
+    }
+    return out
   }
 
   // Part 5 impact presentation: hitstop freezes fighters (sim-side), the
