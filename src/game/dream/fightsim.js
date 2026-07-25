@@ -165,17 +165,28 @@ export function makeFighter(id, spec = {}) {
 
 // Arena collision spec: solids block from all sides; plats are one-way
 // (land from above only, drop-through with down+jump). blast = KO bounds.
+// A plat may carry timed: {period, on, offset} — solid only while
+// (tick+offset) % period < on; the presentation warns 2s before it draws
+// itself in (Nib's star-lines, Part 4.2).
 export function makeArena(spec) {
   return {
     solids: spec.solids ?? [],   // {x, y, w, h} — y is TOP surface
-    plats: spec.plats ?? [],     // {x, y, w} — thin one-way
+    plats: spec.plats ?? [],     // {x, y, w, timed?}
     blast: spec.blast ?? { l: -30, r: 30, t: 24, b: -14 },
     spawns: spec.spawns ?? [[-4, 6], [4, 6], [-8, 6], [8, 6]],
     wrap: !!spec.wrap,           // Mote's dream loops left/right
+    chand: spec.chand ?? null,   // {period, xs} — the Full Hall's falling chandeliers
   }
 }
 
-const landTop = (f, a, prevY) => {
+// is a (possibly timed) platform solid this tick?
+export function platOn(p, tick) {
+  if (!p.timed) return true
+  const t = (tick + (p.timed.offset ?? 0)) % p.timed.period
+  return t < p.timed.on
+}
+
+const landTop = (f, a, prevY, tick = 0) => {
   // returns the surface y under the fighter if this tick crosses one
   let best = null
   const check = (top, x0, x1, oneWay) => {
@@ -187,13 +198,13 @@ const landTop = (f, a, prevY) => {
     }
   }
   for (const s of a.solids) check(s.y, s.x - s.w / 2, s.x + s.w / 2, false)
-  for (const p of a.plats) check(p.y, p.x - p.w / 2, p.x + p.w / 2, true)
+  for (const p of a.plats) { if (platOn(p, tick)) check(p.y, p.x - p.w / 2, p.x + p.w / 2, true) }
   return best
 }
 
 // Advance ONE tick. inputs: {x:-1..1, down, jump, light, heavy, special, toss}
 // Returns a list of events for presentation ('jump','djump','land','ko',...).
-export function stepFighter(f, inp, arena, ev) {
+export function stepFighter(f, inp, arena, ev, tick = 0) {
   // frozen mid-impact (F2). thawed flags the EXPIRY tick: move.t hasn't
   // advanced yet, so the resolution loop must not read it — an edge-
   // triggered cast tick re-fired forever when its own hitstop expired
@@ -312,7 +323,7 @@ export function stepFighter(f, inp, arena, ev) {
   }
 
   // — landing —
-  const top = landTop(f, arena, prevY)
+  const top = landTop(f, arena, prevY, tick)
   if (top != null) {
     if (!f.grounded) {
       f.y = top
@@ -387,7 +398,7 @@ export function stepMatch(m, inputsById) {
       continue
     }
     if (f.invuln > 0) f.invuln--
-    stepFighter(f, inputsById[f.id] ?? {}, m.arena, ev)
+    stepFighter(f, inputsById[f.id] ?? {}, m.arena, ev, m.tick)
   }
 
   // — blast zones: KO, stock loss, respawn or elimination (F3) —
@@ -477,6 +488,15 @@ export function stepMatch(m, inputsById) {
       f.deep = 0
       castSuper(f, m, inputsById, ev)
     }
+  }
+
+  // — the Full Hall's own chandeliers: scripted, neutral (owner -1 hits
+  //   everyone), telegraphed ≥1.5s in the warm accent (Part 4 hazard law) —
+  if (m.arena.chand && m.tick > 0 && m.tick % m.arena.chand.period === 0) {
+    const xs = m.arena.chand.xs ?? [-6, 0, 6]
+    const x = xs[(m.tick / m.arena.chand.period) % xs.length | 0]
+    m.hazards.push({ kind: 'chand', owner: -1, x, y: 14, vy: 0, t: 0, warn: m.arena.chand.warn ?? 100, hitIds: new Set() })
+    ev.push({ t: 'chandWarn', x })
   }
 
   // — persistent supers + hazards (tornado pulses, chandeliers, roots,
