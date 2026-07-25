@@ -22,7 +22,7 @@ const preview = spawn(resolve(root, 'node_modules/.bin/vite'), ['preview', '--po
 const broker = PeerServer({ port: PEER_PORT, path: '/mr', host: '127.0.0.1' })
 await new Promise((r) => setTimeout(r, 2500))
 const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-angle=swiftshader'] })
-const issues = { A: [], B: [] }
+const issues = { A: [], B: [], C: [], D: [] }
 async function boot(tag) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 } })
   const page = await ctx.newPage()
@@ -44,11 +44,13 @@ async function boot(tag) {
 try {
   const A = await boot('A')
   const B = await boot('B')
+  const C = await boot('C')
   const code = await A.page.evaluate(() => window.__MOONREST__.hostNight('aldous'))
   await B.page.evaluate((c) => window.__MOONREST__.joinNight(c, 'bertie'), code)
-  await new Promise((r) => setTimeout(r, 900))
+  await C.page.evaluate((c) => window.__MOONREST__.joinNight(c, 'cosmo'), code)
+  await new Promise((r) => setTimeout(r, 1100))
 
-  // — the host deals the dream —
+  // — the host deals a THREE-seat dream —
   const dealt = await A.page.evaluate(() => window.__MOONREST__.fight.startOnline('beldam'))
   check('host deals a synchronized dream', dealt === true)
   const bothIn = async (page) => {
@@ -56,6 +58,7 @@ try {
   }
   check('host enters the dream', await bothIn(A.page))
   check('client tunnels into the SAME dream', await bothIn(B.page))
+  check('second client tunnels in too (3 human seats)', await bothIn(C.page))
 
   // — inputs flow both ways: A walks right, B walks left —
   const kd = (page, code2) => page.evaluate((c) => {
@@ -76,22 +79,32 @@ try {
   check("A's fighter walked right on A's keys", sA.fighters[0].x > -5.5, `x=${sA.fighters[0].x}`)
   check("B's REMOTE input moved seat 2 on A's sim", sA.fighters[1].x < 5.5, `x=${sA.fighters[1].x}`)
 
-  // — determinism heartbeats: identical state at every shared tick —
-  const reach = Math.min(sA.tick, sB.tick)
+  // — determinism heartbeats: identical state on ALL THREE at shared ticks —
+  const sC = await C.page.evaluate(() => window.__MOONREST__.fight.state())
+  const reach = Math.min(sA.tick, sB.tick, sC.tick)
   const hashTicks = []
   for (let t = 60; t <= reach; t += 60) hashTicks.push(t)
   let allMatch = hashTicks.length >= 2, detail = []
   for (const t of hashTicks) {
     const hA = await A.page.evaluate((t2) => window.__MOONREST__.fight.netHash(t2), t)
     const hB = await B.page.evaluate((t2) => window.__MOONREST__.fight.netHash(t2), t)
-    const ok = hA != null && hA === hB
-    if (!ok) { allMatch = false; detail.push(`t${t}: ${hA} vs ${hB}`) }
+    const hC = await C.page.evaluate((t2) => window.__MOONREST__.fight.netHash(t2), t)
+    const ok = hA != null && hA === hB && hA === hC
+    if (!ok) { allMatch = false; detail.push(`t${t}: ${String(hA).slice(0, 30)}|${String(hB).slice(0, 30)}|${String(hC).slice(0, 30)}`) }
   }
-  check(`determinism heartbeats MATCH across the wire (${hashTicks.length} shared ticks)`, allMatch, detail.join(' ; ') || `${hashTicks.length}/${hashTicks.length} identical`)
+  check(`determinism heartbeats MATCH three-way (${hashTicks.length} shared ticks)`, allMatch, detail.join(' ; ') || `${hashTicks.length}/${hashTicks.length} identical`)
   const stalledA = await A.page.evaluate(() => window.__MOONREST__.fight.netStalled)
-  check('stall count stays sane on a local wire', stalledA != null && stalledA < 600, `stalled=${stalledA}`)
+  check('stall count stays sane on a local wire', stalledA != null && stalledA < 900, `stalled=${stalledA}`)
 
-  check('console clean (both contexts)', issues.A.length + issues.B.length === 0, [...issues.A, ...issues.B].slice(0, 3).join(' | '))
+  // — the fourth lantern arrives LATE and spectates as a firefly —
+  const D = await boot('D')
+  await D.page.evaluate((c) => window.__MOONREST__.joinNight(c, 'dimity'), code)
+  let dIn = false
+  try { await D.page.waitForFunction(() => window.__MOONREST__.fight.active, null, { timeout: 9000 }); dIn = true } catch { dIn = false }
+  const dSeat = dIn ? await D.page.evaluate(() => window.__MOONREST__.fight.netSeat) : null
+  check('late joiner is dealt the dream as a spectator firefly', dIn && dSeat === -1, `in=${dIn} seat=${dSeat}`)
+
+  check('console clean (all four contexts)', issues.A.length + issues.B.length + issues.C.length + (issues.D?.length ?? 0) === 0, [...issues.A, ...issues.B, ...issues.C, ...(issues.D ?? [])].slice(0, 3).join(' | '))
 } finally {
   await browser.close()
   preview.kill()

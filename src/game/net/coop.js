@@ -366,6 +366,15 @@ export class Net {
     else if (this.role === 'host') this._broadcast({ t: 'fi', ...m })
   }
 
+  // host → one specific peer (late-join spectate deal)
+  sendEventTo(id, ev) {
+    if (this.role !== 'host') return false
+    const c = this.conns?.get(id)
+    if (!c?.open) return false
+    c.send({ t: 'ev', ...ev })
+    return true
+  }
+
   _onFightFrame(m, fromConn) {
     if (this.role === 'host' && fromConn) this._broadcast({ t: 'fi', tick: m.tick, seat: m.seat, inp: m.inp }, fromConn._mrId)
     this.h.onFightInput?.(m)

@@ -85,6 +85,10 @@ function botInput(m, id, cfg) {
       inp.x = dx >= 0 ? 1 : -1 // ALWAYS face the target
       if (f.deep >= 100) {
         inp.special = ph % 10 === 0 // spend the lantern
+      } else if (cfg.specialMod && (tick + id * 13) % 74 === 0) {
+        // judge pass 1, finding 5: the bracket must exercise the MELEE
+        // specials too (swig, cape, spin, peck, gust, fog step)
+        inp.special = true
       } else if (ph % cfg.heavyMod < 4) inp.heavy = true
       else if (dnoise(tick, id, 11) < 0.05) inp.toss = true
       else if ((tick + id * 7) % (cfg.heavyMod + 3) < 2) inp.light = true

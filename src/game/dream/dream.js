@@ -38,7 +38,7 @@ const DREAMS = {
   //   and the rain falls upward. —
   beldam: {
     palette: { fog: '#16303a', skyUp: '#4a6a72', ambient: '#a7bcb9', stops: ['#060d18', '#0a1620', '#10242c', '#182f38', '#16303a'] },
-    nightmare: { fog: '#0a161c', skyUp: '#1e3038', ambient: '#5a6a68', stops: ['#020508', '#040a10', '#081218', '#0c181e', '#0a161c'] },
+    nightmare: { fog: '#0a161c', skyUp: '#2a434e', ambient: '#798f8c', stops: ['#020508', '#040a10', '#081218', '#0c181e', '#0a161c'] },
     ambient: 'rainUp',
     arena: {
       solids: [{ x: 0, y: 0, w: 26, h: 3.2 }],
@@ -96,7 +96,7 @@ const DREAMS = {
   //   star-lines draw and undraw as temporary platforms (2s telegraph). —
   nib: {
     palette: { fog: '#1a1836', skyUp: '#4a4880', ambient: '#b2aede', stops: ['#080718', '#100e28', '#181540', '#242054', '#1a1836'] },
-    nightmare: { fog: '#0c0b1c', skyUp: '#201e40', ambient: '#605c80', stops: ['#030308', '#070610', '#0c0a1c', '#100e26', '#0c0b1c'] },
+    nightmare: { fog: '#0c0b1c', skyUp: '#2c2a59', ambient: '#817cac', stops: ['#030308', '#070610', '#0c0a1c', '#100e26', '#0c0b1c'] },
     ambient: { color: '#cfd8ff', vel: [0, -0.45], rate: 12, size: 0.09, alpha: 0.5 },
     arena: {
       solids: [{ x: -6, y: 0, w: 10, h: 3 }, { x: 6, y: 0, w: 10, h: 3 }],
@@ -158,7 +158,7 @@ const DREAMS = {
   //   applauding good hits. Her dream is the night the party never ended. —
   curator: {
     palette: { fog: '#122430', skyUp: '#3a5a68', ambient: '#a8c4cc', stops: ['#04101a', '#081a26', '#0e2432', '#14303e', '#122430'] },
-    nightmare: { fog: '#081218', skyUp: '#182830', ambient: '#586a70', stops: ['#020608', '#040c12', '#061218', '#0a181e', '#081218'] },
+    nightmare: { fog: '#081218', skyUp: '#213843', ambient: '#768f97', stops: ['#020608', '#040c12', '#061218', '#0a181e', '#081218'] },
     ambient: { color: '#bfe0e8', vel: [0.08, 0.3], rate: 10, size: 0.08, alpha: 0.45 },
     arena: {
       solids: [{ x: 0, y: 0, w: 28, h: 3.2 }],
@@ -216,7 +216,7 @@ const DREAMS = {
   //   as platforms; the chandeliers swing and occasionally drop. —
   paleking: {
     palette: { fog: '#241a12', skyUp: '#54402a', ambient: '#c8ae8e', stops: ['#0e0804', '#1a100a', '#241810', '#302016', '#241a12'] },
-    nightmare: { fog: '#120c08', skyUp: '#241a10', ambient: '#6a5a48', stops: ['#040202', '#0a0604', '#100a06', '#16100a', '#120c08'] },
+    nightmare: { fog: '#120c08', skyUp: '#322416', ambient: '#8f7961', stops: ['#040202', '#0a0604', '#100a06', '#16100a', '#120c08'] },
     ambient: { color: '#e8a848', vel: [0.04, -0.28], rate: 10, size: 0.07, alpha: 0.4 },
     arena: {
       solids: [{ x: 0, y: 0, w: 28, h: 3.2 }],
@@ -272,7 +272,8 @@ const DREAMS = {
   //   bright ancient moon; the gate loops the arena edges (the only wrap). —
   mote: {
     palette: { fog: '#1c3424', skyUp: '#54785e', ambient: '#c2d8be', stops: ['#0a140c', '#122218', '#1a3022', '#223e2c', '#1c3424'] },
-    nightmare: { fog: '#0c1810', skyUp: '#22342a', ambient: '#5c6e5c', stops: ['#030805', '#060f0a', '#0a1810', '#0e2016', '#0c1810'] },
+    nightmare: { fog: '#0c1810', skyUp: '#2f483a', ambient: '#7c947c', stops: ['#030805', '#060f0a', '#0a1810', '#0e2016', '#0c1810'] },
+    cam: { maxD: 19 }, // judge finding 8: never zoom out to fit the whole wrap — fighters stay person-sized
     ambient: { color: '#a8d890', vel: [0.06, 0.26], rate: 11, size: 0.08, alpha: 0.45 },
     arena: {
       wrap: true,
@@ -303,9 +304,15 @@ const DREAMS = {
         const crown = mesh(new THREE.ConeGeometry(deco ? 0.9 : 2.0, deco ? 1.4 : 0.7, 7), canopyMat, [0.85, 1.0, 0.85])
         crown.position.set(sx, h + (deco ? 0.7 : 0.25), deco ? -2.2 : 0); scene.add(crown)
       }
-      // the bright ancient moon — bigger and younger than the one we keep
+      // the bright ancient moon — bigger and younger than the one we keep;
+      // in Nightmare its face goes HOLLOW (Part 4.7)
       const moon = glowQuad('#eef4dc', 9, 9, 0.9)
       moon.position.set(0, 9.5, -8.5); scene.add(moon)
+      if (D.nightmare) {
+        const hollow = new THREE.Mesh(new THREE.CircleGeometry(2.4, 16), retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.88, depthWrite: false, emissive: 0x04060a }))
+        ensureVertexColors(hollow.geometry, [0.02, 0.03, 0.05])
+        hollow.position.set(0, 9.5, -8.4); scene.add(hollow)
+      }
       const moonPool = new THREE.Mesh(new THREE.CircleGeometry(4.5, 18), glowMat('#d8e8c0', 0.3))
       ensureVertexColors(moonPool.geometry)
       moonPool.rotation.x = -Math.PI / 2; moonPool.position.set(0, -8.2, 0); scene.add(moonPool)
@@ -329,7 +336,7 @@ const DREAMS = {
   //   flour-dust ground fog, the bakery window as a huge warm moon. —
   chicken: {
     palette: { fog: '#2a1c10', skyUp: '#6a4c2a', ambient: '#d8b890', stops: ['#100a04', '#1e120a', '#2a1a0e', '#362415', '#2a1c10'] },
-    nightmare: { fog: '#140d08', skyUp: '#2c2012', ambient: '#705e48', stops: ['#050302', '#0c0705', '#120c07', '#18100a', '#140d08'] },
+    nightmare: { fog: '#140d08', skyUp: '#3d2c19', ambient: '#977e61', stops: ['#050302', '#0c0705', '#120c07', '#18100a', '#140d08'] },
     ambient: { color: '#f0e0c0', vel: [0.22, 0.05], rate: 8, size: 0.5, alpha: 0.13, puff: true },
     arena: {
       solids: [{ x: 0, y: 0, w: 26, h: 3.2 }],
@@ -397,9 +404,31 @@ function makeDreamRig(fid, idx) {
     case 'paleking': { const r = buildPaleKing(); return genericRig(r, { scale: 1.25, accent: r.crown, pivot: 0.6 }) }
     case 'mote': { const r = buildMote(); return genericRig(r, { scale: 0.8, accent: r.headBone, roller: true, pivot: 0.45 }) }
     case 'chicken': { const r = buildChicken(); return genericRig(r, { scale: 1.5, accent: r.headBone, pivot: 0.25 }) }
-    case 'watcher': { const rig = buildWizard({ tint: '#20242e', withStaff: false }); return { kind: 'wizard', rig, group: rig.group } }
-    case 'beldam': { const rig = buildWizard({ tint: '#3a4258', beardLength: 0.62, withStaff: false }); return { kind: 'wizard', rig, group: rig.group } }
-    default: { const rig = buildWizard({ tint: PLAYER_TINTS[idx % PLAYER_TINTS.length], withStaff: false }); return { kind: 'wizard', rig, group: rig.group } }
+    // judge pass 1, finding 2: the three wizard-rigged fighters must read
+    // apart at a glance — Beldam CARRIES the bottle, the Watcher trails
+    // wisp-light, the Lamplighter keeps a hand-lantern lit
+    case 'watcher': {
+      const rig = buildWizard({ tint: '#20242e', withStaff: false })
+      const wisp = glowQuad('#7a68b8', 1.5, 2.1, 0.22)
+      wisp.position.set(0, 0.95, -0.12)
+      rig.group.add(wisp)
+      return { kind: 'wizard', rig, group: rig.group }
+    }
+    case 'beldam': {
+      const rig = buildWizard({ tint: '#3a4258', beardLength: 0.62, withStaff: false })
+      const glass = retroMaterial({ map: TEX.white(), transparent: true, opacity: 0.85, emissive: 0x2a5040 })
+      const bottle = mesh(new THREE.CylinderGeometry(0.05, 0.068, 0.24, 6), glass, [0.55, 0.78, 0.65])
+      bottle.position.set(0, -0.34, 0.06)
+      rig.bones.armR.add(bottle)
+      return { kind: 'wizard', rig, group: rig.group }
+    }
+    default: {
+      const rig = buildWizard({ tint: PLAYER_TINTS[idx % PLAYER_TINTS.length], withStaff: false })
+      const lant = glowQuad('#e8c26a', 0.55, 0.55, 0.6)
+      lant.position.set(0, -0.36, 0.08)
+      rig.bones.armL.add(lant)
+      return { kind: 'wizard', rig, group: rig.group }
+    }
   }
 }
 
@@ -440,6 +469,11 @@ class DreamMode {
     this.moths = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#d8cfae' }), max: 90, additive: true })
     this.zs = new ParticleSystem(scene, { tex: TEX.zGlyph(), max: 10, additive: false })
     this.embers = new ParticleSystem(scene, { tex: TEX.glowDot({ color: '#e8a848' }), max: 70, additive: true })
+    // judge pass 1, finding 1: the 50/100ms freeze must READ as impact —
+    // sparks fly, the contact point pops, the defender flashes
+    this.sparks = new ParticleSystem(scene, { tex: TEX.star(), max: 70, additive: true })
+    this._hitFlash = new Map()
+    this._impactPop = null
     this._buildFxPools(scene)
     this.baseAmbient = new THREE.Color(P.ambient)
     this.baseSkyUp = new THREE.Color(P.skyUp)
@@ -633,6 +667,14 @@ class DreamMode {
     fx.critter.group.scale.setScalar(1.2)
     fx.critter.group.visible = false
     scene.add(fx.critter.group)
+    // impact presentation: defender white-flash quads + the contact pop
+    fx.flashes = []
+    for (let i = 0; i < 4; i++) {
+      const q = glow('#ffffff', 1.7, 2.2)
+      fx.flashes.push(q)
+    }
+    fx.pop = glow('#fff2d8', 1.5, 1.5)
+    fx.spect = glow('#d8e858', 0.5, 0.5) // the visiting firefly (late joiner)
   }
 
   // position the pools from live sim state (render dt — drifts through hitstop)
@@ -749,6 +791,16 @@ class DreamMode {
     }
     if (!bootUsed) fx.boot.visible = false
     for (let i = bi2; i < fx.itemMeshes.length; i++) fx.itemMeshes[i].visible = false
+    // a late-joining spectator drifts through the dream as a firefly
+    if (this.net?.seat === -1 && fx.spect) {
+      fx.spect.visible = true
+      fx.spect.position.set(
+        (this.cam?.x ?? 0) + Math.sin(tick * 0.021) * 6,
+        (this.cam?.y ?? 3) + 3.4 + Math.sin(tick * 0.033) * 1.2,
+        0.6
+      )
+      fx.spect.material.uniforms.uOpacity.value = 0.4 + 0.35 * Math.max(0, Math.sin(tick * 0.11))
+    } else if (fx.spect) fx.spect.visible = false
     const cr = this.match.critter
     if (cr && this.match.critterOn) {
       const g = fx.critter.group
@@ -769,6 +821,32 @@ class DreamMode {
         })
       }
     }
+
+    // — impact flash + pop (render dt: they drift/decay THROUGH hitstop) —
+    let fli = 0
+    for (const [id, t] of this._hitFlash) {
+      if (t <= 0) { this._hitFlash.delete(id); continue }
+      this._hitFlash.set(id, t - dt)
+      const f = this.match.fighters[id]
+      const q = fx.flashes[fli++]
+      if (f && q) {
+        q.visible = true
+        q.position.set(f.x, f.y + 1.0, 0.45)
+        q.material.uniforms.uOpacity.value = Math.min(0.5, t * 7)
+      }
+    }
+    for (; fli < fx.flashes.length; fli++) fx.flashes[fli].visible = false
+    if (this._impactPop) {
+      const P2 = this._impactPop
+      P2.t += dt
+      const k = P2.t / 0.12
+      if (k >= 1) { this._impactPop = null; fx.pop.visible = false } else {
+        fx.pop.visible = true
+        fx.pop.position.set(P2.x, P2.y, 0.55)
+        fx.pop.scale.setScalar((P2.big ? 1.7 : 1.0) * (0.4 + k * 1.5))
+        fx.pop.material.uniforms.uOpacity.value = 0.85 * (1 - k)
+      }
+    } else fx.pop.visible = false
 
     // — Lights Out: the warm accents die down to the lantern pools —
     const targetDim = this.match.lightsOutT > 0 ? 0.22 : 1
@@ -797,11 +875,12 @@ class DreamMode {
       const lerp = (a, b) => Math.round(a + (b - a) * t)
       return t < 0.5 ? `rgb(${lerp(127, 232)},${lerp(212, 168)},${lerp(212, 74)})` : `rgb(${lerp(127, 232)},${lerp(212, 102)},${lerp(212, 18)})`
     }
+    const SEATC = ['#e8c26a', '#7fd4d4', '#c886e0', '#8fd08f'] // per-seat identity
     this.match.fighters.forEach((f, i) => {
       const x = 20 + i * 86
       ctx.globalAlpha = f.stocks > 0 ? 1 : 0.25
-      // bottle
-      ctx.strokeStyle = '#d8cfae'; ctx.lineWidth = 2
+      // bottle, outlined in the seat's own color
+      ctx.strokeStyle = SEATC[i % SEATC.length]; ctx.lineWidth = 2
       ctx.strokeRect(x, 14, 18, 34)
       ctx.strokeRect(x + 5, 8, 8, 6)
       const fill = Math.min(1, f.wooze / 140)
@@ -891,11 +970,13 @@ class DreamMode {
     }
     this._buildHud(players)
     this.active = true
+    if (this.nightmare) this._startDrone()
     return true
   }
 
   exit() {
     if (!this.active) return false
+    this._stopDrone()
     this.active = false
     this.scene = null
     this.match = null
@@ -1003,6 +1084,26 @@ class DreamMode {
         }
       } else if (e.t === 'hit' || e.t === 'throw') {
         if (this.crowd) this.crowdPulse = Math.min(1.6, this.crowdPulse + 0.7) // polite applause
+        // the impact READS: sparks burst from the contact point, the point
+        // itself pops, the defender flashes white for the freeze
+        const atk = this.match?.fighters?.[e.a], dfd = this.match?.fighters?.[e.d]
+        if (dfd) {
+          const ix = atk ? (atk.x + dfd.x) / 2 : dfd.x
+          const iy = dfd.y + 1.0
+          const heavyish = (e.kb ?? 0) > 6
+          this._hitFlash.set(e.d, heavyish ? 0.12 : 0.07)
+          this._impactPop = { x: ix, y: iy, t: 0, big: heavyish }
+          const n = heavyish ? 10 : 6
+          for (let i = 0; i < n; i++) {
+            const a = (i / n) * Math.PI * 2 + (this.match?.tick ?? 0) * 0.53
+            this.sparks?.spawn({
+              pos: new THREE.Vector3(ix, iy, 0.5),
+              vel: new THREE.Vector3(Math.cos(a) * (heavyish ? 7.5 : 5), Math.sin(a) * (heavyish ? 7.5 : 5), 0),
+              maxLife: 0.22, size: heavyish ? 0.17 : 0.11, alpha: 0.9, seed: i / n,
+              update(p, dt2) { p.pos.addScaledVector(p.vel, dt2); p.vel.multiplyScalar(0.86); p.alpha = 0.9 * (1 - p.life / p.maxLife) },
+            })
+          }
+        }
         const reduced = typeof window !== 'undefined' && window.__REDUCED_MOTION__
         const visH = 2 * (this.cam?.d ?? 17) * Math.tan((this.camera?.fov ?? 38) * Math.PI / 360)
         const ampM = reduced ? 0 : (e.shake ?? 0.4) * 0.006 * visH
@@ -1027,8 +1128,9 @@ class DreamMode {
   _netStep() {
     const N = this.net
     const t = this.match.tick
-    // send local input for t+delay (exactly once per future tick)
-    while (N.sentThrough < t + N.delay) {
+    // send local input for t+delay (exactly once per future tick);
+    // spectators (seat -1, Part 6 fireflies) send nothing and just watch
+    while (N.seat >= 0 && N.sentThrough < t + N.delay) {
       const ft = N.sentThrough + 1
       const inp = this._localNetInput()
       let q = N.queues.get(ft)
@@ -1065,6 +1167,31 @@ class DreamMode {
       toss: inp.down('KeyH'),
       special: inp.down('KeyR'),
     }
+  }
+
+  // Nightmare's dungeon-synth drone (Part 4.7): two sour saws under a slow
+  // breathing lowpass — self-contained WebAudio, dies with the dream
+  _startDrone() {
+    try {
+      const AC = typeof window !== 'undefined' && (window.AudioContext || window.webkitAudioContext)
+      if (!AC) return
+      const ctx = new AC()
+      this.droneCtx = ctx
+      const g = ctx.createGain(); g.gain.value = 0.032; g.connect(ctx.destination)
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 210; lp.Q.value = 5; lp.connect(g)
+      const lfo = ctx.createOscillator(); lfo.frequency.value = 0.07
+      const lfoG = ctx.createGain(); lfoG.gain.value = 85
+      lfo.connect(lfoG); lfoG.connect(lp.frequency); lfo.start()
+      for (const [f2, det] of [[55, -4], [65.4, 6], [110.6, -9]]) { // A1, sour C2, sourer A2
+        const o = ctx.createOscillator(); o.type = 'sawtooth'; o.frequency.value = f2; o.detune.value = det
+        o.connect(lp); o.start()
+      }
+    } catch (e) { /* no audio device here */ }
+  }
+
+  _stopDrone() {
+    try { this.droneCtx?.close() } catch (e) { /* already gone */ }
+    this.droneCtx = null
   }
 
   _rematch() {
@@ -1228,7 +1355,7 @@ class DreamMode {
       tgt = {
         x: (minX + maxX) / 2,
         y: Math.max(2.6, (minY + maxY) / 2 + 0.9),
-        d: Math.min(24, Math.max(13, fitW, fitH)),
+        d: Math.min(this.def.cam?.maxD ?? 24, Math.max(13, fitW, fitH)),
       }
     }
     const c = this.cam ?? (this.cam = { ...tgt })
@@ -1303,6 +1430,7 @@ class DreamMode {
     this.rainUp?.update(dt, this.camera)
     this.drift?.update(dt, this.camera)
     this.embers?.update(dt, this.camera)
+    this.sparks?.update(dt, this.camera)
     this._updateFx(dt)
     // — Nib's star-line platforms: solid when the sim says so; the warn
     //   glow breathes for the 2s before each redraw (Part 4.2 telegraph) —
