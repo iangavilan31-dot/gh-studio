@@ -257,6 +257,24 @@ await superShot('special-dart', ['lamplighter', 'beldam'], `
   step({ special: true, x: d })
   for (let k = 0; k < 24; k++) step()`)
 
+// ——— F12: Beldam's swig, frozen mid-stagger (comedy record) ———
+await superShot('comedy-swig', ['beldam', 'lamplighter'], `${CLOSE}
+  const d = Math.sign(s.fighters[1].x - s.fighters[0].x) || 1
+  step({ special: true, x: d })
+  for (let k = 0; k < 14; k++) step()`)
+
+// ——— F11: the dream shelf (trophies over the pause menu) ———
+await page.evaluate(() => {
+  const M = window.__MOONREST__
+  M.fight.exit()
+  try { localStorage.setItem('moonrest-dream-trophies', JSON.stringify(['beldam', 'chicken', 'mote'])) } catch (e) {}
+  M.openPause()
+})
+await page.waitForTimeout(500)
+await page.screenshot({ path: `${root}/docs/build/shots/dream/trophy-shelf.png` })
+await page.evaluate(() => { const e = new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape', bubbles: true }); window.dispatchEvent(e) })
+await page.waitForTimeout(300)
+
 // the victory nap: drive a fresh duel to its end, then let the real-time
 // victory scene play — winner lies down beside the loser (~3s in)
 await page.evaluate(() => { const M = window.__MOONREST__; M.fight.exit(); M.fight.enter('beldam', 2) })

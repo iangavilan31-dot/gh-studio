@@ -159,6 +159,45 @@ check('four fighters spawn for the couch', couch4.n === 4)
 check('bots hold the empty chairs (seats 3+4 play)', couch4.botsMoved === true)
 await page.evaluate(() => window.__MOONREST__.fight.exit())
 
+// ═══ F11: victory → trophies on the shelf → F rematches → Esc wakes ═══
+const f11 = await page.evaluate(() => new Promise((done) => {
+  const M = window.__MOONREST__
+  try { localStorage.removeItem('moonrest-dream-trophies') } catch (e) {}
+  M.fight.exit()
+  M.fight.enter('beldam', 2) // live vs the dreamer (default host beldam)
+  const t0 = performance.now()
+  let won = false
+  const out = {}
+  const kd = (code) => { const e = new KeyboardEvent('keydown', { code, key: code, bubbles: true }); window.dispatchEvent(e); document.dispatchEvent(e) }
+  const ku = (code) => { const e = new KeyboardEvent('keyup', { code, key: code, bubbles: true }); window.dispatchEvent(e); document.dispatchEvent(e) }
+  const poll = () => {
+    const s = M.fight.state()
+    if (s && !won && performance.now() - t0 > 600) { M.fight.winNow(0); won = true }
+    if (s && s.over && !out.sawVictory) {
+      out.sawVictory = true
+      try { out.trophies = JSON.parse(localStorage.getItem('moonrest-dream-trophies') ?? '[]') } catch (e) { out.trophies = [] }
+      setTimeout(() => { kd('KeyF'); setTimeout(() => ku('KeyF'), 120) }, 800)
+    }
+    if (out.sawVictory && s && !s.over && s.tick < 400) {
+      out.rematched = true
+      done(out)
+      return
+    }
+    if (performance.now() - t0 > 15000) { out.timeout = true; done(out) } else requestAnimationFrame(poll)
+  }
+  requestAnimationFrame(poll)
+}))
+check('victory reached and the shelf gains a tiny sleeper', f11.sawVictory === true && (f11.trophies ?? []).includes('beldam'), JSON.stringify(f11.trophies))
+check('F during the nap deals the same dream again', f11.rematched === true && !f11.timeout)
+const shelfTxt = await page.evaluate(() => {
+  window.__MOONREST__.fight.exit()
+  window.__MOONREST__.openPause()
+  const txt = document.getElementById('ui')?.textContent ?? ''
+  return txt
+})
+check('the pause shelf shows the dream trophies (no numbers anywhere near them)', shelfTxt.includes('dream shelf') && shelfTxt.includes('snoring Beldam'), shelfTxt.slice(0, 60))
+await page.evaluate(() => { const e = new KeyboardEvent('keydown', { code: 'Escape', key: 'Escape', bubbles: true }); window.dispatchEvent(e) })
+
 // ═══ WAKING WORLD stays combat-free: no fight verbs outside the dream ═══
 // (structural: all fight code lives in src/game/dream/ — verified by grep in CI/gates)
 

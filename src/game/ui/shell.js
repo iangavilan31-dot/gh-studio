@@ -231,6 +231,16 @@ export class Shell {
     const shelf = this.el('div', 'shelf', null, card)
     if (!st.trinkets.length) this.el('div', 'shelfempty', 'nothing yet — the sleepers are still dreaming', shelf)
     for (const t of st.trinkets) this.el('div', 'trinket', TRINKET_NAMES[t] ?? t, shelf)
+    // F11: dream trophies — tiny sleeping figurines of everyone bested in
+    // the dreams. No stats, no ranks, no numbers (Part 6).
+    let dreamTrophies = []
+    try { dreamTrophies = JSON.parse(localStorage.getItem('moonrest-dream-trophies') ?? '[]') } catch (e) { /* private mode */ }
+    if (dreamTrophies.length) {
+      this.el('div', 'h2', 'dream shelf', card)
+      const dshelf = this.el('div', 'shelf', null, card)
+      const NAMES = { lamplighter: 'a tiny sleeping lamplighter', beldam: 'a tiny snoring Beldam', nib: 'a very tiny sleeping Nib', curator: 'a tiny translucent sleeper', paleking: 'a tiny crowned sleeper', mote: 'a tiny tucked-in tortoise', chicken: 'a tiny roosting chicken', watcher: 'a tiny folded shadow' }
+      for (const t of dreamTrophies) this.el('div', 'trinket', NAMES[t] ?? `a tiny sleeping ${t}`, dshelf)
+    }
     this.el('div', 'h2', 'the keeper’s hands', card)
     this.el('div', 'hint', 'WASD walk · Shift jog · mouse look · E kindle (hold) · Tab emote wheel · C sit/lie · Space hop · P photo · F3 lantern-keeper’s ledger', card)
     const list = this.el('div', 'menu', null, card)
