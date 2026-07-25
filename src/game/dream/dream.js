@@ -917,8 +917,19 @@ class DreamMode {
     fx.pop = glow('#fff2d8', 1.5, 1.5)
     fx.spect = glow('#d8e858', 0.5, 0.5) // the visiting firefly (late joiner)
     // seat markers: a bright saturated seat-colored point above each
-    // fighter — the clean colour-ID that additive rims can't give
+    // fighter — the clean colour-ID that additive rims can't give. A soft
+    // additive glow PLUS a small SOLID core (the glow washes toward warm
+    // ambient in the halls; the solid core keeps its hue on any background)
     fx.seatFlies = SEATC.map((c) => glow(c, 0.62, 0.62))
+    fx.seatCores = SEATC.map((c) => {
+      const rgb = new THREE.Color(c)
+      const m = retroMaterial({ map: TEX.white(), transparent: true, depthWrite: false, opacity: 0.9, noFog: true })
+      const q = new THREE.Mesh(new THREE.CircleGeometry(0.14, 12), m)
+      ensureVertexColors(q.geometry, [rgb.r, rgb.g, rgb.b])
+      q.visible = false
+      scene.add(q)
+      return q
+    })
     // a seat-colored glow pooled on the ground under EVERY fighter — track
     // your character by COLOUR in a dark pile-up, not silhouette alone
     // (judge pass 10's single highest-leverage move: fixes readability AND
@@ -1227,8 +1238,17 @@ class DreamMode {
         const f = this.match.fighters[i]
         if (!f || f.stocks <= 0 || f.ko > 0) { q.visible = false; continue }
         q.visible = true
-        q.position.set(f.x + Math.sin(tick * 0.07 + i * 2) * 0.2, f.y + 2.55 + Math.sin(tick * 0.13 + i) * 0.12, 0.4)
+        const mx = f.x + Math.sin(tick * 0.07 + i * 2) * 0.2
+        const my = f.y + 2.55 + Math.sin(tick * 0.13 + i) * 0.12
+        q.position.set(mx, my, 0.4)
         q.material.uniforms.uOpacity.value = 0.8 + 0.2 * Math.sin(tick * 0.21 + i * 3)
+        // the solid core sits inside the glow, keeping its hue on any floor
+        const core = fx.seatCores?.[i]
+        if (core) { core.visible = true; core.position.set(mx, my, 0.42); core.material.uniforms.uOpacity.value = 0.9 }
+      }
+      for (let i = 0; i < (fx.seatCores?.length ?? 0); i++) {
+        const f = this.match.fighters[i]
+        if (!f || f.stocks <= 0 || f.ko > 0) fx.seatCores[i].visible = false
       }
     }
 
