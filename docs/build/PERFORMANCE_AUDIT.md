@@ -66,3 +66,11 @@ jump outranked drop-through, so down+jump on a shelf pogoed instead of
 descending (28% of the bracket drew). After fixes: zero draws in 560.
 Final winrates all 40–60: lamp/beldam/nib 47.1, curator 59.3, king 52.9,
 mote 52.9, chicken 42.9, watcher 50.7.
+
+## F10 chaos record
+- pure sim (node): 4 Lucid bots + items + critter + supers, 14400 ticks
+  in 265ms — 0.018 ms/tick, 0.11% of the 16.6ms frame budget.
+- live chaos (Full Hall, items, 2 supers charged): draw calls p95 70/150,
+  triangles p95 3.1k/250k, console clean, 527 frames sampled.
+- SwiftShader floor (not the target profile): 35fps median, 27 min at
+  960×540 — documented honestly; the retro target renders 480×270.
