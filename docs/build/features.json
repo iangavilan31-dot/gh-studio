@@ -1224,7 +1224,8 @@
     "per-fighter move capture",
     "distinctness judge >=8"
    ],
-   "passes": false
+   "passes": true,
+   "evidence": "Sim: fightfeel 55 checks x2 deterministic \u2014 8 kits (per-fighter kinematics/attack tables, weight divides KB: same jab kb 6.64 Nib vs 3.24 Mote; Nib 7.9 m/s vs Mote 4.4), 8 specials (dart 8m projectile, boomerang hat with return-pass hitbox + catch, swig armor-stagger dnoise-deterministic, dust gust positional push zero damage, cape sweep royal armor absorbs launch keeps wooze, shell spin rolls 2.35m and bonks, peck flurry 19 hits/press, fog step 3.4m + 10-tick mist), Chicken ungrabbable ('nograb' event, never grabbed), Deep Dream lantern (fills 0.9/dmg landed, full press converts to super, meter spends), all 8 supers (Moonrise ring+180-tick drift, Bottle Tornado orbit pulses, Constellation 1.6x/1.35x amp with weight restore, Party 3 waltz pairs, Chandelier Court 90-tick warm telegraph, Old Forest 5 sequential roots, Derby 6-bird stampede, Lights Out 180 ticks). Visual: every fighter an existing creature (gnome stands up, crowned king ghost, tortoise rolls at mid-body pivot, chicken 1.5x) \u2014 shots/dream/roster.png 4 distinct silhouettes, critters.png, super-*.png x7 + special-dart.png all READ (chandeliers descend in-frame, derby stampede, giant Nib over tiny Mote, lights-out dims to lantern pools, nobles waltz). Balance round-robin deferred to FIGHT-F7 (bots) where it belongs."
   },
   {
    "id": "FIGHT-F5",
