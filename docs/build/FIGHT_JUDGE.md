@@ -340,3 +340,26 @@ Trajectory across seven judges: 7.90 → 8.30 → 8.50 → 8.45 → 8.50 → 8.5
 8.65 — a slow, real climb as each cycle addresses concrete findings; the
 systems stay ship-quality (feel 9.5, balance/flow/perf 9.0), the
 presentation categories rising off the 8.0 floor toward 8.5.
+
+## Pass 8 — FAIL (8.70) · Pass 9 — FAIL (8.75)
+
+Two more fresh-eyes adversarial passes, judged within the mandated dark
+aesthetic. The climb continued and the floor rose:
+
+- **Pass 8 (8.70):** the fighter backlight lifted readability to 8.5;
+  Nightmare stayed the last 8.0 (fighters dark-on-dark in the darkest
+  regrade). Fixes that followed: brighter/bigger backlight in Nightmare,
+  the blown-white overlay line → slim cool marker, roster-b (all 8 shown).
+- **Pass 9 (8.75):** a milestone — NO category below 8.5. feel 9.5,
+  readability 8.5, distinctness 8.5, arenas 8.5, balance 9.0, netplay 8.5,
+  comedy 8.5, Nightmare 8.5, flow 9.0, perf 9.0. One concrete blocker: the
+  super-roots capture caught a KO, not its own super. Fixes that followed:
+  super-roots restaged so the root line reads (target out of range), the
+  Full Hall crowd pushed back + dimmed so fighters read against it, and the
+  victory nap curled tight together.
+
+Trajectory across nine judges: 7.90 → 8.30 → 8.50 → 8.45 → 8.50 → 8.55 →
+8.65 → 8.70 → 8.75 — a steady climb as each cycle resolves concrete
+findings. Systems remain ship-quality (feel 9.5, balance/flow/perf 9.0);
+the presentation categories have all risen off the floor to 8.5 and the
+per-cycle gains are narrowing as the reel converges.
