@@ -145,15 +145,25 @@ export class OrbitCamera {
       _desired.copy(_pivot).addScaledVector(_dir, wantDist)
       _desired.y = Math.max(_desired.y, this.world.heightAt(_desired.x, _desired.z) + 0.3)
 
-      // collision: march along pivot→desired, pull in at first obstruction (0.25s recovery)
+      // collision (ASCENSION 0.1.4): a CONTINUOUS spherecast from the head,
+      // not a bare ray and not a discrete march. The old 10-step march
+      // sampled every ~0.5m and could step straight over a roof plane, which
+      // is how the camera ended up inside a rooftop looking at the underside
+      // of its faces. A sphere also keeps the near plane clear of corners a
+      // ray would slip past (TOOLKIT §2.2).
       let targetDist = wantDist
-      const steps = 10
-      for (let i = 1; i <= steps; i++) {
-        const t = (i / steps) * wantDist
-        const px = _pivot.x + _dir.x * t
-        const py = _pivot.y + _dir.y * t
-        const pz = _pivot.z + _dir.z * t
-        if (this.world.cameraBlocked(px, py, pz, 0.25)) { targetDist = Math.max(1.5, t - 0.3); break } // floor keeps the wizard in frame
+      const phys = this.world.physics
+      if (phys) {
+        const toi = phys.cameraCast(_pivot, _dir, wantDist, 0.25)
+        if (toi != null) targetDist = Math.max(1.5, toi - 0.15)
+      } else {
+        const steps = 10
+        for (let i = 1; i <= steps; i++) {
+          const t = (i / steps) * wantDist
+          if (this.world.cameraBlocked(_pivot.x + _dir.x * t, _pivot.y + _dir.y * t, _pivot.z + _dir.z * t, 0.25)) {
+            targetDist = Math.max(1.5, t - 0.3); break
+          }
+        }
       }
       if (targetDist < this.curDist) this.curDist = targetDist // snap in (never clip)
       else this.curDist += (targetDist - this.curDist) * (1 - Math.exp(-dt / 0.25)) // ease out

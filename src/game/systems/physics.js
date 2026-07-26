@@ -183,6 +183,19 @@ export class Physics {
    * return heightAt(): that fallback is what made the first terrain check
    * report a perfect zero error while every single ray was missing.
    */
+  cameraCast(from, dir, maxDist, radius = 0.25) {
+    const shape = this._camSphere || (this._camSphere = new RAPIER.Ball(radius))
+    const hit = this.world.castShape(
+      { x: from.x, y: from.y, z: from.z },
+      { x: 0, y: 0, z: 0, w: 1 },
+      { x: dir.x, y: dir.y, z: dir.z },
+      shape, 0, maxDist, true,
+    )
+    if (!hit) return null
+    const t = hit.time_of_impact ?? hit.toi
+    return typeof t === 'number' ? t : null
+  }
+
   groundY(x, z, from = 200) {
     const ray = new RAPIER.Ray({ x, y: from, z }, { x: 0, y: -1, z: 0 })
     const hit = this.world.castRay(ray, from + 400, true)

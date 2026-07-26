@@ -927,6 +927,10 @@ function analyzePixels(buf) {
 
 window.__MOONREST__ = {
   ready: true,
+  // FIN-0: direct handles for scripts/collisioncheck.mjs — it drives the real
+  // controller against the real colliders rather than simulating a bot.
+  __world: world,
+  __player: player,
   seed: worldRNG.seed,
   nightSignature, // D.1: tonight's dealt variations (cosmetic, never gating)
   poses: Object.keys(POSES),
