@@ -683,6 +683,7 @@ function teleport(poseName) {
 // ——— Loop ———
 let lastNow = performance.now()
 let elapsed = 0
+let _timeFrozen = false
 let rainWasSoft = false
 const frameTimes = []
 
@@ -697,7 +698,7 @@ function tick() {
   // only absurd tab-backgrounded spikes; down to 4fps it tracks real time.
   const dtTunnel = Math.min(dtRaw, 0.25)
   lastNow = now
-  elapsed += dt
+  if (!_timeFrozen) elapsed += dt
   globalUniforms.uTime.value = elapsed
   frameTimes.push(dt)
   if (frameTimes.length > 90) frameTimes.shift()
@@ -1154,6 +1155,14 @@ window.__MOONREST__ = {
   // alone and 17.2 as the second of thirteen. A gate that measures a different
   // night each run cannot be tuned against.
   pauseNight(on = true) { night.paused = !!on; return night.paused },
+  // Freeze the ANIMATION clock at a fixed phase. The lantern pool does not
+  // ramp and then settle — it flickers forever
+  // (0.82 + 0.12*sin(t*8.3) + 0.06*sin(t*13.1)), as do wind, water and every
+  // other uTime-driven effect. So no settle delay can make a pose repeatable;
+  // the clock itself has to stop. Without this the composition gate measured
+  // `lanternpool` — the pose that exists to show that light — at a random
+  // phase every run, which is most of the residual variance in DECISIONS #15.
+  freezeTime(t = 12) { elapsed = t; globalUniforms.uTime.value = t; _timeFrozen = true; return t },
   autopilot() { return autopilot() },
   setPhase(age) { night.setPhase(age); return true },
   suppressNightEnd(v) { window.__SUPPRESS_NIGHT_END__ = !!v; return true }, // screenshot rigs only
@@ -1265,6 +1274,7 @@ window.__MOONREST__ = {
     if (p.hemi != null) moonRig.hemiScale = p.hemi
     if (p.albedoFloor != null) globalUniforms.uAlbedoFloor.value = p.albedoFloor
     if (p.vertexTint != null) globalUniforms.uVertexTint.value = p.vertexTint
+    if (p.groundMacro != null) globalUniforms.uGroundMacro.value = p.groundMacro
     if (p.grade && c) c.setGrade(p.grade)
     moonRig.invalidate()
     return {

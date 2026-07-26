@@ -586,3 +586,52 @@ took `player` back from 19.7 to 17.2).
 The remaining fix is ground variation — value break-up in the terrain surface
 itself — which belongs to Stage 2's asset work rather than to another global
 grading knob. Do not close these two by lowering the line.
+
+## FINAL RUN #17 — the animation clock, and why "settle longer" was never going to work
+
+#16 said the last two poses needed Stage 2 asset work. That was wrong, and
+wrong in two separate ways.
+
+**First, the gate was still not deterministic.** #15 fixed the shadow volume
+and the night clock, but `lanternpool` still swung run to run. The reason is
+that the carried lantern does not ramp and settle — it FLICKERS, permanently:
+
+    ls[i] = 0.82 + 0.12*sin(elapsed*8.3) + 0.06*sin(elapsed*13.1)
+
+So the pose built specifically to show that light was measured at a random
+phase every run, and no settle delay could ever fix it — waiting longer just
+samples a different point on the same sine. The same is true of wind, water and
+every other `uTime`-driven effect. The fix is to stop the clock:
+`__MOONREST__.freezeTime(12)`. The gate is now bit-identical across runs.
+
+This also invalidated a sweep. The ground-macro sweep run before the freeze
+showed a noisy, non-monotonic curve that suggested a weak optimum around 0.35.
+Re-run against the frozen clock it is cleanly monotonic, and the value that
+actually clears the line is 1.1. The earlier "optimum" was reading noise.
+
+**Second, the flatness had a Stage-1-legal fix after all.** The open-path poses
+were flat because the ground is one enormous plane of one albedo — no amount of
+good lighting on a uniform surface produces value variation. Real ground is
+patchy at the scale of metres. `uGroundMacro` adds world-space two-octave value
+noise to albedo, weighted by how UP-FACING the surface is so walls and trunks
+are untouched. That is procedural material work, not an asset, so Stage 1 stays
+asset-free as specified.
+
+The lesson: "this needs a later stage" is a claim that should be tested against
+the actual constraint before it is written down. The constraint was "no new
+assets", and a shader is not an asset.
+
+## FINAL RUN #18 — Stage 1 COMPLETE
+
+`COMPOSECHECK PASS (13/13)`, twice consecutively, on a gate that is now
+provably deterministic (bit-identical repeat runs) — which is the only reason
+consecutive passes mean anything at all (#15).
+
+Every gate green: COMPOSECHECK 13/13, COLLISIONCHECK 8/8, CROSSINGCHECK 4/4,
+`npm run build` exit 0, console clean.
+
+The frame the player sees now has: one moon casting real shadows that lengthen
+across the night, coloured shade that is never black, warm lanterns that read
+as light sources and bloom, AgX plus a graded palette locked to DIRECTION Part
+7, SMAA, AO, and ground that varies like ground. Crush went from up to 40% of a
+frame to 0.0% on every pose in the game.
