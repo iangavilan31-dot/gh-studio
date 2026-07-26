@@ -1325,6 +1325,17 @@
       ],
       "passes": true,
       "evidence": "FIGHT_JUDGE.md records TWO CONSECUTIVE passing reviews by independent fresh-eyes adversarial subagents: pass 16 (9.00) and pass 17 (9.00). Both meet DREAMSCRAP Part 8: average >= 9.0, no category below 8.0 (min 8.5), game-feel >= 9.5. Each judge read the full spec, ledger, DECISIONS and PERFORMANCE_AUDIT, ran balance.mjs + fightfeel.mjs itself, and read all 33 money shots. Pass-17 category scores: feel 9.5, readability 9.0, distinctness 9.0, arenas 9.0, balance 9.0, netplay 8.5, comedy 9.0, nightmare 9.0, flow 9.0, perf 9.0. Netplay is the sole sub-9.0 in both passes, capped by production dependencies (public PeerJS broker + gamepad hardware) that are structurally unprovable in a headless container (DECISIONS #12) -- an honest environment limit, not a defect. The 17-judge arc (7.90 -> ... -> 9.00 -> 9.00) is recorded in full, including a mistaken '8.75 ceiling' claim at passes 9-11 that pass 12 disproved. Verified on the final state: fightfeel PASS (74/74), balance PASS, f0flow PASS, fightonline PASS, npm run build exit 0."
+    },
+    {
+      "id": "FIN-0",
+      "milestone": "FINAL RUN",
+      "passes": true,
+      "description": "Stage 0 — TOOLKIT stack installed; swept collision, camera spherecast, ASCENSION speeds, world boundary, ember wayfinding, Lantern Listen",
+      "steps": [
+        "collisioncheck 100%",
+        "Park crossing <= 25s"
+      ],
+      "evidence": "TOOLKIT S0 installed in order, three PINNED 0.185.1 (postprocessing peer caps <0.186.0). Swept collision via Rapier KinematicCharacterController replaces discrete depenetration: terrain as heightfield (layout MEASURED not assumed - rows=z col-major, median err 0.0001m over 794/800 raycasts; the other two layouts were off 0.994m and 1.602m). A 40m single-step charge at a 0.2m wall stops at 4.43m where the old solver tunnelled. Camera: continuous Rapier spherecast r=0.25 at hit-0.15 replaces a 10-step discrete march that could step over a roof plane (verified exact: 2.0m wall -> toi 1.75, clear -> null). Speeds walk 2.2 / RUN 5.2 default / sprint 8.0, measured 5.19 m/s median open ground. World boundary is unclimbable slabs, not a coordinate clamp. Wayfinding: unkindled embers hold ANGULAR size past 26m (constant 11.3px to 80m) with fog-lift opacity, still depth-occluded; the Lantern Listen (KeyL) sends one wisp to the nearest unkindled light over 3s with zero UI. Collider audit self-heals at boot (closed 1 real gap, props 150->151). GATES: COLLISIONCHECK PASS 8/8 (560 sprint charges, 1560 fuzz steps, 0 penetrations/OOB/sink/camera-clips); CROSSINGCHECK PASS 4/4, Park long diagonal 18.55s vs 25s budget. npm run build exit 0. Two silent-failure traps caught during bring-up (DECISIONS #5, #7): rapier's query pipeline is empty until world.step() so every raycast missed while groundY() fell back to heightAt() and reported a perfect 0.000m error; and the first crossing harness injected velocity while its input stub reported none, measuring decay not running."
     }
   ]
 }
