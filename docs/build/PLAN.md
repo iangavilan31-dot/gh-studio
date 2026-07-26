@@ -24,14 +24,6 @@ stranger; if a stage breaks, **revert** rather than push forward.
 - [x] TOOLKIT §0 stack installed in order; `three` pinned 0.185.1; build green.
 - [x] CLAUDE.md rewritten as the compaction hook; DECISIONS #1–#3 logged.
 - [x] **Swept collision.** ✅ live: 150 props + heightfield + boundary; 40m single-step charge at a 0.2m wall stops dead.
-- [ ] ~~swept collision detail~~ `world.collide()` is currently discrete
-      depenetration against analytic cylinders + AABBs — the textbook tunneling
-      cause (TOOLKIT §2: *"substepping is a probabilistic patch, not a fix"*).
-      Replace with Rapier `KinematicCharacterController` (§2.1): terrain as
-      `ColliderDesc.heightfield` (**not** trimesh — O(1), no internal-edge
-      pathology), props as cylinder/cuboid colliders. `enableAutostep`,
-      `enableSnapToGround`, `setOffset` (skin width ≠ 0), `setNormalNudgeFactor`.
-      WASM init is async — must resolve before the first frame.
 - [ ] **Collider audit** — log every reachable mesh >1m without a collider;
       the list must be empty.
 - [ ] **Camera spherecast** (§2.2): three-mesh-bvh `acceleratedRaycast` +
@@ -40,10 +32,7 @@ stranger; if a stage breaks, **revert** rather than push forward.
       plane ≤0.1. ⚠️ renames: `MeshBVHHelper`→`BVHHelper`,
       `maxLeafSize`→`targetLeafSize`.
 - [x] **Speeds:** ✅ walk 2.2 / run 5.2 default / sprint 8.0; measured 5.19 m/s median on open ground; accel 0.15s, decel 0.12s, jump apex 1.6m, coyote 6f.
-- [ ] ~~speeds detail~~ walk 2.2 / **run 5.2 by default (no button)** / sprint 8.0
-      with +6° FOV; accel 0.15s, decel 0.12s; jump apex 1.6m; coyote 6 frames.
 - [x] **World boundary** ✅ four unclimbable slabs replace the coordinate clamp.
-- [ ] ~~boundary detail~~ unclimbable and never visible in frame.
 - [ ] **Ember-visible unkindled lights** — faint pulsing ember readable at 80m,
       occluded by geometry, never lost to fog. Biggest wayfinding win.
 - [ ] **Lantern Listen** — hold L/LB: lantern lifts, chimes, one wisp streaks

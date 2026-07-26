@@ -290,3 +290,18 @@ expected and harmless).
 Tunneling proof, the reason this whole module exists: a capsule driven **40 m
 in a single step** at a 0.2 m-thick wall stops at 4.43 m (wall face 4.8 −
 radius 0.35 − skin). The old discrete depenetration teleported through.
+
+## FINAL RUN — #6. Camera occlusion uses Rapier's shapecast, not a second BVH
+
+TOOLKIT §2.2 suggests `three-mesh-bvh` for camera occlusion against render
+meshes. Used Rapier's `castShape` instead: the collision world is already
+built from the same colliders the player uses, so the camera and the body
+agree by construction, and there is no second acceleration structure to build,
+update, or let drift out of sync. three-mesh-bvh stays installed for the jobs
+it is uniquely good at (picking, ground probes against render meshes, AI
+line-of-sight) per §2.2. Verified exact: a cast at a wall 2.0 m away with a
+0.25 m sphere returns toi 1.75, and a clear direction returns null.
+
+**What this replaced:** a 10-step discrete march sampling every ~0.5 m — which
+is how the camera got inside a rooftop looking at the underside of its faces.
+A discrete sampler can step straight over a thin plane; a spherecast cannot.
