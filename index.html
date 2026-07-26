@@ -15,6 +15,12 @@
     <style>
       html, body { margin: 0; padding: 0; background: #000; overflow: hidden; height: 100%; }
       #game { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
+      /* FIN-1: with the post chain attached the canvas IS the 16:9 frame and
+         the page background is the letterbox, so it is centred rather than
+         stretched — and it is no longer a pixel-art target, so it must not be
+         nearest-upscaled. */
+      #game.composited { width: auto; height: auto; image-rendering: auto;
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
       #ui { position: fixed; inset: 0; pointer-events: none; font-family: Georgia, 'Times New Roman', serif; }
       #ui .prompt {
         position: absolute; left: 50%; top: 62%; transform: translate(-50%, 0);

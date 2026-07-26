@@ -3,8 +3,10 @@
 
 import * as THREE from 'three'
 import { Pipeline } from './core/pipeline.js'
+import { Composer } from './core/composer.js'
 import { ZoneLightState, ZONES } from './world/zonelight.js'
-import { globalUniforms } from './art/materials.js'
+import { MoonRig } from './world/moonrig.js'
+import { globalUniforms, setLitPath } from './art/materials.js'
 import { World } from './world/world.js'
 import { buildWizard, PLAYER_TINTS } from './art/characters.js'
 import { Input } from './systems/input.js'
@@ -38,7 +40,19 @@ const canvas = document.getElementById('game')
 const pipeline = new Pipeline(canvas)
 const scene = new THREE.Scene()
 const camera = new THREE.PerspectiveCamera(55, 16 / 9, 0.1, 220)
+// FIN-1: the lit path. Must be set BEFORE any material is constructed —
+// retroMaterial() reads it at call time, and the world builds its ~99
+// materials during construction. ?lit=0 restores the legacy unlit path
+// for A/B comparison; it is the whole revert.
+setLitPath(new URLSearchParams(location.search).get('lit') !== '0')
 const zoneLight = new ZoneLightState(scene)
+// FIN-1: the real lighting rig. Hangs off ZoneLight.push() so zone mood has
+// exactly one interpolator driving both the sky and the lights.
+const moonRig = new MoonRig(scene, pipeline.renderer)
+zoneLight.rig = moonRig
+// The world builds meshes during construction and a few more on the first
+// frames; rescan shortly after boot so late arrivals are flagged too.
+let _shadowRescan = 1.5
 const world = new World(scene, camera)
 const night = new Night(scene)
 const hud = new HUD()
@@ -81,6 +95,12 @@ initRapier().then(() => {
   if (!t.aligned) console.error('[physics] terrain misaligned', t)
   window.__MOONREST_PHYS__ = { props: n, terrain: t }
 }).catch((e) => console.error('[physics] init failed, staying on legacy collision', e))
+
+// FIN-1: swap the retro RT for the real post chain (needs scene + camera).
+if (new URLSearchParams(location.search).get('lit') !== '0') pipeline.attachComposer(Composer, scene, camera)
+
+// Flag the world into the shadow pass now that every mesh exists.
+window.__MOONREST_SHADOWS__ = moonRig.applyShadows()
 
 const orbit = new OrbitCamera(camera, world)
 orbit.yaw = orbit.smoothYaw = Math.PI // camera behind, facing the park
@@ -876,6 +896,8 @@ function tick() {
     pipeline.postUniforms.uFloor.value.copy(f).multiplyScalar(Math.min(0.085 / peak, 1))
   }
   world.moonDir = night.dirWorld
+  if (_shadowRescan > 0 && (_shadowRescan -= dt) <= 0) moonRig.applyShadows()
+  moonRig.follow(player.pos.x, player.pos.y, player.pos.z, night.dirWorld)
   world.update(dt, elapsed)
   night.update(dt, camera)
   embers.update(dt, camera)
@@ -944,6 +966,7 @@ window.__MOONREST__ = {
   ready: true,
   // FIN-0: direct handles for scripts/collisioncheck.mjs — it drives the real
   // controller against the real colliders rather than simulating a bot.
+  __scene: scene,
   __world: world,
   __player: player,
   seed: worldRNG.seed,
@@ -1212,6 +1235,83 @@ window.__MOONREST__ = {
     const buf = new Uint8Array(w * h * 4)
     gl.readPixels(Math.round(v.x), Math.round(v.y), w, h, gl.RGBA, gl.UNSIGNED_BYTE, buf)
     return analyzePixels(buf)
+  },
+  // FIN-1: live grade knobs. The look is tuned against composecheck numbers,
+  // and a rebuild per guess is the slow way to find out which term owns a
+  // defect — this lets one browser session sweep the whole space.
+  tune(p = {}) {
+    const c = pipeline.composer
+    if (p.vignette != null && c) c.vignette.darkness = p.vignette
+    if (p.vignetteOffset != null && c) c.vignette.offset = p.vignetteOffset
+    if (p.tone != null && c) c.toneMapping.mode = p.tone
+    if (p.bloom != null && c) c.bloom.intensity = p.bloom
+    if (p.bloomThreshold != null && c) c.bloom.luminanceMaterial.threshold = p.bloomThreshold
+    if (p.ao != null && c) c.ao.configuration.intensity = p.ao
+    if (p.noise != null && c) c.noise.blendMode.opacity.value = p.noise
+    if (p.moon != null) moonRig.moonScale = p.moon
+    if (p.hemi != null) moonRig.hemiScale = p.hemi
+    if (p.albedoFloor != null) globalUniforms.uAlbedoFloor.value = p.albedoFloor
+    if (p.vertexTint != null) globalUniforms.uVertexTint.value = p.vertexTint
+    moonRig.invalidate()
+    return {
+      vignette: c?.vignette.darkness, tone: c?.toneMapping.mode,
+      moon: moonRig.moonScale, hemi: moonRig.hemiScale,
+      albedoFloor: globalUniforms.uAlbedoFloor.value,
+      vertexTint: globalUniforms.uVertexTint.value,
+    }
+  },
+  // FIN-1: the composition gate's measurement (scripts/composecheck.mjs).
+  // Reads the FINAL framebuffer — post chain, tone mapping and grade included
+  // — because the art law is about the frame the player sees, not about what
+  // the scene pass happened to contain.
+  composeStats(pose) {
+    pipeline.render(scene, camera, elapsed, 1 / 60)
+    const gl = pipeline.renderer.getContext()
+    const v = pipeline.viewport
+    const w = Math.max(2, Math.round(v.z)), h = Math.max(2, Math.round(v.w))
+    const buf = new Uint8Array(w * h * 4)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    gl.readPixels(Math.round(v.x), Math.round(v.y), w, h, gl.RGBA, gl.UNSIGNED_BYTE, buf)
+
+    // sRGB byte → CIE L*. Perceptual lightness is the only scale on which
+    // "55% of the frame is dark" means what a person would mean by it.
+    const srgbToLin = (c) => { c /= 255; return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4 }
+    const Ls = []
+    let crushed = 0, dark = 0, hi = 0, accents = 0, darkTinted = 0, n = 0
+    for (let i = 0; i < buf.length; i += 4) {
+      const r = srgbToLin(buf[i]), g = srgbToLin(buf[i + 1]), b = srgbToLin(buf[i + 2])
+      const Y = 0.2126 * r + 0.7152 * g + 0.0722 * b
+      const L = Y > 0.008856 ? 116 * Math.cbrt(Y) - 16 : 903.3 * Y
+      Ls.push(L); n++
+      if (L < 3) crushed++
+      if (L < 40) {
+        dark++
+        // chroma as max-min over max: cheap, and it answers exactly the
+        // question the law asks — does this dark pixel have a hue at all?
+        const mx = Math.max(r, g, b), mn = Math.min(r, g, b)
+        if (mx > 0 && (mx - mn) / mx > 0.12) darkTinted++
+      }
+      if (L > 75) hi++
+      // an accent is warm AND bright — a dim brown wall is not spending the
+      // accent budget, a lit lantern is
+      if (L > 45 && r > b * 1.25 && r >= g) accents++
+    }
+    Ls.sort((a, b) => a - b)
+    const q = (p) => Ls[Math.min(Ls.length - 1, Math.max(0, Math.round(p * (Ls.length - 1))))]
+    // spread measured inside the mid-band only: the sky and the crushed blacks
+    // would otherwise flatter a frame that has no legible form in between
+    const mid = Ls.filter((L) => L >= 8 && L <= 70)
+    const mq = (p) => mid.length ? mid[Math.min(mid.length - 1, Math.round(p * (mid.length - 1)))] : 0
+    return {
+      pose, w, h, sampled: n,
+      valueFloor: dark / n,
+      highlights: hi / n,
+      crushed: crushed / n,
+      accents: accents / n,
+      tintedShade: dark ? darkTinted / dark : 1,
+      midSpread: mq(0.9) - mq(0.1),
+      p10: +q(0.1).toFixed(1), p50: +q(0.5).toFixed(1), p90: +q(0.9).toFixed(1),
+    }
   },
   get state() {
     const fps = frameTimes.length ? frameTimes.length / frameTimes.reduce((a, b) => a + b, 0) : 0

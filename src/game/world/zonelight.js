@@ -274,5 +274,8 @@ export class ZoneLightState {
     globalUniforms.uSkyUp.value.copy(this.skyUp)
     // horizon stop follows the blended fog exactly (Rule 3 by construction)
     this.stops[4].copy(this.fog)
+    // FIN-1: the real lights read the same blended state, so there is exactly
+    // one interpolator for zone mood and nothing can drift out of sync.
+    this.rig?.push(this)
   }
 }

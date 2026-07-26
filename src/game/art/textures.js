@@ -17,6 +17,9 @@ export function canvasOf(size, fn) {
   return c
 }
 
+// Read once at module load — set by main.js before any texture is built.
+const LIT = new URLSearchParams(location.search).get('lit') !== '0'
+
 export function toTexture(canvas, { repeat = 1, mips = true } = {}) {
   const t = new THREE.CanvasTexture(canvas)
   t.magFilter = THREE.NearestFilter
@@ -26,7 +29,12 @@ export function toTexture(canvas, { repeat = 1, mips = true } = {}) {
   t.minFilter = mips ? THREE.NearestMipmapLinearFilter : THREE.NearestFilter
   t.generateMipmaps = mips
   t.wrapS = t.wrapT = THREE.RepeatWrapping
-  t.colorSpace = THREE.NoColorSpace
+  // FIN-1: these canvases are painted with sRGB hex values, so they must be
+  // declared sRGB. Under the lit path three uploads them as SRGB8_ALPHA8 and
+  // the GPU decodes to linear on every sample — which is what makes albedo ×
+  // light produce the right mid-tones instead of crushed mud. The legacy path
+  // wanted NoColorSpace because it never encoded on output; ?lit=0 restores it.
+  t.colorSpace = LIT ? THREE.SRGBColorSpace : THREE.NoColorSpace
   if (repeat !== 1) t.repeat.set(repeat, repeat)
   return t
 }

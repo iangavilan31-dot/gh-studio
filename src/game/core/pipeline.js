@@ -102,6 +102,10 @@ export class Pipeline {
     this.renderer.autoClear = true
     // raw pass-through: our shaders manage color themselves (no encoding pass)
     this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace
+    this.canvas = canvas
+    // FIN-1: set by attachComposer(). While null, everything below is the
+    // legacy retro path exactly as it was, which is what ?lit=0 restores.
+    this.composer = null
     this.resScale = 1
     this.rt = new THREE.WebGLRenderTarget(BASE_W, BASE_H, {
       magFilter: THREE.NearestFilter,
@@ -168,6 +172,19 @@ export class Pipeline {
     else this.setResScale(this.resScale)
   }
 
+  // FIN-1: swap the retro RT + quantize shader for the real post chain. Done
+  // after construction because the composer needs the scene and camera, which
+  // do not exist yet when the Pipeline is built.
+  attachComposer(ComposerClass, scene, camera) {
+    this.composer = new ComposerClass(this.renderer, scene, camera)
+    // EffectComposer owns the canvas size, so the 16:9 letterbox stops being a
+    // viewport rectangle inside a full-window canvas and becomes the canvas
+    // itself, centred by CSS. Same framing, one less thing to keep in sync.
+    this.canvas.classList.add('composited')
+    this.resize()
+    return this.composer
+  }
+
   resize() {
     // the smallest honest answer wins: layout viewport, document box, and the
     // visual viewport can disagree inside embeds — overshooting means the game
@@ -177,10 +194,20 @@ export class Pipeline {
     const h = Math.min(window.innerHeight, de.clientHeight || Infinity, Math.ceil(window.visualViewport?.height ?? Infinity))
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
     this.renderer.setPixelRatio(dpr)
+    const target = 16 / 9
+    if (this.composer) {
+      // canvas IS the 16:9 box; CSS centres it and the page background is the
+      // letterbox. setSize resizes the renderer and every intermediate buffer.
+      let cw = w, ch = w / target
+      if (ch > h) { ch = h; cw = h * target }
+      cw = Math.max(2, Math.round(cw)); ch = Math.max(2, Math.round(ch))
+      this.composer.setSize(cw, ch)
+      this.viewport = new THREE.Vector4(0, 0, cw * dpr, ch * dpr)
+      return
+    }
     this.renderer.setSize(w, h, true)
     // 16:9 letterbox viewport in device pixels
     const pw = w * dpr, ph = h * dpr
-    const target = 16 / 9
     let vw = pw, vh = pw / target
     if (vh > ph) { vh = ph; vw = ph * target }
     this.viewport = new THREE.Vector4((pw - vw) / 2, (ph - vh) / 2, vw, vh)
@@ -193,7 +220,15 @@ export class Pipeline {
     }
   }
 
-  render(scene, camera, time) {
+  render(scene, camera, time, dt = 1 / 60) {
+    if (this.composer) {
+      // The composer is built around ONE scene/camera pair. The dream world
+      // swaps both, so rebind rather than silently rendering the wrong scene.
+      this.composer.bind(scene, camera)
+      this.composer.render(dt)
+      this.lastInfo = this.composer.lastInfo
+      return
+    }
     this.postUniforms.uTime.value = time
     this.renderer.setRenderTarget(this.rt)
     // NO setViewport here: a render target carries its own viewport, and a
@@ -211,6 +246,25 @@ export class Pipeline {
 
   // Test hook: render one frame to the RT and sample its pixels (0.4 non-blank gate).
   sampleFrame(scene, camera, clearColorHex) {
+    if (this.composer) {
+      // Nothing is rendered to an RT we can read back any more — the chain
+      // ends on the default framebuffer, so sample that directly.
+      this.composer.bind(scene, camera)
+      this.composer.render(1 / 60)
+      const gl = this.renderer.getContext()
+      const w = gl.drawingBufferWidth, h = gl.drawingBufferHeight
+      const buf = new Uint8Array(w * h * 4)
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+      gl.readPixels(0, 0, w, h, gl.RGBA, gl.UNSIGNED_BYTE, buf)
+      const cc = new THREE.Color(clearColorHex ?? 0x000000)
+      const cr = Math.round(cc.r * 255), cg = Math.round(cc.g * 255), cb = Math.round(cc.b * 255)
+      let differ = 0, n = 0
+      for (let i = 0; i < buf.length; i += 16) {
+        n++
+        if (Math.abs(buf[i] - cr) > 8 || Math.abs(buf[i + 1] - cg) > 8 || Math.abs(buf[i + 2] - cb) > 8) differ++
+      }
+      return { sampled: n, differRatio: differ / n }
+    }
     this.renderer.setRenderTarget(this.rt)
     this.renderer.clear()
     this.renderer.render(scene, camera)
