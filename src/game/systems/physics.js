@@ -169,12 +169,19 @@ export class Physics {
     this.ctrl.computeColliderMovement(this.capsule, desired)
     const m = this.ctrl.computedMovement()
     const grounded = this.ctrl.computedGrounded()
-    let hitWall = false
+    // Return the steepest wall normal we touched. The caller removes only the
+    // velocity component INTO that wall — scaling the whole velocity instead
+    // makes every glancing brush cost your full speed and then re-accelerate,
+    // which reads as sticky walls and cost ~9s on a 95m Park crossing.
+    let hitWall = false, nx = 0, nz = 0, flattest = 1
     for (let i = 0; i < this.ctrl.numComputedCollisions(); i++) {
       const col = this.ctrl.computedCollision(i)
-      if (col && Math.abs(col.normal1?.y ?? 0) < 0.6) { hitWall = true; break }
+      const n = col?.normal1
+      if (!n) continue
+      const ny = Math.abs(n.y)
+      if (ny < 0.6) { hitWall = true; if (ny < flattest) { flattest = ny; nx = n.x; nz = n.z } }
     }
-    return { dx: m.x, dy: m.y, dz: m.z, grounded, hitWall }
+    return { dx: m.x, dy: m.y, dz: m.z, grounded, hitWall, nx, nz }
   }
 
   /**

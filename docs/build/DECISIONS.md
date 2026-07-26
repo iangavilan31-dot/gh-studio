@@ -305,3 +305,25 @@ line-of-sight) per §2.2. Verified exact: a cast at a wall 2.0 m away with a
 **What this replaced:** a 10-step discrete march sampling every ~0.5 m — which
 is how the camera got inside a rooftop looking at the underside of its faces.
 A discrete sampler can step straight over a thin plane; a spherecast cannot.
+
+## FINAL RUN — #7. A measurement bug nearly produced a false "too slow" verdict
+
+The first Park-crossing harness set `player.vel` directly each frame and then
+called `update()` with an input stub whose `moveAxis()` returned `[0,0]`. With
+no input, `targetSpeed` is 0, so the accel/decel damping pulled the injected
+velocity back toward zero every frame — the rig was measuring **decay, not
+running**. It reported 27.7 s (fail) with an average of 3.4 m/s.
+
+The tell was that a real slide fix changed the number by exactly 0.00 s. A
+code change that provably alters behaviour but moves a metric not at all means
+the metric is not measuring the code.
+
+Rebuilt to drive **real input** (full-tilt `moveAxis` + a `camYaw` steered at
+the goal, i.e. what a player holding W with the camera behind them produces):
+95 m diagonal in **18.57 s**, avg **5.12 m/s** — at the 5.2 target, gate ≤25 s.
+The wall-slide fix (normal-projected, keeping the tangential component) stays
+in on its own merits: it is the correct slide and stops glancing contact from
+costing full speed.
+
+**Rule taken forward:** a gate that injects state into a controller instead of
+driving its real inputs is testing the harness, not the game.

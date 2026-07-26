@@ -123,10 +123,17 @@ export class PlayerController {
       this.pos.x += r.dx
       this.pos.y += r.dy
       this.pos.z += r.dz
-      // a wall kills the velocity INTO it, so we slide instead of grinding
+      // Slide: remove ONLY the velocity component into the wall, keeping the
+      // tangential component intact. Scaling the whole vector instead makes a
+      // glancing brush cost all your speed and re-accelerate over 0.15s —
+      // sticky walls, and ~9s of drag on a 95m Park crossing.
       if (r.hitWall) {
-        const moved = Math.hypot(r.dx, r.dz), want = Math.hypot(this.vel.x * dt, this.vel.z * dt)
-        if (want > 1e-6) { const s = moved / want; this.vel.x *= s; this.vel.z *= s }
+        const nl = Math.hypot(r.nx, r.nz)
+        if (nl > 1e-6) {
+          const ux = r.nx / nl, uz = r.nz / nl
+          const into = this.vel.x * ux + this.vel.z * uz
+          if (into < 0) { this.vel.x -= into * ux; this.vel.z -= into * uz }
+        }
       }
       if (r.grounded) {
         if (!wasGrounded) {
