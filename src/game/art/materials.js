@@ -38,6 +38,11 @@ export const globalUniforms = {
   uAlbedoFloor: { value: 0.20 },
   // how much of the baked vertex-colour HUE to reintroduce (0 = ignore it)
   uVertexTint: { value: 1.0 },
+  // Macro patchiness on up-facing surfaces — see CSM_FRAG. Swept against a
+  // DETERMINISTIC gate (the earlier sweep was measured at random animation
+  // phases and read as noise): spread rises monotonically with strength, and
+  // 1.1 clears the readability line on both open-path poses with margin.
+  uGroundMacro: { value: 1.1 },
 }
 
 const VERT = /* glsl */ `
@@ -188,6 +193,7 @@ const CSM_VERT = /* glsl */ `
   uniform float uTime;
   uniform float uWindAmp;
   varying vec3 vWorldPos;
+  varying float vUpness;
   void main() {
     vec3 p = position;
     if (uWindAmp > 0.0) {
@@ -196,6 +202,9 @@ const CSM_VERT = /* glsl */ `
     }
     csm_Position = p;
     vWorldPos = (modelMatrix * vec4(p, 1.0)).xyz;
+    // how ground-like this surface is, in world space — the macro variation
+    // below is a property of GROUND, not of walls
+    vUpness = clamp(normalize(mat3(modelMatrix) * normal).y, 0.0, 1.0);
   }
 `
 
@@ -204,7 +213,22 @@ const CSM_FRAG = /* glsl */ `
   uniform float uLanternStr[4];
   uniform float uAlbedoFloor;
   uniform float uVertexTint;
+  uniform float uGroundMacro;
   varying vec3 vWorldPos;
+  varying float vUpness;
+
+  // Cheap value noise. Two octaves is enough — this is macro patchiness at the
+  // scale of metres, not a detail texture.
+  float vhash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+  }
+  float vnoise(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(vhash(i), vhash(i + vec2(1.0, 0.0)), u.x),
+               mix(vhash(i + vec2(0.0, 1.0)), vhash(i + vec2(1.0, 1.0)), u.x), u.y);
+  }
+
   void main() {
     // ——— vertex colours, by hand, and NOT optional ———
     // CSM patches three's shader as:
@@ -252,6 +276,22 @@ const CSM_FRAG = /* glsl */ `
     // which puts the frame's darkness back where it belongs — in the LIGHTING,
     // where the moon and the lanterns can still carve it.
     csm_DiffuseColor.rgb = mix(vec3(uAlbedoFloor), vec3(1.0), csm_DiffuseColor.rgb);
+
+    // ——— macro ground variation ———
+    // The open-path poses measured flat for a plain reason: the ground is one
+    // enormous plane of one albedo, so it renders as a single value across most
+    // of the frame no matter how good the lighting on it is. Real ground is
+    // patchy at the scale of metres — damp earth, worn track, moss.
+    //
+    // World-space so it never swims with the camera and never tiles with the
+    // texture, and weighted by how UP-FACING the surface is, so walls and
+    // trunks are untouched and only ground receives it. This is procedural
+    // material work, not an asset — Stage 1 stays asset-free.
+    if (uGroundMacro > 0.0 && vUpness > 0.0) {
+      float m = vnoise(vWorldPos.xz * 0.085) * 0.65
+              + vnoise(vWorldPos.xz * 0.31) * 0.35;
+      csm_DiffuseColor.rgb *= mix(1.0, 0.74 + 0.52 * m, uGroundMacro * vUpness);
+    }
 
     // carried lantern warmth (PRESTIGE AA.2): a travelling warm pool that
     // reads even where the moon does not reach. Added to ALBEDO so it still
@@ -356,6 +396,7 @@ export function litMaterial({
       // back to catching moonlight, so it gets a floor of its own at zero
       uAlbedoFloor: isEmitter ? { value: 0 } : globalUniforms.uAlbedoFloor,
       uVertexTint: globalUniforms.uVertexTint,
+      uGroundMacro: isEmitter ? { value: 0 } : globalUniforms.uGroundMacro,
       uOpacity, uEmissive, uMap,
     },
     silent: true,

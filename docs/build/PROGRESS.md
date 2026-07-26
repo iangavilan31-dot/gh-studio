@@ -815,3 +815,34 @@ The `midSpread ≥ 18` threshold is mine rather than the spec's (DECISIONS #13):
 it is either miscalibrated for intimate poses, in which case split it by pose
 type and write down why, or the art is genuinely flat, in which case fix the
 art. Do not quietly lower it to make the gate green.
+
+---
+
+## FIN-1 COMPLETE — the world is lit
+
+`COMPOSECHECK PASS (13/13)`, twice consecutively, on a gate proven
+deterministic first. `COLLISIONCHECK 8/8`, `CROSSINGCHECK 4/4`, build exit 0,
+console clean.
+
+The frame now has one moon casting shadows that lengthen across the night,
+shade that is coloured and never black, lanterns that read as light and bloom,
+AgX with a palette graded to DIRECTION Part 7, SMAA, AO, and ground that varies
+like ground. Crush went from up to 40% of a frame to **0.0% on every pose**.
+
+Two findings worth carrying forward:
+
+- The composition gate reported `PASS (13/13)` twice while the build underneath
+  was an 11/13. Those greens were noise. The ship condition asks for two
+  consecutive passing reviews — which is worth nothing until the instrument is
+  shown stable. Three separate causes, ending with the lantern's permanent
+  flicker (no settle delay can fix a sine wave; the clock has to stop).
+  DECISIONS #15, #17.
+- "That needs a later stage" was wrong about the last two poses. The constraint
+  was *no new assets*, and the fix was a shader. Test the claim against the
+  actual constraint before writing it down. DECISIONS #17.
+
+NEXT: **Stage 2 — the Blender factory** (`tools/`, `npm run assets`,
+`npm run bake`), per FINAL_PASS Part 3 and `docs/ASSETS.md`. Then Stage 3 (the
+Park finished) and Stage 4 (the first ten minutes, `docs/build/TEN_MINUTES.md`)
+— Stage 4 is the fallback deliverable and must be finished and beautiful before
+anything later is attempted.

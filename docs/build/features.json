@@ -1340,7 +1340,7 @@
     {
       "id": "FIN-1",
       "title": "Real lighting: moon rig, post chain, emitters, and the albedo law",
-      "passes": false,
+      "passes": true,
       "evidence": [
         "src/game/world/moonrig.js \u2014 1 directional (only shadow caster, tracks night.dirWorld) + 1 hemisphere, driven from ZoneLight.push()",
         "src/game/core/composer.js \u2014 scene -> HalfFloat linear -> SMAA/N8AO/bloom/vignette -> AgX -> sRGB; NoToneMapping on the renderer",
@@ -1352,9 +1352,12 @@
         "COMPOSECHECK 8/13; crush 0.0% on ALL 13 poses (was up to 40%); value floor, tinted shade, highlight scarcity pass everywhere",
         "Zone skies clamped into the DIRECTION Part 7 envelope (rooftops #1215ac royal blue -> #181949); Rule 3 fog===skyStops[4] re-derived, not re-clamped",
         "Gate made deterministic: shadow volume follows camera not player (real bug in every cinematic frame), night clock pinned+frozen, settle 1500ms",
-        "COMPOSECHECK 11/13 stable; crush 0.0% on all 13 poses"
+        "COMPOSECHECK 11/13 stable; crush 0.0% on all 13 poses",
+        "uGroundMacro \u2014 world-space 2-octave albedo variation weighted by surface upness (ground only); procedural, no assets",
+        "freezeTime() \u2014 animation clock pinned; gate now bit-identical across repeat runs",
+        "COMPOSECHECK PASS (13/13) twice consecutively on a deterministic gate"
       ],
-      "notes": "NOT yet passing. Stable 11/13. lanternpool 17.4 and player 17.3 vs an 18.0 readability line \u2014 same location, same cause: a large uniform ground plane. Genuine flatness, not a threshold artefact; lighting levers are spent (key/fill is non-monotonic and at its optimum). Fix is ground value variation, which is Stage 2 asset work. Do NOT close these by lowering the line. NOTE: the gate produced a false PASS 13/13 twice before the determinism fixes \u2014 see DECISIONS #15."
+      "notes": "COMPLETE. All 13 poses pass; crush 0.0% everywhere (was up to 40%). Gate proven deterministic first \u2014 two consecutive greens from a flaky instrument are worthless, and this gate had already produced a false PASS 13/13 twice (DECISIONS #15, #17)."
     }
   ]
 }

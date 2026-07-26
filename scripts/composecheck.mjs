@@ -78,7 +78,12 @@ async function main() {
     // Pin AND freeze the night before measuring anything. Poses that carry
     // their own `minute` still set it; this stops the clock drifting between
     // them, which is what made the gate order-dependent.
-    await page.evaluate(() => { window.__MOONREST__.skipTo(24); window.__MOONREST__.pauseNight(true) })
+    await page.evaluate(() => {
+      window.__MOONREST__.skipTo(24)
+      window.__MOONREST__.pauseNight(true)
+      // and stop the animation clock — see freezeTime()
+      window.__MOONREST__.freezeTime(12)
+    })
     await page.waitForTimeout(300)
 
     const allPoses = await page.evaluate(() => window.__MOONREST__.poses)
@@ -89,7 +94,7 @@ async function main() {
       if (!ok) { report.push({ pose, error: 'POSE MISSING' }); continue }
       // re-freeze: a pose with its own `minute` calls skipTo, which is fine,
       // but the clock must stay stopped afterwards
-      await page.evaluate(() => window.__MOONREST__.pauseNight(true))
+      await page.evaluate(() => { window.__MOONREST__.pauseNight(true); window.__MOONREST__.freezeTime(12) })
       // 1500ms, not 700: the carried lantern warmth ramps after a pose stages
       // the player, and `lanternpool` — the pose built to show exactly that —
       // swung between 11.1 and 21.6 on the same build when measured too early.
