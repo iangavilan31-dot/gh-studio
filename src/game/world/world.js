@@ -268,6 +268,52 @@ export class World {
   }
 
   /**
+   * Collider audit + self-heal (ASCENSION 0.1.3: "Log any mesh over 1m that
+   * ships without a collider; the list must be empty").
+   *
+   * Rather than hand-patching whichever prop is missing today, close the gap
+   * at build time so the invariant holds for every prop added later too.
+   * Only SOLID, REACHABLE, single-prop meshes qualify: transparent/additive
+   * FX quads are not walls, merged batches registered collision individually
+   * before merging, and anything standing in open water is offshore dressing.
+   * Returns the list it covered so the gate can report it.
+   */
+  autoCoverColliderGaps() {
+    const covered = []
+    this.realScene.traverse((o) => {
+      if (!o.isMesh || !o.geometry || o.userData?.noCollide) return
+      const mats = Array.isArray(o.material) ? o.material : [o.material]
+      const solid = mats.some((m) => m && !m.transparent && m.depthWrite !== false && m.blending !== THREE.AdditiveBlending)
+      if (!solid) return
+      o.geometry.computeBoundingBox?.()
+      const bb = o.geometry.boundingBox
+      if (!bb) return
+      o.updateWorldMatrix?.(true, false)
+      const e = o.matrixWorld.elements
+      const sx = Math.hypot(e[0], e[1], e[2]) || 1, sy = Math.hypot(e[4], e[5], e[6]) || 1, sz = Math.hypot(e[8], e[9], e[10]) || 1
+      const w = (bb.max.x - bb.min.x) * sx, h = (bb.max.y - bb.min.y) * sy, d = (bb.max.z - bb.min.z) * sz
+      const fp = Math.max(w, d)
+      if (fp < 1 || h < 1 || fp > 25) return
+      const cx = (bb.min.x + bb.max.x) / 2, cy = (bb.min.y + bb.max.y) / 2, cz = (bb.min.z + bb.max.z) / 2
+      const x = e[0] * cx + e[4] * cy + e[8] * cz + e[12]
+      const y = e[1] * cx + e[5] * cy + e[9] * cz + e[13]
+      const z = e[2] * cx + e[6] * cy + e[10] * cz + e[14]
+      if (y > 40) return
+      if (x < BOUNDS.minX || x > BOUNDS.maxX || z < BOUNDS.minZ || z > BOUNDS.maxZ) return
+      if (heightAt(x, z) < WATER_Y) return          // offshore, unreachable
+      const r = fp / 2
+      for (const c of this.colliders) if (Math.hypot(c.x - x, c.z - z) < c.r + r + 1.2) return
+      for (const b of this.aabbs) {
+        const nx = Math.max(b.minX, Math.min(x, b.maxX)), nz = Math.max(b.minZ, Math.min(z, b.maxZ))
+        if (Math.hypot(x - nx, z - nz) < r + 1.2) return
+      }
+      this.colliders.push({ x, z, r: Math.max(0.35, r * 0.8), h, y0: heightAt(x, z), tag: 'auto' })
+      covered.push({ x: +x.toFixed(1), z: +z.toFixed(1), w: +w.toFixed(1), h: +h.toFixed(1) })
+    })
+    return covered
+  }
+
+  /**
    * The Lantern Listen (ASCENSION 0.3.3) — the "I'm lost" verb.
    * The lantern lifts and chimes, and ONE wisp streaks away toward the
    * nearest unkindled light, fading after ~3s. Unlimited, zero UI, no arrow
