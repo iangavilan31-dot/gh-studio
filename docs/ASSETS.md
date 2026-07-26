@@ -294,3 +294,149 @@ license name, date acquired, and where it's used. Rules:
 
 *Buy little. Regrade everything. The lighting is what costs nothing and does
 the most.*
+
+---
+
+# PART 8 — VERIFIED CATALOG & LICENSE CORRECTIONS
+
+Licenses below were verified by fetching the actual license pages and, in
+several cases, by downloading and parsing the binaries. **This part corrects
+earlier recommendations in this document.**
+
+## 8.1 🔴 CORRECTIONS to Part 2's shopping list
+
+**Blockade Labs Skybox AI — withdrawn as the #1 recommendation.** The free tier
+outputs **CC-BY-NC** (non-commercial), and more seriously, the ToS grants
+Blockade a **perpetual license to your generations and permission to train on
+them — on paid tiers too**. Use Poly Haven's `_puresky` HDRIs instead: CC0, no
+strings, and better suited to a game background anyway.
+
+**Tripo3D — withdrawn.** Its free/Basic tier **explicitly forbids commercial
+use**. Use **Meshy** instead, whose free tier *is* CC-BY and permits commercial
+use and selling with credit.
+
+**Net effect: the recommended spend drops to roughly $0–40.** The free tier is
+now genuinely sufficient; buy only against a named gap after the free pass.
+
+## 8.2 ⭐ The single highest-leverage art move
+
+**KayKit, Kenney and Quaternius each use one small gradient atlas per pack**
+(KayKit a 1024² that downscales to 128² with no visible loss; Kenney a single
+`colormap.png`). **Swap that one atlas for a shared desaturated, high-contrast
+dark-fantasy ramp and every model in every pack shifts to your palette at
+once.**
+
+That is how you get an Ashen or Death's Door look out of Kenney geometry, and
+it does more for coherence than any individual asset choice. Do this before
+judging whether a pack "fits."
+
+## 8.3 The ranked free sources
+
+**1. KayKit** (kaylousberg.itch.io) — **CC0, ships GLB natively**, one atlas per
+pack. Verified by parsing the binaries: `Skeleton_Warrior.glb` carries **95
+animation clips** including `Skeletons_Awaken_Floor`, `Skeletons_Awaken_Standing`
+and `Death_C_Skeletons_Resurrect` — literally the Souls-like undead vocabulary.
+`Knight.glb` has **76 clips at 3.66 MB**, including `Sit_Floor_Down/Idle/StandUp`
+and `Lie_Down/Idle/StandUp` — which MOONREST needs for its sleepers and bench
+moments. **Adventurers and Skeletons share one rig and clip-naming scheme**, so
+clips retarget between them for free. Free packs cover dungeon, forest, medieval
+buildings, and **gravestones + mausoleums** (Halloween Bits). `Rogue_Hooded` is
+the hooded-figure archetype.
+
+**2. Quaternius** — CC0, the largest volume of on-brief stylized geometry.
+- **Ultimate Animated Animals** (glTF): Deer, **Stag**, Fox, Wolf, Horse and 7
+  more, 12+ clips each. **The single highest-value creature grab for this
+  project** — the Antlered Sleeper's smaller cousins in one CC0 download.
+- **Universal Animation Library 1+2**: ~**250 CC0 humanoid clips as GLB** on a
+  universal rig — the reason you never have to depend on Mixamo.
+- Medieval Village MegaKit (300+), Stylized Nature MegaKit (110+ including dead
+  trees), Fantasy Props MegaKit (200+ on only 4 texture sets).
+- ⚠ Format varies per pack — newer MegaKits ship glTF, older ones are FBX/OBJ
+  only. Prefer the itch.io downloads.
+
+**3. Poly Haven** — CC0 **with an explicit redistribution grant**. Hand-made,
+explicitly **no generative AI** — the cleanest provenance available. Its
+**`lighting` category (29 models)** is the best free warm-light prop set that
+exists: `Lantern_01`, `wooden_lantern_01`, `lantern_chandelier_01`,
+`Chandelier_01/02/03`, `brass_candleholders`, `vintage_oil_lamp`,
+`caged_hanging_light`, `street_lamp_01/02`. Also `large_castle_door`,
+`large_iron_gate`, and dead-tree/root/cliff scans. Textures ship a packed
+**`arm` map** = glTF's `occlusionRoughnessMetallic` layout, one fetch instead of
+three, plus a ready `gltf` export.
+
+**4. ambientCG** — CC0, 2,004 materials. Ships **both `NormalGL` and
+`NormalDX`** — take GL. Holds **pure star-field HDRIs Poly Haven lacks**
+(`NightSkyHDRI001–016`, with `002` a Milky Way). ⚠ Ships `.exr`, so use
+`EXRLoader`, not `RGBELoader`.
+
+**5. Kenney** — CC0 with no strings at all. **Verified from inside the zips:
+every 3D pack ships parallel `Models/GLB format/` trees** — GLB is first-class,
+contradicting the common "Kenney is OBJ-only" claim. Graveyard Kit (90 files:
+ghost/skeleton/keeper, crypts, coffins, altars), Nature Kit (330), Fantasy Town
+Kit (160), Castle Kit (75).
+
+**6. Sonniss #GameAudioGDC** (gdc.sonniss.com) — **200GB+ across 10 annual
+bundles**, and the best license terms in this whole document: worldwide,
+perpetual, royalty-free, unlimited projects, for life, **no attribution**,
+explicitly covering games. 96k/24-bit. Only limits: don't resell the sounds
+as-is, and **no AI/ML training**.
+
+**7. Eric Matyas / soundimage.org** — free commercial, **ships OGG** (web-ready),
+with Fantasy 1–13 and Dark/Ominous pages. Explicitly not AI-generated. ⚠
+Attribution is strict and must appear in an actual credits **screen**.
+
+## 8.4 🔴 Sources that are disqualified
+
+| Source | Why |
+|---|---|
+| **Poliigon** | *"You can't use our assets in… games where the users have direct or indirect access to the assets"* — a three.js build serves raw files over HTTP. Fails on its face. |
+| **Textures.com** | ToS forbids releasing content or derivatives **under any open-source license**, and bars distributing PBR materials as part of a 3D scene at all. |
+| **Blockade Labs free tier** | CC-BY-NC, plus a perpetual license to your generations and training rights. |
+| **Tripo free tier** | No commercial use. (Meshy's free tier is fine.) |
+| **BBC Sound Effects Archive** | Non-commercial only. |
+| **Ready Player Me** | **Dead** — Netflix acquisition, all developer APIs offline January 2026. |
+| **FreePD, Adobe Fuse, iHDRI.com, 3dmodelscc0.com** | Dead or hijacked. iHDRI now serves casino spam; 3dmodelscc0 redirects elsewhere — yet both are still listed as live in popular "awesome" indexes. |
+| **CC-BY-SA / GPL art** (Veloren, Luanti, several Blender splash files) | Share-alike propagates to your derivative art. |
+| **three.js `examples/models`** | ⚠ three.js is MIT but **the example art is not covered by it.** `Soldier.glb` / `Michelle.glb` / `Xbot.glb` are Mixamo-derived; Flamingo/Parrot/Stork/Horse have **no published license anywhere**. Only `RobotExpressive` is genuinely CC0. |
+| **Sketchfab IP laundering** | Verified CC-BY-tagged rips in the wild (Dark Souls, Metroid, TF2, Fortnite models). **An uploader's CC tag cannot launder third-party copyright** — vet by author, not badge. |
+
+**The through-line: because a browser game serves downloadable `.glb` files,
+restrict yourself to CC0 and CC-BY.** Every EULA-bound source (Synty, Fab,
+TurboSquid, Unity Asset Store, Poliigon, BlenderKit Royalty-Free) has
+redistribution or "embedded-only" language that a plain web deployment sits
+awkwardly against.
+
+## 8.5 Practical three.js notes
+
+- **File size:** KayKit characters are 3.6–4.9 MB because 76–95 clips are baked
+  in. **Extract the 6–10 clips you actually use into one shared animation GLB**;
+  `gltf-transform` then typically takes these under 500 KB.
+- **Two animation topologies:** Kenney's Graveyard Kit, Cube Pets and Blocky
+  Characters report `skins: 0` — node-hierarchy transforms, **no GPU skinning**,
+  so they instance far more cheaply. Use them for crowds and flocks.
+- **Pick one rig family and stay inside it.** Cross-family retargeting is where
+  the time goes.
+- **Ship 1K or 2K HDRIs, never 4K+** (1k ≈ 1.7 MB, 4k ≈ 27 MB). **Split the
+  roles:** a 512/1K HDR purely for image-based lighting, plus a separate
+  compressed LDR equirect for the visible background. Night skies have low
+  dynamic range anyway — the HDR range only matters around the moon.
+- **Use the `_puresky` variants** as `scene.background` so your terrain isn't
+  fighting a photographed foreground.
+- **Start `CREDITS.md` on day one.** Kevin MacLeod, Eric Matyas, ZapSplat and
+  Sketchfab CC-BY assets all mandate *specific wording*, and Matyas requires an
+  in-game credits screen. Sketchfab CC-BY often requires crediting **two**
+  parties (modeller and rigger).
+- **Structural note on Sketchfab:** CC0 there is overwhelmingly **museum
+  photogrammetry**, while CC-BY is **actual game art**. If you refuse
+  attribution you lose the useful half of the platform. Decide early.
+
+## 8.6 Where the free ecosystem has nothing — build these
+
+| Need | Reality |
+|---|---|
+| **The colossal sleepers** | **Nothing free is colossus-scale.** Expect to author them — which is correct anyway; they're the assets that must be original. |
+| **Lantern / brazier stylized pack** | No strong free pack. Best available is Poly Haven's photoreal lighting category (decimate + regrade) plus KayKit Dungeon torches. Expect to kitbash. |
+| **Cliffs and large boulders** | The weakest category. Poly Haven scans need decimation; Fertile Soil's terrain kits are untextured OBJ. |
+| **Crows, ravens, owls — animated, CC0** | **Do not exist.** CC-BY only (WildPoly3D has a 638-tri Owl and a 1,280-tri Crow; warrenblyth has a 469-tri American Crow). Accept attribution or model them. |
+| **Moths** | Thin — recolour a butterfly (ffish.asia's CC0 *Pieris rapae*). |
+| **Wisps and spirits** | Best done as **three.js particles and shaders, not meshes.** |

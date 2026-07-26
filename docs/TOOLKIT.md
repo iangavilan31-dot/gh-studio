@@ -1220,3 +1220,279 @@ most problems.** The judge should run this verbatim.
 20. **Tech + fresh eyes.** Texel density consistent, collisions match art, LODs
     tuned, no overdraw blowouts, console clean. **Then close it, sleep, and look
     again tomorrow with the key reference side-by-side at the same size.**
+
+---
+
+# 18. THE BLENDER PIPELINE (verified by execution)
+
+Everything below was **run on real Blender 4.5.12 LTS headless**, not read from
+docs. The gotchas are measured, not theorised.
+
+## 18.1 Version and invocation
+
+**Pin `blender-4.5.12-linux-x64`.** 4.2 LTS is EOL; 5.2 refactored Geometry
+Nodes modifier properties (`mod["socket_1"][1]` → `mod.socket_1.y`), which
+breaks every geonodes script. Docs: use `docs.blender.org/api/4.5/`, since
+`/current/` now serves 5.2.
+
+⚠️ **`pip install bpy` is the wrong tool** — it ships **zero addons** (no
+Sapling, no ANT, no rock generator) and has no `--python-exit-code`. Use the
+real binary. Do `pip install fake-bpy-module-4.5` for type stubs though; it
+measurably cuts agent error rate.
+
+```bash
+blender --background --factory-startup -noaudio --offline-mode \
+        --python-exit-code 1 --python stages/build_asset.py -- --spec rock.json
+```
+
+⚠️ **`--python-exit-code 1` is mandatory.** Without it Blender **exits 0 after
+an uncaught traceback** and your build goes green on broken assets.
+
+## 18.2 The five gotchas that cost the most time
+
+**1. `read_factory_settings()` unregisters every addon.** Reset *first*, then
+enable — the reverse order fails silently and `bpy.ops.curve.tree_add` simply
+doesn't exist.
+
+```python
+bpy.ops.wm.read_factory_settings(use_empty=True)
+for p in ("sapling_tree_gen","antlandscape","extra_mesh_objects","cell_fracture"):
+    addon_utils.enable(f"bl_ext.blender_org.{p}", default_set=False, persistent=True)
+```
+
+The generators **moved out of the bundle in 4.2** — 4.5 ships only 15 core
+addons. Install once with
+`blender -b --online-mode --command extension install -e sapling_tree_gen,antlandscape,extra_mesh_objects,cell_fracture`
+(`--online-mode` required, comma-separated, no spaces), or vendor them via
+`BLENDER_USER_EXTENSIONS` so nothing touches user prefs.
+
+**2. Stale depsgraph.** Without `view_layer.update()` before
+`evaluated_depsgraph_get()`, three different DECIMATE ratios returned
+**identical face counts** in testing.
+
+```python
+def apply_all(ob):
+    bpy.context.view_layer.update()                    # ← REQUIRED
+    dg = bpy.context.evaluated_depsgraph_get()
+    me = bpy.data.meshes.new_from_object(ob.evaluated_get(dg),
+                                         preserve_all_data_layers=True,   # keeps UV1
+                                         depsgraph=dg)
+    ...
+```
+
+**3. AgX wrecks every saved map.** It's the 4.0+ default view transform. Set
+`view_settings.view_transform = 'Standard'` at boot, and save with
+`img.save()` — **never `save_render()`**, which applies colour management.
+
+**4. Cycles only.** EEVEE **cannot bake at all**, and EEVEE Next / Workbench
+fail headless with `Couldn't open libEGL.so.1`.
+
+**5. `export_format` defaults to `''`, not `'GLB'`.** Always pass it.
+
+## 18.3 Baking — the parts the docs don't tell you
+
+**`bpy.ops.object.bake()` has a `uv_layer=` parameter.** Almost nobody uses it,
+and it's the cleanest thing in the pipeline — bake to the lightmap UV while the
+albedo UV stays active, with no state juggling.
+
+⚠️ **Omitted kwargs fall back to `scene.render.bake.*`, not the signature
+defaults.** So `bake(type='NORMAL')` silently uses `margin_type='ADJACENT_FACES'`.
+And `type` has **no** fallback (defaults `COMBINED`), while setting
+`scene.cycles.bake_type` from Python **does nothing** — it's UI-only storage.
+**Pass every parameter explicitly.**
+
+⚠️ **The bake target node must be BOTH active AND selected, and left
+unconnected**, in *every* material slot — Blender's source explicitly refuses
+to "bake to unselected images", and connecting it throws "Circular dependency
+for image".
+
+```python
+for n in nt.nodes: n.select = False
+tex.select = True                # both required
+nt.nodes.active = tex
+```
+
+**Samples:** NORMAL/POSITION/UV bakes are **deterministic — use `samples=1`**,
+identical output to 512 and ~500× faster. AO wants 128–256, GI 256–512.
+**Denoising off for normals** (OIDN is trained on radiance and smooths away
+exactly the detail you baked). Cycles bake output is **not** denoised by the
+scene denoiser — there is no such feature.
+
+**Green channel:** Blender's default `normal_g='POS_Y'` is already OpenGL +Y,
+which is what glTF and three.js want. **Do not swizzle.**
+
+## 18.4 UV1 and AO reach three.js automatically
+
+**All UV layers export unconditionally.** Verified: three UV layers on a mesh
+with **no material at all** produced `TEXCOORD_0/1/2`. You do *not* need to
+reference a UV map in a material node. `TEXCOORD_n` index = **position in
+`mesh.uv_layers`**, so just name them deterministically:
+
+```python
+me.uv_layers[0].name = "UVMap"        # → TEXCOORD_0 → geometry.attributes.uv
+me.uv_layers.new(name="Lightmap")     # → TEXCOORD_1 → geometry.attributes.uv1
+```
+
+**AO needs zero JavaScript glue.** glTF has no lightMap slot, but Blender's
+exporter maps a node group named **`"glTF Material Output"`** with an
+`Occlusion` input to `occlusionTexture` — and GLTFLoader then sets
+`aoMap.channel = 1` automatically. Verified output:
+
+```json
+"materials":[{"occlusionTexture":{"index":0,"texCoord":1}}]
+```
+
+**Full lightmaps still need manual assignment** — and they are **HDR**.
+Measured pixel values above 1.0 (`[1.207, 1.280, 1.499]`), which **silently
+clip when saved to PNG**. Normalize and ship the scale factor:
+
+```python
+peak = max(all_rgb_pixels) or 1.0
+if peak > 1.0: divide all rgb by peak
+obj["lightMapIntensity"] = round(peak, 4)   # → material.lightMapIntensity in three.js
+obj["lightMapChannel"]   = 1
+```
+
+⚠️ `lightMap` only affects the diffuse term — pair with `MeshStandardMaterial`
+or `MeshLambertMaterial`. For fully-baked static geometry, `MeshBasicMaterial` +
+`lightMap` gives zero-cost lighting.
+
+⚠️ `uv.pack_islands` returns `{'CANCELLED'}` unless
+`scene.tool_settings.use_uv_select_sync = True`.
+
+## 18.5 🔴 Two findings that break the whole pipeline if you get them wrong
+
+**(a) A lightmap UV2 makes external simplification a total no-op.**
+
+Measured on the same sphere, `gltf-transform simplify --ratio 0.25`:
+
+| UV setup | verts before | after simplify |
+|---|---|---|
+| 1 UV (smart project) | 2,202 | **628** ✅ |
+| UV1 + UV2 via `lightmap_pack` | 8,064 | **8,064** ❌ **0% reduction** |
+
+`lightmap_pack` makes **every face its own UV island**, so every vertex splits
+and meshoptimizer cannot collapse a single edge. `weld` doesn't help — the UV2
+values genuinely differ per corner.
+
+**→ The ordering rule this forces:**
+```
+generate → UV0 → LOD CHAIN → lightmap UV1 on LOD0 ONLY → bake → export
+```
+LOD1+ should use vertex-baked AO (`COLOR_0` interpolates gracefully through
+decimation) or a shared tiling material.
+
+**(b) Flat shading triples vertex count and blocks simplification.**
+
+| setup | glTF verts | verts/tri | after `gltfpack -si 0.3` |
+|---|---|---|---|
+| flat + UV | 2,865 | **2.96** | ❌ **zero reduction** |
+| smooth + UV | 1,064 | 1.10 | ✅ 290 tris |
+
+**Ship smooth-shaded with baked normal maps** for the faceted look, not
+`shade_flat`. Track **verts/tri** as a health metric — above 2.0 means roughly
+3× the vertex data hitting three.js.
+
+## 18.6 Procedural generation — measured behaviour
+
+| Generator | Operator | Verified |
+|---|---|---|
+| Sapling Tree Gen | `bpy.ops.curve.tree_add` (92–95 props) | ✅ 9 presets, none named "oak" |
+| A.N.T. Landscape | `bpy.ops.mesh.landscape_add(refresh=True)` | ✅ 16k-poly cliff; 32 presets incl. `cliff`, `canyon`, `mesa` |
+| Rock Generator | `bpy.ops.mesh.add_mesh_rock` | ✅ (inside `extra_mesh_objects`) |
+| Cell Fracture | `bpy.ops.object.add_fracture_cell_objects` | ✅ 8 shards in 0.04s |
+
+⚠️ **A.N.T.'s `refresh` defaults False → silently creates nothing.**
+⚠️ Sapling **doesn't set the active object** (grab by name `'tree'`), and
+`makeMesh=True` attaches a SKIN modifier producing **1.6M polys**. Use
+`makeMesh=False` + curve bevel.
+⚠️ The rock generator's 6 modifiers evaluate to **393k polys** at `detail=4`.
+
+**Gnarl levers for dead dark-fantasy trees, ranked:** `curveV` 180–240 (biggest
+knob), **negative `attractUp`** (drooping dead limbs), `curveBack` (S-bends),
+`baseSplits` 3–4 with low `baseSize` (multi-trunk witch tree), `rotateV`
+(breaks regularity).
+
+**🔴 Sapling curve-meshes are non-manifold and DECIMATE hits a hard floor** —
+measured: ratios 0.5, 0.25 and 0.06 all returned **17,246 polys**. Collapse
+can't proceed past ~70%, and `remove_doubles` doesn't fix it.
+
+**The fix — REMESH VOXEL first:**
+```python
+rm = ob.modifiers.new("remesh", 'REMESH')
+rm.mode = 'VOXEL'; rm.voxel_size = 0.055; rm.adaptivity = 0.15
+# → 3,039 polys, 0 boundary edges (watertight); DECIMATE ratios now honoured exactly
+```
+Bonus: it produces the chunky carved silhouette that suits this art direction.
+`mode='BLOCKS'` is excellent for ruins.
+
+**Geometry Nodes:** `node_group.inputs` no longer exists (4.0 break) — use
+`ng.interface.new_socket(...)`, and **never hardcode socket identifiers**
+(they're allocated across inputs *and* outputs in creation order). Pragmatic
+route: author the group once in a GUI, ship the `.blend`, append headlessly
+with `bpy.data.libraries.load` — and mark `use_fake_user = True` first or it
+won't survive the save.
+
+## 18.7 Export
+
+**Use meshopt, not Draco.** Measured on a 4-LOD tree GLB:
+
+| Variant | Raw | gzip -9 |
+|---|---|---|
+| plain | 768,836 | 535,826 |
+| Draco L6 | 135,828 | 132,738 |
+| **gltfpack `-cc`** | 121,040 | **92,673** |
+
+Draco is already entropy-coded so gzip barely helps; meshopt drops another 23%,
+decodes ~10× faster, and its decoder is **25 KB** versus Draco's 200 KB+ — and
+it's a plain ES module import with no extra files to host.
+
+⚠️ **`gltfpack` silently drops node names, extras, and "unused" UVs unless you
+pass `-ke -kn`.** Verified: without them, `node_extras=[]` and attributes
+collapse to just POSITION and NORMAL.
+⚠️ In `gltf-transform optimize`, **disable `--join --flatten --instance`** or it
+merges your `_LOD0..3` nodes into one mesh.
+
+```python
+bpy.ops.export_scene.gltf(filepath=out, export_format='GLB',   # ← required
+    export_yup=True, export_extras=True, export_texcoords=True,
+    export_normals=True, export_tangents=True,
+    export_vertex_color='ACTIVE',           # 'MATERIAL' can emit stray COLOR_1
+    export_draco_mesh_compression_enable=False)
+```
+Custom properties round-trip: `obj["lightMapIntensity"] = 1.41` → `node.extras`
+→ `mesh.userData` in three.js. JSON-serialisable types only.
+
+## 18.8 LODs and impostors
+
+🔴 **`MSFT_lod` is not supported by three.js** — use a naming convention
+(`Name_LOD0..3`) and build `THREE.LOD` at load with **hysteresis 0.1** to stop
+flicker. **Ship one GLB containing all LODs** — they then share one material
+instance and one texture upload.
+
+Decimate ratios for stylized low-poly: LOD1 `0.5`, LOD2 `0.2–0.25`, LOD3
+`0.08–0.1`, then switch to an impostor — below ~0.15 COLLAPSE destroys branch
+silhouettes. `vertex_group` + `vertex_group_factor` is the underrated lever:
+protect silhouette-critical geometry and decimate the rest harder.
+
+**🟢 Skip Blender for impostors entirely.** `@three.ez/octahedral-impostor`
+bakes the atlas in-browser via render targets, so the baker and the shader
+share one convention — which is where all the bugs live. Two conventions that
+silently ruin a hand-rolled atlas: sampling must be `i/(N-1)` **inclusive**
+(not `(i+0.5)/N`, which gives a persistent parallax wobble), and **Blender is
+Z-up while three.js is Y-up** — `export_yup` fixes the mesh but not camera
+directions you compute yourself. Use **hemi-octahedral** for trees, ruins and
+cliffs (never viewed from below → 2× angular resolution for the same budget);
+12×12 at 2048 is the sweet spot.
+
+## 18.9 Worth mining
+
+**[princeton-vl/infinigen](https://github.com/princeton-vl/infinigen)** —
+**BSD-3-Clause**, actively developed, a huge library of procedural rock,
+terrain, cliff and tree generators driven headlessly. Photoreal-oriented so the
+styling needs replacing, but **the geometry algorithms are directly liftable
+under a permissive license.** The single highest-value repository found.
+
+Also: `Naxela/The_Lightmapper` (best lightmap-baking reference),
+`franMarz/TexTools-Blender` (most battle-tested bake code, authoritative on
+normal swizzle and colorspace), `sharpen3d/Aether` (best modern bake suite).
