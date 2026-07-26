@@ -327,3 +327,28 @@ costing full speed.
 
 **Rule taken forward:** a gate that injects state into a controller instead of
 driving its real inputs is testing the harness, not the game.
+
+## FINAL RUN — #8. The collider audit is self-healing, and what it excludes
+
+ASCENSION 0.1.3 wants the uncovered list empty. Instead of hand-patching
+whichever prop is missing today, `world.autoCoverColliderGaps()` runs at boot
+and registers a collider for any qualifying gap, so the invariant also holds
+for props added later. It found and closed exactly **one** real gap (a 1.1×1.3
+solid on walkable ground at −99,−9); prop count 150 → 151.
+
+Three exclusions, each principled rather than a threshold fudge — the first
+two versions of this audit reported 38 then 21 false positives:
+
+1. **Non-solid materials.** Transparent / additive / non-depth-writing meshes
+   are FX: glow halos, ember quads, shimmer planes, and the water surface the
+   player is *meant* to enter. 14 of the false hits were pooled 1×1 quads
+   parked at the origin while hidden.
+2. **Merged batches (>25m footprint).** Static props are merged per material
+   *after* their colliders are registered (D10), and a merged batch's origin
+   is (0,0,0) even though its geometry spans a zone — reading the object
+   origin instead of the world-space bbox centre put 38 phantom props at the
+   world origin.
+3. **Anything over water.** The rule is "surfaces the player can REACH". The
+   anchored rowboat at (−26,−96) is offshore set dressing that exists to give
+   open water a middle-ground silhouette; terrain below WATER_Y is not
+   walkable ground.

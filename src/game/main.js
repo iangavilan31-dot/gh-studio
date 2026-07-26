@@ -67,8 +67,12 @@ player.yaw = player.targetYaw = 0
 // bricking the game (FINAL_PASS 1.2: never ship a placeholder, but never let
 // one subsystem take the world down either).
 initRapier().then(() => {
+  // close any collider gap BEFORE handing the set to rapier, so the physics
+  // world and the audit agree by construction
+  const autoCovered = world.autoCoverColliderGaps()
   const phys = new Physics()
   const n = phys.addProps({ colliders: world.colliders, aabbs: world.aabbs })
+  window.__MOONREST_AUTOCOVER__ = autoCovered
   phys.addBoundary()
   phys.refreshQueries()
   player.physics = phys

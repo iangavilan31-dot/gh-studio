@@ -133,6 +133,81 @@ try {
   if (cam.skip) check('camera spherecast available', false, 'physics missing')
   else check(`camera never starts inside geometry (${cam.samples} casts)`, cam.clipped === 0, `clipped=${cam.clipped}`)
 
+  // ——— collider audit (ASCENSION 0.1.3) ———
+  // Every renderable surface the player can reach needs registered collision.
+  // Walk the scene for large reachable meshes and assert each one is covered
+  // by a collider. The list must be empty.
+  const audit = await page.evaluate(() => {
+    const M = window.__MOONREST__, W = M.__world
+    const B = { minX: -175, maxX: 175, minZ: -205, maxZ: 185 }
+    const misses = []
+    let scanned = 0, merged = 0
+    W.realScene.traverse((o) => {
+      if (!o.isMesh || !o.geometry) return
+      if (o.userData?.noCollide) return
+      // Only SOLID surfaces can be walls. Transparent / additive / non-depth-
+      // writing meshes are FX: glow halos, ember quads, particle billboards,
+      // shimmer planes, the water surface (which the player is meant to
+      // enter). Auditing them produced 21 false "uncovered" hits — 14 of them
+      // pooled 1×1 quads parked at the origin while hidden.
+      const mats = Array.isArray(o.material) ? o.material : [o.material]
+      const solid = mats.some((m) => m && !m.transparent && m.depthWrite !== false && m.blending !== 2 /* AdditiveBlending */)
+      if (!solid) return
+      o.geometry.computeBoundingBox?.()
+      const bb = o.geometry.boundingBox
+      if (!bb) return
+      // read the world matrix directly: three's getWorldPosition/Scale need
+      // real Vector3 instances and we have no THREE handle in page scope
+      o.updateWorldMatrix?.(true, false)
+      const e = o.matrixWorld?.elements
+      if (!e) return
+      const sx = Math.hypot(e[0], e[1], e[2]) || 1
+      const sy = Math.hypot(e[4], e[5], e[6]) || 1
+      const sz = Math.hypot(e[8], e[9], e[10]) || 1
+      const w = (bb.max.x - bb.min.x) * sx, h = (bb.max.y - bb.min.y) * sy, d = (bb.max.z - bb.min.z) * sz
+      const footprint = Math.max(w, d)
+      if (footprint < 1 || h < 1) return          // only meshes over 1m
+      // Use the world-space bbox CENTRE, not the object origin: static props
+      // are merged per material after their colliders are registered
+      // (DECISIONS D10), and a merged batch's origin is (0,0,0) even though
+      // its geometry spans a whole zone. Reading the origin reported 38 false
+      // "uncovered" meshes all sitting at the world origin.
+      const cxl = (bb.min.x + bb.max.x) / 2, cyl = (bb.min.y + bb.max.y) / 2, czl = (bb.min.z + bb.max.z) / 2
+      const x = e[0] * cxl + e[4] * cyl + e[8] * czl + e[12]
+      const y = e[1] * cxl + e[5] * cyl + e[9] * czl + e[13]
+      const z = e[2] * cxl + e[6] * cyl + e[10] * czl + e[14]
+      // A batch spanning >25m is a merged group or terrain, not a single prop;
+      // its constituents registered collision individually at build time, so a
+      // single centre-point test would be meaningless. Counted, not asserted.
+      if (footprint > 25) { merged++; return }
+      if (x < B.minX || x > B.maxX || z < B.minZ || z > B.maxZ) return   // outside the world
+      if (y > 40) return                            // sky/moon/backdrop, unreachable
+      // The rule is "every surface the PLAYER CAN REACH". Anything standing in
+      // open water is offshore set dressing the player cannot walk to — e.g.
+      // the anchored rowboat at (-26,-96), which exists to give the water a
+      // middle-ground silhouette. Terrain below the water line is not
+      // walkable ground.
+      if (W.heightAt(x, z) < -1.2 /* WATER_Y */) return
+      scanned++
+      // covered if any registered collider overlaps its footprint
+      const r = footprint / 2
+      let covered = false
+      for (const c of W.colliders) {
+        if (Math.hypot(c.x - x, c.z - z) < c.r + r + 1.2) { covered = true; break }
+      }
+      if (!covered) {
+        for (const b of W.aabbs) {
+          const nx = Math.max(b.minX, Math.min(x, b.maxX)), nz = Math.max(b.minZ, Math.min(z, b.maxZ))
+          if (Math.hypot(x - nx, z - nz) < r + 1.2) { covered = true; break }
+        }
+      }
+      if (!covered) misses.push({ name: o.name || o.type, x: +x.toFixed(1), z: +z.toFixed(1), w: +w.toFixed(1), h: +h.toFixed(1) })
+    })
+    return { scanned, merged, misses: misses.slice(0, 8), total: misses.length }
+  })
+  check(`collider audit: every reachable mesh >1m has collision (${audit.scanned} scanned, ${audit.merged} merged batches skipped)`,
+    audit.total === 0, audit.total ? `${audit.total} uncovered, e.g. ${JSON.stringify(audit.misses.slice(0, 3))}` : '')
+
   check('console clean', issues.length === 0, issues.slice(0, 2).join(' | '))
 } catch (e) {
   check('collisioncheck completed', false, e.message)
