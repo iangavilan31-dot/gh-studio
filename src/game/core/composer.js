@@ -20,8 +20,9 @@ import {
   EffectComposer, RenderPass, EffectPass,
   SMAAEffect, SMAAPreset,
   BloomEffect, ToneMappingEffect, ToneMappingMode,
-  VignetteEffect, NoiseEffect, BlendFunction,
+  VignetteEffect, NoiseEffect, BlendFunction, LUT3DEffect,
 } from 'postprocessing'
+import { nightGrade } from './grade.js'
 import { N8AOPostPass } from 'n8ao'
 
 export class Composer {
@@ -90,6 +91,11 @@ export class Composer {
     })
     this.noise.blendMode.opacity.value = 0.09
 
+    // The grade. AFTER tone mapping, because it enforces a palette specified
+    // as hex values — i.e. display-referred. Tetrahedral interpolation is what
+    // keeps a 33-cube from banding across a night sky (§3).
+    this.lut = new LUT3DEffect(nightGrade(), { tetrahedralInterpolation: true })
+
     // One EffectPass merges all of these into a single compound shader (§3),
     // so this is one draw, not six.
     this.effectPass = new EffectPass(
@@ -98,6 +104,7 @@ export class Composer {
       this.bloom,
       this.vignette,
       this.toneMapping,
+      this.lut,
       this.noise,
     )
     this.composer.addPass(this.effectPass)
@@ -120,6 +127,16 @@ export class Composer {
     }
     this.ao.scene = scene
     this.ao.camera = camera
+  }
+
+  // Rebuild the grade from new parameters. Used by the live tuning knobs so the
+  // curve can be swept against composecheck instead of guessed at.
+  setGrade(params) {
+    const next = nightGrade(params)
+    const old = this.lut.lut
+    this.lut.lut = next
+    old?.dispose?.()
+    return next
   }
 
   setSize(cssW, cssH) {
