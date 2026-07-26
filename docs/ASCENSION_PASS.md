@@ -20,6 +20,113 @@
 
 ---
 
+# PART 0 — PLAYTEST BLOCKERS (fix before all Part 3+ work)
+
+Second playtest, three blockers reported, all confirmed in screenshots. These
+outrank everything else in this document: a beautiful world you fall through
+and cannot navigate is not shippable. Ledger prefix `ASC-B`.
+
+What is now working and must not regress: the moon renders large with bloom,
+the lantern casts warm light, the village architecture and lit windows read
+well, cobblestone and half-timbering look good.
+
+## 0.1 BLOCKER — the player phases through walls; the camera clips inside geometry
+
+Evidence: a playtest screenshot shows the camera *inside* a rooftop, looking at
+the underside of roof faces, with the player's hat protruding through the roof.
+Reported: "sometimes I phase thru walls."
+
+Fix, in this order:
+
+1. **Continuous (swept) collision, not discrete.** Capsule-cast from the
+   previous position to the intended position every frame; resolve at first
+   hit; slide along the surface tangent. Never assign a transform without a
+   sweep. Fast movement through thin walls is textbook tunneling and will get
+   worse when Part 0.2 raises speeds.
+2. **Sub-stepping.** If a frame's movement exceeds 0.4 x capsule radius, split
+   it into sub-steps.
+3. **Collider audit.** Every renderable surface the player can reach needs
+   registered collision geometry, built into a per-zone BVH at load. Log any
+   mesh over 1m that ships without a collider; the list must be empty.
+4. **Camera collision.** Spherecast (radius 0.25m) from the player's head to
+   the desired camera position; pull in to first hit minus 0.15m; 0.25s
+   recovery ease; near plane <= 0.1. Interiors get a tighter minimum distance
+   and ceiling awareness. The camera must never occupy solid geometry.
+5. **World boundary.** An invisible, unclimbable boundary; the visible hard
+   seam at the world edge (screenshot 1) must be hidden behind terrain, fog,
+   or water so the edge of the world is never in frame.
+
+Gate — `scripts/collisioncheck.mjs`: a bot charges every wall, cliff, prop,
+door frame, and world edge in every zone from 8 angles at maximum speed, plus
+a 5-minute random-walk fuzz per zone. Asserts zero penetrations, zero
+out-of-bounds, and zero frames where the camera-to-player ray is obstructed.
+Must pass 100%, and reruns after every movement or geometry change.
+
+## 0.2 BLOCKER — movement is too slow
+
+Reported: "ur to slow." Current speeds are realistic, which is exactly the
+problem. New values:
+
+- Walk (light analog input): 2.2 m/s.
+- **Default run: 5.2 m/s** — what you get from simply pushing the stick, no
+  button held. This is the speed the game is tuned around.
+- Sprint (hold): 8.0 m/s, with +6 deg FOV, speed streaks in the fog, and the
+  robe and beard streaming behind.
+- Acceleration to full in 0.15s; deceleration 0.12s with a settle step.
+- Jump apex 1.6m, coyote time 6 frames.
+- **Glide moves to tier 0.** A limited hold-jump slow-fall is available from
+  the first minute; the Mothwing upgrade extends it. Traversal joy must not be
+  gated behind 8 lights.
+- **Retune the whole ladder** (Part 7.1): tiers at 4 / 12 / 24 / 40 lights
+  instead of 8 / 20 / 35 / 50.
+- **Lantern fast-travel:** every kindled lantern becomes a waypoint. Hold
+  interact on a kindled lantern to travel to any other, via a 2-second
+  moth-cloud transition. This fixes slowness and backtracking at once, and it
+  makes kindling feel like it pays you back.
+
+Gate: crossing the Park end to end takes <= 25 seconds at default run speed.
+Log measured crossing times for every zone in PERFORMANCE_AUDIT.md.
+
+## 0.3 BLOCKER — no idea where to go
+
+Reported: "its hard to know where to go to explore." Fix with layered diegetic
+guidance, strongest first. No minimap, no quest markers, no arrows.
+
+1. **Unkindled lights are visible from across the zone.** Every cold light
+   carries a faint pulsing ember, readable at 80m, occluded by geometry but
+   never lost to fog. You can literally see your objectives as dying embers
+   scattered through the dark. This one change fixes most of the problem.
+2. **Kindled lights become beacons** — warm bloom visible from far away, so
+   the map reads at a glance as "lit" versus "still dark."
+3. **The Lantern Listen** (new verb): hold L / LB and the lantern lifts,
+   chimes, and a single wisp streaks away toward the nearest unkindled light,
+   fading after 3 seconds. Unlimited uses, zero UI. This is the "I'm lost"
+   button and it must feel like folklore, not like a quest marker.
+4. **Landmarks** visible from each zone entrance and from at least two other
+   zones (Part 5.2 scale delivers this).
+5. **The path reads as the path** — cobblestone catches moonlight with a
+   slight specular and albedo bias over the surrounding terrain, so the road
+   is always legible even in deep fog.
+6. **Fingerposts** at every fork, pictogram-first, readable at 15m.
+7. **The dream fox** (Part 5.3) wanders toward regions you have not visited.
+
+Gate: a fresh-context subagent, given only the control list and no other
+documentation, must reach 3 different zones and kindle 5 lights within 10
+minutes. Save the transcript to the judge file.
+
+## 0.4 Also visible in these screenshots — fold into the Part 3/4 work
+
+- **Untextured faces.** Large flat lavender planes appear on some walls and
+  roofs: missing material or missing UVs. Audit every mesh builder; no face
+  ships untextured or unlit.
+- **Buildings float and intersect terrain badly.** Seat every structure into
+  the heightfield with skirt geometry so nothing hovers or clips.
+- **The world edge is visible** as a hard horizon seam. Hide it (0.1.5).
+- **Ground level is still nearly empty** in the Park. Part 4.2 density is the
+  fix and it is now urgent, not cosmetic.
+
+Nothing in Parts 3 through 10 is marked done while any Part 0 gate is failing.
+
 # PART 1 — THE VERDICT
 
 The owner's judgment of the current build: **"the graphics are like a 2/10, I
