@@ -254,3 +254,39 @@ simplex-noise 4.0.3 + alea 1.0.1 → vite-plugin-glsl 1.6.1 → -D
 @gltf-transform/cli 4.4.2. `npm ls` confirms postprocessing and n8ao both
 dedupe onto three 0.185.1. Build exits 0. `@three.ez/instanced-mesh` deferred
 to the vegetation stage per §0's own note.
+
+## FINAL RUN — #4. Rapier heightfield layout was MEASURED, not assumed
+
+TOOLKIT §2.1 warns about "row/column-major ordering (the classic transposed-
+terrain bug)" without saying which way. Built all three candidate layouts and
+raycast each against the analytic `heightAt()`:
+
+| layout | median error |
+|---|---|
+| nrows=x, column-major | 0.994 m ✗ |
+| nrows=x, row-major | 1.602 m ✗ |
+| **nrows=z, ncols=x, column-major** | **0.000 m ✓** |
+
+Shipped the measured one: `h[row + col*(nrows+1)]`, row → z, col → x.
+`verifyTerrain()` re-asserts median < 0.15 m so a regression fails loudly.
+
+## FINAL RUN — #5. Two silent-failure traps caught in the physics bring-up
+
+**(a) Rapier's query pipeline is empty until `world.step()`.** Before stepping,
+every `castRay` MISSED. My first `verifyTerrain()` reported a perfect 0.000 m
+error — because `groundY()` fell back to `heightAt()` on a miss, so it was
+comparing `heightAt` against itself. A green gate that tested nothing.
+Fixed twice over: `Physics` now steps once after building terrain (and
+`refreshQueries()` after adding props), and **`groundY()` returns `null` on a
+miss instead of falling back** — no silent substitution is allowed to
+manufacture a pass. `verifyTerrain()` now also reports hits/misses and requires
+>90% hits, so a dead pipeline can never read as success again.
+
+**(b) A "worst error" alone can't tell transposition from cliff aliasing.**
+The check reports the MEDIAN (transposition signal) separately from the max
+(1 m sampling across a cliff — residual worst 4.4 m at a cliff edge is
+expected and harmless).
+
+Tunneling proof, the reason this whole module exists: a capsule driven **40 m
+in a single step** at a 0.2 m-thick wall stops at 4.43 m (wall face 4.8 −
+radius 0.35 − skin). The old discrete depenetration teleported through.
