@@ -86,6 +86,15 @@ FUN_PASS toy list. The Wooze/Unseen system survives in reduced form (Part 7.4).
 - **Isle — the Drowned Choir.** A 120m leviathan ribcage arcing out of the
   sea; the keep stands inside it. It hums the bass note of the zone's music.
 
+Build guidance: the Long Sleeper and the Drowned Choir are silhouettes at
+distance and should be generated procedurally (Blender curve/array/displace) —
+detail is wasted on them. The **Antlered Sleeper is the exception**: it is seen
+close, and a convincing stag is the hardest thing in this document to generate
+procedurally. Use an AI-generated GLB for it if one is available in
+`public/assets/models/hero/`, fall back to Blender, and run Part 9's
+three-attempt loop on it either way. It is the first colossus the player sees
+and it carries the scale promise for the whole game.
+
 ---
 
 # PART 3 — THE SPINE (build in exactly this order)
@@ -279,6 +288,36 @@ height, and then the night quietly resets.
 Composition: the causeway as leading line, ribs as foreground frame, the keep
 as focal point, the moon behind it. This is the game's hero shot — spend
 disproportionate effort here.
+
+## 7.5 The living world (small creatures — cheap, and the world is dead without them)
+
+Four creature types, deliberately few, each built from a simple mesh plus a
+short state machine. In this art style creatures are read as **silhouette and
+motion**, not detail — which is why they are cheap and why they must be
+animated well rather than modeled finely.
+
+- **Lanternflies.** Swarms that orbit kindled lanterns and drift after the
+  player, thinning in rain. Instanced quads with soft emissive; effectively
+  particles with intent. They appear the moment the first lantern is lit — the
+  world's first visible reaction to the player, and part of the ten-minute
+  opening.
+- **Grave moths.** Large, slow, pale. They drift across the frame, and
+  occasionally one lands on the player's hat and stays there for a while. Do
+  not announce it. Players will notice on their own and it will be the first
+  thing they tell someone about.
+- **Moss hares.** Bolt when approached, stop at ~15m, watch, and creep back
+  when the player is still. Their whole job is to make the Park feel observed.
+- **The dream fox.** Appears once per night at distance, watching, then leaves.
+  Glowing pawprints fade over 30 seconds. Following them leads somewhere worth
+  finding. Never explained anywhere.
+
+Plus the **chickens** in the Village (Part 7.2) — the only creatures awake, and
+the only warm joke in the game.
+
+Rules: nothing is hostile, nothing can be caught, nothing has a health bar.
+Every creature is animated with anticipation and settle, never linear motion.
+Budget: ≤ 4k tris each, instanced, culled aggressively. Lanternflies, moths and
+hares belong to Stage 3; the fox to Stage 4.
 
 ## 7.4 What survives of the geeked layer
 
