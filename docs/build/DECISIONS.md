@@ -223,3 +223,34 @@ for them anyway).
   the three-way state hashes matched exactly. Only the wall-clock budget
   grew; every real assertion (advance, sync, three-way determinism) is
   unchanged and now passes (156 ticks, 2/2 hash checkpoints identical).
+
+## FINAL RUN — #1. The old tech constraints are superseded (logged, not asked)
+
+`CLAUDE.md` carried the DREAMSCRAP/PRESTIGE law: *three + peerjs only, all
+assets procedural, no realtime lights, 480×270 nearest target*. `FINAL_PASS.md`
++ `TOOLKIT.md` reverse all four — a full runtime stack, Blender-generated GLB
+assets, a real lighting rig with CSM shadows, and a post chain. Authority order
+is explicit (TOOLKIT wins on technical detail, FINAL_PASS over other docs), so
+the new run governs. **CLAUDE.md rewritten** as the compaction hook, with a
+loud warning not to revert to the old constraints after a compact. Risk: a
+compacted context re-reads a stale doc and re-imposes procedural-only. Mitigated
+by putting the reversal at the top of CLAUDE.md and in the compact instructions.
+
+## FINAL RUN — #2. Docs were on `origin/main`, not on the work branch
+
+`TOOLKIT/FINAL_PASS/DIRECTION/ASSETS/ASCENSION_PASS` were pushed to `main` via
+PRs #7–#16 while the branch carried 117 unmerged DREAMSCRAP commits. Merged
+`origin/main` into the work branch (clean, no conflicts) rather than rebasing —
+keeps the shipped DREAMSCRAP history intact and brings the specs in. Branch is
+now 118 ahead / 0 behind.
+
+## FINAL RUN — #3. TOOLKIT §0 stack installed verbatim, in order
+
+`three@0.185.1` **pinned exactly** (not `^`) — postprocessing's peer caps at
+`<0.186.0`, so a caret would let a future `npm i` break the peer. Then rapier
+0.19.3 → three-mesh-bvh 0.9.13 → postprocessing 6.39.3 + n8ao 2.0.0 →
+three-custom-shader-material 6.4.0 → lil-gui 0.21.0 + stats.js 0.17.0 →
+simplex-noise 4.0.3 + alea 1.0.1 → vite-plugin-glsl 1.6.1 → -D
+@gltf-transform/cli 4.4.2. `npm ls` confirms postprocessing and n8ao both
+dedupe onto three 0.185.1. Build exits 0. `@three.ez/instanced-mesh` deferred
+to the vegetation stage per §0's own note.
