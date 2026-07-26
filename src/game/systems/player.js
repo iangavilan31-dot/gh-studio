@@ -4,9 +4,17 @@
 import * as THREE from 'three'
 import { makeAnimState, advanceAnim, applyPose } from './anim.js'
 
-const WALK = 1.6, JOG = 3.2
-const ACCEL_TIME = 0.12
+// ASCENSION Part 0.2 — "ur to slow". Realistic speeds were exactly the
+// problem. Run is what you get from simply pushing the stick, no button held;
+// the whole game is tuned around 5.2.
+const WALK = 2.2, RUN = 5.2, SPRINT = 8.0
+const ACCEL_TIME = 0.15      // 0 → full
+const DECEL_TIME = 0.12      // full → 0, with a settle step
 const GRAV = -14
+const JUMP_APEX = 1.6
+const COYOTE = 6 / 60        // 6 frames
+const CAP_R = 0.35, CAP_HH = 0.5
+const CAP_CENTRE = CAP_R + CAP_HH   // feet → capsule centre
 
 const _v = new THREE.Vector3()
 
@@ -49,10 +57,12 @@ export class PlayerController {
     if (moving && this.anim.action && ['sit', 'lie', 'sleep'].includes(this.anim.action)) this.anim.action = null
     const locked = this.anim.action && ['sit', 'lie', 'sleep', 'channel'].includes(this.anim.action)
 
-    // hop
-    if (input.pressed('Space') && this.grounded && !locked) {
-      this.vy = Math.sqrt(-2 * GRAV * 0.5) // 0.5m apex
+    // hop — 1.6m apex, with coyote time so a step off a lip still jumps
+    const canJump = (this.grounded || this._coyote > 0) && !locked
+    if (input.pressed('Space') && canJump) {
+      this.vy = Math.sqrt(-2 * GRAV * JUMP_APEX)
       this.grounded = false
+      this._coyote = 0
     }
     // sit/lie toggle
     if (input.pressed('KeyC')) {
@@ -61,8 +71,12 @@ export class PlayerController {
       else this.setAction('sit')
     }
 
-    const jog = input.down('ShiftLeft', 'ShiftRight')
-    const targetSpeed = locked || !moving ? 0 : (jog ? JOG : WALK)
+    // Run is the DEFAULT (no button). Shift sprints; a light analog tilt walks.
+    const sprint = input.down('ShiftLeft', 'ShiftRight')
+    const tilt = Math.min(1, Math.hypot(ax, az))
+    const base = tilt < 0.55 ? WALK : (sprint ? SPRINT : RUN)
+    const targetSpeed = locked || !moving ? 0 : base
+    this.sprinting = moving && sprint && tilt >= 0.55   // camera adds +6° FOV
 
     // desired world-space direction (camera-relative)
     // camera forward (horiz): (-sin cy, -cos cy); right: (cos cy, -sin cy)
@@ -76,9 +90,10 @@ export class PlayerController {
       this.targetYaw = Math.atan2(dirX, dirZ)
     }
 
-    // accel: 0→full in 120ms with ease-out (exponential damp ≈ ease-out)
-    const lambda = 3 / ACCEL_TIME
+    // accel 0.15s / decel 0.12s, ease-out (exponential damp ≈ ease-out)
     const targetVX = dirX * targetSpeed, targetVZ = dirZ * targetSpeed
+    const speeding = targetSpeed > Math.hypot(this.vel.x, this.vel.z)
+    const lambda = 3 / (speeding ? ACCEL_TIME : DECEL_TIME)
     const k = 1 - Math.exp(-lambda * dt)
     this.vel.x += (targetVX - this.vel.x) * k
     this.vel.z += (targetVZ - this.vel.z) * k
@@ -92,14 +107,46 @@ export class PlayerController {
     // smoothed yaw rate feeds the C.1 turn lean
     if (dt > 0) this.anim.yawRate += ((yawStep / dt) * 0.25 - this.anim.yawRate) * Math.min(1, dt * 7)
 
-    // integrate
+    // ——— SWEPT MOVE (ASCENSION 0.1) ———
+    // One shape-cast of the whole frame's translation. Never assign a
+    // transform without a sweep; that is what let the old build phase through
+    // walls. Falls back to the legacy pushout only if WASM never initialised,
+    // so a physics failure degrades instead of bricking the game.
+    if (this.physics) {
+      const wasGrounded = this.grounded
+      if (!this.grounded) this.vy += GRAV * dt
+      else if (this.vy < 0) this.vy = 0
+      // gravity probe while grounded keeps us glued to downhill slopes
+      const vyStep = this.grounded ? -2 * dt : this.vy * dt
+      _v.set(this.pos.x, this.pos.y + CAP_CENTRE, this.pos.z)
+      const r = this.physics.move(_v, { x: this.vel.x * dt, y: vyStep, z: this.vel.z * dt })
+      this.pos.x += r.dx
+      this.pos.y += r.dy
+      this.pos.z += r.dz
+      // a wall kills the velocity INTO it, so we slide instead of grinding
+      if (r.hitWall) {
+        const moved = Math.hypot(r.dx, r.dz), want = Math.hypot(this.vel.x * dt, this.vel.z * dt)
+        if (want > 1e-6) { const s = moved / want; this.vel.x *= s; this.vel.z *= s }
+      }
+      if (r.grounded) {
+        if (!wasGrounded) {
+          const impact = Math.min(1, -this.vy / 5)
+          this.anim.landT = 0.38 * (0.5 + 0.5 * impact)
+          this.onLand?.(impact)
+        }
+        this.grounded = true; this.vy = 0; this._coyote = COYOTE
+      } else {
+        this.grounded = false
+        this._coyote = Math.max(0, (this._coyote ?? 0) - dt)
+      }
+      this.surface = this.world.surfaceAt(this.pos.x, this.pos.z)
+      return this._finish(input, dt, time)
+    }
+
+    // ——— legacy fallback (no physics) ———
     this.pos.x += this.vel.x * dt
     this.pos.z += this.vel.z * dt
-
-    // world bounds + collisions (circle pushout)
     this.world.collide(this.pos, 0.35)
-
-    // ground follow + gravity + slope slide
     const groundY = this.world.heightAt(this.pos.x, this.pos.z)
     if (!this.grounded) {
       this.vy += GRAV * dt
@@ -127,7 +174,13 @@ export class PlayerController {
     }
 
     this.surface = this.world.surfaceAt(this.pos.x, this.pos.z)
+    return this._finish(input, dt, time)
+  }
 
+  // everything after the move resolves: latency log, lean, look-back, rig,
+  // footsteps. Shared by the swept path and the legacy fallback so the two
+  // can never drift apart.
+  _finish(input, dt, time) {
     // record latency once movement actually applied
     const speed = Math.hypot(this.vel.x, this.vel.z)
     if (this._pendingLatency && speed > 0.01) {
