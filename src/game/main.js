@@ -9,6 +9,7 @@ import { World } from './world/world.js'
 import { buildWizard, PLAYER_TINTS } from './art/characters.js'
 import { Input } from './systems/input.js'
 import { PlayerController } from './systems/player.js'
+import { initRapier, Physics } from './systems/physics.js'
 import { OrbitCamera } from './systems/camera.js'
 import { InteractSystem } from './systems/interact.js'
 import { HUD } from './ui/hud.js'
@@ -59,6 +60,23 @@ const player = new PlayerController(rig, world)
 player.pos.set(2.6, 0, -18.2) // waking at dusk by the Long Bench
 player.pos.y = world.heightAt(player.pos.x, player.pos.z)
 player.yaw = player.targetYaw = 0
+
+// FIN-0: swept collision. Rapier is WASM, so it arrives a few frames late —
+// the player runs on the legacy pushout until it lands, then upgrades in
+// place. A physics failure therefore degrades to the old behaviour instead of
+// bricking the game (FINAL_PASS 1.2: never ship a placeholder, but never let
+// one subsystem take the world down either).
+initRapier().then(() => {
+  const phys = new Physics()
+  const n = phys.addProps({ colliders: world.colliders, aabbs: world.aabbs })
+  phys.addBoundary()
+  phys.refreshQueries()
+  player.physics = phys
+  world.physics = phys
+  const t = phys.verifyTerrain(300)
+  if (!t.aligned) console.error('[physics] terrain misaligned', t)
+  window.__MOONREST_PHYS__ = { props: n, terrain: t }
+}).catch((e) => console.error('[physics] init failed, staying on legacy collision', e))
 
 const orbit = new OrbitCamera(camera, world)
 orbit.yaw = orbit.smoothYaw = Math.PI // camera behind, facing the park

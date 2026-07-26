@@ -23,7 +23,8 @@ stranger; if a stage breaks, **revert** rather than push forward.
 
 - [x] TOOLKIT §0 stack installed in order; `three` pinned 0.185.1; build green.
 - [x] CLAUDE.md rewritten as the compaction hook; DECISIONS #1–#3 logged.
-- [ ] **Swept collision.** `world.collide()` is currently discrete
+- [x] **Swept collision.** ✅ live: 150 props + heightfield + boundary; 40m single-step charge at a 0.2m wall stops dead.
+- [ ] ~~swept collision detail~~ `world.collide()` is currently discrete
       depenetration against analytic cylinders + AABBs — the textbook tunneling
       cause (TOOLKIT §2: *"substepping is a probabilistic patch, not a fix"*).
       Replace with Rapier `KinematicCharacterController` (§2.1): terrain as
@@ -38,9 +39,11 @@ stranger; if a stage breaks, **revert** rather than push forward.
       `hit.distance − 0.15`; **snap in immediately, ease out 5–10 u/s**; near
       plane ≤0.1. ⚠️ renames: `MeshBVHHelper`→`BVHHelper`,
       `maxLeafSize`→`targetLeafSize`.
-- [ ] **Speeds:** walk 2.2 / **run 5.2 by default (no button)** / sprint 8.0
+- [x] **Speeds:** ✅ walk 2.2 / run 5.2 default / sprint 8.0; measured 5.19 m/s median on open ground; accel 0.15s, decel 0.12s, jump apex 1.6m, coyote 6f.
+- [ ] ~~speeds detail~~ walk 2.2 / **run 5.2 by default (no button)** / sprint 8.0
       with +6° FOV; accel 0.15s, decel 0.12s; jump apex 1.6m; coyote 6 frames.
-- [ ] **World boundary** unclimbable and never visible in frame.
+- [x] **World boundary** ✅ four unclimbable slabs replace the coordinate clamp.
+- [ ] ~~boundary detail~~ unclimbable and never visible in frame.
 - [ ] **Ember-visible unkindled lights** — faint pulsing ember readable at 80m,
       occluded by geometry, never lost to fog. Biggest wayfinding win.
 - [ ] **Lantern Listen** — hold L/LB: lantern lifts, chimes, one wisp streaks
