@@ -164,6 +164,17 @@ const FRAG = /* glsl */ `
 // snap + wind (csm_Position) and the carried lantern warmth
 // (csm_DiffuseColor). Writing csm_DiffuseColor and never csm_FragColor is
 // what keeps the result INSIDE the lighting pipeline (§6).
+// How far above 1.0 an emitter sits. This is a fine balance and 4.0 was too
+// hot: a glow quad is a soft radial gradient, so a uniform multiply pushes its
+// whole falloff into HDR and the Hall of Lanterns rendered as one blown blob
+// at 13.2% accent coverage (budget 8%).
+//
+// The right value lets the bloom THRESHOLD do the selecting. At 2.0 a quad's
+// core (texel ~1.0) lands at 2.0 and clears the 0.72 threshold, while its
+// outer falloff (texel ~0.2) lands at 0.4 and does not — so sources glow and
+// halos stay halos. Bloom makes the bloom; the quad does not pre-bake it.
+const EMITTER_GAIN = 2.0
+
 let _white1x1 = null
 function white1x1() {
   if (_white1x1) return _white1x1
@@ -265,11 +276,32 @@ export function litMaterial({
   wind = 0, side = THREE.FrontSide, depthWrite = true, roughness = 0.85,
   noFog = false,
 } = {}) {
+  // ——— emitters are lights, not surfaces ———
+  // Every glow quad in the world shares one signature: transparent with
+  // depthWrite off. Run through the lit path as ordinary geometry they became
+  // dim surfaces CATCHING moonlight instead of being light — which is why
+  // every pose measured 0.0% highlights and 0.0% accent warmth in a game about
+  // kindling 37 lanterns.
+  //
+  // TOOLKIT §3 names this exact trap: bloom's threshold means nothing blooms
+  // unless emitters are genuinely HDR. So an emitter gets a black diffuse (it
+  // has no reflectance — it is a source), its map colour moved onto the
+  // emissive channel, and an intensity above 1 so it clears the threshold and
+  // the tone curve sees a real highlight.
+  const isEmitter = transparent && !depthWrite
+  const emissiveColor = new THREE.Color(emissive)
+  if (isEmitter && emissiveColor.r + emissiveColor.g + emissiveColor.b === 0) {
+    // no emissive was authored — the quad's own painted colour IS the light
+    emissiveColor.setRGB(1, 1, 1)
+  }
+
   const base = new THREE.MeshStandardMaterial({
     map: map ?? null,
+    color: isEmitter ? 0x000000 : 0xffffff,
+    emissiveIntensity: isEmitter ? EMITTER_GAIN : 1,
     vertexColors: true,
     fog: !noFog,
-    emissive: new THREE.Color(emissive),
+    emissive: emissiveColor,
     // csm_Emissive / csm_Roughness are SILENT no-ops unless the base material
     // has the matching map slot populated (TOOLKIT §8) — a 1×1 white texture
     // is the documented way to open those slots.
@@ -320,7 +352,9 @@ export function litMaterial({
       uWindAmp: { value: wind },
       uLanternPos: globalUniforms.uLanternPos,
       uLanternStr: globalUniforms.uLanternStr,
-      uAlbedoFloor: globalUniforms.uAlbedoFloor,
+      // an emitter's diffuse is black ON PURPOSE — flooring it would put it
+      // back to catching moonlight, so it gets a floor of its own at zero
+      uAlbedoFloor: isEmitter ? { value: 0 } : globalUniforms.uAlbedoFloor,
       uVertexTint: globalUniforms.uVertexTint,
       uOpacity, uEmissive, uMap,
     },
@@ -332,6 +366,7 @@ export function litMaterial({
   // rather than by a name heuristic that would rot the first time a mesh is
   // renamed. `transparent` is remembered so halos never cast a solid shadow.
   mat.userData.lit = true
+  mat.userData.emitter = isEmitter
   mat.userData.castable = !transparent && opacity >= 0.99
   return mat
 }

@@ -199,6 +199,9 @@ export class MoonRig {
       const mats = Array.isArray(m) ? m : [m]
       if (!mats.some((x) => x?.userData?.lit)) return
       o.userData.__shadowed = true
+      // an emitter receiving a shadow would mean a lantern flame going dim
+      // because a tree is in front of the moon
+      if (mats.some((x) => x?.userData?.emitter)) return
       o.receiveShadow = true
       recv++
       if (mats.every((x) => x?.userData?.castable)) { o.castShadow = true; cast++ }
