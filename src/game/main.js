@@ -720,6 +720,17 @@ function tick() {
 
   // photo mode toggle (in the night, no menu up)
   if (mode === 'game' && !shell.screen && !cinematic && input.pressed('KeyP')) togglePhoto(!photo.on)
+  // The Lantern Listen (ASCENSION 0.3.3): the "I'm lost" verb. Lantern lifts,
+  // chimes, one wisp streaks toward the nearest unkindled light. No UI, no
+  // arrow — folklore, not a quest marker. Unlimited uses.
+  if (mode === 'game' && !shell.screen && !cinematic && input.pressed('KeyL')) {
+    const t = world.lanternListen(player.pos.x, player.pos.z)
+    if (t) {
+      player.lookBack(t.x, t.z, 1.6)          // the keeper glances after it
+      audio?.chime?.(0.5)
+      window.__MOONREST_LISTEN__ = t          // gate surface
+    }
+  }
   // a menu/cinematic interrupting a Tab-hold discards the wheel, emoting nothing
   if (wheelOpen && (cinematic || shell.blocking || photo.on || mode === 'title')) {
     wheelOpen = false

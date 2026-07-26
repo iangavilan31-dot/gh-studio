@@ -267,6 +267,56 @@ export class World {
     if (parts.pool) parts.pool.visible = true
   }
 
+  /**
+   * The Lantern Listen (ASCENSION 0.3.3) — the "I'm lost" verb.
+   * The lantern lifts and chimes, and ONE wisp streaks away toward the
+   * nearest unkindled light, fading after ~3s. Unlimited, zero UI, no arrow
+   * and no minimap: it must read as folklore, not a quest marker. Returns the
+   * target so the caller can play the chime and lift the staff.
+   */
+  lanternListen(fromX, fromZ) {
+    let best = null, bestD = Infinity
+    for (const l of this.lights) {
+      if (l.kindled) continue
+      const d = Math.hypot(l.x - fromX, l.z - fromZ)
+      if (d < bestD) { bestD = d; best = l }
+    }
+    if (!best) return null   // everything is lit — the night is done
+    if (!this._wispMat) {
+      this._wispMat = retroMaterial({ map: TEX.glowDot({ name: 'wisp', color: '#ffd79a' }), transparent: true, depthWrite: false, opacity: 0.95, emissive: 0xffc070 })
+      this._wispMat.blending = THREE.AdditiveBlending
+    }
+    if (!this._wisp) {
+      this._wisp = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), this._wispMat)
+      ensureVertexColors(this._wisp.geometry)
+      this._wisp.renderOrder = 7
+      this._wisp.visible = false
+      this.scene.add(this._wisp)
+    }
+    const y = heightAt(fromX, fromZ) + 1.5
+    this.listenWisp = { t: 0, dur: 3, x0: fromX, z0: fromZ, y0: y, tx: best.x, tz: best.z, ty: heightAt(best.x, best.z) + 1.4 }
+    return { id: best.id, x: best.x, z: best.z, dist: bestD }
+  }
+
+  _updateListen(dt) {
+    const w = this.listenWisp
+    if (!w || !this._wisp) { if (this._wisp) this._wisp.visible = false; return }
+    w.t += dt
+    const k = Math.min(1, w.t / w.dur)
+    if (k >= 1) { this.listenWisp = null; this._wisp.visible = false; return }
+    // ease out along the path, arcing a little so it drifts like a spirit
+    const e = 1 - Math.pow(1 - k, 2.2)
+    this._wisp.visible = true
+    this._wisp.position.set(
+      w.x0 + (w.tx - w.x0) * e,
+      w.y0 + (w.ty - w.y0) * e + Math.sin(k * Math.PI) * 1.6,
+      w.z0 + (w.tz - w.z0) * e,
+    )
+    this._wisp.scale.setScalar(1 + Math.sin(k * Math.PI) * 0.6)
+    if (this._wispMat) this._wispMat.uniforms.uOpacity.value = 0.95 * (1 - Math.pow(k, 2))
+    if (this.camera) this._wisp.lookAt(this.camera.position)
+  }
+
   get kindledCount() { return this.lights.filter((l) => l.kindled).length }
   get kindledIds() { return this.lights.filter((l) => l.kindled).map((l) => l.id) }
 
@@ -2050,13 +2100,27 @@ export class World {
       if (!l.pilot) continue
       if (l.kindled) continue
       const cam = this.camera.position
-      const vis = Math.hypot(cam.x - l.x, cam.z - l.z) < 80
+      const d = Math.hypot(cam.x - l.x, cam.z - l.z)
+      // ASCENSION 0.3.1 — "you can literally see your objectives as dying
+      // embers scattered through the dark", readable at 80m and never lost to
+      // fog. A fixed 0.34m quad is sub-pixel by ~40m, so the ember holds its
+      // ANGULAR size past that: it stops shrinking and grows in world units
+      // instead, and its opacity climbs to out-run fog extinction. Still
+      // occluded by geometry (it is depth-tested), so it reads as a light in
+      // the world rather than a quest marker pasted on the screen.
+      const vis = d < 88
       l.pilot.visible = vis
       if (vis) {
-        l.pilot.scale.setScalar(1 + 0.22 * Math.sin(time * 2.1 + l.flickerSeed) + 0.08 * Math.sin(time * 5.3 + l.flickerSeed * 2))
+        const breathe = 1 + 0.22 * Math.sin(time * 2.1 + l.flickerSeed) + 0.08 * Math.sin(time * 5.3 + l.flickerSeed * 2)
+        const far = Math.max(1, d / 26)              // hold angular size past ~26m
+        l.pilot.scale.setScalar(breathe * far)
+        // fog eats distant embers; lift the core so the objective survives it
+        const lift = Math.min(1, Math.max(0, (d - 20) / 60))
+        if (this.pilotMat) this.pilotMat.uniforms.uOpacity.value = 0.6 + 0.35 * lift
         l.pilot.lookAt(cam)
       }
     }
+    this._updateListen(dt)
     for (const s of this.sways) {
       s.rotation.z = Math.sin(time * 0.8 + s.position.x) * 0.06
       s.rotation.x = Math.sin(time * 0.6 + s.position.z) * 0.05
