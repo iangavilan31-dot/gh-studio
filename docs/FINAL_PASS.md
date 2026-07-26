@@ -429,6 +429,10 @@ Plus, every pass: two fresh-context reviewer subagents given only the
 screenshots and this document, instructed to find the most serious problems,
 competing. Merge their findings into the defect list.
 
+**Run `TOOLKIT.md` Part 17 (the 20-item pre-ship checklist) verbatim on every
+zone**, and record the results in the judge file. Items 1–5 alone catch most
+problems and cost nothing.
+
 **The seven questions**, answered per zone with the screenshot attached:
 Would someone stop scrolling? Is there one obvious focal point? Does the
 player feel small? Could this be any other game? Is the composition

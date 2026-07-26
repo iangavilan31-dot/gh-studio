@@ -938,3 +938,285 @@ headline feature is an anime cel shader. But **`@pixiv/three-vrm-springbone`
 standalone** gives secondary jiggle physics for cloaks, hair, belts and chains,
 which is a large cheap win for dark-fantasy character feel. Or write a verlet
 bone-chain solver (~150 lines) that runs after `mixer.update()`.
+
+---
+
+# 16. ENVIRONMENT ART CRAFT
+
+## 16.1 The three laws of believable placement
+
+**Entropy does the placing, not you.** *"Dirt, rust, and destruction are not
+textures; they are the result of events."* Water flows **down** and pools in low
+spots — moss and staining form there. Dust settles on **horizontal** surfaces
+only. Wind polishes exposed corners; sheltered corners collect debris. Scuffs go
+**where hands touch**.
+
+⚠️ **The corridor rule amateurs invert:** the **centre** of a path is worn and
+polished from footfall; the **edges** are dirtier because cleaners miss them.
+Most beginners do the opposite, or apply uniform grunge.
+
+**Functional connectivity.** Every object must answer: how was it brought here,
+how is it maintained, where does the power go? *"Believability is born not in
+polygons, but in answers to 'How does this work?'"*
+
+**From particular to general.** *"A chair isn't just standing there, it's pulled
+back, someone was sitting there."* Props are placed by **usage logic, not grid
+alignment.**
+
+## 16.2 Clustering — and the spotted-dog rule
+
+Anthony Vaccaro (Principal Environment Artist, Naughty Dog): *"Clumping assets
+and creating negative space enhances your details and can lead the eye to your
+objective."* But — **"always vary the size and distance of your detail clumping
+or that will also just become evenly clumped noise like a spotted dog."**
+**Even clumping is as bad as even scatter.**
+
+*"The negative space in a sea of detail is what actually draws the player in —
+it's the* lack *of detail."*
+
+**Fractal placement:** place one element, then duplicate → shrink → rotate →
+offset → repeat smaller. Works for rocks, trees, debris, crates alike.
+
+**Rule of odds (3/5/7)** — odd groups can't resolve into pairs, so the eye
+builds a hierarchy. **Triangle rule** — three objects at three heights and
+depths. **Size hierarchy in every group** — large, medium and small present
+within each of primary/secondary/tertiary tiers.
+
+**The 70/30 rule:** *"At least 70% of your artwork as flat, filler, or negative
+space. Leaving blank resting spaces can be as powerful as detailing."*
+
+## 16.3 Story pockets
+
+Stage **one dominant narrative prop + two supporting hints per room-sized
+volume**. *"The story must survive a glance"* — players scan at walking speed,
+they don't study.
+
+Write the backstory **before** dressing. One artist stalled 3+ months in
+blockout until he invented the backstory, after which every placement decision
+became automatic. **Story is a blockout prerequisite, not a polish garnish.**
+
+## 16.4 Value first, colour second
+
+Block **light / mid / dark** in greyscale, lock the values, then swap greys for
+hues. *"If it doesn't read desaturated, colour won't save it."*
+
+**"Muddy" is a shape problem, not a colour problem.** It means forms aren't
+readable — fix by increasing separation between value plateaus and hardening
+boundaries, **not** by cranking saturation. Muddy midtones come from blending
+every transition with a soft brush and from picking shadows by pulling the same
+hue down in lightness (grey sludge).
+
+**Never shade by lowering lightness on the same hue.** Shift along the wheel:
+lit areas shift *toward* the light's hue, shadows shift *away* (toward ambient
+blue-violet). **Saturation peaks in the midtones** — highlights desaturate
+toward the light, deep shadows toward ambient.
+
+**Build dark → light.** Adding white kills chroma; layering light over dark
+preserves it.
+
+## 16.5 Edge highlighting — the signature stylized move
+
+**Lighten the base colour along convex edges.** Duplicate the base layer,
+lighten, mask with a curvature map, tune contrast. Run it in **both albedo and
+roughness**. Interior cracks must be **secondary** — edge highlights are the
+loudest event in the texture. Avoid perfectly straight highlight lines; break,
+taper and skip them. On trim sheets, bake the highlight into the strip so the
+whole kit inherits it free.
+
+## 16.6 Roughness and albedo discipline
+
+**0.5 roughness is the worst possible value** — *"too shiny to read as matte and
+too rough to read as reflective."* A scene built near 0.5 makes stone and
+concrete look identical. Push every surface to its real value: concrete 0.8+,
+polished metal 0.1, fabric 0.9.
+
+**Albedo band: 50–243 sRGB.** Nothing absorbs 100% or reflects 100%; ~4%
+dielectric specular alone accounts for roughly sRGB 50, so "pure black albedo"
+is physically unreachable and reads as a dead void. Stylized work legitimately
+runs **higher roughness than reality** so colour survives instead of being
+washed out by specular.
+
+**Material contrast is set dressing:** *"The beauty comes when you have a
+reflective puddle on rough concrete, or a shiny polished shield laying on old
+rotten wood."*
+
+## 16.7 Foliage — the cardboard-cutout fix
+
+⚠️ **This is the single biggest reason amateur foliage looks flat.** Default
+flat-plane normals make every leaf card light as a plane — half the canopy goes
+black and the plane structure shows as hard facets.
+
+**Fix: transfer vertex normals from an enclosing sphere** (trees, bushes),
+**dome** (small bushes), or **straight up** (grass). The canopy then lights as
+**one mass** with a smooth terminator. With a dome, undersides catch light
+instead of crushing to black. Do it with Blender's Data Transfer / Normal Edit
+modifier — and if importing to an engine, make sure the importer **preserves
+custom normals** rather than recomputing them.
+
+Other card craft: **cut cards tight to the alpha** (every transparent pixel is
+overdraw); vary **big / medium / small** card sizes (big = mass, small = edge
+silhouette); twist and bend cards so they never read flat when orbited; keep
+albedo bright enough that shadowed foliage never crushes to black.
+
+## 16.8 Trees
+
+**The broccoli tree** — one blobby hemisphere on a straight stick — comes from
+uniform card distribution, no sub-clusters, no sky holes, no trunk taper, and
+all branches at the same angle.
+
+**Fix:** canopy as **3–7 discrete clusters separated by sky holes**; varied
+cluster sizes; asymmetric mass (heavier toward light); trunk with taper, curl,
+lean and a **root flare** (without it, it's a pole in the ground); branch angles
+that widen further down the trunk.
+
+**Study the winter silhouette** — you cannot invent real branching from a
+leafed-out photo.
+
+## 16.9 Forests — the botany amateurs get backwards
+
+- **Trunk density beats canopy density.** *"We reach our desired canopy density
+  long before our desired trunk density. So what can you do? **Add trunks
+  without canopies.**"* Dead bare trees are far cheaper (no leaf cards) and *"a
+  large percentage of the trees in a real forest are dead with no leaves."*
+  **This is the cheapest way to make a forest feel dense.**
+- **The forest EDGE is the densest, bushiest part** (light hits the side wall);
+  the interior is comparatively **open**. Getting this backwards — dense
+  interior, clean edge — is a classic tell.
+- **Tall grass under a closed canopy is a giveaway.** Real forest floor is
+  litter, duff, deep moss, ferns and bare needle mat. Light is the limiting
+  resource down there.
+- **Nurse logs:** seedling density is ~4.6× higher on fallen logs than on soil.
+  Put saplings, moss and fungi *on* logs and stumps, not evenly scattered.
+- **Small plants grow at large plants' bases** — conveniently hiding the ugly
+  trunk-to-ground intersection.
+- **Lower trunks deserve extra texel density** — players look at eye level and
+  slightly down.
+- **Decide water first.** *"If you get to the end of a forest hike without
+  seeing any water, it was probably a boring hike."*
+
+## 16.10 Grass grounding checklist
+
+1. Sink the clump base 2–5 cm below the surface.
+2. **Darken the base** with vertex AO — a fake contact shadow.
+3. **Blend base colour toward the terrain colour.**
+4. Add a **ground-clutter transition layer** — leaf litter, twigs, pebbles,
+   moss, dead flattened grass.
+5. Never place single blades — build **clumps of 5–20**.
+6. **Voronoi clumping** (Ghost of Tsushima): group blades into clumps sharing
+   height, bend and colour so the field reads patchy rather than statistically
+   uniform. This is the named fix for "carpet grass."
+
+## 16.11 The green-mush cure
+
+Diagnose in order: uniform hue → uniform value → uniform density → **no macro
+variation** (variation only at 1–2m, never at 20–100m) → no non-green elements
+→ no atmosphere.
+
+Fixes, most effective first: **force the understory dark** (bright canopy top
+over dark base reads as mass instantly); author 2–3 hue targets per biome and
+lerp by world-position noise; place **1–3 oversized hero trees** per view as
+anchors; add clearings and sky holes; add dead/brown elements; push
+atmospheric perspective (distant trees cooler, bluer, lower contrast); break
+with non-green (rock, dirt, water, trunks, mist); add drifting particles for
+**parallax**, which the eye reads as depth.
+
+## 16.12 Readability failures that break gameplay
+
+From Frozenbyte's internal level-art manual — the best public list of these:
+
+- **Art hides something important** — a handrail over the button, bushes over a
+  ledge.
+- **Colour collision** — *"Don't use the same colour for decorative pieces and
+  gameplay elements."*
+- **False promise of function** — a doorway you can't enter, a ladder you can't
+  climb. *"Level art shouldn't invite the player to a place they cannot
+  enter."* Never use interactive-object assets as decoration.
+- **Path-of-least-resistance inversion** — the secret area looks like the main
+  route and vice versa. Watch where the warm light points.
+- **Plausibility** — a platform with no visible support.
+
+And the studio's greyscale law: *"If an image doesn't look good and clear in
+greyscale, it will not work in colour mode either."* Plus the depth rule:
+**closer = more contrast, further = less.** Distant objects reading at
+play-plane contrast is *the* classic level-art bug.
+
+## 16.13 Process
+
+**Blockout's purpose is NOT to finish, NOT to make it pretty, NOT to texture,
+NOT to light and NOT to detail.** Everything before layout lock is cheap;
+everything after is expensive.
+
+**Lighting comes early**, during or just after blockout — it's a readability
+and gameplay tool, not decoration. Four passes: global → wayfinding hierarchy
+(major exits lit more prominently than secondary) → gameplay lights → mood.
+**Post-process is genuinely last** — *"Post Process is in the name. It's
+post."* Grading early makes you overcompensate the lighting.
+
+Frozenbyte's time split per level: **base art 60–70%, detailing 20–30%,
+polish 10–20%.** *"If the base art is lacking, nothing works."*
+
+**Reference discipline:** *"Don't use reference in someone else's style. Use
+real images, or you'll copy other people's mistakes."* Referencing another
+artist's finished 3D scene inherits their style **and** their errors.
+
+---
+
+# 17. THE PRE-SHIP CHECKLIST
+
+Run this on every scene before calling it done. **Items 1–5 are free and catch
+most problems.** The judge should run this verbatim.
+
+**Read & composition**
+1. **Greyscale pass.** Desaturate. Does it resolve into 3–4 clear value masses?
+   Does the focal point still dominate?
+2. **Squint / blur pass.** Blur heavily. Does anything unimportant still shout?
+   Does the eye land where intended within one second?
+3. **Thumbnail pass.** View at ~200px. Does the light/dark pattern survive or go
+   to grey mud?
+4. **Flip horizontally.** Does the composition still balance? Proportion errors
+   you'd normalised will jump out.
+5. **Depth check.** Distinct foreground, midground, background? Does contrast
+   *decrease* with distance? Any tangents to break?
+
+**Scale & grounding**
+6. **Human-scale audit.** Drop the character in; check doorways, stairs,
+   railings, ceiling height. Judge from the *player* camera, never a fly-cam.
+7. **Grounding audit.** Nothing floats. Props buried 30–60% or given a sculpted
+   seam, debris skirt, contact-shadow darkening and transition blend.
+8. **Off-grid audit.** Anything organic at exactly 0° yaw or on a grid interval?
+   Break every perfect 90° in the big forms.
+
+**Detail & placement**
+9. **70/30 audit.** Is ~70% flat/filler/negative space? Are there deliberate
+   eye-rest spots?
+10. **Clump audit.** Varying cluster size *and* spacing (not spotted-dog)? Odd
+    groups? Large/medium/small present in each tier?
+11. **Repetition audit.** Walk the space looking only for the same silhouette
+    twice.
+12. **Hero audit.** One clear focal point per view, lit, with everything else
+    subordinate?
+
+**Story**
+13. **Use-logic pass.** Where would a person walk, touch, sit, lean? Is the path
+    centre worn and the edges dirtier?
+14. **"How does this work?" pass.** Anything you can't answer for gets justified
+    or deleted.
+15. **Story-pocket pass.** One dominant prop + two hints per volume. Show
+    someone the shot for five seconds and ask what happened here.
+
+**Materials & light**
+16. **Material-contrast pass.** Anything matte beside something reflective? Push
+    every surface off 0.5 roughness.
+17. **Albedo sanity pass.** Anything below 50 or above 240 sRGB? Is albedo doing
+    lighting's job?
+18. **Lighting pass.** Exposure clamped before judging. Solo each light — does
+    it earn its place? Is every light **motivated** by a visible fixture? Is
+    there fill so shadows aren't crushed?
+
+**Readability & tech**
+19. **Gameplay-readability pass.** Does art hide anything important? Do
+    decorative assets share colour or silhouette with interactive ones? Any
+    false promises? Is the intended route the most tempting path?
+20. **Tech + fresh eyes.** Texel density consistent, collisions match art, LODs
+    tuned, no overdraw blowouts, console clean. **Then close it, sleep, and look
+    again tomorrow with the key reference side-by-side at the same size.**
