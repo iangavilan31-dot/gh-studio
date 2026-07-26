@@ -352,3 +352,47 @@ two versions of this audit reported 38 then 21 false positives:
    anchored rowboat at (−26,−96) is offshore set dressing that exists to give
    open water a middle-ground silhouette; terrain below WATER_Y is not
    walkable ground.
+
+## FINAL RUN — #9. Stage 1 blocker found BEFORE writing lighting code
+
+Stage 1 asks for "moon directional with cascaded shadows, hemisphere ambient,
+HDRI environment, pooled lantern point lights". **None of it would have done
+anything.** The world renders through `retroMaterial()` — a raw
+`THREE.ShaderMaterial` with hand-written VERT/FRAG and no `lights: true`.
+three only feeds light uniforms to materials that declare lighting support and
+include the lighting chunks, so `DirectionalLight` / `HemisphereLight` /
+`PointLight` added to that scene are silent no-ops. ~99 call sites
+(world.js 76, meshes.js 18, characters.js 4, materials.js 1).
+
+This is the classic silent failure for this stage: add the rig, see no change,
+then spend the stage tuning intensities on lights that are not connected to
+anything. Caught by checking the material class first rather than after.
+
+**The route, per TOOLKIT §8:** `three-custom-shader-material@6.4.0` is
+explicitly the backbone for exactly this — it keeps three's lighting, shadows,
+fog and tone mapping while preserving custom shading. So Stage 1 is really two
+steps, in this order:
+
+1. **Port `retroMaterial` onto CSM** so the existing look is preserved but the
+   material participates in three's lighting. Write `csm_DiffuseColor` (NOT
+   `csm_FragColor`, which bypasses lighting entirely — §6). ⚠️ `csm_Roughness`
+   /`csm_Metalness`/`csm_AO`/`csm_Emissive` are silent no-ops unless the base
+   material has the matching map slot populated: assign a 1×1 white texture to
+   `roughnessMap` for procedural roughness. `csm_Bump` was removed in 6.4.0 —
+   use `csm_FragNormal`.
+2. **Then** the rig: one moon directional (the only shadow caster, core CSM
+   cascades), one hemisphere, single-digit point lights with
+   `castShadow=false`, everything else emissive with no light attached (§4).
+
+Also note the renderer currently targets a 480×270 nearest RT with a custom
+quantize/dither post shader — the retro pipeline from the previous game
+target. The new post chain (composer @ HalfFloatType, AgX in the chain with
+`NoToneMapping` on the renderer, SelectiveBloom, N8AO, LUT) replaces that, and
+that swap is what makes the "three times better looking" jump real.
+
+**Doc conflict resolved:** DIRECTION Part 9 says ACES tone mapping; TOOLKIT
+§1.3 says use **AgX** and gives the reason (ACES lifts and desaturates shadows
+and skews moonlight-blue toward cyan — it flattens exactly the mid-dark range
+this game lives in). TOOLKIT wins on technical detail per its own authority
+line and FINAL_PASS's header. Using AgX, exposure 0.6–1.0, contrast restored
+in the per-zone LUT.
