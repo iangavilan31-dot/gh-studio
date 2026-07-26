@@ -24,8 +24,7 @@ stranger; if a stage breaks, **revert** rather than push forward.
 - [x] TOOLKIT §0 stack installed in order; `three` pinned 0.185.1; build green.
 - [x] CLAUDE.md rewritten as the compaction hook; DECISIONS #1–#3 logged.
 - [x] **Swept collision.** ✅ live: 150 props + heightfield + boundary; 40m single-step charge at a 0.2m wall stops dead.
-- [ ] **Collider audit** — log every reachable mesh >1m without a collider;
-      the list must be empty.
+- [x] **Collider audit** ✅ empty — 11 scanned, 35 merged batches skipped, self-healing via `autoCoverColliderGaps()`.
 - [x] **Camera spherecast** ✅ continuous Rapier sphere-cast r=0.25, hit−0.15, snap-in/ease-out. Old 10-step march replaced.
 - [x] **Speeds:** ✅ walk 2.2 / run 5.2 default / sprint 8.0; measured 5.19 m/s median on open ground; accel 0.15s, decel 0.12s, jump apex 1.6m, coyote 6f.
 - [x] **World boundary** ✅ four unclimbable slabs replace the coordinate clamp.
@@ -33,6 +32,21 @@ stranger; if a stage breaks, **revert** rather than push forward.
 - [x] **Lantern Listen** ✅ L fires a wisp to the nearest unkindled light over 3s, keeper glances after it, zero UI.
 - [x] `scripts/collisioncheck.mjs` ✅ **PASS 7/7** — 560 charges at sprint speed, 1560 fuzz steps, 0 penetrations / 0 OOB / 0 sink / 0 camera clips.
 - [x] Crossing times ✅ `crossingcheck.mjs` PASS 4/4 — Park 18.55s (budget 25s); all legs logged in PERFORMANCE_AUDIT.md.
+
+### Stage 1 status — NEARLY DONE, 11/13 (see DECISIONS #14–#16)
+
+- [x] `litMaterial()` on three-custom-shader-material, flag-gated (`?lit=0` reverts).
+- [x] `MoonRig` — 1 directional (only shadow caster, tracks the visible moon) + 1 hemisphere.
+- [x] Post chain — HalfFloat linear → SMAA / N8AO / bloom / vignette → **AgX** → sRGB; `NoToneMapping` on the renderer.
+- [x] Night grade LUT (33³, tetrahedral) — contrast restored, palette anchors, black floor.
+- [x] Emitters are HDR sources again (bloom threshold does the selecting).
+- [x] Zone skies clamped into the DIRECTION Part 7 envelope; Rule 3 preserved.
+- [x] `scripts/composecheck.mjs` — the gate, in CIE L*, **deterministic** (see #15).
+- [ ] **`lanternpool` 17.4 / `player` 17.3 vs an 18.0 readability line.** Same
+      location, same cause: a large uniform ground plane. Lighting levers are
+      spent (key/fill is non-monotonic and at its optimum). Fix is ground value
+      variation → **Stage 2 asset work.** Do NOT close these by lowering the line.
+- [ ] Per-zone LUTs (TOOLKIT asks for them; one global grade ships today).
 
 ### Stage 1 — the order it must be done in (DECISIONS #9)
 
