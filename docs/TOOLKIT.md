@@ -796,3 +796,145 @@ something to show off the technology… this was something that was planned from
 the design side to create a consistent visual look."*
 
 Decide the look, then implement it. Not the reverse.
+
+---
+
+# 15. ANIMATION, TEXT & UI
+
+## 15.1 ⚠️ three.js docs URLs changed in r185
+
+The old `threejs.org/docs/#api/en/...` scheme is **dead** — r185 replaced
+hand-written docs with JSDoc-generated pages, and old deep links **silently
+fail** (the SPA shell still returns 200). New scheme:
+`https://threejs.org/docs/pages/<Name>.html`, with a `module-` prefix for
+addons (`module-SkeletonUtils.html`). Machine-readable `docs/llms.txt` and
+`docs/llms-full.txt` now ship in the repo.
+
+## 15.2 Mixamo — alive, free, but archive your evidence
+
+Verified today: mixamo.com is up, the auto-rigger is intact in the shipped app
+bundle, and FBX download options are unchanged. **No discontinuation notice
+exists** — the sunset banner in the app is for **Adobe Aero**, a different
+product, and is easy to misread. Adobe Fuse, by contrast, is genuinely dead.
+
+⚠️ **The licensing thinness is real.** The commercial-use grant rests on an FAQ
+page whose own byline reads *"Last updated on Sep 14, 2021"*, and the footer's
+Terms link points to Adobe's **generic** ToU, not a bespoke asset license. On
+download day, archive a PDF of the FAQ licensing sentence, the URL, the date,
+and your Adobe account ID. Ten minutes, and it's the difference between "we had
+a license" and "we think we did."
+
+Also: **biped humanoids only** (no quadrupeds or winged creatures), and Mixamo
+stores **only the last uploaded character** — save rigs locally. Download once,
+commit the files; do not build a pipeline that assumes Mixamo exists at build
+time.
+
+## 15.3 Additive blending — the highest-leverage animation feature
+
+```js
+THREE.AnimationUtils.makeClipAdditive( clip );   // mutates in place, then:
+mixer.clipAction( clip );                        // picks up AdditiveAnimationBlendMode
+```
+
+Layer additive clips over a normal locomotion base — `wounded_lean`,
+`head_look`, `shiver`, `torch_carry`, `two_handed_grip`. Each costs one extra
+action at a tunable weight and **multiplies apparent animation count without
+new full-body clips.** Exactly what a small team needs.
+
+**Keep additive layers out of the state machine.** Drive their weights from
+continuous game values (health → lean, cold → shiver, aim → head look) with
+lerps in the frame loop. That's what stops state explosion.
+
+## 15.4 Crossfade footguns
+
+`A.crossFadeTo(B, d)` fades **A out, B in**; `B.crossFadeFrom(A, d)` does the
+same thing. Both require the incoming action to be `.play()`ed. **Pass
+`warp = true` for locomotion blends** or walk→run foot-slides.
+
+From three's own example comment: *"animationAction.crossFadeTo() disables its
+start action and sets the start action's weight to zero"* — you must
+`setEffectiveWeight()` and re-enable before reusing an action. Write a helper.
+
+One-shot recipe: `reset()` → `setLoop(LoopOnce, 1)` → `clampWhenFinished = true`
+→ `crossFadeFrom(prev, 0.2, true)` → `play()`, with a mixer `'finished'`
+listener to return to idle — **and remove that listener on exit**, or you get
+duplicate transitions. That is the classic bug.
+
+`mixer.timeScale = 0` is the cheapest global pause for a menu.
+
+## 15.5 Retargeting — `SkeletonUtils`, no dependency needed
+
+`retarget()` and `retargetClip()` are in-tree and actively maintained; the API
+gained `localOffsets`/`hipPosition`/`hipInfluence` recently, so **any tutorial
+older than ~2024 is wrong**. Key options for Mixamo sources:
+
+```js
+{ hip: 'mixamorigHips',
+  hipInfluence: new THREE.Vector3(0, 1, 0),  // strips horizontal root motion
+  scale: 1 / targetModel.scene.scale.y,
+  names: { mixamorigHips: 'mixamorigHips', /* … */ } }
+```
+
+⚠️ **The mixer root must be the `SkinnedMesh` itself**, not the model group —
+getting this wrong is a silent no-op. And use **`SkeletonUtils.clone()`**, never
+`object.clone()`, to spawn multiple skinned characters, or bones won't bind.
+
+If every character comes from Mixamo with matching `mixamorig*` hierarchies,
+you may not need retargeting at all — just share clips.
+
+## 15.6 State machines — hand-roll it
+
+**No maintained three.js animation-FSM library exists.** The pattern is ~80
+lines: a state registry, `SetState(name)` that calls `prevState.Exit()` then
+`new State().Enter(prevState)`, and a re-entry guard. **Passing the previous
+state into `Enter` is the whole trick** — it's what lets the new state look up
+the outgoing action and crossfade from it.
+
+Keep FSM state in a plain class instance held in a ref; never re-render React
+on an animation transition. Escalate to XState only if status-effect
+combinations become genuinely combinatorial.
+
+⚠️ drei's `useAnimations` has a latent cleanup bug — it passes an
+`AnimationAction` where `uncacheAction` expects an `AnimationClip`, so the
+uncache silently no-ops and the mixer cache grows as entities spawn and
+despawn. Call `mixer.uncacheRoot(root)` yourself on despawn.
+
+## 15.7 Text and UI
+
+**HUD → plain React DOM overlay**, a *sibling* of the canvas, `pointer-events:
+none` on the container with `auto` only on interactive widgets. Zero draw
+calls, crisp at any DPI, real flexbox, accessibility and i18n for free. Put
+game state in a store outside React and subscribe with **transient updates**
+writing straight to refs, so a health tick never re-renders the scene graph.
+
+**World-space text → `troika-three-text`** (via drei's `<Text>`). SDF-based,
+one draw call per label, generated in a worker, resolution-independent — and
+crucially it **patches three's materials, so text receives your lighting, fog,
+shadows and post-processing.** Carved runes actually catch the torchlight.
+Use `outlineWidth`/`outlineColor` for legibility against dark backgrounds,
+pre-warm with the `characters` prop, and tune `sdfGlyphSize` (default 64).
+Scales to hundreds of labels; DOM approaches do not.
+
+**Interactive world-anchored prompts → drei `<Html>`**, sparingly, in the low
+tens. Its `occlude` prop is the thing raw `CSS2DRenderer` structurally cannot
+do: `occlude={[levelRef]}` raycasts (cheap, explicit), `occlude="blending"`
+renders an invisible depth-writing plane so the element hides behind geometry
+convincingly. Use `onOcclude` to fade rather than pop.
+
+⚠️ **`CSS2DRenderer`/`CSS3DRenderer` have no depth participation at all** — a
+label on an enemy behind a wall renders *through* the wall, and both require
+100% browser zoom. DOM text also never receives your bloom or colour grade, so
+it visually detaches from a moody scene.
+
+💀 **`three-mesh-ui` is abandoned** — npm frozen 2023-03-24, repo untouched
+since 2023-12-03, with a three-compatibility bug open since r153 and no
+deprecation banner to warn you. For in-scene 3D panels use
+**`@react-three/uikit`** (Yoga flexbox, MIT, actively maintained).
+
+## 15.8 Cheap character polish
+
+`@pixiv/three-vrm` as a whole is the wrong fit — it's a format library whose
+headline feature is an anime cel shader. But **`@pixiv/three-vrm-springbone`
+standalone** gives secondary jiggle physics for cloaks, hair, belts and chains,
+which is a large cheap win for dark-fantasy character feel. Or write a verlet
+bone-chain solver (~150 lines) that runs after `mixer.update()`.
