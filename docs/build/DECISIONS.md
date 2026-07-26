@@ -635,3 +635,44 @@ across the night, coloured shade that is never black, warm lanterns that read
 as light sources and bloom, AgX plus a graded palette locked to DIRECTION Part
 7, SMAA, AO, and ground that varies like ground. Crush went from up to 40% of a
 frame to 0.0% on every pose in the game.
+
+## FINAL RUN #19 — the gate's last order-dependence, and what "settled" means
+
+#17 claimed the gate was deterministic. It was bit-identical on repeat runs of
+the same sequence, which is a weaker property than it sounds: `lanternpool`
+still scored 24.6 run ALONE and 17.3 run second. Two more causes:
+
+- **`freezeTime` froze `elapsed`, not the simulation.** Particles, rain,
+  flames and the character rig all integrate `dt`, which kept running on wall
+  time. Fixed: `dt` is a constant 1/60 while frozen.
+- **A wall-clock settle is a variable number of FRAMES.** With a fixed dt, "wait
+  1500 ms" means "advance however many frames this machine managed", and under
+  SwiftShader at 17–19 fps that is a different amount of simulated time every
+  run. Fixed: the gate settles by frame count, bounded by a wall-clock cap
+  because requestAnimationFrame throttles hard in headless Chromium.
+
+Worth noting what this exposed: `lanternpool`'s flattering 24.6 was an
+UNDER-settled reading. Properly converged it sits near 17.6. The gate had been
+rewarding a frame that had not finished becoming itself.
+
+## FINAL RUN #20 — Stage 2, hero trees planted
+
+`tools/make_tree.py` output is loaded by `src/game/art/heroassets.js` and
+replaces the Park's cylinder trunks. Three decisions:
+
+- **Trunk only, cards kept.** MOONREST already draws foliage as crossed alpha
+  cards, which read better as leaves than faceted geometry does. So the factory
+  ships trunk+limbs (`--canopy` off) and the existing canopy cards stay. The
+  win is silhouette, which is what a night game trades in.
+- **Scale from a MEASURED trunk radius.** The first attempt scaled by the
+  bounding box, which is crown spread, and produced trunks ~3.6× too thin. The
+  loader now samples vertices below y=0.08 — trunk and nothing else.
+- **Missing assets are not an error.** GLBs are build products; a clone that
+  has never run `npm run assets` falls back to procedural trunks and logs it.
+  `vite.config.js` moves to `target: 'es2022'` for the one top-level await that
+  resolves the GLBs before the World constructor builds meshes synchronously.
+
+The new geometry changed the frames enough to drop `lanternpool` below the
+line, so the albedo floor went 0.20 → 0.26 and ground macro 1.1 → 1.4.
+Re-tuning after a content change is expected; the point is that it was measured
+rather than assumed. Every pose now clears readability by at least 3 L*.

@@ -155,7 +155,7 @@ def canopy_mass(bm, rng, centre, radius):
         v.co += centre
 
 
-def build_tree(seed, height=8.0, base_r=0.42, branches=3):
+def build_tree(seed, height=8.0, base_r=0.42, branches=3, canopy=True):
     rng = random.Random(seed)
     ob, me = new_mesh_object(f"hero_tree_{seed}")
     bm = bmesh.new()
@@ -195,12 +195,19 @@ def build_tree(seed, height=8.0, base_r=0.42, branches=3):
 
     # Canopy: one mass over the crown plus one at each primary fork tip, so the
     # silhouette is a broad crown rather than a ball on a stick.
-    crown = trunk_pts[-1] + Vector((0, 0, height * 0.06))
-    canopy_mass(bm, rng, crown, height * rng.uniform(0.20, 0.26))
-    for tip, _ in tips:
-        if rng.random() < 0.75:
-            canopy_mass(bm, rng, tip + Vector((0, 0, height * 0.03)),
-                        height * rng.uniform(0.11, 0.17))
+    #
+    # OFF for the in-game assets. MOONREST already draws foliage as crossed
+    # alpha cards, which read better as leaves than faceted geometry does — so
+    # the win the factory actually delivers is the TRUNK AND LIMBS, and the
+    # cards stay. Geometry canopy is kept for standalone hero renders where
+    # there are no cards to pair with.
+    if canopy:
+        crown = trunk_pts[-1] + Vector((0, 0, height * 0.06))
+        canopy_mass(bm, rng, crown, height * rng.uniform(0.20, 0.26))
+        for tip, _ in tips:
+            if rng.random() < 0.75:
+                canopy_mass(bm, rng, tip + Vector((0, 0, height * 0.03)),
+                            height * rng.uniform(0.11, 0.17))
 
     bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=0.002)
     bm.normal_update()
@@ -273,6 +280,9 @@ def main():
     ap.add_argument("--out", default="public/assets/models/trees")
     ap.add_argument("--count", type=int, default=4)
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--canopy", action="store_true",
+                    help="include geometry canopy masses (off for in-game assets, "
+                         "which pair the hero trunk with the existing alpha cards)")
     args = ap.parse_args(argv)
 
     os.makedirs(args.out, exist_ok=True)
@@ -286,6 +296,7 @@ def main():
             height=rng.uniform(6.5, 10.5),
             base_r=rng.uniform(0.34, 0.52),
             branches=rng.randint(3, 4),
+            canopy=args.canopy,
         )
         add_bark_relief(ob)
         finish(ob)

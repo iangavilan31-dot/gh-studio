@@ -35,14 +35,14 @@ export const globalUniforms = {
   // lifting the floor makes the frame more readable rather than washing it
   // out, which is what tells you it is a fix and not a fudge. 0.20 sits past
   // the knee with margin on the ≤2% gate.
-  uAlbedoFloor: { value: 0.20 },
+  uAlbedoFloor: { value: 0.26 },
   // how much of the baked vertex-colour HUE to reintroduce (0 = ignore it)
   uVertexTint: { value: 1.0 },
   // Macro patchiness on up-facing surfaces — see CSM_FRAG. Swept against a
   // DETERMINISTIC gate (the earlier sweep was measured at random animation
   // phases and read as noise): spread rises monotonically with strength, and
   // 1.1 clears the readability line on both open-path poses with margin.
-  uGroundMacro: { value: 1.1 },
+  uGroundMacro: { value: 1.4 },
 }
 
 const VERT = /* glsl */ `

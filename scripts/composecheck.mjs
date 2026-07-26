@@ -95,10 +95,24 @@ async function main() {
       // re-freeze: a pose with its own `minute` calls skipTo, which is fine,
       // but the clock must stay stopped afterwards
       await page.evaluate(() => { window.__MOONREST__.pauseNight(true); window.__MOONREST__.freezeTime(12) })
-      // 1500ms, not 700: the carried lantern warmth ramps after a pose stages
-      // the player, and `lanternpool` — the pose built to show exactly that —
-      // swung between 11.1 and 21.6 on the same build when measured too early.
-      await page.waitForTimeout(1500)
+      // Settle by FRAME COUNT, not by wall clock. With the animation clock
+      // frozen the sim advances a fixed dt per frame, so "wait 1500ms" means
+      // "advance a variable number of frames" — at 17-19fps under SwiftShader
+      // that is a different amount of simulated time every run, which is the
+      // last source of order-dependence in this gate. 150 frames is a fixed
+      // 2.5 simulated seconds, enough for the rig and the lantern pool to
+      // converge.
+      // ...but bounded. requestAnimationFrame throttles hard in headless
+      // Chromium, so an unbounded frame count can stall the whole run; race it
+      // against a wall-clock cap and take whatever settled.
+      await page.evaluate(async () => {
+        const frames = new Promise(async (res) => {
+          for (let i = 0; i < 90; i++) await new Promise(requestAnimationFrame)
+          res('frames')
+        })
+        const cap = new Promise((res) => setTimeout(() => res('cap'), 6000))
+        await Promise.race([frames, cap])
+      })
       report.push(await page.evaluate((p) => window.__MOONREST__.composeStats(p), pose))
     }
   } finally {

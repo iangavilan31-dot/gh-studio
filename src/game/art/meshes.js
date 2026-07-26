@@ -26,11 +26,27 @@ export function sharedMats() {
 }
 
 // Deciduous tree: bark trunk + crossed alpha canopy cards. ~large scale param.
-export function tree({ rng, height = 6, trunkR = 0.6, canopyR = 4.5, cards = 4 } = {}) {
+export function tree({ rng, height = 6, trunkR = 0.6, canopyR = 4.5, cards = 4, heroGeo = null } = {}) {
   const mats = sharedMats()
   const g = new THREE.Group()
-  const trunk = M(new THREE.CylinderGeometry(trunkR * 0.55, trunkR, height, 7), mats.bark)
-  trunk.position.y = height / 2
+  let trunk
+  if (heroGeo) {
+    // FIN-2: the Blender factory's trunk — leaning, tapered, with forking
+    // limbs. Geometry is normalised to height 1 by the loader, so it scales
+    // like the procedural cylinder it replaces and every call site is
+    // unchanged. The canopy CARDS stay: crossed alpha reads better as leaves
+    // than faceted geometry, so the win here is silhouette, not foliage.
+    trunk = M(heroGeo, mats.bark)
+    // height scales uniformly; the horizontal scale is set so the trunk's
+    // MEASURED base radius lands on the requested trunkR, which is what keeps
+    // hero and procedural trunks interchangeable at every call site
+    const br = heroGeo.userData.baseRadius || 0.05
+    const xz = trunkR / (br * height)
+    trunk.scale.set(height * xz, height, height * xz)
+  } else {
+    trunk = M(new THREE.CylinderGeometry(trunkR * 0.55, trunkR, height, 7), mats.bark)
+    trunk.position.y = height / 2
+  }
   g.add(trunk)
   for (let i = 0; i < cards; i++) {
     const card = M(new THREE.PlaneGeometry(canopyR * 2, canopyR * 1.55), mats.canopy)

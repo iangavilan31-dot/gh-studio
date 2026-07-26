@@ -34,6 +34,7 @@ import { beds } from './audio/beds.js'
 import { footstep, kindleChime } from './audio/sfx.js'
 import * as TEX from './art/textures.js'
 import { worldRNG } from './core/rng.js'
+import { loadHeroTrees } from './art/heroassets.js'
 
 const BOOT_T0 = performance.now()
 const canvas = document.getElementById('game')
@@ -53,6 +54,12 @@ zoneLight.rig = moonRig
 // The world builds meshes during construction and a few more on the first
 // frames; rescan shortly after boot so late arrivals are flagged too.
 let _shadowRescan = 1.5
+// FIN-2: the factory's output must exist BEFORE the world builds, because the
+// world constructs its meshes synchronously. Top-level await keeps that a
+// two-line change instead of an async-boot refactor; the loader resolves to an
+// empty list if the GLBs are absent, so a clone that has never run
+// `npm run assets` still boots on the procedural path.
+await loadHeroTrees()
 const world = new World(scene, camera)
 const night = new Night(scene)
 const hud = new HUD()
@@ -691,7 +698,14 @@ function tick() {
   requestAnimationFrame(tick)
   const now = performance.now()
   const dtRaw = (now - lastNow) / 1000
-  const dt = Math.min(dtRaw, 0.1) // sim/anim step: clamped so a stall can't explode physics
+  // Freezing the animation clock is not enough on its own to make a posed
+  // frame repeatable: `elapsed` stops, but every system that integrates dt —
+  // particles, rain, flames, the character rig — keeps evolving with wall
+  // time, so a pose measured as the 2nd of thirteen shows a different frame
+  // than the same pose measured alone. A FIXED dt makes the sim advance the
+  // same amount per frame; combined with the fixed settle in the gate, the
+  // measured frame becomes a function of the pose rather than of the clock.
+  const dt = _timeFrozen ? 1 / 60 : Math.min(dtRaw, 0.1) // clamped so a stall can't explode physics
   // the between-worlds iris is PURE PRESENTATION and must run on wall-clock:
   // the 0.1 sim clamp made a 1.4s tunnel drag to 4s on a sub-10fps GPU (the
   // tunnel accumulates dt, so a clamped dt runs it in slow motion). 0.25 caps
