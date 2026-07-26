@@ -846,3 +846,30 @@ NEXT: **Stage 2 — the Blender factory** (`tools/`, `npm run assets`,
 Park finished) and Stage 4 (the first ten minutes, `docs/build/TEN_MINUTES.md`)
 — Stage 4 is the fallback deliverable and must be finished and beautiful before
 anything later is attempted.
+
+---
+
+## FIN-2 IN PROGRESS — the Blender factory
+
+Blender 4.0.2 installed and running headless (`npm run assets`). The first
+factory script, `tools/make_tree.py`, generates a seeded FAMILY of hero park
+trees — trunk spine with real lean, forking limbs, faceted canopy masses, bark
+displace, bevel, decimate, GLB export. 4.4–5.3k tris each, inside the 2k–20k
+budget.
+
+It took two passes and the first failed its own brief: v1 was spindly bare
+sticks with a spike artefact at the root. Recorded in the commit, because the
+failure mode is instructive — too little lean reads as a post, a linear taper
+reads as a cone, and many thin branches read as a dead thornbush.
+
+Gotcha worth keeping: this Blender uses system Python and the glTF exporter
+needs `python3-numpy`. Without it the geometry builds fine and only the EXPORT
+dies, which reads as a script bug rather than a missing dependency.
+
+NEXT, to close the Stage 2 gate:
+1. Plant the hero trees in the Park (loader + placement) and judge them
+   side-by-side against the procedural trees per FINAL_PASS Part 9.
+2. `tools/bake_lightmaps.py` — the highest-value script per Part 5.
+Then Stage 3 (the Park finished) and Stage 4 (`docs/build/TEN_MINUTES.md`),
+which is the **fallback deliverable** and must be finished before anything
+later is attempted.
