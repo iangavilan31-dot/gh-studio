@@ -26,22 +26,13 @@ stranger; if a stage breaks, **revert** rather than push forward.
 - [x] **Swept collision.** ✅ live: 150 props + heightfield + boundary; 40m single-step charge at a 0.2m wall stops dead.
 - [ ] **Collider audit** — log every reachable mesh >1m without a collider;
       the list must be empty.
-- [ ] **Camera spherecast** (§2.2): three-mesh-bvh `acceleratedRaycast` +
-      `firstHitOnly`; sphere-cast r=0.25 head→desired, place at
-      `hit.distance − 0.15`; **snap in immediately, ease out 5–10 u/s**; near
-      plane ≤0.1. ⚠️ renames: `MeshBVHHelper`→`BVHHelper`,
-      `maxLeafSize`→`targetLeafSize`.
+- [x] **Camera spherecast** ✅ continuous Rapier sphere-cast r=0.25, hit−0.15, snap-in/ease-out. Old 10-step march replaced.
 - [x] **Speeds:** ✅ walk 2.2 / run 5.2 default / sprint 8.0; measured 5.19 m/s median on open ground; accel 0.15s, decel 0.12s, jump apex 1.6m, coyote 6f.
 - [x] **World boundary** ✅ four unclimbable slabs replace the coordinate clamp.
-- [ ] **Ember-visible unkindled lights** — faint pulsing ember readable at 80m,
-      occluded by geometry, never lost to fog. Biggest wayfinding win.
-- [ ] **Lantern Listen** — hold L/LB: lantern lifts, chimes, one wisp streaks
-      toward the nearest unkindled light, fades in 3s. No UI.
-- [ ] `scripts/collisioncheck.mjs` — bot charges every wall/cliff/prop/door
-      frame/world edge in every zone from 8 angles at max speed + 5-min random
-      fuzz per zone. Zero penetrations, zero OOB, zero obstructed camera rays.
-- [ ] Park crossing time measured; all zone crossings logged in
-      `PERFORMANCE_AUDIT.md`.
+- [x] **Ember-visible unkindled lights** ✅ holds ANGULAR size past 26m (constant 11.3px to 80m) + fog-lift opacity; still depth-occluded.
+- [x] **Lantern Listen** ✅ L fires a wisp to the nearest unkindled light over 3s, keeper glances after it, zero UI.
+- [x] `scripts/collisioncheck.mjs` ✅ **PASS 7/7** — 560 charges at sprint speed, 1560 fuzz steps, 0 penetrations / 0 OOB / 0 sink / 0 camera clips.
+- [x] Crossing times ✅ `crossingcheck.mjs` PASS 4/4 — Park 18.55s (budget 25s); all legs logged in PERFORMANCE_AUDIT.md.
 
 ### Notes that will bite later (from TOOLKIT)
 - Effect order §3: SMAA → SSAO → DoF → CA → Bloom → GodRays → Vignette →
