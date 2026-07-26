@@ -110,6 +110,79 @@ game than `DIRECTION.md` describes.
 
 ---
 
+# PART 2.5 — BLENDER AS THE ASSET FACTORY (free, and the largest single win)
+
+Blender is free and fully scriptable from Python with **no GUI** — the agent
+can drive it headlessly. It is not just a converter; it is how this project
+manufactures professional-grade assets for $0. Build `tools/` scripts and an
+`npm run bake` / `npm run assets` pipeline. In priority order:
+
+**1. Lightmap + AO baking (the biggest quality jump available at any price).**
+Bake the moon, warm anchors, bounce light, and ambient occlusion into
+lightmaps on a second UV channel for all static geometry; sample them at
+runtime. A mostly-static night world gets near-offline-render lighting for
+almost zero frame cost. For a static scene, **baked light beats realtime GI** —
+which is precisely why an engine swap buys less than it appears to (Part 2.6).
+
+**2. High-to-low normal map baking.** Sculpt or procedurally generate a
+high-poly version (subdivide + displace + noise), bake its detail into a normal
+map, apply to a low-poly mesh. This is how commercial assets get their
+surface quality, and it costs nothing. Weathered stone, bark, and eroded
+statues all come from here.
+
+**3. Procedural hero-asset generation.** The gnarled trees, ruined columns,
+cliff forms, and colossal statues can be *built* in Blender via Python — curve
++ skin modifiers for twisted trunks, boolean + displace for damaged stone,
+remesh and bevel for readable silhouettes, geometry nodes for scatter. This is
+strictly better than code-generated primitives in three.js, and it removes most
+of the reason to buy or AI-generate props at all.
+
+**4. Decimation and LOD generation.** Automatic 4-tier LODs from any source
+mesh, including anything downloaded or AI-generated.
+
+**5. Impostor billboards.** Render distant trees/architecture to textured
+cards from 8 angles — how the reference painting's background reads, and near
+free at runtime.
+
+**6. Format conversion and cleanup.** FBX/OBJ → GLB, UV repair, scale
+normalization, material stripping before palette re-grading.
+
+Treat this pipeline as mandatory infrastructure, ahead of any purchase.
+
+---
+
+# PART 2.6 — ON SWITCHING ENGINES (Godot 4)
+
+Godot is the only engine worth considering here — its `.tscn` scene files are
+text, so an agent can genuinely author them, which Unity's cannot be. The
+question is real, and the answer is *not yet*, for three specific reasons:
+
+1. **Godot's renderer advantage does not survive web export.** The features
+   that make Godot 4 look better than three.js out of the box — SDFGI,
+   volumetric fog, screen-space effects — belong to the **Forward+** renderer,
+   which is desktop-only. Web export uses the **Compatibility** renderer
+   (OpenGL ES 3.0 / WebGL2), which is broadly the tier three.js already
+   targets. Switching engines but staying in the browser buys very little.
+2. **So the real fork is browser vs desktop, not Godot vs three.js.** Godot is
+   only a meaningful upgrade if the game becomes a downloaded desktop build —
+   which costs the instant-link co-op that is the reason this game exists.
+3. **Baked lighting closes most of the gap anyway.** MOONREST is a static
+   world at night with a handful of lights. Realtime GI solves a problem this
+   game does not have. Part 2.5's baking pipeline delivers comparable results
+   in the browser.
+
+Add to that a full rewrite of working collision, netcode, audio, and gameplay
+systems, and the trade is bad *today*.
+
+**Revisit if and only if:** the DIRECTION pass ships with baked lighting and
+the screenshots still fail the Part 11 gates, **and** the owner decides a
+desktop download is acceptable. In that case the migration is Godot 4
+Forward+, desktop-first, with Blender assets carrying over unchanged — which
+is the other reason to build the Blender pipeline now: it is engine-agnostic
+insurance.
+
+---
+
 # PART 3 — SKYBOX PROMPTS (paste into Blockade Labs)
 
 Recommended style preset: a painterly/fantasy style, **not** photorealistic.
