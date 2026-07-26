@@ -736,3 +736,34 @@ only, 480x270 nearest target, no realtime lights. The waking world stays
 combat-free; fighting exists only inside dreams. Artifact republished.
 
 DREAMSCRAP COMPLETE — SHIP
+
+## FIN-0 COMPLETE — the game is no longer broken
+
+Stage 0 of the FINAL RUN (`docs/FINAL_PASS.md` Part 3). The two playtest
+blockers that made the world unshippable are fixed at the root.
+
+**Wall-phasing is structurally impossible now.** The old collision moved the
+player and then pushed them out — so a frame that ended past a thin wall
+resolved the wrong way. Rapier's character controller shape-casts the entire
+frame's translation instead. Proof: a capsule driven **40 m in a single step**
+at a 0.2 m wall stops at 4.43 m. The camera got the same treatment — a
+continuous spherecast replaced a 10-step march that could step straight over a
+roof plane, which is how it ended up inside a rooftop.
+
+**Movement is fast.** Run is now the default with no button held: 5.2 m/s
+measured 5.19. The Park crosses in 18.6 s against a 25 s budget.
+
+**You can see where to go.** Unkindled lanterns hold their angular size past
+26 m — a constant 11.3 px out to 80 m instead of shrinking to nothing — so
+objectives read as dying embers scattered through the dark. Press **L** and
+the lantern chimes and sends a single wisp toward the nearest unlit light. No
+minimap, no markers, no text.
+
+Gates: `COLLISIONCHECK PASS (8/8)`, `CROSSINGCHECK PASS (4/4)`, build exit 0.
+
+NEXT: **Stage 1 — light it.** Lighting rig + post stack on the existing world,
+no new assets: moon directional + CSM, hemisphere, HDRI env, pooled lantern
+points, AgX in the effect chain (NoToneMapping on the renderer), selective
+bloom, height fog with moon inscattering, SSAO, per-zone LUT. Read
+`TOOLKIT.md` §3/§4/§5 and `DIRECTION.md` Part 7 first. This is the single
+largest visual jump in the run.
