@@ -14,7 +14,9 @@
 > ends with "FINAL — SHIP" — or stop after 600 turns
 > ```
 >
-> **Authority:** this document wins over every other doc. It inherits the
+> **Authority:** this document wins over every other doc — **except
+> `docs/TOOLKIT.md`, which wins on any technical or library detail** (it was
+> verified against three.js source and the npm registry). It inherits the
 > harness from `MASTER_PROMPT.md` Part 0 (state files, work cycle, evidence
 > gates, do-not-stop rules), the visual law from `DIRECTION.md`, the asset
 > rules from `ASSETS.md`, and the collision/speed/wayfinding blockers from
@@ -102,7 +104,10 @@ and it carries the scale promise for the whole game.
 Each stage is a complete, shippable improvement. Do not start a stage until
 the previous one's gate passes and is committed.
 
-### Stage 0 — Make it playable (blockers)
+### Stage 0 — Read the toolkit, install the stack, make it playable
+**Read `docs/TOOLKIT.md` completely first** — it is verified against source and
+overrides every other doc on technical detail. Install its §0 stack in order.
+Then the blockers:
 `ASCENSION_PASS.md` Part 0: swept collision + collider audit + camera
 spherecast, run speed 5.2 m/s, ember-visible unkindled lights, Lantern Listen.
 **Gate:** `collisioncheck.mjs` passes 100%; Park crossing ≤ 25s.
