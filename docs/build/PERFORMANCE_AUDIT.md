@@ -80,3 +80,20 @@ curator 52.1, paleking 51.4, mote 52.1, chicken 55.7, watcher 48.6.
   triangles p95 3.1k/250k, console clean, 527 frames sampled.
 - SwiftShader floor (not the target profile): 35fps median, 27 min at
   960×540 — documented honestly; the retro target renders 480×270.
+
+## FINAL RUN — crossing times at default run speed (ASCENSION 0.2 gate)
+
+Measured by `scripts/crossingcheck.mjs`, driving the real controller with real
+input at the default run speed (5.2 m/s, no button held), fixed dt so the
+figure is frame-rate independent.
+
+| Leg | Distance | Time | Avg speed | Budget |
+|---|---|---|---|---|
+| Park (long diagonal) | 95.0 m | **18.55 s** | 5.12 m/s | ≤25 s ✅ |
+| Park (straight across) | 80.0 m | **15.60 s** | 5.13 m/s | ≤25 s ✅ |
+| Village street | 62.2 m | **11.62 s** | 5.36 m/s | ≤30 s ✅ |
+| Isle causeway | 66.5 m | **12.40 s** | 5.36 m/s | ≤30 s ✅ |
+
+Averages sit at or just above the 5.2 target (downhill legs gain a little),
+i.e. the run is essentially unobstructed — the swept solver stops the player
+at walls without costing speed on glancing contact.
