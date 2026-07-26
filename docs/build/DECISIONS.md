@@ -489,3 +489,43 @@ miscalibrated for intimate poses and should be split by pose type WITH that
 reasoning written down. If it looks flat, the number is right and the art is
 not done. What must NOT happen is quietly lowering a threshold to turn a gate
 green — that is how a gate stops meaning anything.
+
+## FINAL RUN #14 — the grade is where contrast comes back, and where the palette is enforced
+
+AgX is deliberately gentle: it protects highlights and holds hue, and hands
+back a low-contrast image. TOOLKIT's prescription is AgX for the transform with
+**contrast restored in the LUT**, and skipping the LUT is why the first lit
+build measured whole frames crammed into one L* band — Rooftops sat at p10 28.1
+/ p50 31.6 / p90 32.9. That was a missing grade, not a lighting failure.
+
+`src/game/core/grade.js` builds a 33-cube procedurally (no binary assets, and a
+curve written as code can state its own reasoning). Three findings:
+
+- **LookupTexture is Float32 RGBA in 0..1, colorSpace `srgb-linear`.** Handing
+  it a Uint8Array of 0–255 silently produces a black cube — every pose read
+  100% crushed. The domain being LINEAR also means the DIRECTION Part 7 palette
+  anchors, authored as display hex, must be decoded before use as tint targets.
+- **A linear contrast curve around a pivot manufactures crush.** Everything
+  below the pivot goes negative and clamps to true black: contrast 1.55 put
+  11.4% of the Village at L*0. The fix is a BLACK FLOOR applied after the
+  curve, remapping [0,1] onto [floor,1] — so "shade is never black" stops being
+  something the lighting has to remember and becomes something the grade cannot
+  violate. The curve can then be as punchy as the frame needs.
+- **The floor had to be much higher than the arithmetic suggested** — 0.06
+  linear, not 0.012. At 0.06 crush went to 0.0% on all thirteen poses AND
+  spread rose sharply (Park 20.0 → 25.9, Village 22.2 → 28.3, Foglands 14.4 →
+  21.8). The frame was checked by eye afterwards for milky blacks and does not
+  have them: shade reads as deep teal-blue with form, not as lifted grey.
+
+Two gates still fail and both are real, not threshold artefacts:
+- `hall` accent budget 12.0% vs 8%. The Hall of Lanterns is warm by design, but
+  12% is over budget and the honest fix is per-emitter gain (#12) rather than
+  widening the budget for one room.
+- readability on `lanternpool` (11.5), `player` (12.0), `nib` (14.3) and
+  `rooftops` (17.1). The `nib` frame WAS inspected: it is a wash of royal-blue
+  sky and pale grey roof with everything at one value. The threshold is not
+  wrong there — the art is flat, and the likely cause is that the zone sky
+  stops were authored for the old raw pipeline and are arriving too bright and
+  too saturated through a correct one. Re-authoring per-zone sky stops (and
+  per-zone LUTs, which TOOLKIT asks for and this does not yet do) is the next
+  move, not another global knob.

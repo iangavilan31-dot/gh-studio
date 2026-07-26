@@ -1347,9 +1347,11 @@
         "src/game/art/materials.js \u2014 litMaterial() on three-custom-shader-material behind setLitPath(); ?lit=0 reverts materials AND colour handling",
         "scripts/composecheck.mjs \u2014 new composition gate in CIE L* on the final framebuffer",
         "COLLISIONCHECK PASS (8/8), CROSSINGCHECK PASS (4/4), npm run build exit 0",
-        "COMPOSECHECK 8/13 poses \u2014 crush <=1.6% everywhere (gate 2%), was up to 40%; highlights and accents non-zero"
+        "COMPOSECHECK 8/13 poses \u2014 crush <=1.6% everywhere (gate 2%), was up to 40%; highlights and accents non-zero",
+        "src/game/core/grade.js \u2014 procedural 33-cube night grade LUT (contrast + palette anchors + black floor), tetrahedral interpolation",
+        "COMPOSECHECK 8/13; crush 0.0% on ALL 13 poses (was up to 40%); value floor, tinted shade, highlight scarcity pass everywhere"
       ],
-      "notes": "NOT yet passing. 5 poses fail mid-band readability (lanternpool 9.2, player 9.5, nib 13.1, foglands 14.4, rooftops 15.1). Per DECISIONS #13 the midSpread>=18 threshold is self-authored and must be validated against the actual frames before it is either chased or relaxed."
+      "notes": "NOT yet passing. 4 poses fail mid-band readability (lanternpool 11.5, player 12.0, nib 14.3, rooftops 17.1) and hall fails accent budget (12.0% vs 8%). Per DECISIONS #13 the midSpread>=18 threshold is self-authored; the nib frame was inspected and IS genuinely flat, so the threshold is not the problem there."
     }
   ]
 }

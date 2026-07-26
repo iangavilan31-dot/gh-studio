@@ -1252,6 +1252,7 @@ window.__MOONREST__ = {
     if (p.hemi != null) moonRig.hemiScale = p.hemi
     if (p.albedoFloor != null) globalUniforms.uAlbedoFloor.value = p.albedoFloor
     if (p.vertexTint != null) globalUniforms.uVertexTint.value = p.vertexTint
+    if (p.grade && c) c.setGrade(p.grade)
     moonRig.invalidate()
     return {
       vignette: c?.vignette.darkness, tone: c?.toneMapping.mode,
