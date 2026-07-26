@@ -396,3 +396,96 @@ and skews moonlight-blue toward cyan — it flattens exactly the mid-dark range
 this game lives in). TOOLKIT wins on technical detail per its own authority
 line and FINAL_PASS's header. Using AgX, exposure 0.6–1.0, contrast restored
 in the per-zone LUT.
+
+---
+
+## FINAL RUN #10 — the colour pipeline was wrong, not just retro (FIN-1)
+
+The 480×270 path was not merely a stylistic choice; it was colour-INCORRECT.
+Textures were sampled with `NoColorSpace` (i.e. sRGB bytes treated as linear),
+colours came from `new THREE.Color('#hex')` (which IS linear), and the result
+was written to the canvas with `outputColorSpace = LinearSRGBColorSpace`, so
+nothing was ever encoded on the way out. Two errors that happened to cancel.
+
+Physically-based lighting cannot survive that: a MeshStandardMaterial computes
+in linear and must be encoded on output, or every mid-tone crushes. So the swap
+to the composer was not optional polish for Stage 1 — it was a correctness
+prerequisite, and it had to happen in the same change as the lights.
+
+Consequence worth remembering: `?lit=0` restores BOTH the legacy materials and
+the legacy colour handling (textures.js reads the flag at module load). The two
+cannot be mixed.
+
+## FINAL RUN #11 — three defects the eye forgave and the gate caught
+
+Written down because all three presented as "the art looks a bit off" and all
+three were structural.
+
+1. **Baked darkness in albedo.** Up to 37% of the Village frame sat below L*3.
+   A crush mask (magenta = below L*3, in `docs/build/shots/ab/`) showed it
+   landing precisely on painted dark detail — mortar lines, roof-tile gaps,
+   wood trim — while the plaster beside it read fine. Those textures were
+   painted for an unlit renderer with shading baked in, which DIRECTION Part 6
+   forbids. Fixed with an albedo floor (`uAlbedoFloor`, 0.20).
+
+   The tell that it was a fix and not a fudge: sweeping the floor upward, crush
+   fell monotonically (Village 24.3% → 0.3%) while mid-band SPREAD *rose*
+   (19.5 → 23.8). A fudge flattens the frame; this made it more readable.
+
+2. **CSM discards vertex colours.** three-custom-shader-material patches
+   `#include <color_fragment>` and appends `diffuseColor = csm_DiffuseColor;`
+   on the next line — and `<color_fragment>` is exactly where three multiplies
+   vColor in. `csm_DiffuseColor` is built from `vec4(diffuse, opacity) *
+   sampledMap` and never saw it. So every painted vertex colour on the lit path
+   was silently thrown away: the ground lost its grass/path split and the
+   Keeper's violet robe rendered pure white.
+
+   Re-applying it needs `vColor.rgb` — **vColor is a vec4 here.** Taking it as
+   a vec3 fails to compile, and with CSM's `silent: true` plus a shader that
+   simply stops drawing, that presented as *the world vanishing from the
+   screenshots* rather than as a build error. Two rounds of grading were tuned
+   against an empty frame before a screenshot caught it.
+
+   Rule: when a metric stops responding to a knob that should move it, shoot
+   the frame before theorising. A gate reading a blank world reads as a very
+   consistent gate.
+
+3. **Emitters had become surfaces.** Every pose measured 0.0% highlights and
+   0.0% accent warmth, in a game about kindling lanterns. Fixed per TOOLKIT §3
+   — see FINAL RUN #12.
+
+## FINAL RUN #12 — emitter gain is set by the bloom threshold, not by taste
+
+Glow quads share one signature in this codebase: `transparent` with
+`depthWrite: false`. On the lit path they get a black diffuse (a source has no
+reflectance), their painted colour on the emissive channel, `emissiveIntensity`
+above 1, an albedo floor of zero, and no `receiveShadow`.
+
+The gain wants to be LOW. At 4.0 the Hall of Lanterns rendered as a single
+blown blob at 13.2% accent coverage against an 8% budget, because a glow quad
+is a soft radial gradient and a uniform multiply pushes its whole falloff into
+HDR. At 2.0 the bloom threshold (0.72) does the selecting instead: a core at
+texel ~1.0 lands at 2.0 and clears it, an outer falloff at texel ~0.2 lands at
+0.4 and does not. Sources glow, halos stay halos, and bloom makes the bloom
+rather than the quad pre-baking it. Hall: 13.2% → 7.8%.
+
+Known follow-up: one global gain is a compromise. Small cores want more and
+large halo quads want less — those big soft quads are pre-baked bloom from the
+legacy renderer and are now partly redundant. Per-emitter gain is the real fix.
+
+## FINAL RUN #13 — the composition gate, and one honest caveat
+
+`scripts/composecheck.mjs` judges the FINAL framebuffer (post chain, tone
+mapping and grade included) in CIE L*, not in adjectives, because "is it too
+dark?" is not answerable by looking. Six gates: value floor, highlight
+scarcity, no-crush, accent budget, tinted shade, readability.
+
+Caveat recorded deliberately: the `midSpread ≥ 18` readability threshold is
+MINE, not the spec's — I chose it when writing the gate. It is currently the
+only failing gate on 5 of 13 poses (three close-ups, two fog vistas). Before
+either chasing it or relaxing it, the frames must be looked at: if a close-up
+of the Keeper against fog is genuinely handsome at spread 9, the threshold is
+miscalibrated for intimate poses and should be split by pose type WITH that
+reasoning written down. If it looks flat, the number is right and the art is
+not done. What must NOT happen is quietly lowering a threshold to turn a gate
+green — that is how a gate stops meaning anything.

@@ -767,3 +767,51 @@ points, AgX in the effect chain (NoToneMapping on the renderer), selective
 bloom, height fog with moon inscattering, SSAO, per-zone LUT. Read
 `TOOLKIT.md` §3/§4/§5 and `DIRECTION.md` Part 7 first. This is the single
 largest visual jump in the run.
+
+---
+
+## FIN-1 IN PROGRESS — the world has light in it
+
+Stage 1 of the FINAL RUN. The single largest visual change in the project so
+far, and the first one where the game is lit rather than painted.
+
+**The old world had no lights at all.** `retroMaterial` was a raw
+`ShaderMaterial` with no `lights: true`, so three fed it no light uniforms —
+any `DirectionalLight` added to that scene was a silent no-op. Every surface
+read equally lit from every angle, which is why nothing had form. That is now
+replaced by:
+
+- **litMaterial** on `three-custom-shader-material`, behind one flag, so all
+  ~99 call sites convert together and `?lit=0` is the entire revert. The three
+  uniforms ~47 sites mutate directly (`uOpacity`/`uEmissive`/`uMap`) are
+  republished as accessors that write through to the standard material, so not
+  one call site had to change.
+- **MoonRig** — one directional (the only shadow caster, tracking the visible
+  moon so sky and shading agree; shadows lengthen across the night as it sets),
+  one hemisphere, nothing else. Driven from `ZoneLight.push()`, so zone mood has
+  exactly one interpolator.
+- **The post chain** — scene → linear HDR → SMAA / N8AO / bloom / vignette →
+  **AgX** → sRGB. This also fixed a colour pipeline that was flatly incorrect
+  (see DECISIONS #10).
+- **Emitters are lights again** — lanterns, flames and embers are HDR sources
+  that clear the bloom threshold instead of dim surfaces catching moonlight.
+
+**`scripts/composecheck.mjs`** is new: the composition gate, measured on the
+final framebuffer in CIE L*. It immediately caught two structural defects the
+eye had forgiven — darkness baked into painted albedo (up to 37% of the Village
+frame at pure black), and CSM silently discarding every vertex colour in the
+world. Both are fixed. Details in DECISIONS #11.
+
+Gates: `COLLISIONCHECK PASS (8/8)`, `CROSSINGCHECK PASS (4/4)`, build exit 0.
+`COMPOSECHECK 8/13` — crush, value floor, tinted shade, accent budget and
+highlight scarcity now pass everywhere.
+
+NEXT: the 5 remaining composecheck failures, all on mid-band readability —
+`lanternpool` (9.2), `player` (9.5), `nib` (13.1), `foglands` (14.4),
+`rooftops` (15.1). Three are close-up poses and two are fog vistas.
+
+**Look at those five frames before touching either the art or the number.**
+The `midSpread ≥ 18` threshold is mine rather than the spec's (DECISIONS #13):
+it is either miscalibrated for intimate poses, in which case split it by pose
+type and write down why, or the art is genuinely flat, in which case fix the
+art. Do not quietly lower it to make the gate green.
