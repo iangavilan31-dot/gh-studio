@@ -23,6 +23,7 @@ function brewBottleMesh() {
   return g
 }
 import { worldRNG } from '../core/rng.js'
+import { heroTrees } from '../art/heroassets.js'
 import { heightAt, surfaceAt, streetZ, streetH, roofInfo, WATER_Y, BOUNDS, MOSSWOOD_ARCH } from './layout.js'
 
 const _wp = new THREE.Vector3()
@@ -508,16 +509,21 @@ export class World {
 
   buildPark() {
     const rng = worldRNG.fork('park')
+    // FIN-2: hero trunks from the Blender factory when they exist, procedural
+    // cylinders when they do not — the Park must build either way.
+    const hero = heroTrees()
     for (let i = 0; i < 14; i++) {
       const a = (i / 14) * Math.PI * 2 + rng.range(-0.12, 0.12)
       const r = rng.range(23, 28)
       const cr = rng.range(3.6, 5)
-      const t = tree({ rng, height: rng.range(5, 7), trunkR: rng.range(0.45, 0.7), canopyR: cr })
+      const hg = hero.length ? hero[i % hero.length] : null
+      const t = tree({ rng, height: rng.range(5, 7), trunkR: rng.range(0.45, 0.7), canopyR: cr, heroGeo: hg })
       const x = Math.cos(a) * r, z = Math.sin(a) * r
       this.place(t, x, z, rng.range(0, Math.PI * 2))
       this.treePads.push({ x, z, r: cr })
     }
-    const bigTree = tree({ rng, height: 8.5, trunkR: 1.0, canopyR: 6.5, cards: 5 })
+    const bigTree = tree({ rng, height: 8.5, trunkR: 1.0, canopyR: 6.5, cards: 5,
+      heroGeo: hero.length ? hero[0] : null })
     this.place(bigTree, 2, -22.5, 0.4)
     this.treePads.push({ x: 2, z: -22.5, r: 6.5 })
     const longBench = bench({ length: 2.6 })
