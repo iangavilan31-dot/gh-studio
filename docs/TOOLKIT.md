@@ -1,483 +1,798 @@
 # MOONREST — TOOLKIT
 
-Researched, cited techniques and libraries. **The build agent reads this before
-writing rendering code.** Everything here is sourced; where a claim was verified
-against three.js source it is marked **[V]**, where it comes from a cited
-article **[R]**.
+Verified libraries, techniques and traps. **The build agent reads this before
+writing any rendering or physics code.** Everything was verified 2026-07-26
+against npm, GitHub, and three.js source. Baseline: **three.js r185**.
 
-Companion to `DIRECTION.md` (the art law) and `FINAL_PASS.md` (the build order).
+Companion to `DIRECTION.md` (art law) and `FINAL_PASS.md` (build order).
+**Where this file and any other doc disagree on a technical detail, this wins.**
 
 ---
 
-# 1. STACK DECISIONS (make these first)
+# 0. INSTALL THESE, IN THIS ORDER
 
-## 1.1 Pin three.js to r180–r182 **[V]**
+```bash
+npm i three@0.185.1                       # PIN EXACTLY — see §1.1
+npm i @dimforge/rapier3d-compat@0.19.3    # 1. structurally fixes wall-phasing
+npm i three-mesh-bvh@0.9.13               # 2. camera occlusion, ground probes, picking
+npm i postprocessing@6.39.3 n8ao@2.0.0    # 3. the entire "looks good" delta
+npm i three-custom-shader-material@6.4.0  # 4. custom shaders that KEEP three's lighting
+npm i lil-gui@0.21.0 stats.js@0.17.0      # 5. cannot art-direct a night scene blind
+npm i simplex-noise@4.0.3 alea@1.0.1      # 6. seeded, reproducible world
+npm i vite-plugin-glsl@1.6.1              # 7. .glsl files with #include
+npm i -D @gltf-transform/cli@4.4.2        # 8. biggest perf win per hour spent
+# when vegetation lands:
+npm i @three.ez/instanced-mesh@0.3.16     # pin — pre-1.0, but correct for trees/props
+```
 
-That is the only range satisfying the whole ecosystem simultaneously:
+Rapier is first because it fixes a **bug**, not a look. Everything else is
+polish on a game you currently cannot walk around in.
 
-| Package | Constraint |
-|---|---|
-| `postprocessing` (pmndrs) | three >= 0.168 < 0.186 |
-| `three-good-godrays` | three >= 0.125 <= 0.182 ← binding |
-| `three-gpu-pathtracer` | three >= 0.180 ← binding |
-| `three-mesh-bvh` | three >= 0.159 |
-| `three-custom-shader-material` | three >= 0.159 |
+---
 
-Note for this repo: `@react-three/fiber@9` requires React 19; `8.18.0` is the
-last React-18 line. **Simplest path: vanilla three.js inside a `useEffect`,
-skipping R3F entirely.**
+# 1. STACK DECISIONS
 
-## 1.2 Renderer path — prefer `WebGPURenderer` with WebGL2 fallback **[V]**
+## 1.1 Pin three to **0.185.1 exactly**
 
-`WebGPURenderer` auto-falls back to a WebGL2 backend (`forceWebGL: true` forces
-it; otherwise it warns *"WebGPU is not available, running under WebGL2
-backend"*). Taking this path gives **built-in exponential height fog** and the
-node-based post stack while still shipping to WebGL2 browsers. The classic
-`WebGLRenderer` + `EffectComposer` path requires hand-patching fog via
-`onBeforeCompile`.
+`postprocessing`'s peer range is `three: >= 0.168.0 < 0.186.0`. **You are one
+release from a peer break.** Do not upgrade to r186 until that widens.
 
-Height fog and depth-blur scattering are the two effects this art direction
-leans on hardest, and both are one-liners on the node path.
+## 1.2 Stay on `WebGLRenderer`. Do NOT adopt WebGPU/TSL.
 
-## 1.3 Color pipeline — set before lighting anything
+An earlier draft recommended `WebGPURenderer` for its built-in TSL height fog.
+**Deeper verification reversed that call:**
+
+1. **`pmndrs/postprocessing` does not run under `WebGPURenderer`** — you would
+   lose `SelectiveBloomEffect` and `GodRaysEffect`, the two highest-value
+   effects for a night game. This alone decides it.
+2. `three-custom-shader-material` doesn't work there either (it patches WebGL
+   chunk strings).
+3. **TSL is actively breaking** — r185 itself changed vertex-displacement
+   semantics (`positionLocal` → `positionGeometry`), invalidating every
+   grass-wind tutorial written before it. ~16 TSL/WebGPU breaking changes in six
+   releases.
+4. WebGPU reach ~82%, and the misses are awkward: **Firefox desktop ships
+   nothing by default**; Safari only from 26.0 and flagged *partial*.
+
+Keep shaders in separate `.glsl` files so a future port is mechanical.
+
+## 1.3 The color pipeline — set this before lighting anything
 
 ```js
 renderer.outputColorSpace = THREE.SRGBColorSpace;
-texture.colorSpace = THREE.SRGBColorSpace;  // color maps only, never data maps
-renderer.toneMapping = THREE.AgXToneMapping;
+renderer.toneMapping = THREE.NoToneMapping;        // ← tone map in the EFFECT chain
+new EffectComposer(renderer, { frameBufferType: THREE.HalfFloatType });  // ← NOT 8-bit
+material.dithering = true;                          // on every large gradient surface
 ```
 
-**Use AgX, not ACES.** three.js's own PR notes admit the ACES implementation
-*"fails to desaturate highlights"*, and true ACES desaturation would bleach
-exactly the saturated lantern glow this game is composed around; ACES also
-boosts contrast, fighting the "never crush to black" rule. AgX is flatter and
-explicitly designed as *"a better foundation for additional color grading"* —
-and it is Blender 4.x's default, so baked assets round-trip consistently.
-**Pin >= r161** — r160's AgX shipped without required gamut mapping. **[R]**
+**These three are non-negotiable and each fails silently:**
 
-Custom `ShaderMaterial` fragments must manually `#include <colorspace_fragment>`
-at the end of `main()`; three.js will not fix a hand-written shader.
+- **8-bit composer buffers** requantize on every ping-pong → banding and
+  crushed blacks that no amount of tuning fixes. Dark scenes are exactly where
+  this shows.
+- **Tone mapping on the renderer *and* in the chain** = double tone mapping =
+  washed out. The single most common mistake.
+- **`material.dithering`** defaults `false`; it shifts each channel differently
+  so the pattern is imperceptible. Cost ≈ 0. Without it every sky and ground
+  gradient bands.
+
+**Use AgX tone mapping** (`ToneMappingMode.AGX`). ACESFilmic lifts and
+desaturates shadows and skews moonlight-blue toward cyan — it flattens exactly
+the mid-dark range this game lives in. AgX has the best shadow rolloff and hue
+preservation at low luminance. It reads slightly flat, **which is correct** —
+restore contrast in the LUT. Exposure 0.6–1.0, and **never crank exposure to
+fix darkness — raise light intensities instead**, or you amplify quantization
+noise in the range you're protecting.
 
 ---
 
-# 2. THE LIGHT RIG
+# 2. COLLISION — the wall-phasing fix
 
-three.js forward materials evaluate **every active light per fragment**, with
-no automatic per-object light culling; practical degradation begins around
-30–50 point lights **[R]**. The rig:
+**Root cause:** discrete movement + depenetration. When a frame's motion ends
+past a wall, the pushout resolves the wrong way. **Substepping is a
+probabilistic patch, not a fix** — at 40 m/s with a 100ms hitch, a 5-substep
+solver still moves 80cm per step and any thinner wall is gone.
 
-1. **1 × `DirectionalLight`** — the moon. The **only** shadow caster. Cascaded
-   shadow maps ship in core: `three/addons/csm/CSM.js` **[V]**.
-2. **1 × `HemisphereLight`** — the ambient floor, cool moon-blue sky over warm
-   ground bounce. Cannot cast shadows, essentially free. This is the mechanism
-   that keeps shadows from terminating at pure black.
-3. **Single-digit `PointLight`s** for lanterns near the camera, `castShadow =
-   false`, tight `distance`/`decay`.
-4. **Everything else is emissive material with no light attached.**
+## 2.1 Rapier `KinematicCharacterController` — the structural fix
 
-80.lv's stylized-night breakdown states the recipe directly: *"To give the
-illusion that the lanterns are lit I used emissive materials in combination
-with well-placed point lights"*, and *"the most important part of correcting my
-lighting was to let go of the directional light as the main light source."* **[R]**
+`@dimforge/rapier3d-compat@0.19.3` · Apache-2.0 · 5,568★ · active
 
-## 2.1 The governing rule
+Verified in the Rust source: `computeColliderMovement` calls
+`cast_shape(... max_time_of_impact: translation_dist)` and clamps to the hit
+TOI. **It shape-casts the entire desired translation every call — it cannot
+tunnel at any speed, with no substepping.**
 
-From The Level Design Book's darkness chapter: **"make it feel dark, but don't
-actually make it dark."** Corollaries **[R]**:
+Configuration rather than code you debug: `enableAutostep(maxHeight, minWidth,
+includeDynamic)`, `enableSnapToGround(dist)`, `setMaxSlopeClimbAngle`,
+`setMinSlopeSlideAngle`, `setOffset` (skin width — must not be zero), and
+`setNormalNudgeFactor` (whose docstring is literally the fix for "character
+sticks on walls").
 
-- Never apply flat ambient to all shadows — use directional/hemispherical
-  ambient so only *some* shadows reach zero. **Contrast reads as night, not
-  absolute darkness.**
-- **Never bake darkness into albedo.** Let lights create dark.
-- Avoid pure blue+orange ("vanilla blorange") — add a third accent hue.
-- Fill recipe: dim bluish point lights, no shadows, soft falloff.
+**Critical: use `TriMeshFlags.FIX_INTERNAL_EDGES` on static level geometry** or
+the capsule catches on shared interior triangle edges while sliding across a
+floor. This is the #2 complaint after tunneling.
 
-Robert Yang's mechanism: *"The perceived brightness of a light depends on the
-actual brightness, and the relative light level in the areas around it."* **[R]**
+Start from the official example `physics_rapier_character_controller` — but
+copy the *pattern*, not `examples/jsm/physics/RapierPhysics.js`, which
+CDN-pins rapier 0.17.3.
 
-## 2.2 Rim light — the highest-leverage trick in a dark scene **[R]**
+⚠️ `dimforge/rapier.js` was **archived 2026-07-12** and folded into the rapier
+monorepo. Every older tutorial points at the dead repo; the character
+controller code is byte-identical across the move.
 
-```glsl
-vec3  eye = normalize(-vertexPosition.xyz);   // view space
-float rim = max(0.0, 1.0 - dot(eye, normal));
-rim = pow(rim, rimLightPower);                // soft
-// or: rim = smoothstep(0.3, 0.4, rim);       // hard banded edge
-outputColor.rgb += rim * diffuse;
+**Terrain collision: use `ColliderDesc.heightfield(...)`**, not trimesh — O(1)
+lookup, a fraction of the memory, no internal-edge pathology. Watch
+row/column-major ordering (the classic transposed-terrain bug).
+
+## 2.2 `three-mesh-bvh@0.9.13` — everything else
+
+MIT · 3,433★ · active. Different job from Rapier, and they compose well:
+**fast raycasts against your actual render meshes** for camera occlusion,
+ground probes, mouse picking, AI line-of-sight.
+
+```js
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
+raycaster.firstHitOnly = true;   // several× faster
 ```
 
-Bias toward the moon (`* saturate(dot(N, -lightDir))`) so it reads as backlight
-rather than a uniform glow shell. In near-black scenes this is not a flourish,
-it is *the readability mechanism*.
+⚠️ **API renames in 0.9.x that every tutorial gets wrong:** `MeshBVHHelper` →
+**`BVHHelper`**, `maxLeafSize` → **`targetLeafSize`**.
 
-## 2.3 Why night reads blue **[R]**
+⚠️ Its own `characterMovement.js` example is **discrete depenetration**, not
+swept — good code to read, not a tunneling fix.
 
-Moonlight is ~4100K — technically warmer than daylight. The blue is the
-**Purkinje shift**: scotopic rod vision peaks near 507nm, so reds darken first.
-Aim for **steely desaturated grey-blue**, not saturated cartoon blue. Best
-implemented as a *luminance-dependent* shift (desaturate reds, lift blue only
-in low-luminance pixels) rather than a flat global tint.
+**Camera collision:** sphere-cast (radius 0.2–0.3, **not a bare ray** — a ray
+lets the frustum clip through corners) from head toward the desired position,
+place at `hit.distance - 0.1`, and **spring asymmetrically: snap in
+immediately, ease out at 5–10 u/s.**
+
+## 2.3 Do not use
+
+`cannon-es` (npm frozen 2022, **no capsule primitive at all**), `ammo.js`
+(three pins a 2020 commit), `Sketchbook` (built on dead cannon.js). `ecctrl` is
+R3F-only, but **steal its floating-capsule spring-damper idea**
+(`floatHeight 0.2, springK 80, dampingC 6`) for stair and slope feel.
 
 ---
 
-# 3. FOG — THE PRIMARY SCALE TOOL
+# 3. POST-PROCESSING
 
-Íñigo Quilez, *Better Fog* (https://iquilezles.org/articles/fog/), states the
-thesis: *"Without fog it's not easy to tell the scale of the terrain. With fog
-we immediately understand the size."* **Fog is a scale instrument, not a mood
-effect.**
+`postprocessing@6.39.3` (pmndrs) · Zlib · active. Its `EffectPass` **merges N
+effects into one compound shader**; three's built-in `EffectComposer` does a
+fullscreen pass + blit per effect. Built-in also **has no GodRays and no
+SelectiveBloom** — the two effects that define this look.
 
-## 3.1 The three formulas **[V, extracted]**
+**Official effect order:** SMAA → SSAO → DoF → CA → Bloom → God Rays →
+Vignette → **Tone Mapping → LUT** → Noise. Convolution effects (SMAA, Bloom,
+DoF, GodRays) each need their own `EffectPass`; the rest merge into one.
+
+**Bloom — the night trap:** default `luminanceThreshold: 1.0` means nothing in
+a dark scene exceeds it and bloom looks broken. Fix by making emitters genuinely
+HDR (`emissiveIntensity` 2–10), then threshold 0.6–0.9, `luminanceSmoothing`
+0.2–0.4, `mipmapBlur: true`, `radius` 0.6–0.85. **Never set threshold to 0** —
+that's the "everything glows, blacks fog up" failure. Use
+**`SelectiveBloomEffect` + `Selection`** so only lanterns, runes and eyes glow.
+
+**AO:** `n8ao@2.0.0` (CC0/ISC, no upper peer bound). Use `N8AOPostPass`;
+**`aoTones`** quantizes AO into discrete bands — made for this art direction.
+`halfRes` Ultra beats full-res Performance.
+
+**God rays:** `three-good-godrays@0.12.0` raymarches **through the shadow map** —
+real moonbeams through trees, works off-screen. ⚠️ **Two flags: license is
+NOASSERTION, and peer caps at `<= 0.182.0`.** Resolve both before shipping, or
+fall back to pmndrs `GodRaysEffect` (screen-space, breaks when the light leaves
+frame — fine for lanterns, wrong for the moon) or large soft additive
+billboards, which is what most stylized games actually ship.
+
+**AA:** `SMAAEffect` at `SMAAPreset.ULTRA`. There is no good TAA on WebGL —
+`TAARenderPass` only converges with a static camera.
+
+**LUT is where "dark fantasy" actually happens.** `LUT3DEffect` +
+`LUTCubeLoader`, **≥32³** (16³ bands in dark gradients), **enable
+`tetrahedralInterpolation`**, place **after** tone mapping. Grade a screenshot
+in Resolve → export `.cube` → crush shadows toward blue-cyan, warm the torch
+highlights, desaturate mids.
+
+**Dead despite star counts:** `realism-effects`, `screen-space-reflections`
+(archived). **Do not build on `postprocessing` v7** — beta ~2 years, unmoved.
+
+---
+
+# 4. LIGHTING
+
+Forward materials evaluate **every active light per fragment** with no
+per-object culling; degradation starts around 30–50 point lights. The rig:
+
+1. **1 × `DirectionalLight`** (the moon) — the **only** shadow caster. CSM
+   ships in core: `three/addons/csm/CSM.js`, `mode: 'practical'`,
+   `cascades: 3`, `shadowMapSize: 2048`. Call `setupMaterial()` per material.
+2. **1 × `HemisphereLight`** — the ambient floor that stops shadows reaching
+   pure black. Cannot cast shadows; essentially free.
+3. **Single-digit `PointLight`s** for near lanterns, `castShadow = false`.
+4. **Everything else is emissive with no light attached.**
+
+**Free wins:**
+- **`renderer.shadowMap.autoUpdate = false`**, set `needsUpdate = true` only
+  when something moves. For a static world with one moon this is close to free
+  shadows. Biggest cheap win available.
+- **`renderer.compileAsync(scene, camera)`** to warm shader programs before
+  gameplay — often the single biggest perceived-stutter fix.
+- `shadow.normalBias` 0.02–0.05 fixes foliage acne far better than
+  `shadow.bias`.
+
+⚠️ **`PCFSoftShadowMap` is deprecated as of r186** — write `PCFShadowMap` now.
+
+## 4.1 The governing rule
+
+**"Make it feel dark, but don't actually make it dark."** Corollaries:
+never apply flat ambient to all shadows (only *some* should reach zero —
+contrast reads as night, not absolute darkness); **never bake darkness into
+albedo**; avoid pure blue+orange, add a third accent hue.
+
+## 4.2 Tinted shade — never black
+
+The single most transferable line from `brunosimon/infinite-world`:
 
 ```glsl
-// 1. plain exponential
-float fogAmount = 1.0 - exp(-t*b);
+vec3 shadeColor = baseColor * vec3(0.0, 0.5, 0.7);   // shade goes CYAN/BLUE
+return mix(baseColor, shadeColor, sunShade);          // sunShade = dot(N,-L)*0.5+0.5
+```
 
-// 2. INSCATTERING — fog shifts toward the light when you look at it
-float sunAmount = max(dot(rd, lig), 0.0);
-vec3  fogColor  = mix(nightBlue, moonPale, pow(sunAmount, 16.0));  // 16–32 = tight halo
+**Black shadows are the #1 thing that makes a night scene read as "broken
+renderer" rather than "moonlight."** Make this deep blue/violet for MOONREST.
 
-// 3. EXPONENTIAL HEIGHT FOG — density a*exp(-b*y), analytically integrated
+## 4.3 Rim light — the readability mechanism
+
+```glsl
+float rim = pow(max(0.0, 1.0 - dot(normalize(-vPos), normal)), rimPower);
+```
+Bias toward the moon (`* saturate(dot(N, -lightDir))`) so it reads as backlight,
+not a glow shell. In near-black scenes this is not a flourish.
+
+## 4.4 Baked lightmaps — highest quality per frame cost
+
+⚠️ **The attribute is `uv1`, NOT `uv2`.** Modern three selects UV sets
+per-texture via `texture.channel = 1`. glTF `TEXCOORD_1` maps automatically.
+Every older tutorial gets this wrong and it fails silently.
+
+AO touches **indirect light only** (`reflectedLight.indirectDiffuse *= ao`) —
+correct here, since it darkens the hemisphere floor without double-darkening
+moonlight. Lightmap **adds to irradiance**, so it stacks with the hemisphere
+light; tune the pair together.
+
+Options: Blender Cycles bake → glTF (primary, see `ASSETS.md`); **vertex-color
+AO** (no UVs at all, often sufficient for low-poly — **try this first**);
+`three/addons/misc/ProgressiveLightMap.js` for runtime accumulation without a
+DCC round-trip.
+
+**Contact/blob shadows are non-negotiable** — in a dark scene the real shadow
+is often invisible, and a soft ellipse is what stops everything floating.
+
+---
+
+# 5. FOG — THE PRIMARY SCALE TOOL
+
+Íñigo Quilez: *"Without fog it's not easy to tell the scale of the terrain.
+With fog we immediately understand the size."* **Fog is a scale instrument.**
+
+```glsl
+// height fog — density a*exp(-b*y), analytically integrated
 float fogAmount = (a/b) * exp(-ro.y*b) * (1.0 - exp(-t*rd.y*b)) / rd.y;
+
+// inscattering — fog shifts toward the moon when you look at it
+float m = max(dot(rd, moonDir), 0.0);
+vec3  fogColor = mix(nightBlue, moonPale, pow(m, 16.0));   // 16–32 = tight halo
 ```
 
-Formula 3 costs one extra divide and delivers the entire "valleys drown in
-mist, towers stand clear" read. Formula 2 with a pale moon tint and a high
-exponent gives the moon a halo through the air.
+Height fog costs one extra divide and delivers the whole "valleys drown in
+mist, towers stand clear" read. Implement via `three-custom-shader-material`,
+not fragile `onBeforeCompile` chunk patching.
 
-Separate extinction from inscattering for six independent coefficients:
+⚠️ **Built-in fog does not affect the skybox** — match `scene.background` to
+the fog color or heavy fog gives a fogged world under a crisp sky.
+
+## 5.1 Sky-render-target fog — the best trick found
+
+From `infinite-world` (study-only license — **reimplement, don't copy**):
+render the sky into a **separate render target at 0.1× resolution**, then in
+every material sample it by screen UV and mix toward it:
+
 ```glsl
-vec3 extColor = exp(-distance * be);
-vec3 insColor = exp(-distance * bi);
-finalColor = pixelColor*(1.0-extColor) + fogColor*insColor;
+vec3 fogColor = texture2D(uFogTexture, screenUv).rgb;
+float fogIntensity = 1.0 - exp(-uFogIntensity * uFogIntensity * depth * depth);
+return mix(baseColor, fogColor, fogIntensity);
 ```
 
-## 3.2 Built-in node fog **[V]**
+**The fog color IS the sky behind that exact pixel** — distant geometry
+dissolves into the true sky gradient, moon glow and all, instead of a flat
+constant. Costs one 0.1× render target. For a night game this is worth more
+than any post-processing pass.
 
+## 5.2 Fog behind silhouettes
+
+Left 4 Dead added **light-colored fog** specifically because playtesters
+couldn't read shapes against dark backgrounds — explicitly less realistic, but
+*"it meant playtesters could see attackers in the distance."* A slightly
+lighter fog band at mid-distance turns every foreground object into a legible
+silhouette. Cheapest readability fix in a dark game.
+
+---
+
+# 6. TERRAIN
+
+**The decision that constrains everything: bake heights on the CPU. Do not
+displace only in the vertex shader** — the CPU would have no idea where the
+ground is, raycasts hit the undisplaced plane, and bounding volumes go wrong.
+
+Architecture: author a heightmap offline → load into a `Float32Array` →
+CPU-displace **chunked** `PlaneGeometry` (free per-chunk frustum culling,
+per-chunk `computeVertexNormals()`) → **collision = analytic bilinear sampling
+of that same array** (O(1), no allocation, surface normal free via central
+differences). The array is the source of truth; mesh and collider both derive
+from it.
+
+**The shaping knob that matters most** (from `infinite-world`):
 ```js
-import { exponentialHeightFogFactor, uniform, fog, color } from 'three/tsl';
-scene.fogNode = fog( color(0x14243a), exponentialHeightFogFactor( uniform(0.04), uniform(2) ) );
-scene.backgroundNode = color(0x14243a);   // fog color == horizon color, always
+elevation = Math.pow(Math.abs(elevation), power) * Math.sign(elevation)
 ```
-`fog(color, factor)` accepts an **arbitrary factor node**, so inscattering is a
-custom factor rather than a fork. Example: `webgpu_fog_height`.
+That power curve is what turns noise mush into ridges and plateaus.
 
-Classic-path note: three.js's built-in fog uses `-mvPosition.z` — planar, not
-radial — so density shifts as the camera rotates. Matters at wide FOV. **[V]**
+**LOD seams: use skirts, not stitching.** Duplicate each chunk's border
+vertices pushed **down 15 units** to form a vertical apron; cracks between
+different-LOD neighbours hide behind it. Compute normals from an "overflow"
+grid one row/column larger so edge lighting doesn't seam.
 
-## 3.3 Depth-driven scattering blur — best value effect found **[V]**
+**Skip LOD terrain libraries for v1** — at night, heavy fog collapses the far
+field into silhouette, which is the exact thing LOD exists to solve. Spend the
+budget on the near field.
 
-Blend toward a **half-res blurred copy of the scene** weighted by the fog
-factor, so distant geometry loses acuity instead of only tinting:
+**Triplanar** (stops stretched cliff textures) via
+`three-custom-shader-material`, writing **`csm_DiffuseColor`** (not
+`csm_FragColor`, which bypasses lighting). Costs 3× texture fetches —
+**mitigate by blending it in only on slopes**: `smoothstep(0.6, 0.85, 1.0 - n.y)`.
+Normal maps are the hard part; read Ben Golus, *Normal Mapping for a Triplanar
+Shader*. Use **height-based blending, not linear `mix()`** — linear gives muddy
+50/50 mush.
 
-```js
-const blurred = gaussianBlur(scenePassColor, vec2(scattering), 4, { resolutionScale: 0.5 });
-outputNode = mix(scenePassColor, blurred, fogFactor);
-```
+**Noise:** `simplex-noise@4.0.3` + `alea@1.0.1` for a **seeded, reproducible**
+world (terrain and grass scatter must agree across reloads). Avoid `noisejs`
+(npm frozen since 2013).
 
-three.js's own `webgpu_custom_fog_scattering` example does exactly this, and its
-scene notes describe our target verbatim: fog and background share a color so
-trunks *"read as dark silhouettes that dissolve into depth"*, all
-`MeshBasicMaterial`, **no lights at all**, camera at `y = 1.7`, FOV 55.
-
-## 3.4 Fog behind silhouettes — the cheapest readability fix **[R]**
-
-Left 4 Dead's *Stylized Darkness* post: when playtesters couldn't read shapes
-against dark backgrounds, the team added **light-colored fog** — explicitly
-less realistic, but *"it meant playtesters could see attackers in the
-distance."* A slightly-lighter fog band at mid-distance turns every foreground
-object into a legible silhouette.
-
-## 3.5 Soft particles — mandatory for fog cards **[R]**
-
-Linearize scene depth, subtract card depth, `smoothstep` into alpha. Three
-lines, kills the hard clip line where ground fog meets terrain. Requires a real
-`DepthTexture` (WebGL2 samples depth natively, no RGBA packing).
-
-## 3.6 Sky
-
-`three/addons/objects/Sky.js` is Preetham and **misbehaves at deep night**
-(low sun elevation breaks the zenith terms). Community consensus: cross-fade
-from Preetham at dusk into a procedural starfield dome with a manual color
-lerp. **[R]**
+⚠️ **Gaea Community is free but marked ✗ for commercial use.** Blender's ANT
+Landscape is GPL, free, and commercially unrestricted — use that.
 
 ---
 
-# 4. VOLUMETRIC LIGHT
+# 7. VEGETATION
 
-Ranked by cost. **Important correction: the old
-`examples/jsm/shaders/GodRaysShader.js` no longer exists** — three.js's own
-example now uses third-party `three-good-godrays` **[V]**.
+## 7.1 Grass — per-blade geometry, not alpha cards
 
-1. **Billboard cone shafts — the right answer for lanterns.** John Chapman's
-   "Good Enough Volumetrics"; three.js port `threex.volumetricspotlight`. Whole
-   fragment shader is a distance falloff times `pow(dot(normal, viewZ),
-   anglePower)` to fade at the silhouette. `transparent, depthWrite:false`.
-   Add the §3.5 soft-particle depth fade. **[R]**
-2. **Screen-space radial blur** (GPU Gems 3 Ch.13) — march samples toward the
-   light's screen position with exponential decay. **Breaks when the light is
-   off-screen**, so fine for torches, wrong for the moon. **[R]**
-3. **Raymarched through the shadow map** — `three-good-godrays`, now absorbed
-   into core as `three/addons/tsl/display/GodraysNode.js` **[V]**, with
-   `BilateralBlurNode` and `depthAwareBlend` companions. Works off-screen.
-   Requires full shadow setup; point and directional lights only. Defaults:
-   `density 1/128, maxDensity 0.5, raymarchSteps 60`.
-4. **Blue-noise dithered raymarching** — turns banding into temporal noise,
-   letting step counts drop from ~250 to ~50. **[R]**
+Decisive for **this** art direction: at night albedo barely registers; what the
+player sees is **silhouette edge + rim**. Alpha cards blur into mush in
+silhouette and their edges **crawl badly against a bright moonlit sky** — the
+exact worst case. Blade geometry gives crisp silhouettes, is fully opaque
+(early-Z works, no sorting, no alpha-test shimmer), and costs ~7–15 verts.
 
-Maxime Heckel's *Shaping Light* is the best web-specific writeup (raymarch
-loop, per-sample shadow occlusion, Henyey-Greenstein phase, blue noise).
+**Start from `simondevyoutube/Quick_Grass` (MIT, shippable)** — implements the
+Ghost of Tsushima GDC approach: per-blade tapered geometry, tiled LOD rings,
+vertex wind, and **view-dependent blade widening** so distant blades don't
+flicker to sub-pixel noise.
 
-**Use `pmndrs/postprocessing` over stock `EffectComposer`:** its `EffectPass`
-merges multiple effects into a single shader program rather than N ping-ponged
-fullscreen passes, and draws a fullscreen triangle instead of a quad.
+Ideas worth stealing from `infinite-world` (reimplement — study-only license):
+- **Infinite grass via modulo** in the vertex shader — a fixed 40k budget that
+  never grows, recentred on the player each frame.
+- **Distance falloff by scaling blades to zero, not alpha-fading** — no
+  blending, no sorting, no popping.
+- **`tipness` free from the vertex ID**: `step(2.0, mod(float(gl_VertexID)+1.0, 3.0))`
+  — only the tip moves, so the blade *bends* rather than slides.
+- **The terrain shader recomputes the identical grass attenuation and blends
+  the same two colours**, so ground and grass match exactly at the draw
+  boundary and the transition is invisible. This is the trick.
+
+**Night-grass lighting model** (no repo gives you this):
+- **Wrapped diffuse** `saturate((dot(N,L) + 0.5) / 1.5)` so blades facing away
+  aren't black.
+- **Back-scatter** `pow(saturate(dot(V,-L)), p)` — grass is thin, the moon
+  behind it should glow *through*. **This is the effect that sells the scene.**
+- Rim tinted moon-blue, strongest at tips; vertical dark-base→light-tip
+  gradient. Keep albedo near-black and let rim + back-scatter do the work.
+
+## 7.2 Trees and props
+
+**`dgreenheck/ez-tree`** (MIT, active) — procedural trees, exports GLB, and
+`generateLODs()` bakes every level into the file. **Use as a build-time asset
+generator, not a runtime dependency.** Dead/gnarled presets are exactly
+dark-fantasy silhouette material. ⚠️ Avoid `proctree.js` — no license file.
+
+**`@three.ez/instanced-mesh@0.3.16`** (MIT, very active, pin it) for trees and
+props: raw `InstancedMesh` culls as **one** bounding sphere, so a world-spanning
+instance is *never* culled. This adds per-instance frustum culling, BVH
+raycast, LOD, and **`addShadowLOD()`** — cheaper geometry in the shadow pass,
+the standout feature when one moon light shadows all vegetation.
+
+Use **plain chunked `InstancedMesh` for grass** (one geometry, no per-instance
+uniforms, no shadows — the extra features are wasted).
+
+## 7.3 Foliage rules
+
+- **Alpha test (`alphaTest = 0.5, transparent = false`), never alpha blend.**
+- **`castShadow = false` on all grass** — the shadow pass alone kills you and
+  self-shadowing is invisible at night.
+- Shadow pass must run the same alpha test or you get solid-quad shadows → set
+  `customDepthMaterial`.
+- **Wind: layer three frequencies** — slow world-space gust field (whole
+  regions lean together; this sells scale), mid per-plant sway, high per-blade
+  flutter. **Never phase-offset by `instanceIndex`** — grid ordering produces
+  marching waves; hash the world position. **Bend around the base, don't
+  translate**, or blades stretch.
+- **Scatter:** Poisson disk for trees/rocks; stratified jitter grid for grass.
+  Drive both from the **same slope/altitude/noise masks as the terrain splat
+  weights** so grass appears exactly where the grass texture is — highest-value
+  coherence trick available.
 
 ---
 
-# 5. BAKED LIGHTING (the quality multiplier)
+# 8. WATER, SKY, SHADERS
 
-**Why it wins here:** a night scene's beauty lives in soft bounce — lantern
-light spilling onto a wall and back onto the ground. Realtime WebGL direct
-lighting cannot produce that at any price. Baking buys GI, soft area shadows
-and AO for one texture fetch, and lets the scene run on two realtime lights.
+**Water: write a custom material.** `Water.js` is normal-map-only Blinn-Phong
+and costs a full extra scene render; `Water2.js` costs two. **Neither does
+foam, shorelines, or geometric waves** — the three things this target lives on.
+⚠️ `Water.js` defaults `fog: false`, so water visually detaches from the scene.
 
-## 5.1 The API detail every older tutorial gets wrong **[V]**
-
-Lightmap UVs do **not** go in `geometry.attributes.uv2`. Modern three.js
-selects the UV set per-texture:
-
-```js
-material.lightMap.channel = 1;   // → geometry.attributes.uv1
-material.aoMap.channel    = 1;
+**The high-value technique — depth-based shoreline foam:** render the scene
+without water into an RT with a `DepthTexture` (⚠️ **MSAA and depthTexture are
+incompatible on WebGL2 — `samples: 0`**), then:
+```glsl
+float shore = 1.0 - smoothstep(0.0, uFoamDistance, sceneZ - waterZ);
+float foam  = step(shore - noise*0.25, uFoamCutoff);   // hard edge = stylized
 ```
-glTF `TEXCOORD_1` maps to `uv1` automatically.
+One `shore` value drives foam mask + opacity ramp + shallow/deep colour lerp,
+and gives soft intersection alpha free. **Two foam bands** at different cutoffs
+read far better than one. Add 3–5 summed Gerstner waves with a crest term as a
+second foam mask.
 
-## 5.2 What each map actually does **[V]**
+**Sky: don't use a physical model.** Core `Sky.js` is Preetham and is
+**structurally broken below the horizon** — no moon, no stars. Build instead: a
+hand-authored gradient dome (**`dithering = true`** — this is exactly the smooth
+dark gradient that bands) + a **real star field from the Yale Bright Star
+Catalogue** (public domain, ~9,110 stars to mag 6.5; RA/Dec → spherical, size
+from magnitude, colour from B−V — real constellations are worth it for a "look
+up" beat) + a billboard moon in the bloom `Selection` + the directional light
+aimed from it. Anti-shimmer: clip sub-pixel points offscreen rather than
+drawing them (`if (gl_PointSize < 0.5) gl_Position = vec4(2.0);`).
+
+Palette from `infinite-world`'s night sky, a good starting point:
+`uColorNightLow #004794`, `uColorNightHigh #001624`.
+
+**Clouds:** drei `<Cloud>` is billboard-based, cheap, and reads stylized —
+genuinely good here. ⚠️ It hotlinks a CDN texture by default; self-host.
+
+**Shader authoring:** `three-custom-shader-material@6.4.0` is the backbone —
+terrain triplanar, grass wind, water and height fog all route through it while
+keeping three's lighting, shadows, fog and tone mapping.
+
+⚠️ **Vertex-displaced geometry needs matching depth materials or its shadows
+won't match its silhouette.** Attach three CSM instances sharing one uniforms
+object: the material, plus `customDepthMaterial` (`MeshDepthMaterial`, for
+directional/spot) and `customDistanceMaterial` (`MeshDistanceMaterial`, **for
+point lights — the one everyone forgets**).
+
+⚠️ `csm_Roughness`/`csm_Metalness`/`csm_AO`/`csm_Emissive` are **silent no-ops
+unless the base material has the corresponding map slot populated** — assign a
+1×1 white texture to `roughnessMap` for procedural roughness. `csm_Bump` was
+removed in 6.4.0; use `csm_FragNormal`.
+
+---
+
+# 9. 🚨 LICENSE TRAPS
+
+| Thing | Problem |
+|---|---|
+| **lygia** | **Prosperity Public License 3.0.0 — 30-day commercial trial only.** The most-recommended GLSL library on the web and a genuine commercial trap. **Use `stegu/webgl-noise` (MIT) instead** — vendor the `.glsl` files with their header. |
+| **Shadertoy ports** | Default **CC BY-NC-SA — non-commercial.** Verify per shader. |
+| **`brunosimon/infinite-world`** | **No LICENSE file → all rights reserved. STUDY ONLY.** Reimplement from understanding; do not copy code. Same for `my-room-in-3d`, `proctree.js`, `spacejack/terra`. |
+| **`three-good-godrays`** | License NOASSERTION. Resolve before shipping. |
+| **Sketchfab `by-nd`** | **Blocks distributing modified models** — fatal, since you'll decimate everything. Filter to CC0. |
+| **itch.io** | Licenses are creator-declared and unverified. Read every pack page. |
+| **Sonniss GDC bundles** | Free and commercial-safe for the game, but **bans AI/ML training** and redistribution of raw files. |
+| **Freesound** | Mixes CC0, CC-BY, **CC-BY-NC** and legacy Sampling+. **Always apply the CC0 filter.** |
+| **Incompetech** | CC-BY — attribution mandatory, not drop-in. |
+| **FreePD.com** | **Permanently closed in 2025.** Dead source. |
+| **Gaea Community** | Free tier marked ✗ commercial. |
+| **Blockade Labs free tier** | Check current commercial terms per tier. |
+
+---
+
+# 10. VERIFIED CC0 ASSET SOURCES (zero attribution, commercial-safe)
+
+| Source | Contents | Notes |
+|---|---|---|
+| **Poly Haven** | 980 HDRIs · 785 textures · 521 models | *"You do not need to give credit."* ⚠️ The site is a JS SPA — **scrape via `api.polyhaven.com`**, e.g. `/assets?t=hdris&c=night` (59 night HDRIs). Every HDRI ships .hdr + .exr at 1k–16k. **Use 2k .hdr.** |
+| **ambientCG** | 2,004 materials · 2,872 models · 416 HDRIs | CC0. API: `/api/v2/full_json?type=Material&category=Rock`. **Use 1K/2K JPG.** |
+| **Quaternius** | Stylized low-poly packs | CC0. ⭐ **Ultimate Modular Ruins + Ultimate Stylized Nature + Modular Dungeons** is basically the whole dark-fantasy kit in one style. |
+| **Kenney** | Nature Kit (330), Graveyard Kit (90), Castle Kit, Fantasy Town Kit | CC0, only restriction is the logo. ⚠️ `medieval-town-kit` is a 404 — it's **fantasy-town-kit**. |
+| **KayKit** (kaylousberg.itch.io) | Dungeon Pack (200+), **Skeletons**, Forest Nature, Character Animations | CC0, *"no attribution required."* **Ships glTF**, single 1024² gradient atlas — extremely three.js-friendly. Go through itch.io; the .com pages are JS-rendered. |
+| **Kenney Audio** | RPG Audio (50), Impact Sounds (130) | CC0 — covers footsteps/foley/UI with zero legal work. |
+| **Freesound** | 377,947 CC0 sounds | **Filter:** `/search/?f=license%3A%22Creative+Commons+0%22` |
+
+## Recommended night HDRIs (all CC0, real slugs)
+
+`kloppenheim_02_puresky` (sky-only, crisp stars + moonlight bloom) ·
+`moonlit_golf` · `rogland_moonlit_night` · `narrow_moonlit_road` ·
+`dikhololo_night` (Milky Way, the classic) · `moonless_golf` (most-downloaded
+night HDRI on the site) · `kloppenheim_04` (**fog/mist over field** — great for
+volumetrics) · `courtyard_night` (brick, lamp — village fit).
+
+**Pattern: a `_puresky` as `scene.background`, a full-ground night HDRI as
+`scene.environment`.** Tune `scene.environmentIntensity` rather than
+pre-darkening the HDR — keeps precision.
+
+---
+
+# 11. PERFORMANCE
+
+**`@gltf-transform/cli@4.4.2`** is the biggest win per hour spent:
+```bash
+gltf-transform inspect in.glb                       # find the bottleneck first
+gltf-transform optimize in.glb out.glb --compress meshopt --texture-compress webp
+```
+`join` (draw-call reduction) and `instance` are the two most underused.
+
+**Prefer meshopt over Draco** for geometry — much faster decode, and its
+`simplify()` is your build-time LOD generator. **KTX2/Basis is the real texture
+win** — GPU-resident compressed textures cut VRAM 4–8×; WebP only shrinks the
+download.
+
+Other traps: `renderer.setPixelRatio(Math.min(devicePixelRatio, 2))` (uncapped
+DPR on a 3× phone is a 9× fill-rate bill); `antialias: false` when
+post-processing; share materials aggressively (program explosion); keep foliage
+opaque via alpha test to avoid transparency sorting.
+
+**Profiling:** `renderer.info.render.{calls, triangles}`, `stats.js`, and
+**Spector.js** for frame capture. There is no GPU timestamp API on
+`WebGLRenderer`.
+
+---
+
+# 12. ARCHITECTURE & WORKFLOW
+
+**Vanilla three.js for the game canvas, React for menus/HUD.** Every
+great-looking reference project (`infinite-world`, `Quick_Grass`,
+`Quick_3D_RPG`, `Sketchbook`) is vanilla. R3F's reconciler sits in the hot path
+of a simulation, and per-frame allocation inside `useFrame` feeds the GC, which
+reads as stutter. Mount a plain three.js module that owns its own
+`requestAnimationFrame` loop into a canvas ref; render React UI above it.
+
+**Copy `infinite-world`'s State/View split** — simulation separate from
+rendering, singleton managers, explicit update order. ~50 lines of architecture
+that scales fine for this genre. **Skip ECS** — premature for a game whose
+entity count is low and whose per-entity craft is high.
+
+**`lil-gui` on day one, not later.** Wire every colour, fog density, bloom
+threshold, exposure and light intensity into folders. **Dialling a night
+palette is a hundred micro-adjustments**; working without live sliders will
+cost more time than anything else on this list.
+
+**Text:** `troika-three-text` for world-space diegetic text (SDF, stays crisp
+at any angle). **HUD in React DOM over the canvas** — flexbox, real text
+rendering, accessibility, hot reload, all free. ⚠️ `three-mesh-ui` is
+unmaintained since 2023; don't adopt.
+
+**Audio:** Howler for music/ambience/UI, `THREE.PositionalAudio` only for
+genuinely spatial diegetic sources. For adaptive ambience run 3–4 looping stems
+simultaneously at different gains and cross-fade the gains — cheaper and more
+robust than stitching clips.
+
+**Stale — do not build on:** Theatre.js (2 years), `three-mesh-ui`,
+`three-landscape` (3 years), `felixpalmer/lod-terrain` (8 years),
+`realism-effects`, `screen-space-reflections`, `glslify` (4 years — use
+`vite-plugin-glsl`).
+
+---
+
+# 13. PROJECTS WORTH STUDYING
+
+| Project | License | Why |
+|---|---|---|
+| `simondevyoutube/Quick_Grass` | **MIT** | Ghost of Tsushima grass. **Shippable.** |
+| `thebenezer/FluffyGrass` | **MIT** | Chunked instancing to ~1M blades; stylized non-PBR shadow-colour lerp |
+| `brunosimon/infinite-world` | **none — study only** | Closest single reference to this target: sky-RT fog, tinted shade, modulo grass, quadtree terrain |
+| `dgreenheck/ez-tree` | **MIT** | Procedural trees + LOD export |
+| `swift502/Sketchbook` | **MIT** | Character state machine (ignore its dead physics) |
+| "A forest of octahedral impostors" (three.js discourse) | — | End-to-end blueprint: 200k trees, mobile-capable |
+
+**Official examples are the best technique reference:** `webgl_shadowmap_csm`,
+`webgl_shadowmap_progressive`, `webgl_postprocessing_unreal_bloom_selective`,
+`webgl_postprocessing_3dlut`, `webgl_batch_lod_bvh`, `games_fps`,
+`physics_rapier_character_controller`.
+
+**Maxime Heckel's blog** is the best long-form three.js shader writing
+available — volumetric lighting, raymarching, render targets.
+
+---
+
+# 14. ART DIRECTION, FROM PRIMARY SOURCES
+
+From developer interviews, GDC talks and technical postmortems. These are the
+techniques the actual teams described, ranked by look-per-unit-work.
+
+## 14.1 Scene boxes — author light per-zone, not per-light ⭐ highest leverage
+
+Shadow of the Colossus placed **trigger volumes across the whole map**, each
+carrying exposure, bloom amount, fog colour and tint. Crossing a boundary
+**lerps between two volumes' parameters** — that is the entire "dynamic tone
+mapping," no histogram, no eye-adaptation sim.
+
+Lead programmer Sugiyama, on the cost: *"The downside… is that the time taken
+on the production side to set the boxes up is very high."* Worth it: one
+artist-facing struct gives you SotC's whole tonal range at zero realtime
+lighting cost. **Build this system first.**
+
+## 14.2 Bloom masked by the silhouette, computed at 64×64
+
+SotC's pseudo-HDR, verbatim from the technical article:
+
+1. Composite foreground over distance **using the Z-buffer as a mask**.
+2. Generate a separate image of that mask.
+3. **Reduce to 64×64 with a bilinear filter.**
+4. **Blend in the previous frame's result** at a per-scene-box percentage.
+5. Expand back up bilinear → *"the distant view starts bleeding out from the
+   shape of the foreground."*
+
+**The bloom is driven by a silhouette mask, not a luminance threshold** — which
+is why Wander reads as a dark cutout with light eating his edges. The
+previous-frame blend gives you eye adaptation *and* afterglow for free. The
+afterglow was originally **an accidental artifact of step 4 that they
+parameterised and shipped**.
+
+## 14.3 Journey: no dynamic shadows at all
+
+Art director Matt Nava: *"Journey had no automatic shadows. I painted them all
+by hand. The shadow texture was not hi-res. To get the iconic sunset columns to
+cast sharp shadows, **I made sure that they aligned with the pixel grid of the
+texture**."*
+
+He didn't fight the low resolution — he aligned the geometry to its texel grid
+so low-res became *crispness* instead of mush. If you must have one dynamic
+shadow, make it a blob under the player.
+
+## 14.4 The glitter shader (sand, snow, water, magic)
 
 ```glsl
-// aomap_fragment — AO touches INDIRECT light only
-reflectedLight.indirectDiffuse *= ambientOcclusion;
-// lights_fragment_maps — lightmap ADDS to irradiance
-irradiance += lightMapTexel.rgb * lightMapIntensity;
-```
-AO modulating only indirect is exactly right here: it darkens the hemisphere
-floor and lightmap without double-darkening direct moonlight. It reads `.r`, so
-it is ORM-compatible. The lightmap adds to irradiance, so it stacks with the
-hemisphere light — tune `lightMapIntensity` and hemisphere intensity as a pair.
-
-## 5.3 Pipeline options
-
-- **Blender Cycles bake → glTF** (second UV via Smart UV Project / Lightmap
-  Pack, exported as `TEXCOORD_1`). Primary path — see `ASSETS.md` Part 2.5.
-- **`three-gpu-pathtracer`** (requires three >= 0.180) can bake lightmaps
-  in-browser, built on `three-mesh-bvh`.
-- **xatlas** for automatic lightmap UV atlas generation as a build step.
-- **Vertex-color AO** — for low-poly stylized geometry this is often enough and
-  needs no UVs at all. Bake AO to vertex colors, `material.vertexColors = true`.
-  Zero texture memory. **Try this first; it may be sufficient.**
-- Compressed/HDR lightmaps: `KTX2Loader`, `EXRLoader`, `RGBELoader` all in
-  core addons **[V]**.
-- **Light probes** (`webgl_lightprobe` examples **[V]**) — spherical-harmonic
-  ambient is the middle ground for moving characters in a baked world.
-
-**Contact shadows are non-negotiable.** In a dark scene the real shadow is
-often invisible, so a soft dark ellipse under every object is what stops things
-floating.
-
----
-
-# 6. STYLIZED SHADING
-
-## 6.1 `MeshToonMaterial` is already half-Lambert — and floors at 0.7 **[V]**
-
-```glsl
-float dotNL = dot( normal, lightDirection );
-vec2 coord = vec2( dotNL * 0.5 + 0.5, 0.0 );        // ← half-Lambert remap, free
-// without a gradientMap:
-return mix( vec3(0.7), vec3(1.0), smoothstep(0.7-fw.x, 0.7+fw.x, coord.x) );
+vec3 G = normalize(texture2D(uGlitterTex, uv).rgb * 2.0 - 1.0); // random grain normal
+vec3 R = reflect(L, G);
+float RdotV = max(0.0, dot(R, V));
+if (RdotV > uThreshold) return vec3(0.0);
+return (1.0 - RdotV) * uGlitterColor;   // output MUST exceed 1.0 so bloom halos it
 ```
 
-Two consequences: the `dotNL*0.5+0.5` remap is Valve's half-Lambert and is why
-the terminator doesn't crush to black — keep it. But **the default darkest
-irradiance is 0.7, not 0**, which is wrong for dark fantasy. **Author a custom
-`gradientMap`** (1D gradient texture, `NearestFilter` for hard bands) that
-descends into the real shadow value. `fwidth` provides analytic AA on the band
-edge — preserve it if hand-rolling.
+Three rules: threshold **hard** so glitter is rare; output **above 1.0** or
+bloom can't smear it (a normal map can never exceed 1, which is why normal
+mapping alone can't do this); use `reflect()` **not raw noise**, or the sparkle
+crawls between frames.
 
-`MeshToonMaterial` has **no specular at all** — inject it if a wet-look
-highlight is wanted.
+## 14.5 Rim light is a readability device, not a beauty device
 
-## 6.2 Matcap — use only for background geometry
+Journey's stated purpose for its Fresnel rim: **stop dunes from disappearing
+into the horizon.** Same reason it matters here — it separates silhouettes from
+backgrounds and does the work AO and GI otherwise would.
 
-`MeshMatcapMaterial` bakes the entire lighting response into one texture. Fast
-and beautiful, but **does not respond to lanterns at all**, so it breaks the
-moment warm light should pool on a surface. Distant silhouette geometry only.
+## 14.6 Don't write a toon shader
 
----
+**RiME and Season independently reached the same conclusion.** RiME's technical
+artist: *"the game's visuals are not cel-shaded, but an adaptation of UE4's PBR
+materials."* The stylised read comes from *"maintain[ing] the noise frequency as
+low as possible by implementing big masses of colour."*
 
-# 7. COLOR GRADING
+Season's reason is decisive: cel-shading *"gets rid of many details, but you
+don't have control over which details you get rid of."* Their formula:
+**realistic geometry, illustrative texturing.**
 
-Workflow (John Hable): **prototype the grade live with a parametric
-`ShaderPass`, then bake the approved look to a `.cube` LUT for production.**
+**Use PBR with low-frequency colour masses + restrained texture detail + good
+light.** Far fewer edge cases than NPR, and it's the cheaper path.
 
-```glsl
-// lift / gamma / gain
-color = pow(max(vec3(0.0), color*(1.0 + uGain - uLift) + uLift + uOffset),
-            max(vec3(0.0), 1.0 - uGamma));
-float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
-color = mix(vec3(luma), color, uSaturation);
-float v = smoothstep(0.8, 0.2, length(vUv - 0.5) * uVignetteStrength);
-color *= mix(1.0, v, uVignetteAmount);
-```
+## 14.7 Ban pure black; tint shadows with local colour
 
-LUT application: `LUTPass` + `LUTCubeLoader` from core addons, or
-`three/addons/tsl/display/Lut3DNode.js` on the node path **[V]**.
+RiME's rule, from Sorolla: *"a light that embraces it all with pastel colors,
+**where black does not exist**."* Season tints shadows by nearby colour,
+*"mimicking traditional painting techniques."* Costs one lerp and instantly
+reads painted rather than rendered.
 
-**Lock the palette from one shared value.** Drive `fog.color`,
-`hemisphereLight.color`, and the grade tint from a single "mood" color. A
-time-of-day or zone transition becomes interpolating one value plus swapping
-the directional light — not re-authoring materials. Both the Sable breakdown
-and the 80.lv night article arrived at this independently. Journey used
-explicit **per-act color scripting** the same way. **[R]**
+Season's honest failure, worth knowing: *"Having no secondary or bounce light
+proved to be a bit of an issue and made some volumes harder to read in areas
+covered in shadows."* This is what baked lightmaps (§4.4) buy you.
 
----
+## 14.8 Sable's distance-faded outlines — one parameter, two problems
 
-# 8. MAKING THINGS FEEL HUGE
+Outlines fade opacity with distance, which mimics comic line-weight falloff
+**and** *"disguises objects as they fade in,"* killing LOD pop-in. Their
+layered fix for flat-shading's lost depth cues: **lighting/shadows → distance
+fog (*"really, really key"*, per-biome) → outlines.**
 
-- **Fog is the primary scale cue** (§3). An object fading into haze reads as
-  both far *and* large, because the brain infers size from how much atmosphere
-  sits between.
-- **Value-band layer separation.** Foreground / midground / background must
-  occupy distinguishable value bands. Diagnostic: **screenshot, desaturate,
-  squint.** If layers mush into one grey, the fog curve is wrong.
-- **Camera height:** low camera makes things loom. three.js's own example
-  annotates `camera.position.y = 1.7` as "~human eye height" — a deliberate
-  anchor **[V]**.
-- **Sight angle:** looking *up* is what makes a thing monumental. A flat angle
-  makes a scene *"feel flat and boring"*; putting the viewer below creates the
-  *"impression of observer's smallness."* **[R]**
-- **FOV:** wide exaggerates looming proximity; narrow sells distant mass.
-  Consider animating FOV on colossus reveals.
-- **Staffage** — the actual term of art: living figures or known-size objects
-  placed for scale reference. Birds, doorways, stairs, railings. **Scale is
-  always relational; without an anchor a huge object is just an object.**
-- **Detail frequency.** A giant wall reads giant because it carries
-  brick-scale detail the eye uses as a ruler. A huge object with low-frequency
-  detail just looks like a small object seen close. Texel density standard
-  ~256 px/m; do **not** use uniform density — more on near/visible surfaces.
-- **Big things move slowly**, with secondary-motion lag.
+Also: Sable holds character animation for **5 frames (~12fps) while the world
+and camera run at 60**. Nearly free performance that reads as hand-drawn — but
+only works because the camera stays smooth.
 
-**Shadow of the Colossus specifics [R, analysis sources not developer-primary]:**
-Wander is deliberately undersized (~1.2m) to accentuate giantness; Agro is a
-constant familiar-sized companion travelling with the player; the Forbidden
-Lands are deliberately empty — *design by subtraction* — so the colossi are the
-only vertical events in the world. **Cutting content is a scale technique.**
-When a climbed surface fills the whole screen, the object has become terrain;
-that transition is the payoff.
+## 14.9 Breath of the Wild's triangle rule — free level design
 
-**Always keep something moving** — SotC remake art director Mark Skelton:
-*"I always insist on SOMETHING moving in every frame. Whether it be rolling
-fog, plants bending in the wind, dust motes circling..."* Static reads as
-diorama. **[R]**
+*"Using triangles carries out 2 objectives — gives players a choice as to
+whether to go straight over the triangle, or around; and it obscures the
+player's view."*
 
----
+- **Large triangles** → landmarks and wayfinders.
+- **Medium** → block the view so content reveals progressively.
+- **Small** → tempo and texture.
+- **Rectangles** → *total* concealment (surprise), where triangles give partial
+  reveal (curiosity).
+- **Irregular peaks/divots marked hidden rewards** — players followed it without
+  consciously noticing.
 
-# 9. COMPOSITION VOCABULARY
+Works at any scale. Also from BotW: artists started with **200+ exposed
+parameters and cut to ~50 essentials**, then got 1,440 distinct looks from
+time × weather combinations. Two or three orthogonal axes make a small world
+feel far larger.
 
-From level-design.org (the most complete taxonomy found) **[R]**:
+And the permission slip, from art director Takizawa: *"injecting humor into the
+visual shorthand helps players forgive the break from reality."* **Comedy is
+the lubricant that lets you cheat.**
 
-- **Dominant** — the focal point; must stand out by brightness and position.
-  **Counterpoint** — a competing secondary focal point.
-- Layers: **Foreground** (framing, often pure dark silhouette), **Center of
-  Interest**, **Background** (calm, low detail, aerial perspective),
-  **Staffage**.
-- **Observation Spot** — the specific place the player should be standing when
-  they see the composition, engineered with choke points and funnels. **This is
-  the practical answer to "how do you frame a view in an interactive camera":
-  you don't frame the view, you funnel the player to the framing position.**
-- Symmetric composition reads *"synthetic, made by human, clean"*; asymmetric
-  reads *"organic, made by nature, dirty."*
-- **Critical constraint for a dark game:** *"You shouldn't invert that effect,
-  players are mostly not accustomed to look at very dark spots to find
-  something interesting."* — **the focal point must be the lit thing.**
+## 14.10 Scoping doctrine — emptiness is a budget strategy
 
-The Level Design Book dissents usefully: it **rejects leading lines**, arguing
-*"literally every hallway you build will seem to converge in the distance"*
-through foreshortening, and prioritizes **spatial composition** (3D massing,
-works from all angles) over **shot composition** (one 2D frame). It defines a
-**vista** as *"an exceptionally deep scene composition that offers an overview
-of the next area"* and an **approach** as *"a path with a vista."*
+**Sable's "islands of content":** they set the game in a desert *because they
+knew they couldn't detail an open world at that scale*. Concentrate authored
+detail in nodes; let the space between *"breathe."* The emptiness is
+simultaneously the aesthetic and the budget plan.
 
-Two GDC talks worth watching in full: Miriam Bellard, *Environment Design as
-Spatial Cinematography* (2019); Jim Brown, *The Importance of Nothing: Using
-Negative Space in Level Design* (2014).
+**SotC's LOD doctrine:** distant terrain decimated to 1/30–1/100, but *"we
+usually try and spread it around the landmark which represents that area"* —
+**spend the polygon budget on the silhouette that identifies a place.** And
+**colossi are exempt from LOD entirely**: the thing the game is about keeps
+full fidelity at any distance. Pick your one or two exempt objects.
 
-Books: *Framed Ink* (Mateu-Mestre) for staging and value; *Color and Light*
-(Gurney) — its chapters on night, firelight, and limited palettes map almost
-1:1 onto this project.
+**Ueda's subtraction rule:** *"If something felt unfinished or lacking, then
+I'd remove it."* Note the inversion — unfinished means *remove*, not *finish*.
+ICO's shadow enemies exist because detailed warriors were too expensive **and**
+too visually noisy; a pure-black silhouette was cheaper, more readable, and
+became the theme.
 
----
+**Tunic's counter-warning**, the trap in the other direction: *"If you go too
+detailed, it doesn't look like Tunic anymore, and if it's not detailed enough,
+it doesn't look like a finished thing."* Find that band early and hold it.
 
-# 10. CHEAP TRICKS RANKED BY IMPACT ÷ EFFORT
+## 14.11 Two free tricks
 
-1. **Emissive + selective bloom.** Emissive costs nothing (no light-loop
-   contribution) yet reads as a light source. Layer-based selective bloom so
-   only lanterns glow, not every bright pixel (`webgl_postprocessing_unreal_bloom_selective`;
-   TSL `BloomNode`) **[V]**.
-2. **Fog behind silhouettes** (§3.4) — cheapest readability fix in a dark game.
-3. **Wet surfaces.** Darken diffuse, boost specular: *"the glint off a wet
-   brick wall implies a greater amount of detail."* Perceived detail in shadow
-   for the price of a spec term; also pops silhouettes.
-4. **Rim light on everything that matters** (§2.2).
-5. **Half-Lambert everywhere** — one-line change, nothing crushes to
-   unreadable black.
-6. **Particles as depth cues.** Dust motes between camera and subject prove
-   there is *air* between things. Must be soft particles (§3.5).
-7. **Depth-driven blur** (§3.3).
-8. **Contact/blob shadows** — stops everything floating, nearly free.
-9. **Vignette** — two lines of GLSL, forces the eye to the lit focal point.
-10. **Negative space and subtraction** — empty is a resource; cutting props
-    increases the impact of what remains, and is free performance.
+**Motion blur buys framerate forgiveness.** SotC shipped with 15–60fps variance
+and *designed around it*: *"the motion blur helps to smooth over this, and the
+player's sensation of frame rate changes is held down to a minimum."* In a
+browser, where frame times are unpredictable, this is disproportionately
+valuable.
 
----
+**Facelessness deletes an entire discipline.** Ashen's characters have no faces
+— framed as a co-op design choice, but it also removes facial rigs,
+blendshapes, lipsync, face texturing, and all uncanny-valley risk.
 
-# 11. BUILD ORDER (rendering)
+## 14.12 Cheap shading hacks worth stealing
 
-1. Pin three r180–r182; choose the renderer path (§1.2).
-2. Linear color pipeline + AgX (§1.3). **Before lighting anything.**
-3. Rig: 1 directional moon + 1 hemisphere floor + emissive lanterns (§2).
-   Resist adding lights.
-4. Height fog, non-black tint, color shared with hemisphere sky (§3). Tune
-   until the greyscale squint test shows three clean value layers.
-5. Custom `gradientMap` toon ramp + rim light (§6, §2.2).
-6. Bake lightmaps / vertex AO once layout is locked (§5).
-7. Volumetrics: cone meshes for lanterns; godrays only if the moon needs shafts.
-8. Grade parametrically, then bake to `.cube`.
-9. Dust motes, vignette, selective bloom last.
+- **"Fairy shader"** (SotC's fake subsurface): when the light is behind an
+  object and the camera faces it, push the rim toward white with a simple
+  anisotropic term. Strength is **designer-selected per situation**, not
+  physical. Makes characters read as flesh rather than plastic.
+- **Shells + fins** for fur and grass: 3–6 extruded shell layers *plus*
+  perpendicular fin quads. *"The layered fur shells are easily visible at a
+  sharp viewing angle, and the extra hair fins are equally visible at the
+  opposite angle"* — the two techniques' failure modes are orthogonal, so they
+  cover each other. SotC reused the identical system for grass. ⚠️ Watch fill
+  rate; this is the one technique here that costs real overdraw.
+- **Shadow proxy meshes at 1/40th poly count**, and make the face proxy a solid
+  blob so it never self-shadows — *"it would look visually unpleasing."*
+- **Camera motion blur on the world but never on the character** — *"the
+  character would become too blurred and vague, which… hinders gameplay."*
 
----
+## 14.13 The process lesson
 
-# 12. NOTABLE FINDINGS FROM THE REFERENCE GAMES
+Ueda **prototyped every effect himself in LightWave first**, then handed it to a
+programmer. The article's closing thesis: the stylisation *"wasn't just
+something to show off the technology… this was something that was planned from
+the design side to create a consistent visual look."*
 
-- **Journey has no dynamic shadows at all** — every shadow is hand-painted,
-  including the temple light columns, aligned to the texture pixel grid. A
-  deliberate cost trade. Per-act **color scripting** drives its mood. **[R]**
-- **Sable** added lighting *"for spatial readability, not realism"*, and added
-  moonlight specifically so the world stays readable at night. Fog called
-  *"really, really key"*, blended to sky color, tuned per biome. Outlines fade
-  opacity with distance to prevent silhouette pop-in. **[R]**
-- **Ashen**: *"The lack of natural light is excellent for the experience we
-  want"* — but not uniformly dark; one dominant warm emissive landmark anchors
-  the world. **[R]**
-- **Shadow of the Colossus remake deliberately removed the PS2 bloom**, because
-  it was *"a design choice born from limitation — made primarily to mask short
-  draw distances."* Decide consciously which look is wanted. **[R]**
-- **Left 4 Dead**: *"Simplifying the lighting helped the gameplay (the player
-  is drawn to the warm glow down the street, and not distracted by unnecessary
-  light sources)."* **[R]**
-- **Death's Door is Unity**, not Unreal. Warm toon-shaded characters against
-  muted cool environments. **[R]**
-
----
-
-*Sources are inline. Where this document and any other doc disagree on a
-technical detail, this one wins — it was verified against source.*
+Decide the look, then implement it. Not the reverse.
