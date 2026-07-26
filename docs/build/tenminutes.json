@@ -1,0 +1,86 @@
+{
+  "minutes": 3,
+  "durationS": 188.9,
+  "beats": 9,
+  "deadLimitS": 12,
+  "deadStretches": [
+    {
+      "from": 0,
+      "to": 49,
+      "len": 49
+    },
+    {
+      "from": 49,
+      "to": 71.3,
+      "len": 22.3
+    },
+    {
+      "from": 71.3,
+      "to": 94.2,
+      "len": 22.9
+    },
+    {
+      "from": 94.2,
+      "to": 118.6,
+      "len": 24.4
+    },
+    {
+      "from": 118.6,
+      "to": 139,
+      "len": 20.4
+    },
+    {
+      "from": 139,
+      "to": 163.4,
+      "len": 24.4
+    },
+    {
+      "from": 163.4,
+      "to": 188.9,
+      "len": 25.5
+    }
+  ],
+  "kindled": 0,
+  "consoleIssues": [
+    "[warning] using deprecated parameters for the initialization function; pass a single object instead"
+  ],
+  "pass": false,
+  "timeline": [
+    {
+      "t": 0,
+      "what": "entered park"
+    },
+    {
+      "t": 0,
+      "what": "boot -> intro"
+    },
+    {
+      "t": 49,
+      "what": "night begins (title handed over)"
+    },
+    {
+      "t": 71.3,
+      "what": "intro -> game"
+    },
+    {
+      "t": 71.3,
+      "what": "frame change (43.5)"
+    },
+    {
+      "t": 94.2,
+      "what": "frame change (25.6)"
+    },
+    {
+      "t": 118.6,
+      "what": "frame change (18.0)"
+    },
+    {
+      "t": 139,
+      "what": "frame change (17.2)"
+    },
+    {
+      "t": 163.4,
+      "what": "frame change (14.2)"
+    }
+  ]
+}

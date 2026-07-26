@@ -1298,6 +1298,33 @@ window.__MOONREST__ = {
       vertexTint: globalUniforms.uVertexTint.value,
     }
   },
+  // FIN-4: a per-tile luminance signature of the CURRENT frame, for the
+  // ten-minute dead-stretch gate. It must render first: the context has no
+  // preserveDrawingBuffer, so reading the default framebuffer at an arbitrary
+  // moment returns an empty buffer — which reads as "the frame never changes"
+  // and would have quietly reported a perfectly still game.
+  frameSignature(tx = 8, ty = 5) {
+    pipeline.render(scene, camera, elapsed, 1 / 60)
+    const gl = pipeline.renderer.getContext()
+    const v = pipeline.viewport
+    const w = Math.max(2, Math.round(v.z)), h = Math.max(2, Math.round(v.w))
+    const buf = new Uint8Array(w * h * 4)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+    gl.readPixels(Math.round(v.x), Math.round(v.y), w, h, gl.RGBA, gl.UNSIGNED_BYTE, buf)
+    const sum = new Float64Array(tx * ty), cnt = new Float64Array(tx * ty)
+    for (let y = 0; y < h; y += 3) {
+      const row = Math.min(ty - 1, (y * ty / h) | 0)
+      for (let x = 0; x < w; x += 3) {
+        const i = (y * w + x) * 4
+        const t = row * tx + Math.min(tx - 1, (x * tx / w) | 0)
+        sum[t] += 0.299 * buf[i] + 0.587 * buf[i + 1] + 0.114 * buf[i + 2]
+        cnt[t]++
+      }
+    }
+    const out = new Array(tx * ty)
+    for (let i = 0; i < out.length; i++) out[i] = cnt[i] ? sum[i] / cnt[i] : 0
+    return out
+  },
   // FIN-1: the composition gate's measurement (scripts/composecheck.mjs).
   // Reads the FINAL framebuffer — post chain, tone mapping and grade included
   // — because the art law is about the frame the player sees, not about what
