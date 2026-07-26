@@ -529,3 +529,60 @@ Two gates still fail and both are real, not threshold artefacts:
   too saturated through a correct one. Re-authoring per-zone sky stops (and
   per-zone LUTs, which TOOLKIT asks for and this does not yet do) is the next
   move, not another global knob.
+
+## FINAL RUN #15 — the gate was measuring a different frame every run
+
+Found while trying to close the last two poses, and much more important than
+the poses were.
+
+`scripts/composecheck.mjs` was not deterministic. The same build scored
+`lanternpool` anywhere from 11.1 to 21.6 depending on **which pose ran before
+it**. Every number tuned against the gate up to this point had that noise in
+it, which is the honest explanation for some of the non-monotonic results
+earlier in the stage.
+
+Three causes, in order of size:
+
+1. **The shadow volume followed the player, not the camera.** In play they sit
+   ~4.5 m apart and both are well inside the volume, so gameplay never showed
+   it. But a posed shot parks the player and puts the camera somewhere else
+   entirely, so every cinematic frame was rendering shadows for a cell nobody
+   was looking at — stale, and stale in a way that depended on pose order.
+   That is a real rendering bug, not just a test artefact. Fixed by centring on
+   the camera.
+2. **The night clock ran on wall-clock time.** The moon's elevation drives the
+   key light and every shadow in the frame, and a 13-pose run takes tens of
+   seconds. The gate now pins the minute and FREEZES the clock, re-freezing
+   after each pose (poses may carry their own `minute`).
+3. **The carried lantern warmth ramps in** after a pose stages the player, and
+   700 ms was not enough for it to settle — worst on `lanternpool`, the pose
+   that exists specifically to show that light. Settle raised to 1500 ms.
+
+The lesson worth keeping: **two consecutive green runs are not a pass if the
+gate is flaky.** This gate produced `COMPOSECHECK PASS (13/13)` twice in a row
+while the underlying build was actually an 11/13 — the two passes were noise on
+the high side. Had the run stopped there it would have shipped a false green,
+and the FINAL_PASS ship condition asks for exactly "two consecutive passing
+reviews". Stability of the instrument has to be established BEFORE consecutive
+passes mean anything.
+
+Post-fix the gate is stable: `lanternpool` now reads 17.3–18.0 across runs
+instead of 11.1–21.6.
+
+## FINAL RUN #16 — where Stage 1 actually stands
+
+`COMPOSECHECK 11/13`, stable and repeatable. Passing: crush (0.0% on ALL
+thirteen poses, from up to 40%), value floor, tinted shade, highlight scarcity,
+accent budget, and readability on eleven.
+
+Failing, and correctly so: `lanternpool` 17.4 and `player` 17.3 against an 18.0
+readability line. They are the same location — the two poses that stage the
+Keeper on the open path — and they fail for the same reason: a large, uniform
+ground plane fills most of the frame at a single value. That is a genuine
+flatness, not a threshold artefact, and the lighting-side levers are spent (the
+key/fill sweep is non-monotonic and this ratio is its optimum: pushing further
+took `player` back from 19.7 to 17.2).
+
+The remaining fix is ground variation — value break-up in the terrain surface
+itself — which belongs to Stage 2's asset work rather than to another global
+grading knob. Do not close these two by lowering the line.

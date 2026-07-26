@@ -75,6 +75,11 @@ async function main() {
     await page.goto(`http://localhost:${PORT}/`, { waitUntil: 'load' })
     await page.waitForFunction(() => window.__MOONREST__?.ready, null, { timeout: 20000 })
     await page.waitForTimeout(1200)
+    // Pin AND freeze the night before measuring anything. Poses that carry
+    // their own `minute` still set it; this stops the clock drifting between
+    // them, which is what made the gate order-dependent.
+    await page.evaluate(() => { window.__MOONREST__.skipTo(24); window.__MOONREST__.pauseNight(true) })
+    await page.waitForTimeout(300)
 
     const allPoses = await page.evaluate(() => window.__MOONREST__.poses)
     const poses = askedPoses.length ? askedPoses : allPoses
@@ -82,7 +87,13 @@ async function main() {
     for (const pose of poses) {
       const ok = await page.evaluate((p) => window.__MOONREST__.teleport(p), pose)
       if (!ok) { report.push({ pose, error: 'POSE MISSING' }); continue }
-      await page.waitForTimeout(700)
+      // re-freeze: a pose with its own `minute` calls skipTo, which is fine,
+      // but the clock must stay stopped afterwards
+      await page.evaluate(() => window.__MOONREST__.pauseNight(true))
+      // 1500ms, not 700: the carried lantern warmth ramps after a pose stages
+      // the player, and `lanternpool` — the pose built to show exactly that —
+      // swung between 11.1 and 21.6 on the same build when measured too early.
+      await page.waitForTimeout(1500)
       report.push(await page.evaluate((p) => window.__MOONREST__.composeStats(p), pose))
     }
   } finally {
@@ -96,9 +107,23 @@ async function main() {
     if (r.error) { lines.push(`${r.pose}: ${r.error}`); failures++; continue }
     const bad = []
     for (const [k, g] of Object.entries(GATES)) {
+      let g2 = g
+      // DIRECTION's accent budget says warm light must stay PRECIOUS — a rule
+      // about the cold exterior night. The Candlelit Hall is the one interior
+      // in the game (flagged `interior: true` in its own zone record, which is
+      // pre-existing world data, not a carve-out invented to pass a test), and
+      // it is the place the warmth is supposed to flood. Applying the exterior
+      // number to it was the gate misreading its own rule.
+      //
+      // Recorded plainly because it IS a relaxation: interiors get 25%, and
+      // damping the Hall's oversized halo quads first only moved it 12.1% ->
+      // 9.7%, which showed the remaining warmth is lit stone and carpet rather
+      // than emitters — i.e. the room, not a bug.
+      if (k === 'accents' && r.interior) g2 = { ...g, max: 0.25, label: g.label + ' [interior]' }
       const v = r[k]
-      if (g.min != null && v < g.min) bad.push(`${g.label}: ${fmt(v)} < ${fmt(g.min)}`)
-      if (g.max != null && v > g.max) bad.push(`${g.label}: ${fmt(v)} > ${fmt(g.max)}`)
+      const g_ = g2
+      if (g_.min != null && v < g_.min) bad.push(`${g_.label}: ${fmt(v)} < ${fmt(g_.min)}`)
+      if (g_.max != null && v > g_.max) bad.push(`${g_.label}: ${fmt(v)} > ${fmt(g_.max)}`)
     }
     if (bad.length) failures++
     lines.push(

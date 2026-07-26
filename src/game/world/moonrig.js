@@ -131,7 +131,7 @@ export class MoonRig {
     // near-zero fill gave an ~80:1 range that AgX turned into silhouettes on
     // white. Real night vision is compressed. The moon now shapes; it does not
     // carry the frame.
-    this.moon.intensity = (0.55 + 0.75 * THREE.MathUtils.clamp(lum, 0, 1)) * this.moonScale
+    this.moon.intensity = (0.72 + 0.95 * THREE.MathUtils.clamp(lum, 0, 1)) * this.moonScale
 
     this.hemi.color.copy(sky)
     const sc = this.hemi.color
@@ -146,7 +146,14 @@ export class MoonRig {
     g.r = Math.max(g.r, SHADE_FLOOR.r)
     g.g = Math.max(g.g, SHADE_FLOOR.g)
     g.b = Math.max(g.b, SHADE_FLOOR.b)
-    this.hemi.intensity = (1.7 + 1.2 * THREE.MathUtils.clamp(lum, 0, 1)) * this.hemiScale
+    // Swept, not guessed, and NOT monotonic: pushing the key further (0.82 /
+    // 1.10 fill) took lanternpool back down 17.6 -> 16.2 and player 19.7 ->
+    // 17.2. There is an optimum and this is it.
+    // Fill was pushed high to stop shade crushing to black. The grade's black
+    // floor now guarantees that outright (DECISIONS #14), so the fill can come
+    // back down and let the key do more shaping — flat ground stops reading as
+    // a uniform bright plane, which is what the open-path poses were losing.
+    this.hemi.intensity = (1.25 + 0.9 * THREE.MathUtils.clamp(lum, 0, 1)) * this.hemiScale
   }
 
   // Follow the player with the shadow volume, and follow the sky with the key

@@ -897,7 +897,13 @@ function tick() {
   }
   world.moonDir = night.dirWorld
   if (_shadowRescan > 0 && (_shadowRescan -= dt) <= 0) moonRig.applyShadows()
-  moonRig.follow(player.pos.x, player.pos.y, player.pos.z, night.dirWorld)
+  // Centre the shadow volume on the CAMERA, not the player. In play they are
+  // ~4.5m apart and well inside the volume, so nothing changes; but a posed or
+  // cinematic shot parks the player and moves the camera somewhere else
+  // entirely, and following the player left those frames rendering shadows for
+  // a cell nobody was looking at — stale, and stale in a way that depended on
+  // which pose ran before, which made the composition gate non-deterministic.
+  moonRig.follow(camera.position.x, camera.position.y, camera.position.z, night.dirWorld)
   world.update(dt, elapsed)
   night.update(dt, camera)
   embers.update(dt, camera)
@@ -1141,6 +1147,13 @@ window.__MOONREST__ = {
     dreamFound: () => !!shell.s.dreamFound,
   },
   skipTo(min) { night.skipTo(min); return true },
+  // Freeze the night clock. The composition gate needs a pose to measure the
+  // same frame every run: the moon's elevation drives the key light and every
+  // shadow in the frame, and letting it advance with wall-clock time across a
+  // 13-pose run made the gate order-dependent — lanternpool read 21.6 run
+  // alone and 17.2 as the second of thirteen. A gate that measures a different
+  // night each run cannot be tuned against.
+  pauseNight(on = true) { night.paused = !!on; return night.paused },
   autopilot() { return autopilot() },
   setPhase(age) { night.setPhase(age); return true },
   suppressNightEnd(v) { window.__SUPPRESS_NIGHT_END__ = !!v; return true }, // screenshot rigs only
@@ -1305,6 +1318,9 @@ window.__MOONREST__ = {
     const mq = (p) => mid.length ? mid[Math.min(mid.length - 1, Math.round(p * (mid.length - 1)))] : 0
     return {
       pose, w, h, sampled: n,
+      // read from the zone record, not decided by the gate: the accent budget is
+      // a rule about warmth being precious in the COLD EXTERIOR night
+      interior: !!ZONES[zoneLight.currentZoneId]?.interior,
       valueFloor: dark / n,
       highlights: hi / n,
       crushed: crushed / n,

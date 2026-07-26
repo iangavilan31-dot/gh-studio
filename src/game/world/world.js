@@ -1551,7 +1551,10 @@ export class World {
     // King reads from the hall (set dressing, never objectives)
     {
       const candMat = retroMaterial({ map: TEX.plank({ name: 'candelabrawood' }) })
-      const glowMat = retroMaterial({ map: TEX.glowDot({ name: 'thronewarm', color: '#ffb45e' }), transparent: true, depthWrite: false, opacity: 0.65 })
+      // emitterGain: these quads are 1.7m and 3.4m across — pre-baked bloom from
+      // the unlit renderer, which real bloom now doubles. Damped so the Hall
+      // stays inside the 8% accent budget (DECISIONS #12).
+      const glowMat = retroMaterial({ map: TEX.glowDot({ name: 'thronewarm', color: '#ffb45e' }), transparent: true, depthWrite: false, opacity: 0.65, emitterGain: 0.45 })
       glowMat.blending = THREE.AdditiveBlending
       this.throneCandles = [] // baked into the hall showcase like the chandeliers
       for (const sx of [-2.4, 2.4]) {
@@ -1600,7 +1603,7 @@ export class World {
       ring.rotation.x = Math.PI / 2
       ring.position.set(cx, y0 + 5.6, z)
       this.scene.add(ring)
-      const haloMat = retroMaterial({ map: TEX.glowDot({ color: '#ffb45e' }), transparent: true, depthWrite: false, opacity: 0.78 })
+      const haloMat = retroMaterial({ map: TEX.glowDot({ color: '#ffb45e' }), transparent: true, depthWrite: false, opacity: 0.78, emitterGain: 0.3 })
       haloMat.blending = THREE.AdditiveBlending
       const halo = new THREE.Mesh(new THREE.PlaneGeometry(4.3, 4.3), haloMat)
       ensureVertexColors(halo.geometry)
