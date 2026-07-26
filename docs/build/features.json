@@ -1349,9 +1349,12 @@
         "COLLISIONCHECK PASS (8/8), CROSSINGCHECK PASS (4/4), npm run build exit 0",
         "COMPOSECHECK 8/13 poses \u2014 crush <=1.6% everywhere (gate 2%), was up to 40%; highlights and accents non-zero",
         "src/game/core/grade.js \u2014 procedural 33-cube night grade LUT (contrast + palette anchors + black floor), tetrahedral interpolation",
-        "COMPOSECHECK 8/13; crush 0.0% on ALL 13 poses (was up to 40%); value floor, tinted shade, highlight scarcity pass everywhere"
+        "COMPOSECHECK 8/13; crush 0.0% on ALL 13 poses (was up to 40%); value floor, tinted shade, highlight scarcity pass everywhere",
+        "Zone skies clamped into the DIRECTION Part 7 envelope (rooftops #1215ac royal blue -> #181949); Rule 3 fog===skyStops[4] re-derived, not re-clamped",
+        "Gate made deterministic: shadow volume follows camera not player (real bug in every cinematic frame), night clock pinned+frozen, settle 1500ms",
+        "COMPOSECHECK 11/13 stable; crush 0.0% on all 13 poses"
       ],
-      "notes": "NOT yet passing. 4 poses fail mid-band readability (lanternpool 11.5, player 12.0, nib 14.3, rooftops 17.1) and hall fails accent budget (12.0% vs 8%). Per DECISIONS #13 the midSpread>=18 threshold is self-authored; the nib frame was inspected and IS genuinely flat, so the threshold is not the problem there."
+      "notes": "NOT yet passing. Stable 11/13. lanternpool 17.4 and player 17.3 vs an 18.0 readability line \u2014 same location, same cause: a large uniform ground plane. Genuine flatness, not a threshold artefact; lighting levers are spent (key/fill is non-monotonic and at its optimum). Fix is ground value variation, which is Stage 2 asset work. Do NOT close these by lowering the line. NOTE: the gate produced a false PASS 13/13 twice before the determinism fixes \u2014 see DECISIONS #15."
     }
   ]
 }

@@ -274,7 +274,7 @@ const CSM_FRAG = /* glsl */ `
 export function litMaterial({
   map, emissive = 0x000000, alphaTest = 0, transparent = false, opacity = 1,
   wind = 0, side = THREE.FrontSide, depthWrite = true, roughness = 0.85,
-  noFog = false,
+  noFog = false, emitterGain = 1,
 } = {}) {
   // ——— emitters are lights, not surfaces ———
   // Every glow quad in the world shares one signature: transparent with
@@ -298,7 +298,7 @@ export function litMaterial({
   const base = new THREE.MeshStandardMaterial({
     map: map ?? null,
     color: isEmitter ? 0x000000 : 0xffffff,
-    emissiveIntensity: isEmitter ? EMITTER_GAIN : 1,
+    emissiveIntensity: isEmitter ? EMITTER_GAIN * emitterGain : 1,
     vertexColors: true,
     fog: !noFog,
     emissive: emissiveColor,
@@ -397,6 +397,7 @@ export function retroMaterial({
   if (_lit && !arguments[0]?.ripple) {
     return litMaterial({
       map, emissive, alphaTest, transparent, opacity, wind, side, depthWrite, noFog,
+      emitterGain: arguments[0]?.emitterGain ?? 1,
     })
   }
   const defines = {}
