@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "assets": "blender -b --python tools/make_tree.py -- --out public/assets/models/trees --count 4",
+    "bake": "blender -b --python tools/bake_lightmaps.py --"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "^0.19.3",
