@@ -10,7 +10,7 @@ stranger; if a stage breaks, **revert** rather than push forward.
 | Stage | What | Gate | State |
 |---|---|---|---|
 | 0 | toolkit install + collision/speed/wayfinding | `collisioncheck.mjs` 100%; Park crossing ≤25s | **IN PROGRESS** |
-| 1 | lighting + post only (no new assets) | before/after per zone; value-floor + highlight scarcity | todo |
+| 1 | lighting + post only (no new assets) | before/after per zone; value-floor + highlight scarcity | **NEXT — blocker mapped, see DECISIONS #9** |
 | 2 | the Blender factory (`tools/`) | Park bakes; hero tree beats procedural (Part 9 judged) | todo |
 | 3 | the Park, finished | every Park pose passes `composecheck.mjs` | todo |
 | 4 | the first ten minutes — **fallback deliverable** | `TEN_MINUTES.md`, no dead stretch >12s | todo |
@@ -33,6 +33,29 @@ stranger; if a stage breaks, **revert** rather than push forward.
 - [x] **Lantern Listen** ✅ L fires a wisp to the nearest unkindled light over 3s, keeper glances after it, zero UI.
 - [x] `scripts/collisioncheck.mjs` ✅ **PASS 7/7** — 560 charges at sprint speed, 1560 fuzz steps, 0 penetrations / 0 OOB / 0 sink / 0 camera clips.
 - [x] Crossing times ✅ `crossingcheck.mjs` PASS 4/4 — Park 18.55s (budget 25s); all legs logged in PERFORMANCE_AUDIT.md.
+
+### Stage 1 — the order it must be done in (DECISIONS #9)
+
+**Do not add lights first — they would be silent no-ops.** `retroMaterial()`
+is a raw `ShaderMaterial` without `lights: true`, so three feeds it no light
+uniforms. ~99 call sites.
+
+1. Port `retroMaterial` onto `three-custom-shader-material` (TOOLKIT §8 names
+   this as the backbone for exactly this job) so the existing look survives
+   but materials receive three's lighting/shadows/fog. Write
+   `csm_DiffuseColor`, never `csm_FragColor`. Populate `roughnessMap` with a
+   1×1 white texture or `csm_Roughness` silently does nothing.
+2. Replace the 480×270 nearest RT + quantize post shader with the composer:
+   `HalfFloatType`, `NoToneMapping` on the renderer, **AgX** in the chain
+   (TOOLKIT §1.3 overrides DIRECTION's ACES), SMAA ULTRA, N8AO half-res with
+   `aoTones`, `SelectiveBloomEffect` (threshold 0.6–0.9, never 0), vignette,
+   per-zone LUT ≥32³ with `tetrahedralInterpolation`, fine grain.
+3. Then the rig: ONE moon directional (only shadow caster, core CSM,
+   `PCFShadowMap`, `shadowMap.autoUpdate=false`, `normalBias` 0.02–0.05), one
+   hemisphere, single-digit point lights `castShadow=false`, everything else
+   emissive. Shade tints blue/violet — never black.
+4. Gate: before/after screenshot pair per zone + value-floor (≥55% below
+   L*40) and highlight-scarcity (≤8% above L*75) metrics.
 
 ### Notes that will bite later (from TOOLKIT)
 - Effect order §3: SMAA → SSAO → DoF → CA → Bloom → GodRays → Vignette →
