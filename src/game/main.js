@@ -78,7 +78,18 @@ if (rig.staffFlame) world.flames.push({ mesh: rig.staffFlame, tex: rig.staffFlam
 if (rig.staffHalo) world.halos.push(rig.staffHalo)
 const input = new Input(canvas)
 const player = new PlayerController(rig, world)
-player.pos.set(2.6, 0, -18.2) // waking at dusk by the Long Bench
+// Waking at dusk BESIDE the Long Bench rather than 1.4m off its back.
+//
+// The bench sits at (2, -19.6) and spans x 0.7-3.3. Spawning at (2.6, -18.2)
+// put the third-person camera — 4.5m behind the player — squarely inside it, so
+// the first frame of the game was a grey slab across the bottom third with the
+// Keeper and Beldam occluded at the waist (judge pass 1, reviewer B defect 6).
+// It also boxed the walk in: every capture run lost its driver here, twelve
+// unsticks on the first waypoint, wandering 12m before finding a way around.
+//
+// Clear of the bench's x-extent and a little further north: the camera has open
+// ground behind it, and the first step out is unobstructed.
+player.pos.set(4.9, 0, -17.2)
 player.pos.y = world.heightAt(player.pos.x, player.pos.z)
 player.yaw = player.targetYaw = 0
 
