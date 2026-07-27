@@ -277,6 +277,16 @@ const CSM_FRAG = /* glsl */ `
     // where the moon and the lanterns can still carve it.
     csm_DiffuseColor.rgb = mix(vec3(uAlbedoFloor), vec3(1.0), csm_DiffuseColor.rgb);
 
+    // ——— the value inversion fix ———
+    // Weighted by how UP-FACING the surface is, so it darkens ground and
+    // roof-tops (the planes that were reading as snow) and leaves verticals
+    // alone. The floor above still guarantees shade never reaches black.
+    {
+      float up = clamp(vNormalW.y, 0.0, 1.0);
+      float k = mix(1.0, uGroundDarken, up * up);
+      csm_DiffuseColor.rgb *= max(k, uAlbedoFloor * 0.9);
+    }
+
     // ——— macro ground variation ———
     // The open-path poses measured flat for a plain reason: the ground is one
     // enormous plane of one albedo, so it renders as a single value across most
@@ -395,6 +405,8 @@ export function litMaterial({
       // an emitter's diffuse is black ON PURPOSE — flooring it would put it
       // back to catching moonlight, so it gets a floor of its own at zero
       uAlbedoFloor: isEmitter ? { value: 0 } : globalUniforms.uAlbedoFloor,
+      // an emitter has no albedo to darken
+      uGroundDarken: isEmitter ? { value: 1 } : globalUniforms.uGroundDarken,
       uVertexTint: globalUniforms.uVertexTint,
       uGroundMacro: isEmitter ? { value: 0 } : globalUniforms.uGroundMacro,
       uOpacity, uEmissive, uMap,
