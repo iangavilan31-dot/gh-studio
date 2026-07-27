@@ -1,0 +1,39 @@
+{
+ "samples": [
+  {
+   "moment": "night-start",
+   "text": [
+    {
+     "text": "ᚲ",
+     "tag": "text",
+     "cls": {}
+    }
+   ]
+  },
+  {
+   "moment": "prompt-showing",
+   "text": [
+    {
+     "text": "ᚲ",
+     "tag": "text",
+     "cls": {}
+    }
+   ]
+  }
+ ],
+ "offenders": [],
+ "marks": [
+  {
+   "moment": "night-start",
+   "text": "ᚲ",
+   "tag": "text",
+   "cls": {}
+  },
+  {
+   "moment": "prompt-showing",
+   "text": "ᚲ",
+   "tag": "text",
+   "cls": {}
+  }
+ ]
+}
