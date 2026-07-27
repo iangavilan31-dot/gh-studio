@@ -44,9 +44,17 @@ const GATES = {
   accents: { max: 0.08, label: 'accent budget (frac warm & bright)' },
   tintedShade: { min: 0.60, label: 'tinted shade (frac of darks with chroma)' },
   midSpread: { min: 18, label: 'readability (L* p90-p10 of mid-band)' },
-  // DIRECTION Part 11.2 / judge pass 1: the ground must not out-reflect the sky.
-  // -2 rather than 0 allows a lit foreground pool without permitting a snowfield.
-  valueStructure: { min: -2, label: 'value structure (sky L* - ground L*)' },
+  // DIRECTION Part 11.2: the outer 15% must sit >= 25% darker than the centre
+  // third. This is the value-structure rule that is well defined for EVERY pose.
+  //
+  // `valueStructure` (top third minus bottom third) is still reported below but
+  // deliberately NOT gated: it was added to catch the ground-brighter-than-sky
+  // inversion, and it does that in open poses — but in a street pose the top
+  // third is architecture, not sky, so it measures something other than what
+  // its name claims. Gating on a metric already shown to mismeasure some of its
+  // inputs would be worse than not having it. Reported as a diagnostic until a
+  // per-pose sky mask makes it honest.
+  edgeMass: { min: 0.25, label: 'edge mass (outer 15% darker than centre third)' },
 }
 
 function startPreview() {
@@ -151,7 +159,7 @@ async function main() {
     lines.push(
       `${bad.length ? 'FAIL' : 'pass'}  ${r.pose.padEnd(12)}` +
       ` dark=${pct(r.valueFloor)} hi=${pct(r.highlights)} crush=${pct(r.crushed)}` +
-      ` accent=${pct(r.accents)} spread=${r.midSpread.toFixed(1)} sky/gnd=${r.skyL}/${r.groundL}` +
+      ` accent=${pct(r.accents)} spread=${r.midSpread.toFixed(1)} edge=${r.edgeMass} sky/gnd=${r.skyL}/${r.groundL}` +
       (bad.length ? `\n        ↳ ${bad.join('\n        ↳ ')}` : '')
     )
   }

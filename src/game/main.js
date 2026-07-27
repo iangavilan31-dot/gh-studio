@@ -1375,6 +1375,12 @@ window.__MOONREST__ = {
     // frames. A night ground cannot out-reflect its own sky; that inversion is
     // upstream of composition, atmosphere and scale together. Measured as mean
     // L* of the top third against the bottom third.
+    // EDGE MASS (DIRECTION Part 11.2): the outer 15% frame must sit at least
+    // 25% darker than the centre third — a dark mass framing a brighter focal
+    // area. Unlike the sky/ground split this is well defined for every pose,
+    // including street scenes where the upper frame is architecture rather than
+    // sky, so it is the one that gates.
+    let edgeSum = 0, edgeN = 0, ctrSum = 0, ctrN = 0
     let topSum = 0, topN = 0, botSum = 0, botN = 0
     for (let i = 0; i < buf.length; i += 4) {
       const px = (i / 4) % w, py = Math.floor((i / 4) / w)   // readPixels is bottom-up
@@ -1383,7 +1389,9 @@ window.__MOONREST__ = {
       const L = Y > 0.008856 ? 116 * Math.cbrt(Y) - 16 : 903.3 * Y
       if (py > h * 0.667) { topSum += L; topN++ }            // top of the image
       else if (py < h * 0.333) { botSum += L; botN++ }
-      void px
+      const inEdge = px < w * 0.15 || px > w * 0.85 || py < h * 0.15 || py > h * 0.85
+      const inCtr = px > w * 0.333 && px < w * 0.667 && py > h * 0.333 && py < h * 0.667
+      if (inEdge) { edgeSum += L; edgeN++ } else if (inCtr) { ctrSum += L; ctrN++ }
     }
     const skyL = topN ? topSum / topN : 0
     const groundL = botN ? botSum / botN : 0
@@ -1406,6 +1414,10 @@ window.__MOONREST__ = {
       tintedShade: dark ? darkTinted / dark : 1,
       midSpread: mq(0.9) - mq(0.1),
       skyL: +skyL.toFixed(1), groundL: +groundL.toFixed(1),
+      edgeL: +(edgeN ? edgeSum / edgeN : 0).toFixed(1),
+      centreL: +(ctrN ? ctrSum / ctrN : 0).toFixed(1),
+      // fraction the edge is darker than the centre; Part 11.2 wants >= 0.25
+      edgeMass: +(ctrN && ctrSum > 0 ? 1 - (edgeSum / edgeN) / (ctrSum / ctrN) : 0).toFixed(3),
       // positive = sky brighter than ground, which is what night looks like
       valueStructure: +(skyL - groundL).toFixed(1),
       p10: +q(0.1).toFixed(1), p50: +q(0.5).toFixed(1), p90: +q(0.9).toFixed(1),
