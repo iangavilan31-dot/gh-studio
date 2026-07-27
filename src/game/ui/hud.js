@@ -120,8 +120,14 @@ export class HUD {
   // way Beldam's line is specified in Part 4 — a head-turn toward the road).
   // Until then those moments are silent, and that is a real loss stated plainly
   // rather than papered over with a subtitle.
-  say(text, seconds = 4) {
-    this.beats.push({ text, t: performance.now() })
+  // `say(id)` no longer takes prose — the call sites now pass a beat
+  // IDENTIFIER ('shared-rest', 'lamp-went-cold'). The moment structure is
+  // intact and addressable; what is gone is the English sentence that used to
+  // be rendered, and with it the temptation for the next restyle to ship words
+  // again. Re-expressing each beat as light, animation or sound is the work
+  // this leaves behind, and until it is done those moments are silent.
+  say(id, seconds = 4) {
+    this.beats.push({ id, t: performance.now() })
     if (this.beats.length > 64) this.beats.shift()
   }
 }

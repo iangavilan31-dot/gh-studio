@@ -330,20 +330,20 @@ const net = new Net({
   setCatTarget: (arr) => { npcs.catNetTarget = arr },
   onFightInput: (m) => { if (!dream.netInput(m) && pendingFightFrames.length < 900) pendingFightFrames.push(m) }, // F9 lockstep frames (buffer the startup race)
   onPeerJoin: (p) => {
-    hud.say('another lantern joins the night.', 3.5)
+    hud.say('another-lantern-joins-the', 3.5)
     // mid-dream arrivals spectate as fireflies until the next match
     if (dream.active && net.role === 'host' && lastDreamDeal && p?.id != null) {
       net.sendEventTo?.(p.id, { ...lastDreamDeal, spectate: true })
     }
   },
-  onPeerLeave: () => hud.say('a lantern drifts away, fireflies now.', 3.5),
+  onPeerLeave: () => hud.say('a-lantern-drifts-away', 3.5),
   onHostLost: () => {
-    hud.say('the night drifts on without its keeper.', 5)
+    hud.say('the-night-drifts-on', 5)
     if (!window.__SUPPRESS_NIGHT_END__) setTimeout(() => location.reload(), 5200) // soft return (title lands in M8)
   },
   onDeny: (reason) => {
-    if (reason === 'brazier') hud.say('this flame wants every keeper. channel it together.', 4)
-    else if (reason === 'full') hud.say('that night already carries four lanterns.', 4)
+    if (reason === 'brazier') hud.say('this-flame-wants-every', 4)
+    else if (reason === 'full') hud.say('that-night-already-carries', 4)
   },
   spawnFireflies: (x, y, z) => emberBurst(embers, x, y, z, worldRNG.fork('fade' + Math.round(x * 7 + z * 3))),
   remoteFootstep: (surface, vol) => footstep(surface, vol),
