@@ -61,6 +61,14 @@ const data = await page.evaluate(async () => {
   ]
   const events = []
   let wp = 0, prev = null, channelStart = null
+  // Stuck handling. A pure seek driver presses W into whatever it hits and
+  // never stops — the first run of this capture sat at one position for 1800
+  // ticks while the controller reported 5.2 m/s. Even with the world's pinch
+  // traps sealed, a concave corner can still trap a dumb seek, so the driver
+  // needs to notice and go around.
+  let bestD = Infinity, noProgress = 0, sidestep = 0, sidestepKey = 'KeyD'
+  let wpStartNt = 0
+  const stalls = []
   const nt0 = M.state.nightT
   let lastNotable = 0
   const gaps = []
@@ -73,7 +81,34 @@ const data = await page.evaluate(async () => {
     const t = route[Math.min(wp, route.length - 1)]
     const dx = t.x - s.playerPos[0], dz = t.z - s.playerPos[2]
     const d = Math.hypot(dx, dz)
-    if (!channelStart) M.setCamYaw(Math.atan2(-dx, -dz)) // steer toward the waypoint
+
+    // --- unstick ---
+    if (!channelStart) {
+      // PROGRESS, not motion. A player pressed against an obstacle still slides
+      // along it, so "did the position change?" reports healthy movement while
+      // the run goes nowhere — that micro-jitter defeated the first version of
+      // this check. What matters is whether the target is getting closer.
+      if (d < bestD - 0.25) { bestD = d; noProgress = 0 } else noProgress++
+      if (noProgress > 25 && sidestep <= 0) {
+        // wedged: strafe along the obstacle for a beat, alternating sides so a
+        // corner that defeats one direction gets the other next time
+        sidestep = 30
+        sidestepKey = sidestepKey === 'KeyD' ? 'KeyA' : 'KeyD'
+        stalls.push({ nt: +nt.toFixed(2), at: [+s.playerPos[0].toFixed(2), +s.playerPos[2].toFixed(2)], wp })
+        kb('keydown', sidestepKey)
+        noProgress = 0
+      }
+      if (sidestep > 0 && --sidestep === 0) kb('keyup', sidestepKey)
+      // steer toward the waypoint (but not while strafing free of an obstacle)
+      if (sidestep === 0) M.setCamYaw(Math.atan2(-dx, -dz))
+    }
+
+    // a waypoint that cannot be reached must not eat the whole capture
+    if (!channelStart && nt - wpStartNt > 1.2 && wp < route.length) {
+      events.push({ nt: +nt.toFixed(2), ev: 'skip', at: [t.x, t.z] })
+      wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0
+      if (sidestep > 0) { kb('keyup', sidestepKey); sidestep = 0 }
+    }
     if (d < 1.8 && wp < route.length) { // inside interact range (2.0), not outside it
       if (t.light && !channelStart) {
         kb('keyup', 'KeyW')
@@ -81,7 +116,7 @@ const data = await page.evaluate(async () => {
         channelStart = nt
       } else if (!t.light) {
         events.push({ nt: +nt.toFixed(2), ev: 'waypoint', at: [t.x, t.z] })
-        wp++
+        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0
       }
     }
     if (channelStart != null) {
@@ -89,12 +124,12 @@ const data = await page.evaluate(async () => {
         kb('keyup', 'KeyE')
         kb('keydown', 'KeyW')
         channelStart = null
-        wp++
+        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0
       } else if (nt - channelStart > 0.2) { // ~12s sim without a kindle: move on
         kb('keyup', 'KeyE')
         kb('keydown', 'KeyW')
         channelStart = null
-        wp++
+        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0
       }
     }
     if (prev) {
@@ -102,13 +137,16 @@ const data = await page.evaluate(async () => {
       if (s.kindled.length > prev.kindled) events.push({ nt: +nt.toFixed(2), ev: 'kindle', id: s.kindled[s.kindled.length - 1] })
       if (s.fov > 57 && prev.fov <= 57) events.push({ nt: +nt.toFixed(2), ev: 'reveal', zone: s.zone })
     }
-    // notable: an event this tick, or any POI inside 16m
-    let notable = events.length > 0 && Math.abs(events[events.length - 1].nt - nt) < 0.02
-    if (!notable) {
-      for (const poi of pois) {
-        if (Math.hypot(poi.x - s.playerPos[0], poi.z - s.playerPos[2]) < 16) { notable = true; break }
-      }
-    }
+    // A beat is an EVENT — a kindle, a zone change, a reveal, a waypoint
+    // reached. It is NOT proximity to a point of interest.
+    //
+    // The previous version counted "any POI inside 16m" as notable, every tick.
+    // That meant a player standing still beside a landmark could never
+    // accumulate a gap, so the first run of this capture scored a perfect
+    // "worst stretch 0s" while the player was in fact wedged against a rock for
+    // nine and a half sim minutes. Proximity is a property of the MAP; this
+    // gate is supposed to measure the EXPERIENCE.
+    const notable = events.length > 0 && Math.abs(events[events.length - 1].nt - nt) < 0.02
     if (notable) {
       const gap = nt - lastNotable
       if (gap > 0.1) gaps.push({ gap: +gap.toFixed(2), atNt: +lastNotable.toFixed(2) })
@@ -121,16 +159,27 @@ const data = await page.evaluate(async () => {
   const tail = endNt - lastNotable
   if (tail > 0.1) gaps.push({ gap: +tail.toFixed(2), atNt: +lastNotable.toFixed(2), tail: true })
   gaps.sort((a, b) => b.gap - a.gap)
-  return { events, gaps: gaps.slice(0, 8), simMinutes: +endNt.toFixed(2), kindled: M.state.kindled.length, endZone: M.state.zone, waypointsReached: wp }
+  return { events, gaps: gaps.slice(0, 8), simMinutes: +endNt.toFixed(2), kindled: M.state.kindled.length, endZone: M.state.zone, waypointsReached: wp, routeLength: route.length, stalls: stalls.slice(0, 12) }
 })
 
 data.consoleIssues = issues.slice(0, 5)
 writeFileSync(resolve(root, 'docs/build/k1capture.json'), JSON.stringify(data, null, 1))
 const worst = data.gaps[0]?.gap ?? 0
-console.log(`route: ${data.waypointsReached} waypoints, ${data.kindled} lamps, ${data.events.length} events over ${data.simMinutes} sim min, ended in ${data.endZone}`)
+// A capture that never walked the route is not evidence about the opening, and
+// must not be able to report a pass. The first version could: it stalled after
+// 2 of 19 waypoints and printed "worst stretch 0s" — a stuck player generates
+// no events, and no events meant no gaps. Route completion is now a gate in its
+// own right, checked BEFORE the gap number is believed.
+const routeDone = data.waypointsReached >= data.routeLength
+const ok = routeDone && worst <= 0.34 && issues.length === 0
+console.log(`route: ${data.waypointsReached}/${data.routeLength} waypoints, ${data.kindled} lamps, ${data.events.length} events over ${data.simMinutes} sim min, ended in ${data.endZone}`)
 console.log('worst stretches (sim min):', data.gaps.map((g) => `${g.gap} @${g.atNt}`).join(' · ') || 'none')
-console.log(worst <= 0.34 ? `K1 CAPTURE PASS — worst stretch ${(worst * 60).toFixed(0)}s <= 20s` : `K1 CAPTURE: worst stretch ${(worst * 60).toFixed(0)}s exceeds 20s`)
+if (data.stalls?.length) {
+  console.log(`unstick fired ${data.stalls.length}x:`, data.stalls.map((x) => `(${x.at[0]},${x.at[1]})@wp${x.wp}`).join(' · '))
+}
+if (!routeDone) console.log(`K1 CAPTURE FAIL — only ${data.waypointsReached}/${data.routeLength} waypoints reached; a stalled run is not evidence`)
+else console.log(worst <= 0.34 ? `K1 CAPTURE PASS — route complete, worst stretch ${(worst * 60).toFixed(0)}s <= 20s` : `K1 CAPTURE FAIL — worst stretch ${(worst * 60).toFixed(0)}s exceeds 20s`)
 console.log(issues.length === 0 ? 'console clean' : `console issues: ${issues.length}`)
 await browser.close()
 preview.kill()
-process.exit(worst <= 0.34 && issues.length === 0 ? 0 : 1)
+process.exit(ok ? 0 : 1)
