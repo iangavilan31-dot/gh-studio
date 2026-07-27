@@ -44,6 +44,9 @@ const GATES = {
   accents: { max: 0.08, label: 'accent budget (frac warm & bright)' },
   tintedShade: { min: 0.60, label: 'tinted shade (frac of darks with chroma)' },
   midSpread: { min: 18, label: 'readability (L* p90-p10 of mid-band)' },
+  // DIRECTION Part 11.2 / judge pass 1: the ground must not out-reflect the sky.
+  // -2 rather than 0 allows a lit foreground pool without permitting a snowfield.
+  valueStructure: { min: -2, label: 'value structure (sky L* - ground L*)' },
 }
 
 function startPreview() {
@@ -148,7 +151,7 @@ async function main() {
     lines.push(
       `${bad.length ? 'FAIL' : 'pass'}  ${r.pose.padEnd(12)}` +
       ` dark=${pct(r.valueFloor)} hi=${pct(r.highlights)} crush=${pct(r.crushed)}` +
-      ` accent=${pct(r.accents)} tint=${pct(r.tintedShade)} spread=${r.midSpread.toFixed(1)}` +
+      ` accent=${pct(r.accents)} spread=${r.midSpread.toFixed(1)} sky/gnd=${r.skyL}/${r.groundL}` +
       (bad.length ? `\n        ↳ ${bad.join('\n        ↳ ')}` : '')
     )
   }

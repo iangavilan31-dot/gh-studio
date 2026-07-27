@@ -1296,6 +1296,7 @@ window.__MOONREST__ = {
     if (p.hemi != null) moonRig.hemiScale = p.hemi
     if (p.albedoFloor != null) globalUniforms.uAlbedoFloor.value = p.albedoFloor
     if (p.vertexTint != null) globalUniforms.uVertexTint.value = p.vertexTint
+    if (p.groundDarken != null) globalUniforms.uGroundDarken.value = p.groundDarken
     if (p.groundMacro != null) globalUniforms.uGroundMacro.value = p.groundMacro
     if (p.grade && c) c.setGrade(p.grade)
     moonRig.invalidate()
@@ -1369,6 +1370,24 @@ window.__MOONREST__ = {
       // accent budget, a lit lantern is
       if (L > 45 && r > b * 1.25 && r >= g) accents++
     }
+    // ——— value structure (DIRECTION Part 11.2, and judge pass 1's top finding) ———
+    // Both reviewers measured the ground brighter than the sky in all thirteen
+    // frames. A night ground cannot out-reflect its own sky; that inversion is
+    // upstream of composition, atmosphere and scale together. Measured as mean
+    // L* of the top third against the bottom third.
+    let topSum = 0, topN = 0, botSum = 0, botN = 0
+    for (let i = 0; i < buf.length; i += 4) {
+      const px = (i / 4) % w, py = Math.floor((i / 4) / w)   // readPixels is bottom-up
+      const r = srgbToLin(buf[i]), g = srgbToLin(buf[i + 1]), b = srgbToLin(buf[i + 2])
+      const Y = 0.2126 * r + 0.7152 * g + 0.0722 * b
+      const L = Y > 0.008856 ? 116 * Math.cbrt(Y) - 16 : 903.3 * Y
+      if (py > h * 0.667) { topSum += L; topN++ }            // top of the image
+      else if (py < h * 0.333) { botSum += L; botN++ }
+      void px
+    }
+    const skyL = topN ? topSum / topN : 0
+    const groundL = botN ? botSum / botN : 0
+
     Ls.sort((a, b) => a - b)
     const q = (p) => Ls[Math.min(Ls.length - 1, Math.max(0, Math.round(p * (Ls.length - 1))))]
     // spread measured inside the mid-band only: the sky and the crushed blacks
@@ -1386,6 +1405,9 @@ window.__MOONREST__ = {
       accents: accents / n,
       tintedShade: dark ? darkTinted / dark : 1,
       midSpread: mq(0.9) - mq(0.1),
+      skyL: +skyL.toFixed(1), groundL: +groundL.toFixed(1),
+      // positive = sky brighter than ground, which is what night looks like
+      valueStructure: +(skyL - groundL).toFixed(1),
       p10: +q(0.1).toFixed(1), p50: +q(0.5).toFixed(1), p90: +q(0.9).toFixed(1),
     }
   },
