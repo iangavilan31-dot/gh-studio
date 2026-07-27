@@ -19,7 +19,7 @@
    "id": "park-firefly-jar"
   },
   {
-   "nt": 1.3,
+   "nt": 1.31,
    "ev": "waypoint",
    "at": [
     -10.2,
@@ -27,17 +27,17 @@
    ]
   },
   {
-   "nt": 1.39,
+   "nt": 1.4,
    "ev": "kindle",
-   "id": "park-firefly-jar"
+   "id": "park-lantern-2"
   },
   {
-   "nt": 1.58,
+   "nt": 1.6,
    "ev": "kindle",
-   "id": "park-firefly-jar"
+   "id": "park-lantern-1"
   },
   {
-   "nt": 1.62,
+   "nt": 1.63,
    "ev": "waypoint",
    "at": [
     24.5,
@@ -45,7 +45,7 @@
    ]
   },
   {
-   "nt": 1.79,
+   "nt": 1.8,
    "ev": "kindle",
    "id": "wayside-shrine-5"
   },
@@ -55,52 +55,52 @@
    "id": "wayside-shrine-6"
   },
   {
-   "nt": 2.05,
+   "nt": 2.07,
    "ev": "zone",
    "to": "foglandPR"
   },
   {
-   "nt": 2.23,
+   "nt": 2.24,
    "ev": "kindle",
-   "id": "wayside-shrine-6"
+   "id": "wayside-shrine-1"
   },
   {
-   "nt": 2.25,
+   "nt": 2.27,
    "ev": "zone",
    "to": "park"
   },
   {
-   "nt": 2.54,
+   "nt": 2.56,
    "ev": "zone",
    "to": "foglandPV"
   },
   {
-   "nt": 2.6,
+   "nt": 2.63,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 2.61,
+   "nt": 2.64,
    "ev": "reveal",
    "zone": "village"
   },
   {
-   "nt": 2.69,
+   "nt": 2.7,
    "ev": "kindle",
-   "id": "wayside-shrine-6"
+   "id": "wayside-shrine-4"
   },
   {
-   "nt": 2.77,
+   "nt": 2.78,
    "ev": "kindle",
-   "id": "wayside-shrine-6"
+   "id": "village-post-1"
   },
   {
-   "nt": 2.84,
+   "nt": 2.85,
    "ev": "kindle",
-   "id": "wayside-shrine-6"
+   "id": "village-post-2"
   },
   {
-   "nt": 4.04,
+   "nt": 4.06,
    "ev": "skip",
    "at": [
     114.6,
@@ -108,7 +108,7 @@
    ]
   },
   {
-   "nt": 5.24,
+   "nt": 5.26,
    "ev": "skip",
    "at": [
     119.78,
@@ -116,47 +116,12 @@
    ]
   },
   {
-   "nt": 5.28,
+   "nt": 5.29,
    "ev": "kindle",
-   "id": "wayside-shrine-6"
+   "id": "village-bakery-window"
   },
   {
-   "nt": 5.46,
-   "ev": "zone",
-   "to": "rooftops"
-  },
-  {
-   "nt": 5.47,
-   "ev": "reveal",
-   "zone": "rooftops"
-  },
-  {
-   "nt": 5.48,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 5.63,
-   "ev": "zone",
-   "to": "rooftops"
-  },
-  {
-   "nt": 5.65,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 6.34,
-   "ev": "zone",
-   "to": "rooftops"
-  },
-  {
-   "nt": 6.34,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 6.48,
+   "nt": 6.49,
    "ev": "skip",
    "at": [
     127.28,
@@ -172,32 +137,37 @@
    ]
   },
   {
-   "nt": 7.8,
+   "nt": 7.82,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 7.91,
+   "nt": 7.83,
+   "ev": "reveal",
+   "zone": "rooftops"
+  },
+  {
+   "nt": 7.93,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 7.96,
+   "nt": 7.98,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 8.01,
+   "nt": 8.02,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 8.05,
+   "nt": 8.06,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 8.1,
+   "nt": 8.11,
    "ev": "zone",
    "to": "village"
   },
@@ -207,12 +177,12 @@
    "to": "rooftops"
   },
   {
-   "nt": 8.18,
+   "nt": 8.19,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 8.22,
+   "nt": 8.21,
    "ev": "zone",
    "to": "rooftops"
   },
@@ -222,7 +192,7 @@
    "to": "village"
   },
   {
-   "nt": 8.31,
+   "nt": 8.3,
    "ev": "zone",
    "to": "rooftops"
   },
@@ -252,27 +222,27 @@
    "to": "village"
   },
   {
-   "nt": 8.55,
+   "nt": 8.56,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 8.6,
+   "nt": 8.61,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 8.63,
+   "nt": 8.64,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 8.68,
+   "nt": 8.69,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 8.71,
+   "nt": 8.72,
    "ev": "zone",
    "to": "rooftops"
   },
@@ -282,12 +252,12 @@
    "to": "village"
   },
   {
-   "nt": 8.8,
+   "nt": 8.81,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 8.85,
+   "nt": 8.86,
    "ev": "zone",
    "to": "village"
   },
@@ -305,24 +275,24 @@
    ]
   },
   {
-   "nt": 8.91,
+   "nt": 8.92,
    "ev": "kindle",
-   "id": "wayside-shrine-6"
+   "id": "village-post-4"
   },
   {
-   "nt": 8.94,
+   "nt": 8.96,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 8.98,
+   "nt": 8.99,
    "ev": "kindle",
-   "id": "wayside-shrine-6"
+   "id": "village-post-3"
   },
   {
-   "nt": 9.04,
+   "nt": 9.05,
    "ev": "kindle",
-   "id": "wayside-shrine-6"
+   "id": "village-well-lantern"
   }
  ],
  "gaps": [
@@ -333,49 +303,49 @@
    "driver": true
   },
   {
-   "gap": 1.19,
-   "atNt": 2.85,
+   "gap": 1.2,
+   "atNt": 2.86,
    "endedBy": "skip",
    "driver": true
   },
   {
    "gap": 1.19,
-   "atNt": 6.5,
+   "atNt": 4.07,
    "endedBy": "skip",
    "driver": true
   },
   {
    "gap": 1.18,
-   "atNt": 4.06,
+   "atNt": 5.31,
    "endedBy": "skip",
    "driver": true
   },
   {
-   "gap": 0.67,
-   "atNt": 5.67,
-   "endedBy": "zone",
-   "driver": false
+   "gap": 1.18,
+   "atNt": 6.51,
+   "endedBy": "skip",
+   "driver": true
   },
   {
    "gap": 0.28,
-   "atNt": 2.26,
+   "atNt": 2.28,
    "endedBy": "zone",
    "driver": false
   },
   {
    "gap": 0.19,
-   "atNt": 1.8,
+   "atNt": 1.41,
    "endedBy": "kindle",
    "driver": false
   },
   {
    "gap": 0.18,
-   "atNt": 1.4,
+   "atNt": 1.81,
    "endedBy": "kindle",
    "driver": false
   }
  ],
- "simMinutes": 9.04,
+ "simMinutes": 9.05,
  "kindled": 14,
  "endZone": "village",
  "waypointsReached": 22,
@@ -384,7 +354,7 @@
   {
    "nt": 0.03,
    "at": [
-    2.75,
+    2.76,
     -18.02
    ],
    "wp": 1,
@@ -393,8 +363,8 @@
   {
    "nt": 0.06,
    "at": [
-    5.95,
-    -21.71
+    5.2,
+    -21.01
    ],
    "wp": 1,
    "run": 2
@@ -402,8 +372,8 @@
   {
    "nt": 0.1,
    "at": [
-    3.69,
-    -20.14
+    3.68,
+    -20.16
    ],
    "wp": 1,
    "run": 3
@@ -411,8 +381,8 @@
   {
    "nt": 0.14,
    "at": [
-    2.27,
-    -32.09
+    2.93,
+    -31.3
    ],
    "wp": 1,
    "run": 4
@@ -420,17 +390,17 @@
   {
    "nt": 0.18,
    "at": [
-    9.05,
-    -25.17
+    9.65,
+    -20.56
    ],
    "wp": 1,
    "run": 5
   },
   {
-   "nt": 0.22,
+   "nt": 0.23,
    "at": [
-    -1.87,
-    -30.12
+    0.78,
+    -31.31
    ],
    "wp": 1,
    "run": 6
@@ -438,17 +408,17 @@
   {
    "nt": 0.27,
    "at": [
-    9.72,
-    -25.59
+    8.83,
+    -22.85
    ],
    "wp": 1,
    "run": 7
   },
   {
-   "nt": 0.31,
+   "nt": 0.32,
    "at": [
-    -3.19,
-    -30.46
+    -2.68,
+    -30.59
    ],
    "wp": 1,
    "run": 8
@@ -456,17 +426,17 @@
   {
    "nt": 0.36,
    "at": [
-    10.09,
-    -26.07
+    9.81,
+    -25.74
    ],
    "wp": 1,
    "run": 9
   },
   {
-   "nt": 0.4,
+   "nt": 0.41,
    "at": [
-    -3.56,
-    -30.68
+    -2.16,
+    -29.65
    ],
    "wp": 1,
    "run": 10
@@ -474,22 +444,22 @@
   {
    "nt": 0.45,
    "at": [
-    7.99,
-    -26.74
+    9.41,
+    -25.76
    ],
    "wp": 1,
    "run": 11
   },
   {
-   "nt": 0.49,
+   "nt": 0.5,
    "at": [
-    -5.32,
-    -28.48
+    -3.58,
+    -30.3
    ],
    "wp": 1,
    "run": 12
   }
  ],
- "routeSimMinutes": 9.04,
+ "routeSimMinutes": 9.05,
  "consoleIssues": []
 }
