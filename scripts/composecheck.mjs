@@ -39,6 +39,12 @@ let inScope = []
 const askedPoses = process.argv.slice(2).filter((a) => !a.startsWith('-'))
 
 const GATES = {
+  // Liveness first — see composeStats(). Composition numbers from a frame whose
+  // geometry never drew are not evidence of anything, and this gate has already
+  // shipped two consecutive greens on exactly that.
+  drawnMeshes: { min: 50, label: 'liveness (visible meshes in scene)' },
+  litMaterials: { min: 20, label: 'liveness (lit materials present)' },
+  shaderErrors: { max: 0, label: 'shader errors (lit materials that failed to compile)' },
   valueFloor: { min: 0.55, label: 'value floor (frac < L*40)' },
   highlights: { max: 0.08, label: 'highlight scarcity (frac > L*75)' },
   crushed: { max: 0.02, label: 'no crush (frac < L*3)' },
@@ -164,7 +170,7 @@ async function main() {
     lines.push(
       `${bad.length ? (gated ? 'FAIL' : 'warn') : 'pass'}  ${r.pose.padEnd(12)}${gated ? '' : '*'}` +
       ` dark=${pct(r.valueFloor)} hi=${pct(r.highlights)} crush=${pct(r.crushed)}` +
-      ` accent=${pct(r.accents)} spread=${r.midSpread.toFixed(1)} edge=${r.edgeMass} sky/gnd=${r.skyL}/${r.groundL}` +
+      ` mesh=${r.drawnMeshes} shErr=${r.shaderErrors} spread=${r.midSpread.toFixed(1)} edge=${r.edgeMass} sky/gnd=${r.skyL}/${r.groundL}` +
       (bad.length ? `\n        ↳ ${bad.join('\n        ↳ ')}` : '')
     )
   }

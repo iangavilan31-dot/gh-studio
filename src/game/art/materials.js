@@ -43,6 +43,13 @@ export const globalUniforms = {
   // phases and read as noise): spread rises monotonically with strength, and
   // 1.1 clears the readability line on both open-path poses with margin.
   uGroundMacro: { value: 1.4 },
+  // Ground albedo scale on up-facing surfaces. Judge pass 1's top finding: both
+  // reviewers measured the ground brighter than the sky in all thirteen frames.
+  // Declared here — its absence was the "Cannot read properties of undefined
+  // (reading 'needsUpdate')" that took down shoot.mjs and composecheck: a
+  // material listed the uniform, globalUniforms did not define it, and three
+  // was handed undefined.
+  uGroundDarken: { value: 0.72 },
 }
 
 const VERT = /* glsl */ `
