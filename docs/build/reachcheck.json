@@ -1,0 +1,329 @@
+{
+ "lights": [
+  {
+   "id": "park-bench-lamp",
+   "zone": "park",
+   "kindled": true,
+   "closest": 1.64,
+   "range": 2
+  },
+  {
+   "id": "park-lantern-1",
+   "zone": "park",
+   "kindled": true,
+   "closest": 1.85,
+   "range": 2
+  },
+  {
+   "id": "park-lantern-2",
+   "zone": "park",
+   "kindled": true,
+   "closest": 1.93,
+   "range": 2
+  },
+  {
+   "id": "park-firefly-jar",
+   "zone": "park",
+   "kindled": true,
+   "closest": 1.57,
+   "range": 2
+  },
+  {
+   "id": "village-well-lantern",
+   "zone": "village",
+   "kindled": false,
+   "closest": 2.87,
+   "range": 2
+  },
+  {
+   "id": "village-post-1",
+   "zone": "village",
+   "kindled": true,
+   "closest": 1.93,
+   "range": 2
+  },
+  {
+   "id": "village-post-2",
+   "zone": "village",
+   "kindled": true,
+   "closest": 1.95,
+   "range": 2
+  },
+  {
+   "id": "village-post-3",
+   "zone": "village",
+   "kindled": true,
+   "closest": 1.73,
+   "range": 2
+  },
+  {
+   "id": "village-post-4",
+   "zone": "village",
+   "kindled": true,
+   "closest": 1.77,
+   "range": 2
+  },
+  {
+   "id": "village-bakery-window",
+   "zone": "village",
+   "kindled": true,
+   "closest": 1.7,
+   "range": 2
+  },
+  {
+   "id": "rooftops-lantern-1",
+   "zone": "rooftops",
+   "kindled": true,
+   "closest": 1.89,
+   "range": 2
+  },
+  {
+   "id": "rooftops-lantern-2",
+   "zone": "rooftops",
+   "kindled": true,
+   "closest": 1.89,
+   "range": 2
+  },
+  {
+   "id": "rooftops-telescope-brazier",
+   "zone": "rooftops",
+   "kindled": true,
+   "closest": 1.75,
+   "range": 2
+  },
+  {
+   "id": "ruins-sconce-1",
+   "zone": "ruins",
+   "kindled": true,
+   "closest": 1.83,
+   "range": 2
+  },
+  {
+   "id": "ruins-sconce-2",
+   "zone": "ruins",
+   "kindled": true,
+   "closest": 1.88,
+   "range": 2
+  },
+  {
+   "id": "ruins-sconce-3",
+   "zone": "ruins",
+   "kindled": true,
+   "closest": 1.75,
+   "range": 2
+  },
+  {
+   "id": "ruins-sconce-4",
+   "zone": "ruins",
+   "kindled": true,
+   "closest": 1.72,
+   "range": 2
+  },
+  {
+   "id": "ruins-moonwell",
+   "zone": "ruins",
+   "kindled": false,
+   "closest": 3.06,
+   "range": 2
+  },
+  {
+   "id": "gloomspire-causeway-1",
+   "zone": "gloomspire",
+   "kindled": true,
+   "closest": 1.49,
+   "range": 2
+  },
+  {
+   "id": "gloomspire-causeway-2",
+   "zone": "gloomspire",
+   "kindled": true,
+   "closest": 1.51,
+   "range": 2
+  },
+  {
+   "id": "gloomspire-causeway-3",
+   "zone": "gloomspire",
+   "kindled": true,
+   "closest": 1.69,
+   "range": 2
+  },
+  {
+   "id": "gloomspire-causeway-4",
+   "zone": "gloomspire",
+   "kindled": true,
+   "closest": 1.64,
+   "range": 2
+  },
+  {
+   "id": "gloomspire-gatehouse-brazier",
+   "zone": "gloomspire",
+   "kindled": true,
+   "closest": 1.9,
+   "range": 2
+  },
+  {
+   "id": "hall-sconce-1",
+   "zone": "hall",
+   "kindled": true,
+   "closest": 1.77,
+   "range": 2
+  },
+  {
+   "id": "hall-sconce-2",
+   "zone": "hall",
+   "kindled": true,
+   "closest": 1.76,
+   "range": 2
+  },
+  {
+   "id": "hall-sconce-3",
+   "zone": "hall",
+   "kindled": true,
+   "closest": 1.66,
+   "range": 2
+  },
+  {
+   "id": "hall-sconce-4",
+   "zone": "hall",
+   "kindled": true,
+   "closest": 1.57,
+   "range": 2
+  },
+  {
+   "id": "hall-sconce-5",
+   "zone": "hall",
+   "kindled": true,
+   "closest": 1.93,
+   "range": 2
+  },
+  {
+   "id": "hall-sconce-6",
+   "zone": "hall",
+   "kindled": true,
+   "closest": 1.8,
+   "range": 2
+  },
+  {
+   "id": "mosswood-arch-lantern-1",
+   "zone": "mosswood",
+   "kindled": true,
+   "closest": 1.91,
+   "range": 2
+  },
+  {
+   "id": "mosswood-arch-lantern-2",
+   "zone": "mosswood",
+   "kindled": true,
+   "closest": 1.73,
+   "range": 2
+  },
+  {
+   "id": "mosswood-trail-50",
+   "zone": "mosswood",
+   "kindled": true,
+   "closest": 1.73,
+   "range": 2
+  },
+  {
+   "id": "mosswood-trail-68",
+   "zone": "mosswood",
+   "kindled": true,
+   "closest": 1.73,
+   "range": 2
+  },
+  {
+   "id": "isle-causeway-1",
+   "zone": "isle",
+   "kindled": true,
+   "closest": 1.88,
+   "range": 2
+  },
+  {
+   "id": "isle-causeway-2",
+   "zone": "isle",
+   "kindled": true,
+   "closest": 1.93,
+   "range": 2
+  },
+  {
+   "id": "isle-cove-beacon",
+   "zone": "isle",
+   "kindled": true,
+   "closest": 1.9,
+   "range": 2
+  },
+  {
+   "id": "isle-keep-brazier",
+   "zone": "isle",
+   "kindled": false,
+   "closest": 5.37,
+   "range": 2
+  },
+  {
+   "id": "wayside-shrine-1",
+   "zone": "wayside",
+   "kindled": true,
+   "closest": 1.79,
+   "range": 2
+  },
+  {
+   "id": "wayside-shrine-2",
+   "zone": "wayside",
+   "kindled": true,
+   "closest": 1.75,
+   "range": 2
+  },
+  {
+   "id": "wayside-shrine-3",
+   "zone": "wayside",
+   "kindled": true,
+   "closest": 1.69,
+   "range": 2
+  },
+  {
+   "id": "wayside-shrine-4",
+   "zone": "wayside",
+   "kindled": true,
+   "closest": 1.64,
+   "range": 2
+  },
+  {
+   "id": "wayside-shrine-5",
+   "zone": "wayside",
+   "kindled": true,
+   "closest": 1.68,
+   "range": 2
+  },
+  {
+   "id": "wayside-shrine-6",
+   "zone": "wayside",
+   "kindled": true,
+   "closest": 1.75,
+   "range": 2
+  }
+ ],
+ "consoleIssues": [],
+ "unreachable": [
+  {
+   "id": "village-well-lantern",
+   "zone": "village",
+   "kindled": false,
+   "closest": 2.87,
+   "range": 2
+  },
+  {
+   "id": "ruins-moonwell",
+   "zone": "ruins",
+   "kindled": false,
+   "closest": 3.06,
+   "range": 2
+  },
+  {
+   "id": "isle-keep-brazier",
+   "zone": "isle",
+   "kindled": false,
+   "closest": 5.37,
+   "range": 2
+  }
+ ]
+}

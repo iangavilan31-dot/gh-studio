@@ -52,7 +52,7 @@ const data = await page.evaluate(async () => {
   const out = []
   for (const L of M.lights) {
     if (L.kindled) continue                       // pre-lit breadcrumbs are not objectives
-    const range = L.reach ?? 2.0
+    const range = L.reach ?? 2.0   // per-light override, see registerLight()
     let kindled = false, closest = Infinity
     // eight approaches: a light reachable from only one side is still reachable
     for (let a = 0; a < 8 && !kindled; a++) {
