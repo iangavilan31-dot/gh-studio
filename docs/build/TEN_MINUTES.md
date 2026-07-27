@@ -50,12 +50,49 @@ every other, and the gate reports a perfectly still game as perfectly fine.
 
 ## Where it stands
 
-- `docs/build/k1capture.json` on disk records a full 10 sim-minute run of the
-  authored route — 8 waypoints, 3 lanterns, ending in the village, no gap over
-  its 20 s threshold. **That run predates all of the FIN-1 lighting work and is
-  not evidence for the current build.** It is not being counted.
-- The re-run on current code is the next step, at Part 8's stricter **12 s**
-  threshold rather than k1capture's 20 s.
+`k1capture.mjs` was re-run on current code. It printed:
+
+    route: 2 waypoints, 2 lamps, 2 events over 10 sim min, ended in park
+    worst stretches (sim min): none
+    K1 CAPTURE PASS — worst stretch 0s <= 20s
+    console clean
+
+**That PASS is false, and the way it is false matters.** The authored route has
+8 waypoints and ends in the village. This run reached 2, lit 2 lamps, produced
+2 events in ten simulated minutes, and finished still standing in the park —
+i.e. the player got stuck early and idled for roughly nine and a half sim
+minutes. A capture of a stuck player is the single deadest possible opening,
+and the gate scored it a perfect zero.
+
+The mechanism is one line:
+
+```js
+// notable: an event this tick, or any POI inside 16m
+if (Math.hypot(poi.x - s.playerPos[0], poi.z - s.playerPos[2]) < 16) notable = true
+```
+
+Standing within 16 m of a point of interest counts as "something is happening",
+every tick, forever. So an idle player parked next to a landmark can never
+accumulate a gap, and every dead stretch is erased before it is measured.
+**Being near a landmark is not the same as something happening** — proximity is
+a property of the map, and this gate is supposed to measure the experience.
+
+This is the second false pass in this run with the same shape: an instrument
+that reports green while the thing it is watching is broken (see DECISIONS #15
+for the composition gate's). Both were found by sanity-checking the *content*
+of a green result rather than its colour.
+
+## Next
+
+1. Fix the beat definition: a beat is an EVENT (kindle, zone change, reveal,
+   music layer) or a real FRAME CHANGE — never mere proximity.
+2. Find out why the route stalls after waypoint 2. That is a genuine finding
+   about the opening and probably the most valuable thing in this file: if a
+   scripted driver cannot get past the second waypoint, a player may struggle
+   there too.
+3. Re-point `tenminutes.mjs` at the authored waypoint route, keeping the
+   frame-signature instrument, and run at Part 8's 12 s threshold.
+4. Record before/after with screenshots.
 
 ## Next
 

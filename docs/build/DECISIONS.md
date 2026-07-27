@@ -676,3 +676,32 @@ The new geometry changed the frames enough to drop `lanternpool` below the
 line, so the albedo floor went 0.20 → 0.26 and ground macro 1.1 → 1.4.
 Re-tuning after a content change is expected; the point is that it was measured
 rather than assumed. Every pose now clears readability by at least 3 L*.
+
+## FINAL RUN #21 — the second false pass, same shape as the first
+
+`scripts/k1capture.mjs` re-run on current code printed `K1 CAPTURE PASS —
+worst stretch 0s`. It was not a pass. The authored route has 8 waypoints and
+ends in the village; the run reached 2, lit 2 lamps, emitted 2 events across
+ten simulated minutes, and finished standing in the park. The player got stuck
+early and idled for ~9.5 sim minutes, which is the deadest opening imaginable,
+and the gate scored it zero.
+
+One line does it:
+
+    // notable: an event this tick, or any POI inside 16m
+    if (Math.hypot(poi.x - pos[0], poi.z - pos[2]) < 16) notable = true
+
+Standing near a point of interest counts as something happening, every tick.
+An idle player parked beside a landmark can never accumulate a gap. Proximity
+is a property of the MAP; this gate is meant to measure the EXPERIENCE.
+
+Second time this run (DECISIONS #15 was the composition gate reporting 13/13 on
+an 11/13 build). Both were caught the same way — by reading the CONTENT of a
+green result instead of its colour. Worth making a habit: when a gate goes
+green, check that the numbers underneath describe the thing you think ran. "2
+waypoints, ended in park" was visible in the same line of output as the word
+PASS.
+
+Note also what this bought: the stall after waypoint 2 is a real finding about
+the opening, not just about the harness. If a scripted driver cannot get past
+the second waypoint, that stretch of the Park deserves looking at.
