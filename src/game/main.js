@@ -1222,7 +1222,11 @@ window.__MOONREST__ = {
   get stirLog() { return npcs.stirLog ?? [] },
   get trinkets() { return progress.trinkets },
   bootAudio() { bootAudio(); return audio.started },
-  get lights() { return world.lights.map((l) => ({ id: l.id, zone: l.zone, kindled: l.kindled, x: l.x, z: l.z })) },
+  // `reach` matters to any rig that walks up to a light: without it
+  // reachcheck assumed the default 2.0m for every light and reported the three
+  // wide-structure lights as unreachable even after they were fixed. The
+  // projection has to carry whatever the gates need to reason about.
+  get lights() { return world.lights.map((l) => ({ id: l.id, zone: l.zone, kindled: l.kindled, x: l.x, z: l.z, reach: l.reach ?? null })) },
   // AA.5 wander-test surface: everything actionable or discoverable a walker
   // can "surface" — interactables (lights/brews), foglands breadcrumbs +
   // fingerposts, and the sleepers themselves
