@@ -50,25 +50,39 @@ const data = await page.evaluate(async () => {
   M.suppressNightEnd(true)
   const pois = M.pois
   const kb = (type, code) => window.dispatchEvent(new KeyboardEvent(type, { code, bubbles: true }))
-  // the authored opening route: park ritual → east road → Emberwick lamps →
-  // and back west into the shrine country (fills the full ten minutes)
-  const villageLights = M.lights.filter((l) => l.zone === 'village').slice(0, 4).map((l) => ({ x: l.x, z: l.z, light: true, reach: l.reach }))
-  const route = [
-    { x: 4.2, z: -19.2, light: true },   // Beldam's bench lamp (her pointer)
-    { x: 17.7, z: 9.0, light: true },    // park lantern 1
-    { x: -17.7, z: 9.0, light: true },   // park lantern 2
-    { x: 24, z: 0 },                     // the fingerpost fork
-    { x: 40, z: 0 }, { x: 60, z: 0 },    // the east road (crumb country)
-    { x: 72, z: 1 }, { x: 88, z: 2 },    // into the street
-    ...villageLights,
-    { x: 137, z: 4 },                    // the gate landmark
-    // the return: back down the street, out west to the wayside shrines
-    { x: 100, z: 2 }, { x: 72, z: 1 }, { x: 40, z: 0 }, { x: 24, z: 0 },
-    { x: -6, z: 20 }, { x: -36, z: 34 },
-    { x: -52, z: 42, light: true },      // wayside shrine 1 (deep amber)
-    { x: -34, z: 22 },                   // the memorial stone
-    { x: 0, z: 0 },                      // the park heart
-  ]
+  // The opening route, GENERATED from the world rather than hand-listed.
+  //
+  // The hand-listed version visited 22 waypoints and lit 8 lamps, filled 2.07
+  // sim minutes, and I read that as "the opening is thin". It was not: the
+  // opening footprint (park, east road, village) holds 44 points of interest —
+  // 17 lights, 5 brews, 4 signs, 3 benches, 9 sleepers. The ROUTE was the thin
+  // thing, and a capture of a thin route says nothing about the game.
+  //
+  // So the route now walks everything actually there, ordered nearest-neighbour
+  // from the spawn. It stays honest as content moves, and it cannot silently
+  // drift into sampling a fraction of the zone again.
+  const inOpening = (x, z) => x > -60 && x < 145 && z > -45 && z < 45
+  const stops = []
+  for (const l of M.lights) {
+    if (!l.kindled && inOpening(l.x, l.z)) stops.push({ x: l.x, z: l.z, light: true, reach: l.reach })
+  }
+  for (const q of pois) {
+    if (q.kind === 'brew' && inOpening(q.x, q.z)) stops.push({ x: q.x, z: q.z })
+  }
+  // nearest-neighbour from spawn — a plausible walking order, not a salesman
+  const route = []
+  { let cx = 2.7, cz = -18, pool = stops.slice()
+    while (pool.length) {
+      let bi = 0, bd = Infinity
+      for (let i = 0; i < pool.length; i++) {
+        const d = Math.hypot(pool[i].x - cx, pool[i].z - cz)
+        if (d < bd) { bd = d; bi = i }
+      }
+      const n = pool.splice(bi, 1)[0]
+      route.push(n); cx = n.x; cz = n.z
+    }
+  }
+
   // Light waypoints authored as bare coordinates still need to know the reach
   // of the light they refer to, or the driver walks to the wrong distance —
   // which is what kept it grinding at the village well for 1.2 sim minutes even

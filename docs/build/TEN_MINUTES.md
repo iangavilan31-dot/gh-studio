@@ -157,10 +157,20 @@ computed** — an earlier geometric pass also flagged
 `rooftops-telescope-brazier`, which a player can in fact light. It has to be
 walked.
 
-**2. The authored route only fills ~2 of the ten minutes.** The driver walks
-optimally and never explores, so a player is slower and the real gap is smaller
-than it looks — but the opening is thinner than ten minutes of authored beats.
-That is now its own reported line rather than a gap number.
+**2. The authored route only filled ~2 of the ten minutes** — and I initially
+read that as "the opening is thin". **That was wrong, and the correction
+matters more than the original claim.**
+
+The opening footprint (park, east road, village) holds **44 points of
+interest**: 17 lights, 5 brews, 4 signs, 5 crumbs, 3 benches, 1 memorial, 9
+sleepers. The hand-listed route visited 22 waypoints and lit 8 lamps. The ROUTE
+was the thin thing, not the game, and a capture of a thin route says nothing
+about the opening either way.
+
+The route is now GENERATED from the world — every unkindled light and every brew
+inside the opening footprint, ordered nearest-neighbour from the spawn. It stays
+honest as content moves, and it cannot silently drift back into sampling a
+fraction of the zone.
 
 ## Where it stands now
 
@@ -239,10 +249,20 @@ computed** — an earlier geometric pass also flagged
 `rooftops-telescope-brazier`, which a player can in fact light. It has to be
 walked.
 
-**2. The authored route only fills ~2 of the ten minutes.** The driver walks
-optimally and never explores, so a player is slower and the real gap is smaller
-than it looks — but the opening is thinner than ten minutes of authored beats.
-That is now its own reported line rather than a gap number.
+**2. The authored route only filled ~2 of the ten minutes** — and I initially
+read that as "the opening is thin". **That was wrong, and the correction
+matters more than the original claim.**
+
+The opening footprint (park, east road, village) holds **44 points of
+interest**: 17 lights, 5 brews, 4 signs, 5 crumbs, 3 benches, 1 memorial, 9
+sleepers. The hand-listed route visited 22 waypoints and lit 8 lamps. The ROUTE
+was the thin thing, not the game, and a capture of a thin route says nothing
+about the opening either way.
+
+The route is now GENERATED from the world — every unkindled light and every brew
+inside the opening footprint, ordered nearest-neighbour from the spawn. It stays
+honest as content moves, and it cannot silently drift back into sampling a
+fraction of the zone.
 
 ## Where it stands now
 
