@@ -39,15 +39,24 @@ export class InteractSystem {
     this.hud.setProgress(0)
   }
 
-  losBlocked(x1, z1, x2, z2, y) {
-    // sample the segment against colliders (skip endpoints' own space)
+  // y1 = eye height, y2 = the target's height. Both matter.
+  losBlocked(x1, z1, x2, z2, y1, y2 = null) {
     const steps = 8
     for (let i = 1; i < steps; i++) {
       const t = i / steps
       const px = x1 + (x2 - x1) * t
       const pz = z1 + (z2 - z1) * t
+      // The sightline RISES toward a high target. Testing the whole segment at
+      // eye height said a lantern on a post was hidden behind a waist-high wall
+      // the player can plainly see over.
+      const py = y2 == null ? y1 : y1 + (y2 - y1) * t
       for (const c of this.world.colliders) {
-        if (Math.hypot(px - c.x, pz - c.z) < c.r - 0.05 && y < this.world.heightAt(c.x, c.z) + c.h) return true
+        // Nothing occludes itself. A well lantern sits above the well, and the
+        // well's own collider (r 1.5, top 6.0m) sat squarely across every
+        // sightline to it — so the structure holding the light up was the thing
+        // reported as hiding it.
+        if (Math.hypot(x2 - c.x, z2 - c.z) < c.r) continue
+        if (Math.hypot(px - c.x, pz - c.z) < c.r - 0.05 && py < this.world.heightAt(c.x, c.z) + c.h) return true
       }
     }
     return false
@@ -72,7 +81,7 @@ export class InteractSystem {
       // generous-reach light never outranks a normal one you are standing on
       if (d > range) continue
       const slack = range - d
-      if (slack > bestRange && !this.losBlocked(p.x, p.z, l.x, l.z, p.y + 1)) {
+      if (slack > bestRange && !this.losBlocked(p.x, p.z, l.x, l.z, p.y + 1, l.y)) {
         bestRange = slack; bestD = d; best = l
       }
     }
