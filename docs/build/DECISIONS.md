@@ -769,3 +769,26 @@ Why nothing caught this earlier: no gate had ever tried to walk up to all of
 them. The kindle gates tested the kindle MECHANIC on reachable lights, and the
 traverse gates tested movement, and between those two the question "can you
 actually get to every objective?" fell straight through.
+
+## FINAL RUN #24 — three layers under one symptom
+
+The unreachable lights took three fixes, and each was only visible once the one
+above it was done. Worth recording as a shape, not just as a list:
+
+1. **Reach** — the light's structure ate the player's arm's length.
+2. **The test surface lied** — `__MOONREST__.lights` projects a light to
+   `{id, zone, kindled, x, z}`. The gate never saw `reach`, assumed 2.0m,
+   walked to the wrong distance, and reported the fix had failed when the game
+   was already fine. A test surface has to carry whatever the gates reason
+   about, or the gate measures a world the game is not running.
+3. **Line of sight** — the LOS test held the ray at eye height for its whole
+   length, and counted the light's own structure as an occluder.
+
+Only after all three does `REACHCHECK PASS 43/43`.
+
+The general lesson: a symptom that survives its first correct-looking fix is
+usually stacked, and the temptation at layer 2 is to conclude the layer-1 fix
+was wrong and revert it. Here every layer's fix was right and necessary. What
+distinguishes stacked layers from a wrong fix is whether the FAILURE CHANGED —
+"unreachable, needs <= 2m" becoming "closest 3.01m, needs <= 3.3m" says the
+first fix worked and something else is now binding.
