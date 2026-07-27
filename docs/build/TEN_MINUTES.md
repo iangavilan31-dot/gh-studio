@@ -355,3 +355,35 @@ measurement is what counts.
 wandering from (2.7, -18) out to (-3.5, -30). The driver loses itself within
 metres of the spawn bench. Fix that one leg and this gate goes green on
 evidence rather than on a threshold argument.
+
+
+## The driver needs pathfinding, not another heuristic
+
+Four unstick strategies have now been tried on the capture driver:
+
+1. movement-based stuck detection — defeated by a player sliding along an
+   obstacle (real movement, zero progress);
+2. progress-based detection with a fixed sidestep — got round single obstacles,
+   trapped in concave corners;
+3. escalating sidestep with reverse — wandered 40m off-route because the
+   escalation never reset;
+4. bounded escalation, plus moving the spawn clear of the Long Bench.
+
+Each fixed a real defect and each left the same five stops unreachable. The
+latest run shows the driver oscillating between two regions around waypoint 1 —
+which is the sidestep alternation itself, walking the player back and forth.
+
+**This is structural.** A greedy seek with a strafe heuristic cannot reliably
+navigate a world with concave geometry, and no amount of tuning the heuristic
+changes that; it only moves which corner it fails in. The honest fix is real
+pathfinding — an A* over the collider set, or a coarse navmesh baked from the
+terrain heightfield and the prop colliders, which the physics layer already has
+everything needed to build.
+
+Recording this rather than attempting a fifth heuristic, because four data
+points in the same direction is enough evidence.
+
+**What this does NOT block:** the game's own pacing. With the zone flip-flop bug
+fixed the worst real content stretch is 17 seconds against a 20 second
+threshold. The opening is fine; the rig that measures it is not, and the gate
+now says exactly that instead of blaming the game.
