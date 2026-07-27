@@ -37,7 +37,9 @@
          data attribute for the rigs and the accessibility layer, and renders
          nothing. The ring above it is the whole prompt. */
       #ui .verb { display: none; }
-      #ui .subtitle {
+      /* zero words (FINAL_PASS Part 4) — see HUD.say() */
+      #ui .subtitle { display: none !important; }
+      #ui .subtitle-unused {
         position: absolute; left: 50%; bottom: 9%; transform: translateX(-50%);
         max-width: 60%; text-align: center; color: #d7d2e8; font-size: 19px; font-style: italic;
         text-shadow: 0 1px 4px #000, 0 0 12px rgba(11, 22, 38, 0.8);
