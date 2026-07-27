@@ -82,6 +82,39 @@ that reports green while the thing it is watching is broken (see DECISIONS #15
 for the composition gate's). Both were found by sanity-checking the *content*
 of a green result rather than its colour.
 
+## The stall, diagnosed and fixed
+
+Traced to an exact cause. The player froze at **(-10.06, 8.11)** — position
+bit-identical for 1800 consecutive ticks while the controller cheerfully
+reported 5.2 m/s. Two rock colliders of radius 0.8 sit with their centres
+2.28 m apart:
+
+    surface gap = 2.28 - 0.8 - 0.8 = 0.68 m
+    character capsule diameter     = 0.70 m
+
+It was wedged in a gap two centimetres too narrow. Not a physics bug — the
+swept solver was doing exactly its job — but a **wedge trap** in the level.
+
+Two defects, so two fixes:
+
+**The world.** `World.sealNarrowGaps()` bridges any pair of blocking colliders
+whose clearance is under a capsule-and-a-bit. A gap the player cannot fit
+through is not a passage, but at this width it still *looks* like one — to a
+person reading the scene and to anything steering toward a point beyond it.
+Sealed, the pair reads as the single solid mass it effectively is, and the
+player walks around it. Five pinches were found in the Park. Only marginal gaps
+are touched; anything comfortably walkable is untouched.
+
+**The harness.** The driver was a pure seek with no unstick — it pressed W into
+the rock forever. It now detects being stuck and strafes around, alternating
+sides, with a per-waypoint budget so no single waypoint can eat the capture.
+
+The detector watches **progress, not motion**, and that distinction was earned:
+once the gap was sealed the player stopped squeezing and started *sliding* along
+the sealed mass, and a "did the position change?" test read that micro-jitter as
+healthy movement while the run went nowhere. What matters is whether the target
+is getting closer.
+
 ## Next
 
 1. Fix the beat definition: a beat is an EVENT (kindle, zone change, reveal,
