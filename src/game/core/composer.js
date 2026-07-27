@@ -79,7 +79,17 @@ export class Composer {
       radius: 0.72,
     })
 
-    this.vignette = new VignetteEffect({ offset: 0.32, darkness: 0.42 })
+    // Vignette is doing compositional work here, not mood: DIRECTION Part 11.2
+    // wants the outer 15% at least 25% darker than the centre third, and the
+    // Village measured 0.115 — its edges were nearly as bright as its middle,
+    // which is why the street read as flat. Raised until the three zones clear
+    // the rule with margin.
+    //
+    // This is a PARTIAL remedy and should be recorded as one: the real fix is
+    // dark gable masses framing both edges of the street (Part 7.2 asks for
+    // exactly that). A vignette darkens whatever happens to be at the edge; it
+    // does not put anything there.
+    this.vignette = new VignetteEffect({ offset: 0.26, darkness: 0.62 })
 
     this.toneMapping = new ToneMappingEffect({ mode: ToneMappingMode.AGX })
 
