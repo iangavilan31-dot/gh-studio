@@ -52,7 +52,7 @@ const data = await page.evaluate(async () => {
   const kb = (type, code) => window.dispatchEvent(new KeyboardEvent(type, { code, bubbles: true }))
   // the authored opening route: park ritual → east road → Emberwick lamps →
   // and back west into the shrine country (fills the full ten minutes)
-  const villageLights = M.lights.filter((l) => l.zone === 'village').slice(0, 4).map((l) => ({ x: l.x, z: l.z, light: true }))
+  const villageLights = M.lights.filter((l) => l.zone === 'village').slice(0, 4).map((l) => ({ x: l.x, z: l.z, light: true, reach: l.reach }))
   const route = [
     { x: 4.2, z: -19.2, light: true },   // Beldam's bench lamp (her pointer)
     { x: 17.7, z: 9.0, light: true },    // park lantern 1
@@ -69,6 +69,20 @@ const data = await page.evaluate(async () => {
     { x: -34, z: 22 },                   // the memorial stone
     { x: 0, z: 0 },                      // the park heart
   ]
+  // Light waypoints authored as bare coordinates still need to know the reach
+  // of the light they refer to, or the driver walks to the wrong distance —
+  // which is what kept it grinding at the village well for 1.2 sim minutes even
+  // after the well itself became kindleable.
+  for (const t of route) {
+    if (!t.light || t.reach != null) continue
+    let best = null, bestD = Infinity
+    for (const l of M.lights) {
+      const d = Math.hypot(l.x - t.x, l.z - t.z)
+      if (d < bestD) { bestD = d; best = l }
+    }
+    if (best && bestD < 3) t.reach = best.reach
+  }
+
   const events = []
   let wp = 0, prev = null, channelStart = null
   // Stuck handling. A pure seek driver presses W into whatever it hits and
@@ -135,7 +149,9 @@ const data = await page.evaluate(async () => {
     // outside the driver's arrival test by five centimetres. The driver ground
     // against the well's west wall for 1.2 sim minutes and then skipped it.
     // Use the range the GAME uses, barely inside it.
-    const arrive = t.light ? 1.95 : 1.8
+    // use the light's OWN reach — the game does, and a fixed radius sends the
+    // driver to a distance a wide-structure light can never be approached at
+    const arrive = t.light ? (t.reach ?? 2.0) - 0.05 : 1.8
     if (d < arrive && wp < route.length) {
       if (t.light && !channelStart) {
         kb('keyup', 'KeyW')
