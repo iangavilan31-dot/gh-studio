@@ -1,0 +1,37 @@
+{
+  "name": "bonus-army-short",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@fontsource/libre-caslon-text": "^5.2.7",
+    "@fontsource/libre-franklin": "^5.2.8",
+    "@fontsource/permanent-marker": "^5.2.7",
+    "@fontsource/playfair-display": "^5.2.8",
+    "@fontsource/special-elite": "^5.2.8",
+    "@remotion/captions": "^4.0.490",
+    "@remotion/cli": "^4.0.490",
+    "@remotion/fonts": "^4.0.490",
+    "@remotion/install-whisper-cpp": "^4.0.490",
+    "@remotion/media-utils": "^4.0.490",
+    "@remotion/noise": "^4.0.490",
+    "@remotion/paths": "^4.0.490",
+    "@remotion/transitions": "^4.0.490",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.490",
+    "roughjs": "^4.6.6"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "typescript": "^5.9.3"
+  }
+}

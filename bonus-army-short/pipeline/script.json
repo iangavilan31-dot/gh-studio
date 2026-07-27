@@ -1,0 +1,924 @@
+{
+  "comment": "Bonus Army short - VO script. Each chunk is one TTS call; chunk boundaries give exact event timing. 'd' = display text (captions), 's' = spoken text for TTS when it differs. Events: word => exact-ish word start within chunk; omit word => chunk start.",
+  "voice": "hifi-tts_low",
+  "speaker": 1,
+  "defaultLengthScale": 0.9,
+  "defaultChunkGapMs": 90,
+  "defaultBeatGapMs": 210,
+  "leadInMs": 100,
+  "tailMs": 500,
+  "beats": [
+    {
+      "id": "b1",
+      "lengthScale": 0.88,
+      "gapBeforeMs": 0,
+      "chunks": [
+        {
+          "id": "c1",
+          "gapBeforeMs": 0,
+          "words": [
+            {
+              "d": "In"
+            },
+            {
+              "d": "1932,",
+              "s": "nineteen thirty-two,"
+            },
+            {
+              "d": "America's"
+            },
+            {
+              "d": "three"
+            },
+            {
+              "d": "most"
+            },
+            {
+              "d": "famous"
+            },
+            {
+              "d": "generals"
+            },
+            {
+              "d": "fought"
+            },
+            {
+              "d": "their"
+            },
+            {
+              "d": "first"
+            },
+            {
+              "d": "battle"
+            },
+            {
+              "d": "together."
+            }
+          ],
+          "events": [
+            {
+              "name": "generals",
+              "word": "generals"
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "gapBeforeMs": 120,
+          "words": [
+            {
+              "d": "Against"
+            },
+            {
+              "d": "American"
+            },
+            {
+              "d": "veterans."
+            }
+          ],
+          "events": [
+            {
+              "name": "against"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b2",
+      "lengthScale": 0.88,
+      "chunks": [
+        {
+          "id": "c1",
+          "words": [
+            {
+              "d": "Forty-three"
+            },
+            {
+              "d": "thousand"
+            },
+            {
+              "d": "broke"
+            },
+            {
+              "d": "World"
+            },
+            {
+              "d": "War"
+            },
+            {
+              "d": "One"
+            },
+            {
+              "d": "veterans",
+              "s": "veterans,"
+            }
+          ],
+          "events": [
+            {
+              "name": "number"
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "gapBeforeMs": 140,
+          "words": [
+            {
+              "d": "marched"
+            },
+            {
+              "d": "on"
+            },
+            {
+              "d": "Washington."
+            }
+          ],
+          "events": [
+            {
+              "name": "marched"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b3",
+      "chunks": [
+        {
+          "id": "c1",
+          "words": [
+            {
+              "d": "The"
+            },
+            {
+              "d": "government"
+            },
+            {
+              "d": "owed"
+            },
+            {
+              "d": "them"
+            },
+            {
+              "d": "a"
+            },
+            {
+              "d": "bonus"
+            },
+            {
+              "d": "for"
+            },
+            {
+              "d": "their"
+            },
+            {
+              "d": "service."
+            }
+          ],
+          "events": [
+            {
+              "name": "owed",
+              "word": "owed"
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "gapBeforeMs": 120,
+          "words": [
+            {
+              "d": "Payable...",
+              "s": "Payable."
+            }
+          ],
+          "events": [
+            {
+              "name": "payable"
+            }
+          ]
+        },
+        {
+          "id": "c3",
+          "gapBeforeMs": 120,
+          "lengthScale": 1.02,
+          "words": [
+            {
+              "d": "in"
+            },
+            {
+              "d": "1945.",
+              "s": "nineteen forty-five."
+            }
+          ],
+          "events": [
+            {
+              "name": "date1945"
+            }
+          ]
+        }
+      ],
+      "lengthScale": 0.92
+    },
+    {
+      "id": "b4",
+      "chunks": [
+        {
+          "id": "c1",
+          "words": [
+            {
+              "d": "It"
+            },
+            {
+              "d": "was"
+            },
+            {
+              "d": "the"
+            },
+            {
+              "d": "Great"
+            },
+            {
+              "d": "Depression."
+            }
+          ],
+          "events": [
+            {
+              "name": "depression"
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "gapBeforeMs": 120,
+          "words": [
+            {
+              "d": "Men"
+            },
+            {
+              "d": "who'd"
+            },
+            {
+              "d": "survived"
+            },
+            {
+              "d": "the"
+            },
+            {
+              "d": "trenches"
+            },
+            {
+              "d": "were"
+            },
+            {
+              "d": "starving."
+            }
+          ],
+          "events": [
+            {
+              "name": "trenches"
+            },
+            {
+              "name": "starving",
+              "word": "starving"
+            }
+          ]
+        }
+      ],
+      "lengthScale": 0.9
+    },
+    {
+      "id": "b5",
+      "lengthScale": 0.96,
+      "chunks": [
+        {
+          "id": "c1",
+          "words": [
+            {
+              "d": "So"
+            },
+            {
+              "d": "they"
+            },
+            {
+              "d": "camped"
+            },
+            {
+              "d": "across"
+            },
+            {
+              "d": "the"
+            },
+            {
+              "d": "river"
+            },
+            {
+              "d": "from"
+            },
+            {
+              "d": "the"
+            },
+            {
+              "d": "Capitol."
+            }
+          ],
+          "events": [
+            {
+              "name": "camped"
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "gapBeforeMs": 120,
+          "words": [
+            {
+              "d": "Peacefully."
+            }
+          ],
+          "events": [
+            {
+              "name": "peacefully"
+            }
+          ]
+        },
+        {
+          "id": "c3",
+          "gapBeforeMs": 120,
+          "words": [
+            {
+              "d": "For"
+            },
+            {
+              "d": "months."
+            }
+          ],
+          "events": [
+            {
+              "name": "months"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b6",
+      "lengthScale": 0.88,
+      "chunks": [
+        {
+          "id": "c1",
+          "words": [
+            {
+              "d": "Congress"
+            },
+            {
+              "d": "voted"
+            },
+            {
+              "d": "on"
+            },
+            {
+              "d": "their"
+            },
+            {
+              "d": "bonus."
+            }
+          ],
+          "events": [
+            {
+              "name": "voted"
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "gapBeforeMs": 120,
+          "words": [
+            {
+              "d": "The"
+            },
+            {
+              "d": "Senate"
+            },
+            {
+              "d": "said"
+            },
+            {
+              "d": "no."
+            }
+          ],
+          "events": [
+            {
+              "name": "senate"
+            },
+            {
+              "name": "saidNo",
+              "word": "no."
+            }
+          ]
+        },
+        {
+          "id": "c3",
+          "gapBeforeMs": 120,
+          "words": [
+            {
+              "d": "62",
+              "s": "Sixty-two"
+            },
+            {
+              "d": "to"
+            },
+            {
+              "d": "18.",
+              "s": "eighteen."
+            }
+          ],
+          "events": [
+            {
+              "name": "voteCard"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b7",
+      "gapBeforeMs": 220,
+      "chunks": [
+        {
+          "id": "c1",
+          "words": [
+            {
+              "d": "Then"
+            },
+            {
+              "d": "President"
+            },
+            {
+              "d": "Hoover"
+            },
+            {
+              "d": "sent"
+            },
+            {
+              "d": "in"
+            },
+            {
+              "d": "the"
+            },
+            {
+              "d": "actual"
+            },
+            {
+              "d": "United"
+            },
+            {
+              "d": "States"
+            },
+            {
+              "d": "Army."
+            }
+          ],
+          "events": [
+            {
+              "name": "hoover",
+              "word": "Hoover"
+            },
+            {
+              "name": "armyCut",
+              "word": "Army."
+            }
+          ]
+        }
+      ],
+      "lengthScale": 0.9
+    },
+    {
+      "id": "b8",
+      "lengthScale": 0.84,
+      "gapBeforeMs": 220,
+      "chunks": [
+        {
+          "id": "c1",
+          "words": [
+            {
+              "d": "Cavalry"
+            },
+            {
+              "d": "with"
+            },
+            {
+              "d": "drawn"
+            },
+            {
+              "d": "sabers."
+            }
+          ],
+          "events": [
+            {
+              "name": "sabers"
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "gapBeforeMs": 120,
+          "words": [
+            {
+              "d": "Infantry"
+            },
+            {
+              "d": "with"
+            },
+            {
+              "d": "fixed"
+            },
+            {
+              "d": "bayonets."
+            }
+          ],
+          "events": [
+            {
+              "name": "bayonets"
+            }
+          ]
+        },
+        {
+          "id": "c3",
+          "gapBeforeMs": 120,
+          "words": [
+            {
+              "d": "Six"
+            },
+            {
+              "d": "tanks."
+            }
+          ],
+          "events": [
+            {
+              "name": "tanks"
+            }
+          ]
+        },
+        {
+          "id": "c4",
+          "gapBeforeMs": 120,
+          "words": [
+            {
+              "d": "Down"
+            },
+            {
+              "d": "Pennsylvania"
+            },
+            {
+              "d": "Avenue."
+            }
+          ],
+          "events": [
+            {
+              "name": "avenue"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b9",
+      "lengthScale": 0.92,
+      "gapBeforeMs": 220,
+      "chunks": [
+        {
+          "id": "c1",
+          "words": [
+            {
+              "d": "They"
+            },
+            {
+              "d": "tear-gassed"
+            },
+            {
+              "d": "the"
+            },
+            {
+              "d": "camp."
+            }
+          ],
+          "events": [
+            {
+              "name": "gas"
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "gapBeforeMs": 120,
+          "words": [
+            {
+              "d": "Then"
+            },
+            {
+              "d": "they"
+            },
+            {
+              "d": "burned"
+            },
+            {
+              "d": "it"
+            },
+            {
+              "d": "to"
+            },
+            {
+              "d": "the"
+            },
+            {
+              "d": "ground."
+            }
+          ],
+          "events": [
+            {
+              "name": "burned",
+              "word": "burned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b10",
+      "lengthScale": 1.0,
+      "gapBeforeMs": 220,
+      "chunks": [
+        {
+          "id": "c1",
+          "words": [
+            {
+              "d": "Two"
+            },
+            {
+              "d": "veterans"
+            },
+            {
+              "d": "were"
+            },
+            {
+              "d": "killed."
+            }
+          ],
+          "events": [
+            {
+              "name": "killed"
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "gapBeforeMs": 120,
+          "words": [
+            {
+              "d": "Reports"
+            },
+            {
+              "d": "at"
+            },
+            {
+              "d": "the"
+            },
+            {
+              "d": "time"
+            },
+            {
+              "d": "said"
+            },
+            {
+              "d": "an"
+            },
+            {
+              "d": "infant"
+            },
+            {
+              "d": "died"
+            },
+            {
+              "d": "from"
+            },
+            {
+              "d": "the"
+            },
+            {
+              "d": "gas."
+            }
+          ],
+          "events": [
+            {
+              "name": "infant",
+              "word": "infant"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "b11",
+      "gapBeforeMs": 220,
+      "chunks": [
+        {
+          "id": "c1",
+          "words": [
+            {
+              "d": "One"
+            },
+            {
+              "d": "newspaper"
+            },
+            {
+              "d": "headline"
+            },
+            {
+              "d": "said"
+            },
+            {
+              "d": "everything:",
+              "s": "everything."
+            }
+          ],
+          "events": [
+            {
+              "name": "headline"
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "gapBeforeMs": 120,
+          "lengthScale": 1.0,
+          "words": [
+            {
+              "d": "\u201cCavalry",
+              "s": "Cavalry"
+            },
+            {
+              "d": "Major"
+            },
+            {
+              "d": "Evicts"
+            },
+            {
+              "d": "Veteran"
+            },
+            {
+              "d": "Who"
+            },
+            {
+              "d": "Saved"
+            },
+            {
+              "d": "His"
+            },
+            {
+              "d": "Life"
+            },
+            {
+              "d": "in"
+            },
+            {
+              "d": "Battle.\u201d",
+              "s": "Battle."
+            }
+          ],
+          "events": [
+            {
+              "name": "quoteStart"
+            }
+          ]
+        }
+      ],
+      "lengthScale": 0.94
+    },
+    {
+      "id": "b12",
+      "gapBeforeMs": 220,
+      "chunks": [
+        {
+          "id": "c1",
+          "words": [
+            {
+              "d": "Newsreel"
+            },
+            {
+              "d": "audiences"
+            },
+            {
+              "d": "booed"
+            },
+            {
+              "d": "their"
+            },
+            {
+              "d": "own"
+            },
+            {
+              "d": "army."
+            }
+          ],
+          "events": [
+            {
+              "name": "audience"
+            },
+            {
+              "name": "booed",
+              "word": "booed"
+            }
+          ]
+        },
+        {
+          "id": "c2",
+          "gapBeforeMs": 120,
+          "words": [
+            {
+              "d": "And"
+            },
+            {
+              "d": "when"
+            },
+            {
+              "d": "Franklin"
+            },
+            {
+              "d": "Roosevelt"
+            },
+            {
+              "d": "read"
+            },
+            {
+              "d": "the"
+            },
+            {
+              "d": "headlines,"
+            },
+            {
+              "d": "he"
+            },
+            {
+              "d": "reportedly"
+            },
+            {
+              "d": "said:",
+              "s": "said,"
+            }
+          ],
+          "events": [
+            {
+              "name": "fdr",
+              "word": "Roosevelt"
+            },
+            {
+              "name": "headlines",
+              "word": "headlines,"
+            }
+          ]
+        },
+        {
+          "id": "c3",
+          "gapBeforeMs": 120,
+          "lengthScale": 0.98,
+          "words": [
+            {
+              "d": "\u201cI",
+              "s": "I"
+            },
+            {
+              "d": "think"
+            },
+            {
+              "d": "I've"
+            },
+            {
+              "d": "just"
+            },
+            {
+              "d": "won"
+            },
+            {
+              "d": "the"
+            },
+            {
+              "d": "election.\u201d",
+              "s": "election."
+            }
+          ],
+          "events": [
+            {
+              "name": "quote"
+            },
+            {
+              "name": "won",
+              "word": "won"
+            }
+          ]
+        }
+      ],
+      "lengthScale": 0.92
+    }
+  ]
+}

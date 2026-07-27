@@ -1,0 +1,1122 @@
+[
+ {
+  "text": "In",
+  "startMs": 100.0,
+  "endMs": 283.0,
+  "timestampMs": 100.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " 1932,",
+  "startMs": 283.0,
+  "endMs": 1170.1,
+  "timestampMs": 283.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " America's",
+  "startMs": 1296.8,
+  "endMs": 1902.2,
+  "timestampMs": 1296.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " three",
+  "startMs": 1902.2,
+  "endMs": 2085.2,
+  "timestampMs": 1902.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " most",
+  "startMs": 2085.2,
+  "endMs": 2268.3,
+  "timestampMs": 2085.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " famous",
+  "startMs": 2268.3,
+  "endMs": 2592.1,
+  "timestampMs": 2268.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " generals",
+  "startMs": 2592.1,
+  "endMs": 3056.7,
+  "timestampMs": 2592.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " fought",
+  "startMs": 3056.7,
+  "endMs": 3239.8,
+  "timestampMs": 3056.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " their",
+  "startMs": 3239.8,
+  "endMs": 3422.8,
+  "timestampMs": 3239.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " first",
+  "startMs": 3422.8,
+  "endMs": 3605.8,
+  "timestampMs": 3422.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " battle",
+  "startMs": 3605.8,
+  "endMs": 3929.7,
+  "timestampMs": 3605.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " together.",
+  "startMs": 3929.7,
+  "endMs": 4510.5,
+  "timestampMs": 3929.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " Against",
+  "startMs": 4630.5,
+  "endMs": 4928.8,
+  "timestampMs": 4630.5,
+  "confidence": 1.0
+ },
+ {
+  "text": " American",
+  "startMs": 4928.8,
+  "endMs": 5486.5,
+  "timestampMs": 4928.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " veterans.",
+  "startMs": 5486.5,
+  "endMs": 6021.6,
+  "timestampMs": 5486.5,
+  "confidence": 1.0
+ },
+ {
+  "text": " Forty-three",
+  "startMs": 6231.6,
+  "endMs": 6657.6,
+  "timestampMs": 6231.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " thousand",
+  "startMs": 6657.6,
+  "endMs": 6954.6,
+  "timestampMs": 6657.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " broke",
+  "startMs": 6954.6,
+  "endMs": 7251.5,
+  "timestampMs": 6954.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " World",
+  "startMs": 7251.5,
+  "endMs": 7419.4,
+  "timestampMs": 7251.5,
+  "confidence": 1.0
+ },
+ {
+  "text": " War",
+  "startMs": 7419.4,
+  "endMs": 7587.2,
+  "timestampMs": 7419.4,
+  "confidence": 1.0
+ },
+ {
+  "text": " One",
+  "startMs": 7587.2,
+  "endMs": 7884.1,
+  "timestampMs": 7587.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " veterans",
+  "startMs": 7884.1,
+  "endMs": 8416.7,
+  "timestampMs": 7884.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " marched",
+  "startMs": 8556.7,
+  "endMs": 8870.3,
+  "timestampMs": 8556.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " on",
+  "startMs": 8870.3,
+  "endMs": 9047.5,
+  "timestampMs": 8870.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " Washington.",
+  "startMs": 9047.5,
+  "endMs": 9610.0,
+  "timestampMs": 9047.5,
+  "confidence": 1.0
+ },
+ {
+  "text": " The",
+  "startMs": 9820.0,
+  "endMs": 9980.2,
+  "timestampMs": 9820.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " government",
+  "startMs": 9980.2,
+  "endMs": 10387.0,
+  "timestampMs": 9980.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " owed",
+  "startMs": 10387.0,
+  "endMs": 10670.4,
+  "timestampMs": 10387.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " them",
+  "startMs": 10670.4,
+  "endMs": 10830.7,
+  "timestampMs": 10670.4,
+  "confidence": 1.0
+ },
+ {
+  "text": " a",
+  "startMs": 10830.7,
+  "endMs": 10990.9,
+  "timestampMs": 10830.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " bonus",
+  "startMs": 10990.9,
+  "endMs": 11274.4,
+  "timestampMs": 10990.9,
+  "confidence": 1.0
+ },
+ {
+  "text": " for",
+  "startMs": 11274.4,
+  "endMs": 11434.7,
+  "timestampMs": 11274.4,
+  "confidence": 1.0
+ },
+ {
+  "text": " their",
+  "startMs": 11434.7,
+  "endMs": 11594.9,
+  "timestampMs": 11434.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " service.",
+  "startMs": 11594.9,
+  "endMs": 12103.3,
+  "timestampMs": 11594.9,
+  "confidence": 1.0
+ },
+ {
+  "text": " Payable...",
+  "startMs": 12223.3,
+  "endMs": 12975.0,
+  "timestampMs": 12223.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " in",
+  "startMs": 13095.0,
+  "endMs": 13239.2,
+  "timestampMs": 13095.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " 1945.",
+  "startMs": 13239.2,
+  "endMs": 14251.4,
+  "timestampMs": 13239.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " It",
+  "startMs": 14461.4,
+  "endMs": 14667.3,
+  "timestampMs": 14461.4,
+  "confidence": 1.0
+ },
+ {
+  "text": " was",
+  "startMs": 14667.3,
+  "endMs": 14873.2,
+  "timestampMs": 14667.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " the",
+  "startMs": 14873.2,
+  "endMs": 15079.1,
+  "timestampMs": 14873.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " Great",
+  "startMs": 15079.1,
+  "endMs": 15285.0,
+  "timestampMs": 15079.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " Depression.",
+  "startMs": 15285.0,
+  "endMs": 15938.3,
+  "timestampMs": 15285.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " Men",
+  "startMs": 16058.3,
+  "endMs": 16277.9,
+  "timestampMs": 16058.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " who'd",
+  "startMs": 16277.9,
+  "endMs": 16497.6,
+  "timestampMs": 16277.9,
+  "confidence": 1.0
+ },
+ {
+  "text": " survived",
+  "startMs": 16497.6,
+  "endMs": 17055.1,
+  "timestampMs": 16497.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " the",
+  "startMs": 17055.1,
+  "endMs": 17274.8,
+  "timestampMs": 17055.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " trenches",
+  "startMs": 17274.8,
+  "endMs": 17663.4,
+  "timestampMs": 17274.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " were",
+  "startMs": 17663.4,
+  "endMs": 18052.0,
+  "timestampMs": 17663.4,
+  "confidence": 1.0
+ },
+ {
+  "text": " starving.",
+  "startMs": 18052.0,
+  "endMs": 18537.8,
+  "timestampMs": 18052.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " So",
+  "startMs": 18747.8,
+  "endMs": 18914.5,
+  "timestampMs": 18747.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " they",
+  "startMs": 18914.5,
+  "endMs": 19081.3,
+  "timestampMs": 18914.5,
+  "confidence": 1.0
+ },
+ {
+  "text": " camped",
+  "startMs": 19081.3,
+  "endMs": 19376.3,
+  "timestampMs": 19081.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " across",
+  "startMs": 19376.3,
+  "endMs": 19671.4,
+  "timestampMs": 19376.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " the",
+  "startMs": 19671.4,
+  "endMs": 19838.2,
+  "timestampMs": 19671.4,
+  "confidence": 1.0
+ },
+ {
+  "text": " river",
+  "startMs": 19838.2,
+  "endMs": 20133.2,
+  "timestampMs": 19838.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " from",
+  "startMs": 20133.2,
+  "endMs": 20300.0,
+  "timestampMs": 20133.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " the",
+  "startMs": 20300.0,
+  "endMs": 20466.7,
+  "timestampMs": 20300.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " Capitol.",
+  "startMs": 20466.7,
+  "endMs": 20995.9,
+  "timestampMs": 20466.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " Peacefully.",
+  "startMs": 21115.9,
+  "endMs": 21882.2,
+  "timestampMs": 21115.9,
+  "confidence": 1.0
+ },
+ {
+  "text": " For",
+  "startMs": 22002.2,
+  "endMs": 22411.1,
+  "timestampMs": 22002.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " months.",
+  "startMs": 22411.1,
+  "endMs": 22922.2,
+  "timestampMs": 22411.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " Congress",
+  "startMs": 23132.2,
+  "endMs": 23505.2,
+  "timestampMs": 23132.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " voted",
+  "startMs": 23505.2,
+  "endMs": 23878.3,
+  "timestampMs": 23505.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " on",
+  "startMs": 23878.3,
+  "endMs": 24089.2,
+  "timestampMs": 23878.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " their",
+  "startMs": 24089.2,
+  "endMs": 24300.1,
+  "timestampMs": 24089.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " bonus.",
+  "startMs": 24300.1,
+  "endMs": 24766.4,
+  "timestampMs": 24300.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " The",
+  "startMs": 24886.4,
+  "endMs": 25084.2,
+  "timestampMs": 24886.4,
+  "confidence": 1.0
+ },
+ {
+  "text": " Senate",
+  "startMs": 25084.2,
+  "endMs": 25586.2,
+  "timestampMs": 25084.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " said",
+  "startMs": 25586.2,
+  "endMs": 25784.0,
+  "timestampMs": 25586.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " no.",
+  "startMs": 25784.0,
+  "endMs": 26031.2,
+  "timestampMs": 25784.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " 62",
+  "startMs": 26151.2,
+  "endMs": 26867.8,
+  "timestampMs": 26151.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " to",
+  "startMs": 26867.8,
+  "endMs": 27150.1,
+  "timestampMs": 26867.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " 18.",
+  "startMs": 27150.1,
+  "endMs": 27774.5,
+  "timestampMs": 27150.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " Then",
+  "startMs": 27994.5,
+  "endMs": 28180.4,
+  "timestampMs": 27994.5,
+  "confidence": 1.0
+ },
+ {
+  "text": " President",
+  "startMs": 28180.4,
+  "endMs": 28652.6,
+  "timestampMs": 28180.4,
+  "confidence": 1.0
+ },
+ {
+  "text": " Hoover",
+  "startMs": 28652.6,
+  "endMs": 28981.6,
+  "timestampMs": 28652.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " sent",
+  "startMs": 28981.6,
+  "endMs": 29167.6,
+  "timestampMs": 28981.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " in",
+  "startMs": 29167.6,
+  "endMs": 29353.6,
+  "timestampMs": 29167.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " the",
+  "startMs": 29353.6,
+  "endMs": 29539.6,
+  "timestampMs": 29353.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " actual",
+  "startMs": 29539.6,
+  "endMs": 29868.7,
+  "timestampMs": 29539.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " United",
+  "startMs": 29868.7,
+  "endMs": 30340.8,
+  "timestampMs": 29868.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " States",
+  "startMs": 30340.8,
+  "endMs": 30669.8,
+  "timestampMs": 30340.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " Army.",
+  "startMs": 30669.8,
+  "endMs": 31081.2,
+  "timestampMs": 30669.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " Cavalry",
+  "startMs": 31301.2,
+  "endMs": 31822.6,
+  "timestampMs": 31301.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " with",
+  "startMs": 31822.6,
+  "endMs": 32028.1,
+  "timestampMs": 31822.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " drawn",
+  "startMs": 32028.1,
+  "endMs": 32233.5,
+  "timestampMs": 32028.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " sabers.",
+  "startMs": 32233.5,
+  "endMs": 32687.8,
+  "timestampMs": 32233.5,
+  "confidence": 1.0
+ },
+ {
+  "text": " Infantry",
+  "startMs": 32807.8,
+  "endMs": 33377.7,
+  "timestampMs": 32807.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " with",
+  "startMs": 33377.7,
+  "endMs": 33602.2,
+  "timestampMs": 33377.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " fixed",
+  "startMs": 33602.2,
+  "endMs": 33999.4,
+  "timestampMs": 33602.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " bayonets.",
+  "startMs": 33999.4,
+  "endMs": 34495.8,
+  "timestampMs": 33999.4,
+  "confidence": 1.0
+ },
+ {
+  "text": " Six",
+  "startMs": 34615.8,
+  "endMs": 35115.6,
+  "timestampMs": 34615.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " tanks.",
+  "startMs": 35115.6,
+  "endMs": 35740.3,
+  "timestampMs": 35115.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " Down",
+  "startMs": 35860.3,
+  "endMs": 36054.0,
+  "timestampMs": 35860.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " Pennsylvania",
+  "startMs": 36054.0,
+  "endMs": 36694.7,
+  "timestampMs": 36054.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " Avenue.",
+  "startMs": 36694.7,
+  "endMs": 37309.4,
+  "timestampMs": 36694.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " They",
+  "startMs": 37529.4,
+  "endMs": 37752.9,
+  "timestampMs": 37529.4,
+  "confidence": 1.0
+ },
+ {
+  "text": " tear-gassed",
+  "startMs": 37752.9,
+  "endMs": 38320.3,
+  "timestampMs": 37752.9,
+  "confidence": 1.0
+ },
+ {
+  "text": " the",
+  "startMs": 38320.3,
+  "endMs": 38543.9,
+  "timestampMs": 38320.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " camp.",
+  "startMs": 38543.9,
+  "endMs": 38823.3,
+  "timestampMs": 38543.9,
+  "confidence": 1.0
+ },
+ {
+  "text": " Then",
+  "startMs": 38943.3,
+  "endMs": 39146.0,
+  "timestampMs": 38943.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " they",
+  "startMs": 39146.0,
+  "endMs": 39348.7,
+  "timestampMs": 39146.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " burned",
+  "startMs": 39348.7,
+  "endMs": 39707.4,
+  "timestampMs": 39348.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " it",
+  "startMs": 39707.4,
+  "endMs": 39910.1,
+  "timestampMs": 39707.4,
+  "confidence": 1.0
+ },
+ {
+  "text": " to",
+  "startMs": 39910.1,
+  "endMs": 40112.8,
+  "timestampMs": 39910.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " the",
+  "startMs": 40112.8,
+  "endMs": 40315.5,
+  "timestampMs": 40112.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " ground.",
+  "startMs": 40315.5,
+  "endMs": 40568.9,
+  "timestampMs": 40315.5,
+  "confidence": 1.0
+ },
+ {
+  "text": " Two",
+  "startMs": 40788.9,
+  "endMs": 40940.3,
+  "timestampMs": 40788.9,
+  "confidence": 1.0
+ },
+ {
+  "text": " veterans",
+  "startMs": 40940.3,
+  "endMs": 41324.8,
+  "timestampMs": 40940.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " were",
+  "startMs": 41324.8,
+  "endMs": 41592.7,
+  "timestampMs": 41324.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " killed.",
+  "startMs": 41592.7,
+  "endMs": 41927.7,
+  "timestampMs": 41592.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " Reports",
+  "startMs": 42047.7,
+  "endMs": 42364.2,
+  "timestampMs": 42047.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " at",
+  "startMs": 42364.2,
+  "endMs": 42543.2,
+  "timestampMs": 42364.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " the",
+  "startMs": 42543.2,
+  "endMs": 42722.1,
+  "timestampMs": 42543.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " time",
+  "startMs": 42722.1,
+  "endMs": 43038.7,
+  "timestampMs": 42722.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " said",
+  "startMs": 43038.7,
+  "endMs": 43217.6,
+  "timestampMs": 43038.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " an",
+  "startMs": 43217.6,
+  "endMs": 43396.6,
+  "timestampMs": 43217.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " infant",
+  "startMs": 43396.6,
+  "endMs": 43713.1,
+  "timestampMs": 43396.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " died",
+  "startMs": 43713.1,
+  "endMs": 43892.1,
+  "timestampMs": 43713.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " from",
+  "startMs": 43892.1,
+  "endMs": 44071.0,
+  "timestampMs": 43892.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " the",
+  "startMs": 44071.0,
+  "endMs": 44250.0,
+  "timestampMs": 44071.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " gas.",
+  "startMs": 44250.0,
+  "endMs": 44473.6,
+  "timestampMs": 44250.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " One",
+  "startMs": 44693.6,
+  "endMs": 44954.8,
+  "timestampMs": 44693.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " newspaper",
+  "startMs": 44954.8,
+  "endMs": 45329.5,
+  "timestampMs": 44954.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " headline",
+  "startMs": 45329.5,
+  "endMs": 45704.1,
+  "timestampMs": 45329.5,
+  "confidence": 1.0
+ },
+ {
+  "text": " said",
+  "startMs": 45704.1,
+  "endMs": 45851.8,
+  "timestampMs": 45704.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " everything:",
+  "startMs": 45851.8,
+  "endMs": 46462.0,
+  "timestampMs": 45851.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " \u201cCavalry",
+  "startMs": 46582.0,
+  "endMs": 46961.7,
+  "timestampMs": 46582.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " Major",
+  "startMs": 46961.7,
+  "endMs": 47226.3,
+  "timestampMs": 46961.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " Evicts",
+  "startMs": 47226.3,
+  "endMs": 47490.9,
+  "timestampMs": 47226.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " Veteran",
+  "startMs": 47490.9,
+  "endMs": 47870.6,
+  "timestampMs": 47490.9,
+  "confidence": 1.0
+ },
+ {
+  "text": " Who",
+  "startMs": 47870.6,
+  "endMs": 48020.1,
+  "timestampMs": 47870.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " Saved",
+  "startMs": 48020.1,
+  "endMs": 48284.7,
+  "timestampMs": 48020.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " His",
+  "startMs": 48284.7,
+  "endMs": 48434.3,
+  "timestampMs": 48284.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " Life",
+  "startMs": 48434.3,
+  "endMs": 48698.9,
+  "timestampMs": 48434.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " in",
+  "startMs": 48698.9,
+  "endMs": 48848.5,
+  "timestampMs": 48698.9,
+  "confidence": 1.0
+ },
+ {
+  "text": " Battle.\u201d",
+  "startMs": 48848.5,
+  "endMs": 49179.2,
+  "timestampMs": 48848.5,
+  "confidence": 1.0
+ },
+ {
+  "text": " Newsreel",
+  "startMs": 49399.2,
+  "endMs": 49822.3,
+  "timestampMs": 49399.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " audiences",
+  "startMs": 49822.3,
+  "endMs": 50429.4,
+  "timestampMs": 49822.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " booed",
+  "startMs": 50429.4,
+  "endMs": 50668.5,
+  "timestampMs": 50429.4,
+  "confidence": 1.0
+ },
+ {
+  "text": " their",
+  "startMs": 50668.5,
+  "endMs": 50907.6,
+  "timestampMs": 50668.5,
+  "confidence": 1.0
+ },
+ {
+  "text": " own",
+  "startMs": 50907.6,
+  "endMs": 51146.8,
+  "timestampMs": 50907.6,
+  "confidence": 1.0
+ },
+ {
+  "text": " army.",
+  "startMs": 51146.8,
+  "endMs": 51675.7,
+  "timestampMs": 51146.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " And",
+  "startMs": 51795.7,
+  "endMs": 51981.0,
+  "timestampMs": 51795.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " when",
+  "startMs": 51981.0,
+  "endMs": 52166.3,
+  "timestampMs": 51981.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " Franklin",
+  "startMs": 52166.3,
+  "endMs": 52494.2,
+  "timestampMs": 52166.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " Roosevelt",
+  "startMs": 52494.2,
+  "endMs": 52964.7,
+  "timestampMs": 52494.2,
+  "confidence": 1.0
+ },
+ {
+  "text": " read",
+  "startMs": 52964.7,
+  "endMs": 53150.0,
+  "timestampMs": 52964.7,
+  "confidence": 1.0
+ },
+ {
+  "text": " the",
+  "startMs": 53150.0,
+  "endMs": 53335.3,
+  "timestampMs": 53150.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " headlines,",
+  "startMs": 53335.3,
+  "endMs": 53805.7,
+  "timestampMs": 53335.3,
+  "confidence": 1.0
+ },
+ {
+  "text": " he",
+  "startMs": 53934.1,
+  "endMs": 54119.4,
+  "timestampMs": 53934.1,
+  "confidence": 1.0
+ },
+ {
+  "text": " reportedly",
+  "startMs": 54119.4,
+  "endMs": 54732.4,
+  "timestampMs": 54119.4,
+  "confidence": 1.0
+ },
+ {
+  "text": " said:",
+  "startMs": 54732.4,
+  "endMs": 54964.0,
+  "timestampMs": 54732.4,
+  "confidence": 1.0
+ },
+ {
+  "text": " \u201cI",
+  "startMs": 55084.0,
+  "endMs": 55248.0,
+  "timestampMs": 55084.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " think",
+  "startMs": 55248.0,
+  "endMs": 55411.9,
+  "timestampMs": 55248.0,
+  "confidence": 1.0
+ },
+ {
+  "text": " I've",
+  "startMs": 55411.9,
+  "endMs": 55701.9,
+  "timestampMs": 55411.9,
+  "confidence": 1.0
+ },
+ {
+  "text": " just",
+  "startMs": 55701.9,
+  "endMs": 55865.9,
+  "timestampMs": 55701.9,
+  "confidence": 1.0
+ },
+ {
+  "text": " won",
+  "startMs": 55865.9,
+  "endMs": 56029.8,
+  "timestampMs": 55865.9,
+  "confidence": 1.0
+ },
+ {
+  "text": " the",
+  "startMs": 56029.8,
+  "endMs": 56193.7,
+  "timestampMs": 56029.8,
+  "confidence": 1.0
+ },
+ {
+  "text": " election.\u201d",
+  "startMs": 56193.7,
+  "endMs": 56713.9,
+  "timestampMs": 56193.7,
+  "confidence": 1.0
+ }
+]

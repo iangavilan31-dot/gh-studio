@@ -1,0 +1,59 @@
+{
+  "comment": "Every SFX event: word/event trigger -> layered, aged files + gain. Files are the procedural CC0-substitute kit in audio/sfx (aged: low-pass ~8kHz + saturation in sfx.py). Layer 2-3 per event. Mix: VO -14 LUFS anchor, SFX peaks ~-8dB, bed ~-30dB.",
+  "bed": {
+    "roomTone": { "file": "room-tone", "gain": 0.16, "loop": true },
+    "vinylCrackle": { "file": "projector", "gain": 0.05, "loop": true }
+  },
+  "music": {
+    "drone": { "file": "drone", "gain": 0.3, "loop": true, "duckDb": -6 },
+    "tension": { "file": "tense", "gain": 0.16, "loop": true, "note": "sparse, under drone" },
+    "riser": { "file": "riser", "gain": 0.34, "note": "into B7 turn" },
+    "deadCutAt": "b7.armyCut",
+    "resumeAt": "b8.start"
+  },
+  "events": [
+    { "at": "b1.start", "layers": [["room-tone", 0.2]], "note": "paper rustle" },
+    { "at": "b1.generals", "layers": [["stamp", 0.9]], "note": "stamp thump 1" },
+    { "at": "b1.generals", "offset": 4, "layers": [["stamp", 0.95]], "note": "thump 2 (rising)" },
+    { "at": "b1.generals", "offset": 8, "layers": [["stamp", 1.0], ["thud", 0.4]], "note": "thump 3" },
+    { "at": "b1.against", "offset": -1, "layers": [["thud", 1.0], ["paper-slam", 0.9], ["whoosh", 0.5]], "note": "match-cut snap" },
+
+    { "at": "b2.number", "layers": [["paper-slam", 0.9], ["pop", 0.6]] },
+    { "at": "b2.marched", "layers": [["squeak", 0.5], ["hooves", 0.5]], "note": "pen scratch + distant feet" },
+
+    { "at": "b3.owed", "layers": [["paper-slam", 0.9], ["squeak", 0.6]] },
+    { "at": "b3.date1945", "layers": [["thud", 0.8], ["squeak", 0.7]], "note": "circle scratch" },
+
+    { "at": "b4.depression", "layers": [["projector", 0.5]] },
+    { "at": "b4.starving", "layers": [["whoosh", 0.4]] },
+
+    { "at": "b5.camped", "layers": [["room-tone", 0.25], ["whoosh", 0.35]], "note": "camp murmur + wind" },
+    { "at": "b5.peacefully", "layers": [["whoosh", 0.4]], "note": "wind gust bridge" },
+
+    { "at": "b6.voted", "layers": [["click", 0.5]] },
+    { "at": "b6.saidNo", "layers": [["clank", 0.9], ["thud", 0.6]], "note": "gavel knock" },
+    { "at": "b6.voteCard", "layers": [["paper-slam", 0.85], ["squeak", 0.6]] },
+
+    { "at": "b7.hoover", "layers": [["click", 0.5]] },
+    { "at": "b7.armyCut", "layers": [["thud", 1.0]], "note": "then silence -> boots" },
+    { "at": "b7.armyCut", "offset": 4, "layers": [["hooves", 0.5], ["clank", 0.4]], "note": "boots on pavement, distant metal" },
+
+    { "at": "b8.sabers", "layers": [["hooves", 0.9], ["clank", 0.8], ["whoosh-big", 0.5]], "note": "hoof build start + saber shing" },
+    { "at": "b8.bayonets", "layers": [["hooves", 1.0], ["clank", 0.9]], "note": "hooves closer + rifle clack" },
+    { "at": "b8.tanks", "layers": [["rumble", 1.0], ["hooves", 0.7]], "note": "tank tread + hooves peak" },
+    { "at": "b8.avenue", "layers": [["rumble", 0.7], ["hooves", 0.8]], "note": "full assault bed" },
+
+    { "at": "b9.gas", "layers": [["whoosh-big", 0.8], ["rumble", 0.4]], "note": "gas hiss" },
+    { "at": "b9.burned", "layers": [["fire", 1.0], ["rumble", 0.5]], "note": "fire crackle rising" },
+
+    { "at": "b10.killed", "layers": [["thud", 0.6]] },
+    { "at": "b10.infant", "layers": [["rumble", 0.3]] },
+
+    { "at": "b11.headline", "layers": [["paper-slam", 0.85]] },
+    { "at": "b11.quoteStart", "layers": [["squeak", 0.7], ["pop", 0.4]] },
+
+    { "at": "b12.booed", "layers": [["boo", 0.8]] },
+    { "at": "b12.fdr", "layers": [["stamp", 0.9], ["thud", 0.4]] },
+    { "at": "b12.headlines", "layers": [["paper-slam", 0.95], ["whoosh-big", 0.5]], "note": "paper RIP into loop" }
+  ]
+}
