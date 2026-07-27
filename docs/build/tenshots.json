@@ -1,0 +1,29 @@
+{
+ "shots": [
+  {
+   "label": "spawn",
+   "file": "docs/build/shots/ten/00-spawn.png",
+   "kindled": 0,
+   "zone": "park",
+   "pos": [
+    2.7,
+    -0.1,
+    -18
+   ],
+   "nightT": 0
+  },
+  {
+   "label": "final",
+   "file": "docs/build/shots/ten/01-final.png",
+   "kindled": 0,
+   "zone": "village",
+   "pos": [
+    113,
+    4.5,
+    8.1
+   ],
+   "nightT": 1.86
+  }
+ ],
+ "consoleIssues": []
+}

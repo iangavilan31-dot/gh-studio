@@ -814,3 +814,35 @@ checking what the instrument actually looked at.
 Fix: the route is generated from the world (every unkindled light and brew in
 the opening footprint, nearest-neighbour ordered). It cannot drift into
 sampling a fraction of the zone, and it tracks content as content changes.
+
+## FINAL RUN #26 — the shipped game had a word in it, and nothing was looking
+
+The first screenshot of a PLAYED moment (rather than an authored camera pose)
+had the word **"kindle"** sitting in the middle of the frame. FINAL_PASS Part 4
+is absolute — zero words in the shipped game, permitted total being numbers in
+settings, the title, and up to eight lines of credits — and
+`HUD.showPrompt(verb)` wrote its verb straight into `textContent`, so every
+interactable in the game captioned itself.
+
+It survived this long for a specific reason worth remembering: **the shoot rig
+photographs cinematic poses, and cinematic poses hide the HUD.** Every
+screenshot ever taken of this game was of a state with no HUD in it, so the one
+UI element that breaks the rule was invisible to the entire evidence pipeline.
+The gates that existed could not have caught it, and neither could any
+screenshot review.
+
+Fix: the ring already carries the meaning — it appears when something is
+actionable and fills as you hold. The verb is kept as a `data-verb` attribute
+(the rigs and the accessibility layer still want to know which verb is offered)
+and rendered as nothing.
+
+Gate: `scripts/wordcheck.mjs` walks the DOM for text actually visible during
+play, at night-start and with a prompt showing.
+
+**One judgement recorded, and it is the human's to overrule.** The interact ring
+carries a single rune, ᚲ (Kaunan, the torch rune). The gate treats a lone
+non-Latin symbolic glyph as a MARK, not a word: it is doing the same job as an
+arrow or a flame icon, and a player who has never seen a rune learns what it
+means the first time the ring fills — which is how a wordless prompt is meant to
+teach. Any Latin letter fails. If the intent is literally no glyphs at all, the
+rule is one line in wordcheck.mjs and the rune goes with it.

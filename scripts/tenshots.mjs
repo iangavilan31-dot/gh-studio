@@ -53,7 +53,7 @@ await page.evaluate(() => {
   M.suppressNightEnd(true)
   const inOpening = (x, z) => x > -60 && x < 145 && z > -45 && z < 45
   const stops = []
-  for (const l of M.lights) if (!l.kindled && inOpening(l.x, l.z)) stops.push({ x: l.x, z: l.z, light: true, reach: l.reach })
+  for (const l of M.lights) if (!l.kindled && inOpening(l.x, l.z)) stops.push({ id: l.id, x: l.x, z: l.z, light: true, reach: l.reach })
   const route = []
   let cx = 2.7, cz = -18, pool = stops.slice()
   while (pool.length) {
@@ -64,7 +64,7 @@ await page.evaluate(() => {
     }
     const n = pool.splice(bi, 1)[0]; route.push(n); cx = n.x; cz = n.z
   }
-  window.__TEN__ = { route, wp: 0, done: false, kindled: 0 }
+  window.__TEN__ = { route, wp: 0, done: false, kindled: 0, forced: [] }
 })
 
 const shots = []
@@ -101,15 +101,27 @@ for (let step = 0; step < 260 && mi < MILESTONES.length; step++) {
       if (side > 0 && --side === 0) kb('keyup', sideKey)
       if (side === 0) M.setCamYaw(Math.atan2(-dx, -dz))
       if (d < (t.reach ?? 2.0) - 0.05) {
+        // The channel takes about a second of SIM time. These frames are shot
+        // at full render quality, where the sim advances at roughly 6% of real
+        // time — so a second of channel is ~17 real seconds, and the 2s this
+        // used to wait meant the rig walked the entire route lighting nothing.
         kb('keyup', 'KeyW'); kb('keydown', 'KeyE')
-        for (let j = 0; j < 40; j++) { await new Promise((r) => setTimeout(r, 50)); if (M.state.kindled.length > T.kindled) break }
+        let lit = false
+        for (let j = 0; j < 500; j++) {
+          await new Promise((r) => setTimeout(r, 50))
+          if (M.state.kindled.length > T.kindled) { lit = true; break }
+        }
         kb('keyup', 'KeyE'); kb('keydown', 'KeyW')
+        // If the hold still did not take, set the light directly and SAY SO.
+        // A frame of an unlit opening would misrepresent the game just as badly
+        // as a frame that pretended the player lit it.
+        if (!lit && t.id) { M.kindle(t.id); T.forced.push(t.id) }
         T.kindled = M.state.kindled.length; T.wp++; bestD = Infinity; noProg = 0
         break
       }
     }
     kb('keyup', 'KeyW')
-    return { kindled: M.state.kindled.length, wp: T.wp, total: T.route.length }
+    return { kindled: M.state.kindled.length, wp: T.wp, total: T.route.length, forced: T.forced.length }
   })
   if (st.kindled >= MILESTONES[mi]) {
     await shoot(`lit-${st.kindled}`)
@@ -119,7 +131,9 @@ for (let step = 0; step < 260 && mi < MILESTONES.length; step++) {
 }
 await shoot('final')
 
-const data = { shots, consoleIssues: issues.slice(0, 5) }
+const forced = await page.evaluate(() => window.__TEN__.forced)
+const data = { shots, forcedKindles: forced, consoleIssues: issues.slice(0, 5) }
+if (forced.length) console.log(`NOTE: ${forced.length} light(s) set directly because the channel hold timed out: ${forced.join(', ')}`)
 writeFileSync(resolve(root, 'docs/build/tenshots.json'), JSON.stringify(data, null, 1))
 const lastLit = shots[shots.length - 1].kindled
 console.log(`${shots.length} frames captured, ${lastLit} lamps lit by the last one`)

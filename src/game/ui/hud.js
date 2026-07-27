@@ -13,7 +13,7 @@ export class HUD {
         <circle class="ring-fill" cx="22" cy="22" r="19"/>
         <text x="22" y="27" text-anchor="middle" class="rune">ᚲ</text>
       </svg></div>
-      <div class="verb">kindle</div>`
+      <div class="verb" data-verb="kindle"></div>`
     ui.appendChild(this.prompt)
     this.ringFill = this.prompt.querySelector('.ring-fill')
     this.verbEl = this.prompt.querySelector('.verb')
@@ -30,7 +30,16 @@ export class HUD {
   }
 
   showPrompt(verb) {
-    if (this.verbEl.textContent !== verb) this.verbEl.textContent = verb
+    // FINAL_PASS Part 4 is absolute: zero words in the shipped game. This used
+    // to write the verb into textContent, so every interactable captioned
+    // itself — "kindle", "take", "rest" — and the first played screenshot of
+    // the opening had a word sitting in the middle of it.
+    //
+    // The ring already carries the meaning: it appears when something is
+    // actionable and fills as you hold. The verb is kept as a data attribute
+    // because the rigs and the accessibility layer still want to know WHICH
+    // verb is offered; it is simply never rendered as text.
+    if (this.verbEl.dataset.verb !== verb) this.verbEl.dataset.verb = verb
     if (!this.visible) {
       this.visible = true
       this.prompt.classList.add('on')
