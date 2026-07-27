@@ -97,6 +97,89 @@ const data = await page.evaluate(async () => {
     if (best && bestD < 3) t.reach = best.reach
   }
 
+  // ——— navigation ———
+  // Four unstick heuristics failed on the same five stops, each in a different
+  // corner. A greedy seek cannot navigate concave geometry; the fix is a plan,
+  // not a better reflex. The physics layer already publishes every collider and
+  // AABB, so a coarse occupancy grid plus A* is cheap and exact enough — the
+  // driver only needs to know which way round an obstacle to go.
+  const CELL = 1.5
+  const GX0 = -70, GX1 = 155, GZ0 = -55, GZ1 = 55
+  const GW = Math.ceil((GX1 - GX0) / CELL), GH = Math.ceil((GZ1 - GZ0) / CELL)
+  const blocked = new Uint8Array(GW * GH)
+  {
+    const w = M.__world
+    const PAD = 0.45   // capsule radius + a little clearance
+    for (const c of (w.colliders || [])) {
+      if ((c.h ?? 0) < 0.5) continue
+      const r = (c.r ?? 0) + PAD
+      const i0 = Math.max(0, Math.floor((c.x - r - GX0) / CELL)), i1 = Math.min(GW - 1, Math.ceil((c.x + r - GX0) / CELL))
+      const j0 = Math.max(0, Math.floor((c.z - r - GZ0) / CELL)), j1 = Math.min(GH - 1, Math.ceil((c.z + r - GZ0) / CELL))
+      for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+        const x = GX0 + (i + 0.5) * CELL, z = GZ0 + (j + 0.5) * CELL
+        if (Math.hypot(x - c.x, z - c.z) < r) blocked[j * GW + i] = 1
+      }
+    }
+    for (const a of (w.aabbs || [])) {
+      const i0 = Math.max(0, Math.floor((a.minX - PAD - GX0) / CELL)), i1 = Math.min(GW - 1, Math.ceil((a.maxX + PAD - GX0) / CELL))
+      const j0 = Math.max(0, Math.floor((a.minZ - PAD - GZ0) / CELL)), j1 = Math.min(GH - 1, Math.ceil((a.maxZ + PAD - GZ0) / CELL))
+      for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) blocked[j * GW + i] = 1
+    }
+  }
+  const cellOf = (x, z) => [
+    Math.min(GW - 1, Math.max(0, Math.floor((x - GX0) / CELL))),
+    Math.min(GH - 1, Math.max(0, Math.floor((z - GZ0) / CELL))),
+  ]
+  function planPath(sx, sz, tx, tz) {
+    const [si, sj] = cellOf(sx, sz)
+    let [ti, tj] = cellOf(tx, tz)
+    // a target sitting inside its own structure (a well head, a plinth) has a
+    // blocked cell; walk out to the nearest free one rather than failing
+    if (blocked[tj * GW + ti]) {
+      let best = null, bd = Infinity
+      for (let i = Math.max(0, ti - 4); i <= Math.min(GW - 1, ti + 4); i++)
+        for (let j = Math.max(0, tj - 4); j <= Math.min(GH - 1, tj + 4); j++) {
+          if (blocked[j * GW + i]) continue
+          const d = (i - ti) ** 2 + (j - tj) ** 2
+          if (d < bd) { bd = d; best = [i, j] }
+        }
+      if (!best) return null
+      ;[ti, tj] = best
+    }
+    const N = GW * GH
+    const g = new Float32Array(N).fill(Infinity)
+    const prev = new Int32Array(N).fill(-1)
+    const start = sj * GW + si, goal = tj * GW + ti
+    g[start] = 0
+    const open = [start]
+    const h = (k) => Math.hypot((k % GW) - ti, Math.floor(k / GW) - tj)
+    const inOpen = new Uint8Array(N); inOpen[start] = 1
+    while (open.length) {
+      let bi = 0, bf = Infinity
+      for (let k = 0; k < open.length; k++) { const f = g[open[k]] + h(open[k]); if (f < bf) { bf = f; bi = k } }
+      const cur = open.splice(bi, 1)[0]; inOpen[cur] = 0
+      if (cur === goal) break
+      const ci = cur % GW, cj = Math.floor(cur / GW)
+      for (let di = -1; di <= 1; di++) for (let dj = -1; dj <= 1; dj++) {
+        if (!di && !dj) continue
+        const ni = ci + di, nj = cj + dj
+        if (ni < 0 || nj < 0 || ni >= GW || nj >= GH) continue
+        const nk = nj * GW + ni
+        if (blocked[nk]) continue
+        const step = (di && dj) ? 1.4142 : 1
+        if (g[cur] + step < g[nk]) { g[nk] = g[cur] + step; prev[nk] = cur; if (!inOpen[nk]) { open.push(nk); inOpen[nk] = 1 } }
+      }
+    }
+    if (prev[goal] < 0 && goal !== start) return null
+    const pts = []
+    for (let k = goal; k >= 0; k = prev[k]) {
+      pts.push({ x: GX0 + ((k % GW) + 0.5) * CELL, z: GZ0 + (Math.floor(k / GW) + 0.5) * CELL })
+      if (k === start) break
+    }
+    pts.reverse()
+    return pts
+  }
+
   const events = []
   let wp = 0, prev = null, channelStart = null
   // Stuck handling. A pure seek driver presses W into whatever it hits and
@@ -105,6 +188,7 @@ const data = await page.evaluate(async () => {
   // traps sealed, a concave corner can still trap a dumb seek, so the driver
   // needs to notice and go around.
   let prevKindled = new Set()
+  let path = [], planFor = -1
   let bestD = Infinity, noProgress = 0, sidestep = 0, sidestepKey = 'KeyD'
   let stuckRuns = 0, reversing = 0
   let wpStartNt = 0
@@ -127,8 +211,22 @@ const data = await page.evaluate(async () => {
     // reported separately below, because that IS worth knowing.
     if (wp >= route.length) { routeDoneNt = nt; break }
     const t = route[Math.min(wp, route.length - 1)]
-    const dx = t.x - s.playerPos[0], dz = t.z - s.playerPos[2]
-    const d = Math.hypot(dx, dz)
+    const d = Math.hypot(t.x - s.playerPos[0], t.z - s.playerPos[2])
+
+    // Follow the PLAN, not the goal. Re-plan when the waypoint changes or when
+    // the current plan has been consumed; otherwise advance along it, dropping
+    // nodes as they are reached. Steering at the next node instead of at the
+    // destination is what lets the driver go round a corner rather than press
+    // into it.
+    if (wp !== planFor || (!path.length && d > 2.5)) {
+      path = planPath(s.playerPos[0], s.playerPos[2], t.x, t.z) || []
+      planFor = wp
+      // drop nodes already behind us
+      while (path.length > 1 && Math.hypot(path[0].x - s.playerPos[0], path[0].z - s.playerPos[2]) < CELL) path.shift()
+    }
+    while (path.length && Math.hypot(path[0].x - s.playerPos[0], path[0].z - s.playerPos[2]) < CELL * 1.1) path.shift()
+    const aim = path.length ? path[0] : t
+    const dx = aim.x - s.playerPos[0], dz = aim.z - s.playerPos[2]
 
     // --- unstick ---
     if (!channelStart) {
@@ -165,7 +263,7 @@ const data = await page.evaluate(async () => {
     // a waypoint that cannot be reached must not eat the whole capture
     if (!channelStart && nt - wpStartNt > 1.2 && wp < route.length) {
       events.push({ nt: +nt.toFixed(2), ev: 'skip', at: [t.x, t.z] })
-      wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0; stuckRuns = 0
+      wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0; stuckRuns = 0; path = []
       if (sidestep > 0) { kb('keyup', sidestepKey); sidestep = 0 }
     }
     // Arrival radius. The game's interact range is 2.0m, and this used to
@@ -186,7 +284,7 @@ const data = await page.evaluate(async () => {
         channelStart = nt
       } else if (!t.light) {
         events.push({ nt: +nt.toFixed(2), ev: 'waypoint', at: [t.x, t.z] })
-        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0; stuckRuns = 0
+        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0; stuckRuns = 0; path = []
       }
     }
     if (channelStart != null) {
@@ -194,12 +292,12 @@ const data = await page.evaluate(async () => {
         kb('keyup', 'KeyE')
         kb('keydown', 'KeyW')
         channelStart = null
-        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0; stuckRuns = 0
+        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0; stuckRuns = 0; path = []
       } else if (nt - channelStart > 0.2) { // ~12s sim without a kindle: move on
         kb('keyup', 'KeyE')
         kb('keydown', 'KeyW')
         channelStart = null
-        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0; stuckRuns = 0
+        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0; stuckRuns = 0; path = []
       }
     }
     if (prev) {
