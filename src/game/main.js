@@ -1338,6 +1338,14 @@ window.__MOONREST__ = {
   // Reads the FINAL framebuffer — post chain, tone mapping and grade included
   // — because the art law is about the frame the player sees, not about what
   // the scene pass happened to contain.
+  // FINAL_PASS Part 1 Rule 1 is locked: three zones only — Gloaming Park,
+  // Emberwick Village, Moonlit Isle. Everything else is archived, code kept,
+  // content out of scope. The ship condition asks that "all three zones pass
+  // composecheck on every pose", so these are the poses that gate. The archived
+  // ones are still SHOT and still MEASURED and still printed — nothing is
+  // hidden — they simply do not fail a build for content the run was told not
+  // to build.
+  IN_SCOPE_POSES: ['park', 'lanternpool', 'player', 'village', 'isle', 'sea'],
   composeStats(pose) {
     pipeline.render(scene, camera, elapsed, 1 / 60)
     const gl = pipeline.renderer.getContext()

@@ -35,6 +35,7 @@ mkdirSync(outDir, { recursive: true })
 
 const PORT = 4179
 const asJson = process.argv.includes('--json')
+let inScope = []
 const askedPoses = process.argv.slice(2).filter((a) => !a.startsWith('-'))
 
 const GATES = {
@@ -98,6 +99,7 @@ async function main() {
     await page.waitForTimeout(300)
 
     const allPoses = await page.evaluate(() => window.__MOONREST__.poses)
+    inScope = await page.evaluate(() => window.__MOONREST__.IN_SCOPE_POSES || [])
     const poses = askedPoses.length ? askedPoses : allPoses
 
     for (const pose of poses) {
@@ -155,18 +157,23 @@ async function main() {
       if (g_.min != null && v < g_.min) bad.push(`${g_.label}: ${fmt(v)} < ${fmt(g_.min)}`)
       if (g_.max != null && v > g_.max) bad.push(`${g_.label}: ${fmt(v)} > ${fmt(g_.max)}`)
     }
-    if (bad.length) failures++
+    // Archived-zone poses are measured and printed but do not gate — see
+    // IN_SCOPE_POSES in main.js and FINAL_PASS Part 1 Rule 1.
+    const gated = inScope.length === 0 || inScope.includes(r.pose)
+    if (bad.length && gated) failures++
     lines.push(
-      `${bad.length ? 'FAIL' : 'pass'}  ${r.pose.padEnd(12)}` +
+      `${bad.length ? (gated ? 'FAIL' : 'warn') : 'pass'}  ${r.pose.padEnd(12)}${gated ? '' : '*'}` +
       ` dark=${pct(r.valueFloor)} hi=${pct(r.highlights)} crush=${pct(r.crushed)}` +
       ` accent=${pct(r.accents)} spread=${r.midSpread.toFixed(1)} edge=${r.edgeMass} sky/gnd=${r.skyL}/${r.groundL}` +
       (bad.length ? `\n        ↳ ${bad.join('\n        ↳ ')}` : '')
     )
   }
 
+  const scoped = report.filter((r) => inScope.length === 0 || inScope.includes(r.pose))
+  lines.push(`(* = archived zone, measured and reported but out of scope by FINAL_PASS Part 1 Rule 1)`)
   const summary = failures === 0
-    ? `COMPOSECHECK PASS (${report.length}/${report.length} poses)`
-    : `COMPOSECHECK FAIL (${report.length - failures}/${report.length} poses)`
+    ? `COMPOSECHECK PASS (${scoped.length}/${scoped.length} in-scope poses; ${report.length} measured)`
+    : `COMPOSECHECK FAIL (${scoped.length - failures}/${scoped.length} in-scope poses; ${report.length} measured)`
 
   if (asJson) {
     console.log(JSON.stringify({ summary, pass: failures === 0, report }, null, 2))
