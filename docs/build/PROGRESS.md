@@ -924,3 +924,60 @@ They caught two things I had got wrong about my own work:
 
 NEXT: the colossi are the single largest scoring gap and the reviewers agree.
 After that, the remaining composition metrics, then the 40s dead patch.
+
+
+---
+
+## FIN-1 — the gate was measuring an empty world
+
+The most important thing found this session, and it was mine.
+
+`globalUniforms.uGroundDarken` was referenced by every lit material but never
+declared. three received `undefined` and threw. That one omission broke
+`shoot.mjs`, broke `composecheck`, and — because a material that fails to
+compile simply does not draw, leaving sky and fog behind, and sky and fog score
+well on value floor, edge mass and spread — produced **two consecutive
+COMPOSECHECK PASS 6/6 readings that I reported as evidence of stability.**
+
+Fixed, and the lesson turned into a gate: composecheck now asserts LIVENESS
+before it measures composition — visible mesh count, lit-material count, and
+lit materials whose program carries shader diagnostics. All three fail the
+build. A composition gate cannot tell a good frame from an empty one unless
+something tells it the frame is not empty.
+
+Every composition number recorded before commit 09b3a33 should be treated as
+void, not as history.
+
+### Gate state, all on a verified-live world (mesh 461-466, shErr 0)
+
+| gate | state |
+|---|---|
+| COMPOSECHECK | 12 of 13 poses pass; 6/6 in-scope |
+| WORDCHECK | PASS |
+| REACHCHECK | PASS 43/43 |
+| COLLISIONCHECK | PASS 8/8 |
+| CROSSINGCHECK | PASS 4/4 |
+| `npm run build` | exit 0 |
+| K1 CAPTURE | **FAIL** — real 40s content dead patch |
+
+The one composecheck failure is `nib` (edge mass 0.114), a pose in an archived
+zone. It is left failing and visible rather than deleted: cutting a failing
+pose because it is out of scope would be the right scope call made for the
+wrong reason, and the next person should see it.
+
+### Not built
+
+The three colossi. A silhouette attempt (Antlered Sleeper ~45m, Long Sleeper
+~200m, Drowned Choir ~120m over the causeway) broke the world at runtime and
+was reverted per FINAL_PASS 1.1 rather than pushed forward. The approach is
+sound — both reviewers asked for blockouts at correct scale — and it needs the
+vertex-colour attribute `bakeVertexColors` assumes on every mesh. That is where
+the next attempt starts.
+
+Also open: five of the seven missing composition metrics, the 40s dead patch,
+no audio evidence, no honest performance number (this environment has no GPU,
+so Part 10 category 10 cannot be scored here at all), and one judge pass of the
+two the ship bar requires.
+
+**This build does not ship.** Judge pass 1 scored 1-5 across twelve categories
+against an 8.5-9.0 bar, and the gap is content, not polish.
