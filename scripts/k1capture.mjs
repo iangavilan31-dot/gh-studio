@@ -144,9 +144,13 @@ const data = await page.evaluate(async () => {
         stuckRuns++
         // wedged: strafe along the obstacle for a beat, alternating sides so a
         // corner that defeats one direction gets the other next time
-        sidestep = 30 + stuckRuns * 25
+        // Bounded. Unbounded escalation is its own failure: reversing on every
+        // attempt walked the driver from z -18 out to z -57, wandering off
+        // instead of getting round the obstacle. Sidesteps grow only to a cap,
+        // and reverse fires exactly once per waypoint.
+        sidestep = Math.min(30 + stuckRuns * 25, 90)
         if (stuckRuns > 1) sidestepKey = sidestepKey === 'KeyD' ? 'KeyA' : 'KeyD'
-        if (stuckRuns >= 3) { kb('keyup', 'KeyW'); kb('keydown', 'KeyS'); reversing = 22 }
+        if (stuckRuns === 3) { kb('keyup', 'KeyW'); kb('keydown', 'KeyS'); reversing = 18 }
         stalls.push({ nt: +nt.toFixed(2), at: [+s.playerPos[0].toFixed(2), +s.playerPos[2].toFixed(2)], wp, run: stuckRuns })
         kb('keydown', sidestepKey)
         noProgress = 0
