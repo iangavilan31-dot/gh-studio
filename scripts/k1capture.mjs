@@ -104,6 +104,7 @@ const data = await page.evaluate(async () => {
   // ticks while the controller reported 5.2 m/s. Even with the world's pinch
   // traps sealed, a concave corner can still trap a dumb seek, so the driver
   // needs to notice and go around.
+  let prevKindled = new Set()
   let bestD = Infinity, noProgress = 0, sidestep = 0, sidestepKey = 'KeyD'
   let stuckRuns = 0, reversing = 0
   let wpStartNt = 0
@@ -203,7 +204,17 @@ const data = await page.evaluate(async () => {
     }
     if (prev) {
       if (s.zone !== prev.zone) events.push({ nt: +nt.toFixed(2), ev: 'zone', to: s.zone })
-      if (s.kindled.length > prev.kindled) events.push({ nt: +nt.toFixed(2), ev: 'kindle', id: s.kindled[s.kindled.length - 1] })
+      if (s.kindled.length > prev.kindled) {
+        // Name the light that ACTUALLY lit. state.kindled is derived by
+        // filtering world.lights, so it is in world order, not kindle order —
+        // taking its last element named whichever kindled light happens to sit
+        // last in the world array. That made 14 real kindles report as 4
+        // distinct ids, and a judge reviewer reasonably read the duplicates as
+        // lights re-firing. The game was fine; the label was wrong. Diff the
+        // sets instead.
+        const added = s.kindled.filter((id) => !prevKindled.has(id))
+        events.push({ nt: +nt.toFixed(2), ev: 'kindle', id: added[0] ?? s.kindled[s.kindled.length - 1] })
+      }
       if (s.fov > 57 && prev.fov <= 57) events.push({ nt: +nt.toFixed(2), ev: 'reveal', zone: s.zone })
     }
     // A beat is an EVENT — a kindle, a zone change, a reveal, a waypoint
@@ -229,6 +240,7 @@ const data = await page.evaluate(async () => {
       lastNotable = nt
     }
     prev = { zone: s.zone, kindled: s.kindled.length, fov: s.fov }
+    prevKindled = new Set(s.kindled)
   }
   kb('keyup', 'KeyW')
   const endNt = M.state.nightT - nt0

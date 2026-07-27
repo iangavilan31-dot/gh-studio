@@ -127,3 +127,25 @@ awe scores 1 because the promise is entirely unmade.
 6. Replace the moon billboard with an analytic disc (both reviewers called it
    the loudest "default asset" tell in the build).
 7. Capture audio and real performance evidence, or the pass cannot close.
+
+### Correction to Pass 1 — one reviewer finding was my instrument, not the game
+
+Both reviewers reported that the capture showed **14 kindle events but only 4
+unique light ids**, and read it as lights re-firing without an already-lit
+guard. Reasonable from the data they were given. It is wrong, and the fault is
+mine.
+
+`world.kindle()` guards with `if (!light || light.kindled) return false`, and
+`state.kindled` is derived as `lights.filter(l => l.kindled).map(l => l.id)` —
+so duplicates are not representable. The game never double-counted.
+
+The capture logged the newly-lit light as `kindled[length - 1]`. That array is
+in **world order, not kindle order**, so it named whichever kindled light
+happened to sit last in the world array — the same few ids over and over. 14
+kindle events were 14 real lights, matching the "14 lamps" in the same summary
+line. Fixed by diffing the id sets.
+
+Everything else both reviewers found has been verified as real. This one is
+recorded because a judge file that keeps a false finding is worse than one that
+admits a correction — the next pass would have gone hunting for a bug that was
+never there.
