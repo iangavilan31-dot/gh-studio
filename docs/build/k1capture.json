@@ -1,80 +1,20 @@
 {
  "events": [
   {
-   "nt": 0.03,
+   "nt": 0.02,
    "ev": "kindle",
    "id": "park-bench-lamp"
   },
   {
-   "nt": 0.35,
+   "nt": 0.14,
    "ev": "kindle",
    "id": "park-lantern-1"
-  },
-  {
-   "nt": 0.74,
-   "ev": "kindle",
-   "id": "park-lantern-2"
-  },
-  {
-   "nt": 1.16,
-   "ev": "waypoint",
-   "at": [
-    24,
-    0
-   ]
-  },
-  {
-   "nt": 1.33,
-   "ev": "waypoint",
-   "at": [
-    40,
-    0
-   ]
-  },
-  {
-   "nt": 1.33,
-   "ev": "zone",
-   "to": "foglandPV"
-  },
-  {
-   "nt": 1.54,
-   "ev": "waypoint",
-   "at": [
-    60,
-    0
-   ]
-  },
-  {
-   "nt": 1.66,
-   "ev": "waypoint",
-   "at": [
-    72,
-    1
-   ]
-  },
-  {
-   "nt": 1.67,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 1.68,
-   "ev": "reveal",
-   "zone": "village"
-  },
-  {
-   "nt": 1.83,
-   "ev": "waypoint",
-   "at": [
-    88,
-    2
-   ]
   }
  ],
  "gaps": [],
  "simMinutes": 10,
- "kindled": 3,
- "endZone": "village",
- "waypointsReached": 8,
+ "kindled": 2,
+ "endZone": "park",
+ "waypointsReached": 2,
  "consoleIssues": []
 }
