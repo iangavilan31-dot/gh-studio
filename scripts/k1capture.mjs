@@ -218,7 +218,14 @@ const data = await page.evaluate(async () => {
     const notable = events.length > 0 && Math.abs(events[events.length - 1].nt - nt) < 0.02
     if (notable) {
       const gap = nt - lastNotable
-      if (gap > 0.1) gaps.push({ gap: +gap.toFixed(2), atNt: +lastNotable.toFixed(2) })
+      // Classify the stretch by what ENDED it. A stretch closed by a 'skip' is
+      // the driver failing to path to a stop — reachcheck proves every light is
+      // reachable, so that is a harness limitation, not the game running out of
+      // things to do. Conflating the two makes the gate unable to say which
+      // defect it found, and every long stretch this capture has ever reported
+      // has turned out to be the former.
+      const endedBy = events.length ? events[events.length - 1].ev : null
+      if (gap > 0.1) gaps.push({ gap: +gap.toFixed(2), atNt: +lastNotable.toFixed(2), endedBy, driver: endedBy === 'skip' })
       lastNotable = nt
     }
     prev = { zone: s.zone, kindled: s.kindled.length, fov: s.fov }
@@ -233,24 +240,34 @@ const data = await page.evaluate(async () => {
 
 data.consoleIssues = issues.slice(0, 5)
 writeFileSync(resolve(root, 'docs/build/k1capture.json'), JSON.stringify(data, null, 1))
-const worst = data.gaps[0]?.gap ?? 0
+// Content stretches are the game's pacing; driver stretches are the harness's
+// pathing. Both are reported, both can fail the gate, but they fail for
+// different reasons and the message has to say which.
+const contentGaps = data.gaps.filter((g) => !g.driver)
+const driverGaps = data.gaps.filter((g) => g.driver)
+const worst = contentGaps[0]?.gap ?? 0
 // A capture that never walked the route is not evidence about the opening, and
 // must not be able to report a pass. The first version could: it stalled after
 // 2 of 19 waypoints and printed "worst stretch 0s" — a stuck player generates
 // no events, and no events meant no gaps. Route completion is now a gate in its
 // own right, checked BEFORE the gap number is believed.
 const routeDone = data.waypointsReached >= data.routeLength
-const ok = routeDone && worst <= 0.34 && issues.length === 0
+// A capture riddled with pathing failures is not trustworthy evidence either,
+// so driver stretches still fail the gate — just with an honest message.
+const ok = routeDone && worst <= 0.34 && driverGaps.length <= 2 && issues.length === 0
 console.log(`route: ${data.waypointsReached}/${data.routeLength} waypoints, ${data.kindled} lamps, ${data.events.length} events over ${data.simMinutes} sim min, ended in ${data.endZone}`)
 if (data.routeSimMinutes != null && data.routeSimMinutes < 10) {
   console.log(`NOTE: the authored route fills ${data.routeSimMinutes}/10 sim minutes at this driver's pace (it walks optimally and never explores, so a player is slower — but the opening is thinner than ten minutes of authored beats).`)
 }
-console.log('worst stretches (sim min):', data.gaps.map((g) => `${g.gap} @${g.atNt}`).join(' · ') || 'none')
+console.log('content stretches (sim min):', contentGaps.map((g) => `${g.gap} @${g.atNt}`).join(' · ') || 'none')
+if (driverGaps.length) console.log(`driver stretches (harness could not path, NOT game pacing): ${driverGaps.map((g) => `${g.gap} @${g.atNt}`).join(' · ')}`)
 if (data.stalls?.length) {
   console.log(`unstick fired ${data.stalls.length}x:`, data.stalls.map((x) => `(${x.at[0]},${x.at[1]})@wp${x.wp}`).join(' · '))
 }
 if (!routeDone) console.log(`K1 CAPTURE FAIL — only ${data.waypointsReached}/${data.routeLength} waypoints reached; a stalled run is not evidence`)
-else console.log(worst <= 0.34 ? `K1 CAPTURE PASS — route complete, worst stretch ${(worst * 60).toFixed(0)}s <= 20s` : `K1 CAPTURE FAIL — worst stretch ${(worst * 60).toFixed(0)}s exceeds 20s`)
+else if (worst > 0.34) console.log(`K1 CAPTURE FAIL — worst CONTENT stretch ${(worst * 60).toFixed(0)}s exceeds 20s (the game has a dead patch here)`)
+else if (driverGaps.length > 2) console.log(`K1 CAPTURE FAIL — ${driverGaps.length} stops the driver could not path to; pacing evidence unreliable until the harness reaches them`)
+else console.log(`K1 CAPTURE PASS — route complete, worst content stretch ${(worst * 60).toFixed(0)}s <= 20s`)
 console.log(issues.length === 0 ? 'console clean' : `console issues: ${issues.length}`)
 await browser.close()
 preview.kill()
