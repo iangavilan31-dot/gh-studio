@@ -82,12 +82,20 @@ const data = await page.evaluate(async () => {
   const nt0 = M.state.nightT
   let lastNotable = 0
   const gaps = []
+  let routeDoneNt = null
   kb('keydown', 'KeyW')
   while (true) {
     await new Promise((r) => setTimeout(r, 100))
     const s = M.state
     const nt = s.nightT - nt0
-    if (nt >= 10) break // the full ten minutes — route exhaustion just idles at the park heart
+    if (nt >= 10) break
+    // Stop when the route is walked. Idling at the park heart after the last
+    // waypoint is the HARNESS having nothing left to do, not the game being
+    // empty, and scoring it as a dead stretch measures the wrong thing — it
+    // produced a 6.62 sim-minute "gap" that said nothing about the opening.
+    // How much of the ten minutes the authored route actually fills is
+    // reported separately below, because that IS worth knowing.
+    if (wp >= route.length) { routeDoneNt = nt; break }
     const t = route[Math.min(wp, route.length - 1)]
     const dx = t.x - s.playerPos[0], dz = t.z - s.playerPos[2]
     const d = Math.hypot(dx, dz)
@@ -119,7 +127,16 @@ const data = await page.evaluate(async () => {
       wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0
       if (sidestep > 0) { kb('keyup', sidestepKey); sidestep = 0 }
     }
-    if (d < 1.8 && wp < route.length) { // inside interact range (2.0), not outside it
+    // Arrival radius. The game's interact range is 2.0m, and this used to
+    // require 1.8m as a safety margin — which made any light with a fat
+    // collider physically unreachable. `village-well-lantern` sits at the
+    // centre of a 1.5m-radius well inside a solid 9x8m block, so the closest a
+    // 0.35m capsule can stand is ~1.85m: inside the game's interact range,
+    // outside the driver's arrival test by five centimetres. The driver ground
+    // against the well's west wall for 1.2 sim minutes and then skipped it.
+    // Use the range the GAME uses, barely inside it.
+    const arrive = t.light ? 1.95 : 1.8
+    if (d < arrive && wp < route.length) {
       if (t.light && !channelStart) {
         kb('keyup', 'KeyW')
         kb('keydown', 'KeyE')
@@ -169,7 +186,7 @@ const data = await page.evaluate(async () => {
   const tail = endNt - lastNotable
   if (tail > 0.1) gaps.push({ gap: +tail.toFixed(2), atNt: +lastNotable.toFixed(2), tail: true })
   gaps.sort((a, b) => b.gap - a.gap)
-  return { events, gaps: gaps.slice(0, 8), simMinutes: +endNt.toFixed(2), kindled: M.state.kindled.length, endZone: M.state.zone, waypointsReached: wp, routeLength: route.length, stalls: stalls.slice(0, 12) }
+  return { events, gaps: gaps.slice(0, 8), simMinutes: +endNt.toFixed(2), kindled: M.state.kindled.length, endZone: M.state.zone, waypointsReached: wp, routeLength: route.length, stalls: stalls.slice(0, 12), routeSimMinutes: routeDoneNt == null ? null : +routeDoneNt.toFixed(2) }
 })
 
 data.consoleIssues = issues.slice(0, 5)
@@ -183,6 +200,9 @@ const worst = data.gaps[0]?.gap ?? 0
 const routeDone = data.waypointsReached >= data.routeLength
 const ok = routeDone && worst <= 0.34 && issues.length === 0
 console.log(`route: ${data.waypointsReached}/${data.routeLength} waypoints, ${data.kindled} lamps, ${data.events.length} events over ${data.simMinutes} sim min, ended in ${data.endZone}`)
+if (data.routeSimMinutes != null && data.routeSimMinutes < 10) {
+  console.log(`NOTE: the authored route fills ${data.routeSimMinutes}/10 sim minutes at this driver's pace (it walks optimally and never explores, so a player is slower — but the opening is thinner than ten minutes of authored beats).`)
+}
 console.log('worst stretches (sim min):', data.gaps.map((g) => `${g.gap} @${g.atNt}`).join(' · ') || 'none')
 if (data.stalls?.length) {
   console.log(`unstick fired ${data.stalls.length}x:`, data.stalls.map((x) => `(${x.at[0]},${x.at[1]})@wp${x.wp}`).join(' · '))
