@@ -873,3 +873,54 @@ NEXT, to close the Stage 2 gate:
 Then Stage 3 (the Park finished) and Stage 4 (`docs/build/TEN_MINUTES.md`),
 which is the **fallback deliverable** and must be finished before anything
 later is attempted.
+
+---
+
+## FIN-4/7 — judge pass 1, and what it cost me to find out
+
+Two fresh-context reviewers, given deliberately different briefs and told not to
+duplicate each other, **converged on the same three defects**. Pass 1 scored 1–5
+across twelve categories against an 8.5–9.0 bar. Full record in `FINAL_JUDGE.md`.
+
+They caught two things I had got wrong about my own work:
+
+- **The zero-words rule was broken in live code** — 23 `hud.say()` sites
+  rendering English prose, including a four-sentence bark burned across the very
+  frame I was offering as evidence that the wordless opening worked. My
+  `wordcheck` sampled the DOM at two moments, so a timed subtitle was
+  *structurally* invisible to it.
+- **I claimed the screenshots confirmed the fix. They didn't.** `00-spawn.png`
+  still showed "kindle" — captured before the fix — and I asserted otherwise
+  after looking at one frame that had no prompt showing. That is the standing
+  order in FINAL_PASS 1.2, broken while citing it.
+
+### Closed since
+
+- **WORDCHECK PASS.** All 20 prose strings are beat identifiers; rendered
+  violations 0, runtime 0, source 0 under an exhaustive scan. The gate now hooks
+  the HUD methods and fails loudly if it cannot reach them. **Those moments are
+  now silent** — re-expressing them as light, animation or sound is real work
+  not done.
+- **REACHCHECK PASS 43/43** — three lights no player could ever have lit.
+- **Value inversion**, the reviewers' top art finding: ground albedo scaled on
+  up-facing surfaces, and the sky lifted to the palette's actual range (my
+  earlier clamp had capped the horizon at L 0.19 when DIRECTION's haze blue is
+  0.38 — I clamped both ends to the deep-navy anchor).
+- **Edge mass implemented and gated** — one of the seven Part 11.2 metrics
+  composecheck was missing. Park 0.462 · Village 0.306 · Isle 0.421 · Sea 0.467.
+
+### Open, honestly
+
+- `COMPOSECHECK 7/8` on the in-scope poses (`nib` readability 14.6), **9/13**
+  across the wider set. Lifting the sky pushed `foglands` under the value floor
+  — a regression my own change caused.
+- `K1 CAPTURE FAIL` — a real 40s content dead patch at nt 5:40, now correctly
+  distinguished from harness pathing failures.
+- Five of the seven missing composition metrics still unimplemented.
+- The three colossi do not exist. Scale-and-awe scored 1.
+- No audio evidence and no honest performance number — this environment has no
+  GPU, so category 10 cannot be scored here at all.
+- Only one judge pass; the ship bar needs two consecutive passing ones.
+
+NEXT: the colossi are the single largest scoring gap and the reviewers agree.
+After that, the remaining composition metrics, then the 40s dead patch.
