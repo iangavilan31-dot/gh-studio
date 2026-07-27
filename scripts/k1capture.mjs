@@ -103,13 +103,17 @@ const data = await page.evaluate(async () => {
   // not a better reflex. The physics layer already publishes every collider and
   // AABB, so a coarse occupancy grid plus A* is cheap and exact enough — the
   // driver only needs to know which way round an obstacle to go.
-  const CELL = 1.5
+  // 1.5m cells closed the Village street: houses either side plus padding left
+  // no free cell down a gap the 0.70m player fits through, so A* found no route
+  // and the driver fell back to greedy — every unstick moved from the spawn
+  // bench to the same street. 0.9m resolves a street while staying cheap.
+  const CELL = 0.9
   const GX0 = -70, GX1 = 155, GZ0 = -55, GZ1 = 55
   const GW = Math.ceil((GX1 - GX0) / CELL), GH = Math.ceil((GZ1 - GZ0) / CELL)
   const blocked = new Uint8Array(GW * GH)
   {
     const w = M.__world
-    const PAD = 0.45   // capsule radius + a little clearance
+    const PAD = 0.38   // capsule radius (0.35) + a hair; more closes real gaps
     for (const c of (w.colliders || [])) {
       if ((c.h ?? 0) < 0.5) continue
       const r = (c.r ?? 0) + PAD
