@@ -235,7 +235,31 @@ export class ZoneLightState {
 
   update(px, pz, dt, py = 0) {
     const { a, b, w, aId } = this.targets(px, pz, py)
-    this.currentZoneId = aId
+    // Zone hysteresis. Where two volumes overlap — the Village street and the
+    // Rooftops volume above it — the nearest-zone test flips on every frame the
+    // player wobbles across the boundary. The capture logged 114 village <->
+    // rooftops changes in one ten-minute run, which inflated its beat count
+    // with a bug and hid the real dead stretches underneath it. Audibly it is
+    // worse than that: each flip re-cues the music bed and the ambience.
+    //
+    // A candidate must therefore hold for DWELL seconds before it becomes the
+    // current zone. Crossing a boundary once still switches; oscillating on it
+    // does not.
+    const DWELL = 0.8
+    if (aId === this.currentZoneId) {
+      this._pendingZone = null
+      this._pendingT = 0
+    } else if (aId === this._pendingZone) {
+      this._pendingT += dt
+      if (this._pendingT >= DWELL) {
+        this.currentZoneId = aId
+        this._pendingZone = null
+        this._pendingT = 0
+      }
+    } else {
+      this._pendingZone = aId
+      this._pendingT = 0
+    }
     if (a.audioZone) this.audioZone = a.audioZone
     const k = 1 - Math.exp(-dt / 1.2) // ≈4s to settle
     const lerpColor = (cur, hexA, hexB) => {
