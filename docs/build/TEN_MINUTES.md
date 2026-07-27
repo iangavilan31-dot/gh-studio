@@ -198,7 +198,17 @@ So Stage 4 remains open on the thing that actually matters:
   player is slower than a driver that walks optimally and never explores, never
   reads a fingerpost, never stops to look at anything — so the true figure is
   better than 2.07 minutes, but not by the factor needed.
-- No screenshot evidence of the opening has been captured yet.
+- **Screenshot evidence now exists** — `docs/build/shots/ten/`, five frames of
+  the opening as PLAYED (spawn → 1 lit → 3 → 6 → 8, park into village), taken
+  by `scripts/tenshots.mjs` at 1600x900, console clean. One light
+  (`wayside-shrine-4`) was set directly because the channel hold timed out, and
+  `docs/build/tenshots.json` records that rather than hiding it.
+
+  The first of those frames immediately paid for the rig: it had the word
+  **"kindle"** in the middle of it, violating FINAL_PASS Part 4. Every previous
+  screenshot of this game was of a cinematic pose, and cinematic poses hide the
+  HUD — so the one UI element breaking the zero-words rule had never appeared in
+  any evidence. Fixed, and `scripts/wordcheck.mjs` now guards it (DECISIONS #26).
 
 ## Next
 
@@ -295,7 +305,17 @@ So Stage 4 remains open on the thing that actually matters:
   player is slower than a driver that walks optimally and never explores, never
   reads a fingerpost, never stops to look at anything — so the true figure is
   better than 2.07 minutes, but not by the factor needed.
-- No screenshot evidence of the opening has been captured yet.
+- **Screenshot evidence now exists** — `docs/build/shots/ten/`, five frames of
+  the opening as PLAYED (spawn → 1 lit → 3 → 6 → 8, park into village), taken
+  by `scripts/tenshots.mjs` at 1600x900, console clean. One light
+  (`wayside-shrine-4`) was set directly because the channel hold timed out, and
+  `docs/build/tenshots.json` records that rather than hiding it.
+
+  The first of those frames immediately paid for the rig: it had the word
+  **"kindle"** in the middle of it, violating FINAL_PASS Part 4. Every previous
+  screenshot of this game was of a cinematic pose, and cinematic poses hide the
+  HUD — so the one UI element breaking the zero-words rule had never appeared in
+  any evidence. Fixed, and `scripts/wordcheck.mjs` now guards it (DECISIONS #26).
 
 ## Next
 
