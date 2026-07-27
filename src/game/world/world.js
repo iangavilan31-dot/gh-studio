@@ -220,10 +220,15 @@ export class World {
     return group
   }
 
-  registerLight(id, zone, parts, x, z, yBase = null) {
+  // `reach` (metres) overrides the default 2.0m interact range for lights that
+  // sit inside their own structure — a well head, a plinth, a keep parapet.
+  // Measured, not guessed: the value for each is the closest point a 0.35m
+  // capsule can legally stand, plus margin (see scripts/reachcheck.mjs, which
+  // fails the build if any light stops being kindleable).
+  registerLight(id, zone, parts, x, z, yBase = null, reach = null) {
     const y = (yBase ?? heightAt(x, z)) + (parts.flameH ?? 3.2)
     const light = {
-      id, zone, x, z, y,
+      id, zone, x, z, y, ...(reach ? { reach } : {}),
       parts, kindled: false, bloom: 0,
       flickerSeed: worldRNG.range(0, Math.PI * 2),
       haloBase: parts.halo ? parts.halo.material.uniforms.uOpacity.value : 0.55,
@@ -864,7 +869,7 @@ export class World {
     wellLan.group.position.set(wx, wellBase + 2.55, wz)
     this.scene.add(wellLan.group)
     this.sways.push(wellLan.group)
-    this.registerLight('village-well-lantern', 'village', wellLan, wx, wz, wellBase + 2.55)
+    this.registerLight('village-well-lantern', 'village', wellLan, wx, wz, wellBase + 2.55, 3.3)   // closest standable 2.87m
 
     // 4 iron lamp posts up the street (cold lights)
     const lampXs = [88, 104, 120, 136]
@@ -1238,7 +1243,7 @@ export class World {
     this.scene.add(wellWater)
     wellWater.visible = false
     this.waterMats.push({ tex: wellWaterTex, sx: 0.006, sy: 0.004 })
-    this.registerLight('ruins-moonwell', 'ruins', { glass: wellWater, halo: wellGlow, flame: null, pool: null, flameH: 0.85 }, wx2, wz2, heightAt(wx2, wz2))
+    this.registerLight('ruins-moonwell', 'ruins', { glass: wellWater, halo: wellGlow, flame: null, pool: null, flameH: 0.85 }, wx2, wz2, heightAt(wx2, wz2), 3.5)  // closest standable 3.06m
     // co-op floor glyphs (Part 3.2.4): 2–4 shown scaled to lobby (Moments decides
     // visibility); stand on one to brighten the well, full lobby → sky beam
     this.ruinsGlyphs = []
@@ -1860,7 +1865,7 @@ export class World {
     const keepBrazier = brazier({ scale: 1.3 })
     keepBrazier.group.position.set(kx, kBase + 9.9, kz)
     this.scene.add(keepBrazier.group)
-    this.registerLight('isle-keep-brazier', 'isle', keepBrazier, kx, kz, kBase + 9.9)
+    this.registerLight('isle-keep-brazier', 'isle', keepBrazier, kx, kz, kBase + 9.9, 5.9)  // closest standable 5.36m — it sits on the keep parapet
 
     // foam edge along the cove (scrolling pale strip)
     const foamTex = TEX.streak({ name: 'foam', color: '#b8ccd4' })

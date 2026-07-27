@@ -56,12 +56,27 @@ export class InteractSystem {
   update(input, dt) {
     const p = this.player.pos
     // nearest cold light in range with LOS
-    let best = null, bestD = RANGE
+    // A light's own structure must not eat the player's reach. RANGE is how
+    // far the Keeper can extend the staff; measuring it from the CENTRE of a
+    // 1.5m well or a wide brazier plinth spends that reach on the object
+    // itself. Three lights were unkindleable because of this — the nearest
+    // point a 0.35m capsule could legally stand was 2.87m, 3.06m and 5.36m
+    // from centres the player was required to get within 2.0m of. `reach`
+    // is the per-light override for lights that sit inside something.
+    let best = null, bestD = Infinity, bestRange = 0
     for (const l of this.world.lights) {
       if (l.kindled) continue
+      const range = l.reach ?? RANGE
       const d = Math.hypot(l.x - p.x, l.z - p.z)
-      if (d < bestD && !this.losBlocked(p.x, p.z, l.x, l.z, p.y + 1)) { bestD = d; best = l }
+      // compare by how far INSIDE its own range each candidate is, so a
+      // generous-reach light never outranks a normal one you are standing on
+      if (d > range) continue
+      const slack = range - d
+      if (slack > bestRange && !this.losBlocked(p.x, p.z, l.x, l.z, p.y + 1)) {
+        bestRange = slack; bestD = d; best = l
+      }
     }
+    if (!best) bestD = RANGE
     // nearest brew (instant pickup takes precedence when closer)
     let bestBrew = null, bestBrewD = RANGE
     for (const b of this.world.brews ?? []) {
