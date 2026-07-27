@@ -1348,6 +1348,26 @@ window.__MOONREST__ = {
   IN_SCOPE_POSES: ['park', 'lanternpool', 'player', 'village', 'isle', 'sea'],
   composeStats(pose) {
     pipeline.render(scene, camera, elapsed, 1 / 60)
+    // ——— LIVENESS ———
+    // A composition gate cannot tell a well-composed frame from an empty one.
+    // It proved that: composecheck reported PASS 6/6 twice on a build whose lit
+    // material failed to compile, because meshes that do not draw leave sky and
+    // fog behind, and sky and fog score well on value floor, edge mass and
+    // spread. Every number below is meaningless unless the world actually
+    // rendered, so measure that first and let the gate fail on it.
+    let litMats = 0, shaderErrors = 0, drawnMeshes = 0
+    const seenMat = new Set()
+    scene.traverse((o) => {
+      if (!o.isMesh || !o.visible) return
+      drawnMeshes++
+      const mats = Array.isArray(o.material) ? o.material : [o.material]
+      for (const m of mats) {
+        if (!m?.userData?.lit || seenMat.has(m.uuid)) continue
+        seenMat.add(m.uuid)
+        litMats++
+        if (m.program?.diagnostics) shaderErrors++
+      }
+    })
     const gl = pipeline.renderer.getContext()
     const v = pipeline.viewport
     const w = Math.max(2, Math.round(v.z)), h = Math.max(2, Math.round(v.w))
@@ -1412,6 +1432,7 @@ window.__MOONREST__ = {
     const mq = (p) => mid.length ? mid[Math.min(mid.length - 1, Math.round(p * (mid.length - 1)))] : 0
     return {
       pose, w, h, sampled: n,
+      litMaterials: litMats, shaderErrors, drawnMeshes,
       // read from the zone record, not decided by the gate: the accent budget is
       // a rule about warmth being precious in the COLD EXTERIOR night
       interior: !!ZONES[zoneLight.currentZoneId]?.interior,
