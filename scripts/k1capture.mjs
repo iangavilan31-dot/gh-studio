@@ -22,7 +22,17 @@ const browser = await chromium.launch({
   executablePath: '/opt/pw-browsers/chromium',
   args: ['--no-sandbox', '--enable-unsafe-swiftshader', '--use-angle=swiftshader'],
 })
-const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+// 640x360, deliberately. What this capture measures is the EVENT TIMELINE in
+// SIM minutes — when lamps are kindled, when zones change, how long the dead
+// stretches are — and every one of those is frame-rate independent. Render
+// size changes none of it.
+//
+// It changes how long the run takes enormously. Under software GL with the
+// full post chain, 720p advances the sim at roughly 6% of real time, so ten
+// sim minutes costs about three hours; at 640x360 it is minutes. The pipeline
+// is still the real one — this is the shipping build, just drawn smaller.
+// (Composition and look are judged by composecheck/shoot at full size.)
+const page = await browser.newPage({ viewport: { width: 640, height: 360 } })
 await page.addInitScript(() => {
   window.__NIGHT_SEED__ = 42 // D.1: pinned night
   try { localStorage.setItem('moonrest-settings-v1', JSON.stringify({ settingsV: 2, memoryMode: 'n64', resScale: 1 })) } catch (e) {}
