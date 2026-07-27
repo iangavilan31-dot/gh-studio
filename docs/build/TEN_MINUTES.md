@@ -136,8 +136,23 @@ and trying; none light. Not a soft-lock (the night ends on moonset, not on
 lighting everything), but the game's whole verb is kindling the old lights and
 three were impossible.
 
-Fixed with a per-light `reach`, and `scripts/reachcheck.mjs` now walks up to
-every light and fails if any cannot be lit. **Reachability is not safely
+Fixing them took three layers, each revealed by fixing the one above it:
+
+1. **Reach.** A light's own structure was eating the player's arm's length.
+   `registerLight` now takes a per-light `reach`; RANGE is how far the Keeper
+   extends the staff, and a well head should not consume it.
+2. **The test surface.** `__MOONREST__.lights` projected a light down to
+   `{id, zone, kindled, x, z}`, so the gate never saw `reach`, assumed 2.0m for
+   everything, walked to the wrong distance and reported failure — of a fix that
+   was already working in the game.
+3. **Line of sight.** The interact LOS test sampled the sightline at EYE height
+   for its whole length (a lantern on a post is visible over a waist-high rim; a
+   flat ray runs into it), and it counted the light's OWN structure as an
+   occluder — the well holding the lantern up was the thing reported as hiding
+   it. Nothing occludes itself.
+
+`scripts/reachcheck.mjs` now walks up to every light from eight directions and
+fails if any cannot be lit. **REACHCHECK PASS — 43/43.** **Reachability is not safely
 computed** — an earlier geometric pass also flagged
 `rooftops-telescope-brazier`, which a player can in fact light. It has to be
 walked.
@@ -180,8 +195,23 @@ and trying; none light. Not a soft-lock (the night ends on moonset, not on
 lighting everything), but the game's whole verb is kindling the old lights and
 three were impossible.
 
-Fixed with a per-light `reach`, and `scripts/reachcheck.mjs` now walks up to
-every light and fails if any cannot be lit. **Reachability is not safely
+Fixing them took three layers, each revealed by fixing the one above it:
+
+1. **Reach.** A light's own structure was eating the player's arm's length.
+   `registerLight` now takes a per-light `reach`; RANGE is how far the Keeper
+   extends the staff, and a well head should not consume it.
+2. **The test surface.** `__MOONREST__.lights` projected a light down to
+   `{id, zone, kindled, x, z}`, so the gate never saw `reach`, assumed 2.0m for
+   everything, walked to the wrong distance and reported failure — of a fix that
+   was already working in the game.
+3. **Line of sight.** The interact LOS test sampled the sightline at EYE height
+   for its whole length (a lantern on a post is visible over a waist-high rim; a
+   flat ray runs into it), and it counted the light's OWN structure as an
+   occluder — the well holding the lantern up was the thing reported as hiding
+   it. Nothing occludes itself.
+
+`scripts/reachcheck.mjs` now walks up to every light from eight directions and
+fails if any cannot be lit. **REACHCHECK PASS — 43/43.** **Reachability is not safely
 computed** — an earlier geometric pass also flagged
 `rooftops-telescope-brazier`, which a player can in fact light. It has to be
 walked.
