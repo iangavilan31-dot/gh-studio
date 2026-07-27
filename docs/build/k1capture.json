@@ -6,314 +6,300 @@
    "id": "park-bench-lamp"
   },
   {
-   "nt": 0.14,
+   "nt": 0.05,
+   "ev": "waypoint",
+   "at": [
+    1.2,
+    -21.6
+   ]
+  },
+  {
+   "nt": 0.1,
    "ev": "kindle",
-   "id": "park-lantern-1"
+   "id": "park-firefly-jar"
   },
   {
-   "nt": 0.32,
+   "nt": 0.11,
+   "ev": "waypoint",
+   "at": [
+    -10.2,
+    -11.8
+   ]
+  },
+  {
+   "nt": 0.2,
    "ev": "kindle",
-   "id": "park-lantern-2"
+   "id": "park-firefly-jar"
   },
   {
-   "nt": 0.55,
+   "nt": 0.35,
+   "ev": "kindle",
+   "id": "park-firefly-jar"
+  },
+  {
+   "nt": 0.38,
    "ev": "waypoint",
    "at": [
-    24,
-    0
+    24.5,
+    2.2
    ]
   },
   {
-   "nt": 0.6,
-   "ev": "waypoint",
-   "at": [
-    40,
-    0
-   ]
-  },
-  {
-   "nt": 0.6,
-   "ev": "zone",
-   "to": "foglandPV"
-  },
-  {
-   "nt": 0.67,
-   "ev": "waypoint",
-   "at": [
-    60,
-    0
-   ]
-  },
-  {
-   "nt": 0.71,
-   "ev": "waypoint",
-   "at": [
-    72,
-    1
-   ]
-  },
-  {
-   "nt": 0.71,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 0.72,
-   "ev": "reveal",
-   "zone": "village"
+   "nt": 0.57,
+   "ev": "kindle",
+   "id": "wayside-shrine-5"
   },
   {
    "nt": 0.76,
-   "ev": "waypoint",
-   "at": [
-    88,
-    2
-   ]
-  },
-  {
-   "nt": 0.86,
    "ev": "kindle",
-   "id": "village-well-lantern"
+   "id": "wayside-shrine-6"
   },
   {
-   "nt": 0.94,
-   "ev": "kindle",
-   "id": "village-post-1"
-  },
-  {
-   "nt": 1.01,
-   "ev": "kindle",
-   "id": "village-post-2"
-  },
-  {
-   "nt": 1.09,
-   "ev": "kindle",
-   "id": "village-post-3"
-  },
-  {
-   "nt": 1.13,
-   "ev": "zone",
-   "to": "rooftops"
-  },
-  {
-   "nt": 1.14,
-   "ev": "reveal",
-   "zone": "rooftops"
-  },
-  {
-   "nt": 1.15,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 1.16,
-   "ev": "waypoint",
-   "at": [
-    137,
-    4
-   ]
-  },
-  {
-   "nt": 1.16,
-   "ev": "zone",
-   "to": "rooftops"
-  },
-  {
-   "nt": 1.18,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 1.27,
-   "ev": "waypoint",
-   "at": [
-    100,
-    2
-   ]
-  },
-  {
-   "nt": 1.36,
-   "ev": "waypoint",
-   "at": [
-    72,
-    1
-   ]
-  },
-  {
-   "nt": 1.37,
-   "ev": "zone",
-   "to": "foglandPV"
-  },
-  {
-   "nt": 1.46,
-   "ev": "waypoint",
-   "at": [
-    40,
-    0
-   ]
-  },
-  {
-   "nt": 1.48,
-   "ev": "zone",
-   "to": "park"
-  },
-  {
-   "nt": 1.52,
-   "ev": "waypoint",
-   "at": [
-    24,
-    0
-   ]
-  },
-  {
-   "nt": 1.63,
-   "ev": "waypoint",
-   "at": [
-    -6,
-    20
-   ]
-  },
-  {
-   "nt": 1.74,
-   "ev": "waypoint",
-   "at": [
-    -36,
-    34
-   ]
-  },
-  {
-   "nt": 1.78,
+   "nt": 0.83,
    "ev": "zone",
    "to": "foglandPR"
   },
   {
-   "nt": 1.82,
+   "nt": 1,
    "ev": "kindle",
-   "id": "wayside-shrine-1"
+   "id": "wayside-shrine-6"
   },
   {
-   "nt": 1.84,
+   "nt": 1.02,
    "ev": "zone",
    "to": "park"
   },
   {
-   "nt": 1.89,
-   "ev": "waypoint",
+   "nt": 1.31,
+   "ev": "zone",
+   "to": "foglandPV"
+  },
+  {
+   "nt": 1.38,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 1.39,
+   "ev": "reveal",
+   "zone": "village"
+  },
+  {
+   "nt": 1.47,
+   "ev": "kindle",
+   "id": "wayside-shrine-6"
+  },
+  {
+   "nt": 1.54,
+   "ev": "kindle",
+   "id": "wayside-shrine-6"
+  },
+  {
+   "nt": 1.62,
+   "ev": "kindle",
+   "id": "wayside-shrine-6"
+  },
+  {
+   "nt": 2.83,
+   "ev": "skip",
    "at": [
-    -34,
-    22
+    114.6,
+    -2.7274082483977313
    ]
   },
   {
-   "nt": 2.07,
-   "ev": "waypoint",
+   "nt": 4.03,
+   "ev": "skip",
    "at": [
-    0,
-    0
+    119.78,
+    -4.837134720047104
    ]
+  },
+  {
+   "nt": 4.05,
+   "ev": "kindle",
+   "id": "wayside-shrine-6"
+  },
+  {
+   "nt": 5.25,
+   "ev": "skip",
+   "at": [
+    127.28,
+    -3.26323081703565
+   ]
+  },
+  {
+   "nt": 6.45,
+   "ev": "skip",
+   "at": [
+    127.5,
+    -8.957359312880714
+   ]
+  },
+  {
+   "nt": 7.65,
+   "ev": "skip",
+   "at": [
+    134.5,
+    -6.276057001562719
+   ]
+  },
+  {
+   "nt": 8.86,
+   "ev": "skip",
+   "at": [
+    136,
+    -1.0418498100764575
+   ]
+  },
+  {
+   "nt": 8.9,
+   "ev": "kindle",
+   "id": "wayside-shrine-6"
+  },
+  {
+   "nt": 8.95,
+   "ev": "kindle",
+   "id": "wayside-shrine-6"
   }
  ],
  "gaps": [
   {
-   "gap": 0.22,
-   "atNt": 0.33
-  },
-  {
-   "gap": 0.17,
-   "atNt": 1.9
-  },
-  {
-   "gap": 0.16,
-   "atNt": 0.16
-  },
-  {
-   "gap": 0.11,
-   "atNt": 0.03
-  },
-  {
-   "gap": 0.1,
+   "gap": 1.19,
    "atNt": 1.64
+  },
+  {
+   "gap": 1.19,
+   "atNt": 2.84
+  },
+  {
+   "gap": 1.19,
+   "atNt": 4.06
+  },
+  {
+   "gap": 1.19,
+   "atNt": 7.67
+  },
+  {
+   "gap": 1.18,
+   "atNt": 5.27
+  },
+  {
+   "gap": 1.18,
+   "atNt": 6.47
+  },
+  {
+   "gap": 0.28,
+   "atNt": 1.03
+  },
+  {
+   "gap": 0.18,
+   "atNt": 0.39
   }
  ],
- "simMinutes": 2.07,
- "kindled": 8,
- "endZone": "park",
+ "simMinutes": 8.95,
+ "kindled": 13,
+ "endZone": "village",
  "waypointsReached": 22,
  "routeLength": 22,
  "stalls": [
   {
-   "nt": 0.24,
+   "nt": 0.03,
    "at": [
-    -9.9,
-    7.59
+    2.71,
+    -18
    ],
-   "wp": 2
+   "wp": 1
   },
   {
-   "nt": 0.26,
+   "nt": 0.22,
    "at": [
-    -9.91,
-    7.56
+    -12.28,
+    7.58
    ],
-   "wp": 2
-  },
-  {
-   "nt": 0.34,
-   "at": [
-    -12.19,
-    7.14
-   ],
-   "wp": 3
-  },
-  {
-   "nt": 0.36,
-   "at": [
-    -12.38,
-    6.78
-   ],
-   "wp": 3
-  },
-  {
-   "nt": 0.39,
-   "at": [
-    -10.56,
-    9.03
-   ],
-   "wp": 3
-  },
-  {
-   "nt": 0.4,
-   "at": [
-    -10.93,
-    8.74
-   ],
-   "wp": 3
+   "wp": 5
   },
   {
    "nt": 0.43,
    "at": [
-    -7.82,
-    11.93
+    21.45,
+    -11.36
    ],
-   "wp": 3
+   "wp": 7
   },
   {
-   "nt": 2,
+   "nt": 0.44,
    "at": [
-    -12.32,
-    6.82
+    20.2,
+    -11.23
    ],
-   "wp": 21
+   "wp": 7
   },
   {
-   "nt": 2.01,
+   "nt": 0.45,
    "at": [
-    -12.21,
-    7.19
+    20.58,
+    -11.11
    ],
-   "wp": 21
+   "wp": 7
+  },
+  {
+   "nt": 1.65,
+   "at": [
+    108.08,
+    1.31
+   ],
+   "wp": 13
+  },
+  {
+   "nt": 1.7,
+   "at": [
+    112.27,
+    1.35
+   ],
+   "wp": 13
+  },
+  {
+   "nt": 1.71,
+   "at": [
+    110.98,
+    1.32
+   ],
+   "wp": 13
+  },
+  {
+   "nt": 1.72,
+   "at": [
+    112.56,
+    1.91
+   ],
+   "wp": 13
+  },
+  {
+   "nt": 1.74,
+   "at": [
+    110.99,
+    1.34
+   ],
+   "wp": 13
+  },
+  {
+   "nt": 1.75,
+   "at": [
+    112.73,
+    2.08
+   ],
+   "wp": 13
+  },
+  {
+   "nt": 1.77,
+   "at": [
+    110.99,
+    1.32
+   ],
+   "wp": 13
   }
  ],
- "routeSimMinutes": 2.07,
+ "routeSimMinutes": 8.95,
  "consoleIssues": []
 }

@@ -105,6 +105,7 @@ const data = await page.evaluate(async () => {
   // traps sealed, a concave corner can still trap a dumb seek, so the driver
   // needs to notice and go around.
   let bestD = Infinity, noProgress = 0, sidestep = 0, sidestepKey = 'KeyD'
+  let stuckRuns = 0, reversing = 0
   let wpStartNt = 0
   const stalls = []
   const nt0 = M.state.nightT
@@ -135,15 +136,22 @@ const data = await page.evaluate(async () => {
       // the run goes nowhere — that micro-jitter defeated the first version of
       // this check. What matters is whether the target is getting closer.
       if (d < bestD - 0.25) { bestD = d; noProgress = 0 } else noProgress++
+      // Escalate. Alternating direction on every attempt walks the player back
+      // into the same corner — seven unsticks fired at (110.99, 1.32) within a
+      // metre of each other. Keep a direction while it is working, flip only
+      // after it fails, and add reverse once flipping has failed too.
       if (noProgress > 25 && sidestep <= 0) {
+        stuckRuns++
         // wedged: strafe along the obstacle for a beat, alternating sides so a
         // corner that defeats one direction gets the other next time
-        sidestep = 30
-        sidestepKey = sidestepKey === 'KeyD' ? 'KeyA' : 'KeyD'
-        stalls.push({ nt: +nt.toFixed(2), at: [+s.playerPos[0].toFixed(2), +s.playerPos[2].toFixed(2)], wp })
+        sidestep = 30 + stuckRuns * 25
+        if (stuckRuns > 1) sidestepKey = sidestepKey === 'KeyD' ? 'KeyA' : 'KeyD'
+        if (stuckRuns >= 3) { kb('keyup', 'KeyW'); kb('keydown', 'KeyS'); reversing = 22 }
+        stalls.push({ nt: +nt.toFixed(2), at: [+s.playerPos[0].toFixed(2), +s.playerPos[2].toFixed(2)], wp, run: stuckRuns })
         kb('keydown', sidestepKey)
         noProgress = 0
       }
+      if (reversing > 0 && --reversing === 0) { kb('keyup', 'KeyS'); kb('keydown', 'KeyW') }
       if (sidestep > 0 && --sidestep === 0) kb('keyup', sidestepKey)
       // steer toward the waypoint (but not while strafing free of an obstacle)
       if (sidestep === 0) M.setCamYaw(Math.atan2(-dx, -dz))
@@ -152,7 +160,7 @@ const data = await page.evaluate(async () => {
     // a waypoint that cannot be reached must not eat the whole capture
     if (!channelStart && nt - wpStartNt > 1.2 && wp < route.length) {
       events.push({ nt: +nt.toFixed(2), ev: 'skip', at: [t.x, t.z] })
-      wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0
+      wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0; stuckRuns = 0
       if (sidestep > 0) { kb('keyup', sidestepKey); sidestep = 0 }
     }
     // Arrival radius. The game's interact range is 2.0m, and this used to
@@ -173,7 +181,7 @@ const data = await page.evaluate(async () => {
         channelStart = nt
       } else if (!t.light) {
         events.push({ nt: +nt.toFixed(2), ev: 'waypoint', at: [t.x, t.z] })
-        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0
+        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0; stuckRuns = 0
       }
     }
     if (channelStart != null) {
@@ -181,12 +189,12 @@ const data = await page.evaluate(async () => {
         kb('keyup', 'KeyE')
         kb('keydown', 'KeyW')
         channelStart = null
-        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0
+        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0; stuckRuns = 0
       } else if (nt - channelStart > 0.2) { // ~12s sim without a kindle: move on
         kb('keyup', 'KeyE')
         kb('keydown', 'KeyW')
         channelStart = null
-        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0
+        wp++; wpStartNt = nt; bestD = Infinity; noProgress = 0; stuckRuns = 0
       }
     }
     if (prev) {
