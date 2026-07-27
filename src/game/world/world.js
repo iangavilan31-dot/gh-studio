@@ -279,6 +279,53 @@ export class World {
    * before merging, and anything standing in open water is offshore dressing.
    * Returns the list it covered so the gate can report it.
    */
+  // FIN-4: seal wedge traps.
+  //
+  // The ten-minute capture stalled dead at (-10.06, 8.11) — position
+  // bit-identical for 1800 ticks while the controller happily reported 5.2 m/s.
+  // The cause was two 0.8m rock colliders whose centres sit 2.28m apart: a
+  // surface gap of 0.68m, against a character capsule 0.70m wide. The player
+  // was jammed in a gap two centimetres too narrow.
+  //
+  // A gap the player cannot fit through is not a passage — but at this width it
+  // still LOOKS like one, both to a human reading the scene and to anything
+  // steering toward a point beyond it. So close it: bridge any pair of
+  // blocking colliders whose clearance is under a capsule-and-a-bit, and the
+  // pair reads as the single solid mass it effectively is. Walking around a
+  // rock is fine; walking into an invisible pinch and stopping is not.
+  //
+  // Only marginal gaps are sealed. Anything over CLEAR is comfortably walkable
+  // and is left alone, so real paths between props survive.
+  sealNarrowGaps() {
+    const CAPSULE_D = 0.70          // 2 × CAPSULE.radius in systems/physics.js
+    const CLEAR = CAPSULE_D + 0.12  // under this, treat it as a pinch, not a gap
+    const MIN_H = 0.5               // shorter than this the controller autosteps
+    const sealed = []
+    const cols = this.colliders
+    const n = cols.length
+    for (let i = 0; i < n; i++) {
+      const a = cols[i]
+      if (!a.r || (a.h ?? 0) < MIN_H) continue
+      for (let j = i + 1; j < n; j++) {
+        const b = cols[j]
+        if (!b.r || (b.h ?? 0) < MIN_H) continue
+        const dx = b.x - a.x, dz = b.z - a.z
+        const dist = Math.hypot(dx, dz)
+        if (dist < 1e-4) continue
+        const gap = dist - a.r - b.r
+        if (gap <= 0 || gap >= CLEAR) continue    // overlapping already, or wide enough
+        const t = (a.r + gap / 2) / dist
+        const x = a.x + dx * t, z = a.z + dz * t
+        this.colliders.push({
+          x, z, r: gap / 2 + 0.08, h: Math.min(a.h, b.h),
+          y0: heightAt(x, z), tag: 'seal',
+        })
+        sealed.push({ x: +x.toFixed(2), z: +z.toFixed(2), gap: +gap.toFixed(2) })
+      }
+    }
+    return sealed
+  }
+
   autoCoverColliderGaps() {
     const covered = []
     this.realScene.traverse((o) => {

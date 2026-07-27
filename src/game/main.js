@@ -91,9 +91,12 @@ initRapier().then(() => {
   // close any collider gap BEFORE handing the set to rapier, so the physics
   // world and the audit agree by construction
   const autoCovered = world.autoCoverColliderGaps()
+  // seal pinches AFTER the auto-cover pass, so bridges consider those too
+  const sealed = world.sealNarrowGaps()
   const phys = new Physics()
   const n = phys.addProps({ colliders: world.colliders, aabbs: world.aabbs })
   window.__MOONREST_AUTOCOVER__ = autoCovered
+  window.__MOONREST_SEALED__ = sealed
   phys.addBoundary()
   phys.refreshQueries()
   player.physics = phys
