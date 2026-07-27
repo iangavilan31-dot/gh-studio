@@ -157,10 +157,33 @@ computed** — an earlier geometric pass also flagged
 `rooftops-telescope-brazier`, which a player can in fact light. It has to be
 walked.
 
-**2. The authored route only fills ~3.4 of the ten minutes.** The driver walks
+**2. The authored route only fills ~2 of the ten minutes.** The driver walks
 optimally and never explores, so a player is slower and the real gap is smaller
 than it looks — but the opening is thinner than ten minutes of authored beats.
 That is now its own reported line rather than a gap number.
+
+## Where it stands now
+
+`K1 CAPTURE PASS — route complete, worst stretch 13s <= 20s`, console clean.
+22/22 waypoints, 8 lamps, 34 events, `docs/build/k1capture.json` on disk.
+
+That is a real pass, unlike the one this file previously recorded: route
+completion is now a gate in its own right, and a beat is an event rather than
+proximity to a landmark, so a stalled or idle run can no longer score well.
+
+**But the capture passing is NOT the ten-minute gate passing, and this file
+should not be read as if it were.** The capture measures pacing *within the
+authored route*, and the authored route is **2.07 sim minutes long** at this
+driver's pace. Its worst dead stretch being 13 seconds is a statement about two
+minutes of content, not ten.
+
+So Stage 4 remains open on the thing that actually matters:
+
+- The opening needs roughly five times more authored route than it has. A real
+  player is slower than a driver that walks optimally and never explores, never
+  reads a fingerpost, never stops to look at anything — so the true figure is
+  better than 2.07 minutes, but not by the factor needed.
+- No screenshot evidence of the opening has been captured yet.
 
 ## Next
 
@@ -216,10 +239,33 @@ computed** — an earlier geometric pass also flagged
 `rooftops-telescope-brazier`, which a player can in fact light. It has to be
 walked.
 
-**2. The authored route only fills ~3.4 of the ten minutes.** The driver walks
+**2. The authored route only fills ~2 of the ten minutes.** The driver walks
 optimally and never explores, so a player is slower and the real gap is smaller
 than it looks — but the opening is thinner than ten minutes of authored beats.
 That is now its own reported line rather than a gap number.
+
+## Where it stands now
+
+`K1 CAPTURE PASS — route complete, worst stretch 13s <= 20s`, console clean.
+22/22 waypoints, 8 lamps, 34 events, `docs/build/k1capture.json` on disk.
+
+That is a real pass, unlike the one this file previously recorded: route
+completion is now a gate in its own right, and a beat is an event rather than
+proximity to a landmark, so a stalled or idle run can no longer score well.
+
+**But the capture passing is NOT the ten-minute gate passing, and this file
+should not be read as if it were.** The capture measures pacing *within the
+authored route*, and the authored route is **2.07 sim minutes long** at this
+driver's pace. Its worst dead stretch being 13 seconds is a statement about two
+minutes of content, not ten.
+
+So Stage 4 remains open on the thing that actually matters:
+
+- The opening needs roughly five times more authored route than it has. A real
+  player is slower than a driver that walks optimally and never explores, never
+  reads a fingerpost, never stops to look at anything — so the true figure is
+  better than 2.07 minutes, but not by the factor needed.
+- No screenshot evidence of the opening has been captured yet.
 
 ## Next
 
