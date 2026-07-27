@@ -6,26 +6,6 @@
    "id": "park-bench-lamp"
   },
   {
-   "nt": 0.74,
-   "ev": "zone",
-   "to": "foglandPI"
-  },
-  {
-   "nt": 0.78,
-   "ev": "zone",
-   "to": "park"
-  },
-  {
-   "nt": 1.02,
-   "ev": "zone",
-   "to": "foglandPI"
-  },
-  {
-   "nt": 1.12,
-   "ev": "zone",
-   "to": "park"
-  },
-  {
    "nt": 1.23,
    "ev": "skip",
    "at": [
@@ -34,12 +14,12 @@
    ]
   },
   {
-   "nt": 1.4,
+   "nt": 1.32,
    "ev": "kindle",
    "id": "park-firefly-jar"
   },
   {
-   "nt": 1.4,
+   "nt": 1.32,
    "ev": "waypoint",
    "at": [
     -10.2,
@@ -47,17 +27,17 @@
    ]
   },
   {
-   "nt": 1.5,
+   "nt": 1.41,
    "ev": "kindle",
    "id": "park-firefly-jar"
   },
   {
-   "nt": 1.65,
+   "nt": 1.56,
    "ev": "kindle",
    "id": "park-firefly-jar"
   },
   {
-   "nt": 1.68,
+   "nt": 1.6,
    "ev": "waypoint",
    "at": [
     24.5,
@@ -65,62 +45,62 @@
    ]
   },
   {
-   "nt": 1.86,
+   "nt": 1.77,
    "ev": "kindle",
    "id": "wayside-shrine-5"
   },
   {
-   "nt": 2.05,
+   "nt": 1.96,
    "ev": "kindle",
    "id": "wayside-shrine-6"
   },
   {
-   "nt": 2.12,
+   "nt": 2.02,
    "ev": "zone",
    "to": "foglandPR"
   },
   {
-   "nt": 2.29,
+   "nt": 2.2,
    "ev": "kindle",
    "id": "wayside-shrine-6"
   },
   {
-   "nt": 2.31,
+   "nt": 2.22,
    "ev": "zone",
    "to": "park"
   },
   {
-   "nt": 2.6,
+   "nt": 2.51,
    "ev": "zone",
    "to": "foglandPV"
   },
   {
-   "nt": 2.67,
+   "nt": 2.58,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 2.68,
+   "nt": 2.59,
    "ev": "reveal",
    "zone": "village"
   },
   {
-   "nt": 2.76,
+   "nt": 2.67,
    "ev": "kindle",
    "id": "wayside-shrine-6"
   },
   {
-   "nt": 2.83,
+   "nt": 2.74,
    "ev": "kindle",
    "id": "wayside-shrine-6"
   },
   {
-   "nt": 2.91,
+   "nt": 2.82,
    "ev": "kindle",
    "id": "wayside-shrine-6"
   },
   {
-   "nt": 4.11,
+   "nt": 4.03,
    "ev": "skip",
    "at": [
     114.6,
@@ -128,32 +108,7 @@
    ]
   },
   {
-   "nt": 4.87,
-   "ev": "zone",
-   "to": "rooftops"
-  },
-  {
-   "nt": 4.88,
-   "ev": "reveal",
-   "zone": "rooftops"
-  },
-  {
-   "nt": 4.92,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 4.97,
-   "ev": "zone",
-   "to": "rooftops"
-  },
-  {
-   "nt": 4.98,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 5.32,
+   "nt": 5.23,
    "ev": "skip",
    "at": [
     119.78,
@@ -161,22 +116,225 @@
    ]
   },
   {
-   "nt": 5.48,
+   "nt": 5.25,
    "ev": "kindle",
    "id": "wayside-shrine-6"
   },
   {
-   "nt": 6.05,
+   "nt": 5.38,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 6.06,
+   "nt": 5.38,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 6.6,
+   "nt": 5.39,
+   "ev": "reveal",
+   "zone": "village"
+  },
+  {
+   "nt": 5.39,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 5.42,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 5.43,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 5.52,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 5.53,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 5.6,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 5.62,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 5.69,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 5.7,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 5.77,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 5.79,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 5.85,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 5.85,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 5.86,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 5.88,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 5.93,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 5.96,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 6.01,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.02,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 6.02,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.04,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 6.09,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.1,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 6.1,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.12,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 6.18,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.21,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 6.26,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.3,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 6.34,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.34,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 6.35,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.38,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 6.43,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.43,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 6.44,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.45,
+   "ev": "skip",
+   "at": [
+    127.28,
+    -3.26323081703565
+   ]
+  },
+  {
+   "nt": 6.45,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 6.47,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.48,
    "ev": "zone",
    "to": "rooftops"
   },
@@ -186,40 +344,72 @@
    "to": "village"
   },
   {
-   "nt": 6.69,
-   "ev": "skip",
-   "at": [
-    127.28,
-    -3.26323081703565
-   ]
+   "nt": 6.63,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 6.63,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.63,
+   "ev": "zone",
+   "to": "rooftops"
   },
   {
    "nt": 6.7,
    "ev": "zone",
-   "to": "rooftops"
-  },
-  {
-   "nt": 6.84,
-   "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 6.85,
+   "nt": 6.71,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 6.9,
+   "nt": 6.78,
    "ev": "zone",
    "to": "village"
+  },
+  {
+   "nt": 6.79,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 6.87,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.87,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 6.87,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.88,
+   "ev": "zone",
+   "to": "rooftops"
   },
   {
    "nt": 6.95,
    "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.96,
+   "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 6.97,
+   "nt": 7.03,
    "ev": "zone",
    "to": "village"
   },
@@ -229,32 +419,27 @@
    "to": "rooftops"
   },
   {
-   "nt": 7.06,
+   "nt": 7.03,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 7.11,
+   "nt": 7.04,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 7.13,
+   "nt": 7.44,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 7.24,
+   "nt": 7.44,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 7.25,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 7.9,
+   "nt": 7.65,
    "ev": "skip",
    "at": [
     127.5,
@@ -262,7 +447,242 @@
    ]
   },
   {
-   "nt": 9.11,
+   "nt": 7.72,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 7.72,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 7.76,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 7.77,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 7.8,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 7.81,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 7.84,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 7.86,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 7.89,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 7.9,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 7.94,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 7.95,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 7.98,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.04,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.05,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.08,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.1,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.13,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.15,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.18,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.19,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.23,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.24,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.28,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.29,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.33,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.35,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.38,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.39,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.43,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.44,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.48,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.49,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.53,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.54,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.58,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.59,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.63,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.64,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.68,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.69,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.73,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.74,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.78,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.8,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 8.85,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.86,
    "ev": "skip",
    "at": [
     134.5,
@@ -270,66 +690,66 @@
    ]
   },
   {
-   "nt": 9.3,
-   "ev": "kindle",
-   "id": "wayside-shrine-6"
-  },
-  {
-   "nt": 9.3,
+   "nt": 8.86,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 9.34,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 9.38,
+   "nt": 8.88,
    "ev": "kindle",
    "id": "wayside-shrine-6"
   },
   {
-   "nt": 9.44,
+   "nt": 8.92,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 8.96,
+   "ev": "kindle",
+   "id": "wayside-shrine-6"
+  },
+  {
+   "nt": 9.02,
    "ev": "kindle",
    "id": "wayside-shrine-6"
   }
  ],
  "gaps": [
   {
-   "gap": 1.19,
-   "atNt": 2.92
-  },
-  {
-   "gap": 1.19,
-   "atNt": 7.92
-  },
-  {
-   "gap": 0.74,
-   "atNt": 4.13
-  },
-  {
-   "gap": 0.71,
+   "gap": 1.2,
    "atNt": 0.03
   },
   {
-   "gap": 0.63,
-   "atNt": 7.27
+   "gap": 1.2,
+   "atNt": 2.83
   },
   {
-   "gap": 0.55,
-   "atNt": 5.5
+   "gap": 1.18,
+   "atNt": 4.05
   },
   {
-   "gap": 0.53,
-   "atNt": 6.07
+   "gap": 0.38,
+   "atNt": 7.06
   },
   {
-   "gap": 0.32,
-   "atNt": 5
+   "gap": 0.28,
+   "atNt": 2.23
+  },
+  {
+   "gap": 0.19,
+   "atNt": 7.46
+  },
+  {
+   "gap": 0.18,
+   "atNt": 1.78
+  },
+  {
+   "gap": 0.17,
+   "atNt": 2.03
   }
  ],
- "simMinutes": 9.44,
+ "simMinutes": 9.02,
  "kindled": 14,
  "endZone": "village",
  "waypointsReached": 22,
@@ -347,103 +767,103 @@
   {
    "nt": 0.06,
    "at": [
-    5.35,
-    -21.38
+    5.16,
+    -20.95
    ],
    "wp": 1,
    "run": 2
   },
   {
-   "nt": 0.1,
+   "nt": 0.09,
    "at": [
-    3.57,
-    -20.5
+    3.72,
+    -20.08
    ],
    "wp": 1,
    "run": 3
   },
   {
-   "nt": 0.15,
+   "nt": 0.14,
    "at": [
-    2.42,
-    -34.8
+    2.92,
+    -32.19
    ],
    "wp": 1,
    "run": 4
   },
   {
-   "nt": 0.22,
+   "nt": 0.19,
    "at": [
-    15.94,
-    -24.65
+    11.36,
+    -21.94
    ],
    "wp": 1,
    "run": 5
   },
   {
-   "nt": 0.3,
+   "nt": 0.23,
    "at": [
-    -0.32,
-    -39.65
+    3.55,
+    -30.65
    ],
    "wp": 1,
    "run": 6
   },
   {
-   "nt": 0.4,
+   "nt": 0.28,
    "at": [
-    22.02,
-    -25.54
+    10.02,
+    -18.77
    ],
    "wp": 1,
    "run": 7
   },
   {
-   "nt": 0.5,
+   "nt": 0.33,
    "at": [
-    1.88,
-    -44.19
+    2.94,
+    -31.34
    ],
    "wp": 1,
    "run": 8
   },
   {
-   "nt": 0.62,
+   "nt": 0.37,
    "at": [
-    25.92,
-    -21.71
+    9.23,
+    -21.07
    ],
    "wp": 1,
    "run": 9
   },
   {
-   "nt": 0.75,
+   "nt": 0.41,
    "at": [
-    2.96,
-    -50.58
+    -0.46,
+    -31.48
    ],
    "wp": 1,
    "run": 10
   },
   {
-   "nt": 0.89,
+   "nt": 0.46,
    "at": [
-    32.84,
-    -22.16
+    10.34,
+    -24.7
    ],
    "wp": 1,
    "run": 11
   },
   {
-   "nt": 1.06,
+   "nt": 0.51,
    "at": [
-    2.69,
-    -57.4
+    -2.28,
+    -31.14
    ],
    "wp": 1,
    "run": 12
   }
  ],
- "routeSimMinutes": 9.44,
+ "routeSimMinutes": 9.02,
  "consoleIssues": []
 }
