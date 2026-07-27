@@ -27,6 +27,7 @@ export class HUD {
     ui.appendChild(this.subtitle)
     this.subtitleTimer = null
     this.pendingSays = new Set()
+    this.beats = []   // recorded, never rendered — see say()
   }
 
   showPrompt(verb) {
@@ -103,11 +104,24 @@ export class HUD {
     this.pendingSays.add(id)
   }
 
+  // every beat the game would once have spoken, for the rigs and for the pass
+  // that turns them back into something wordless
+  get spokenBeats() { return this.beats }
+
+  // FINAL_PASS Part 4: zero words. This used to render prose subtitles —
+  // Beldam's dialogue, moment lines, trinket lines — 23 call sites of English
+  // sentences, several of them jokes, which also broke DIRECTION Part 13's
+  // "the world is never funny". A judge reviewer found a four-sentence bark
+  // burned across the frame the project was using as evidence that its
+  // wordless opening worked.
+  //
+  // The beats are NOT deleted: each call still records, so the moment structure
+  // survives for a pass that re-expresses it as light, animation or sound (the
+  // way Beldam's line is specified in Part 4 — a head-turn toward the road).
+  // Until then those moments are silent, and that is a real loss stated plainly
+  // rather than papered over with a subtitle.
   say(text, seconds = 4) {
-    if (this.subtitlesOn === false) return // a11y setting (Part 10)
-    this.subtitle.textContent = text
-    this.subtitle.classList.add('on')
-    clearTimeout(this.subtitleTimer)
-    this.subtitleTimer = setTimeout(() => this.subtitle.classList.remove('on'), seconds * 1000)
+    this.beats.push({ text, t: performance.now() })
+    if (this.beats.length > 64) this.beats.shift()
   }
 }

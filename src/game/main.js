@@ -991,6 +991,7 @@ window.__MOONREST__ = {
   // FIN-0: direct handles for scripts/collisioncheck.mjs — it drives the real
   // controller against the real colliders rather than simulating a bot.
   __scene: scene,
+  __hud: hud,
   __world: world,
   __player: player,
   seed: worldRNG.seed,
