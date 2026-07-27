@@ -9,12 +9,345 @@
    "nt": 0.14,
    "ev": "kindle",
    "id": "park-lantern-1"
+  },
+  {
+   "nt": 0.31,
+   "ev": "kindle",
+   "id": "park-lantern-2"
+  },
+  {
+   "nt": 0.53,
+   "ev": "waypoint",
+   "at": [
+    24,
+    0
+   ]
+  },
+  {
+   "nt": 0.58,
+   "ev": "waypoint",
+   "at": [
+    40,
+    0
+   ]
+  },
+  {
+   "nt": 0.58,
+   "ev": "zone",
+   "to": "foglandPV"
+  },
+  {
+   "nt": 0.64,
+   "ev": "waypoint",
+   "at": [
+    60,
+    0
+   ]
+  },
+  {
+   "nt": 0.68,
+   "ev": "waypoint",
+   "at": [
+    72,
+    1
+   ]
+  },
+  {
+   "nt": 0.68,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 0.69,
+   "ev": "reveal",
+   "zone": "village"
+  },
+  {
+   "nt": 0.73,
+   "ev": "waypoint",
+   "at": [
+    88,
+    2
+   ]
+  },
+  {
+   "nt": 1.94,
+   "ev": "skip",
+   "at": [
+    110,
+    13
+   ]
+  },
+  {
+   "nt": 2.08,
+   "ev": "kindle",
+   "id": "village-post-1"
+  },
+  {
+   "nt": 2.15,
+   "ev": "kindle",
+   "id": "village-post-2"
+  },
+  {
+   "nt": 2.23,
+   "ev": "kindle",
+   "id": "village-post-3"
+  },
+  {
+   "nt": 2.27,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 2.28,
+   "ev": "reveal",
+   "zone": "rooftops"
+  },
+  {
+   "nt": 2.29,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 2.29,
+   "ev": "waypoint",
+   "at": [
+    137,
+    4
+   ]
+  },
+  {
+   "nt": 2.3,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 2.32,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 2.41,
+   "ev": "waypoint",
+   "at": [
+    100,
+    2
+   ]
+  },
+  {
+   "nt": 2.5,
+   "ev": "waypoint",
+   "at": [
+    72,
+    1
+   ]
+  },
+  {
+   "nt": 2.51,
+   "ev": "zone",
+   "to": "foglandPV"
+  },
+  {
+   "nt": 2.6,
+   "ev": "waypoint",
+   "at": [
+    40,
+    0
+   ]
+  },
+  {
+   "nt": 2.61,
+   "ev": "zone",
+   "to": "park"
+  },
+  {
+   "nt": 2.65,
+   "ev": "waypoint",
+   "at": [
+    24,
+    0
+   ]
+  },
+  {
+   "nt": 2.76,
+   "ev": "waypoint",
+   "at": [
+    -6,
+    20
+   ]
+  },
+  {
+   "nt": 2.87,
+   "ev": "waypoint",
+   "at": [
+    -36,
+    34
+   ]
+  },
+  {
+   "nt": 2.91,
+   "ev": "zone",
+   "to": "foglandPR"
+  },
+  {
+   "nt": 3.16,
+   "ev": "zone",
+   "to": "park"
+  },
+  {
+   "nt": 3.21,
+   "ev": "waypoint",
+   "at": [
+    -34,
+    22
+   ]
+  },
+  {
+   "nt": 3.37,
+   "ev": "waypoint",
+   "at": [
+    0,
+    0
+   ]
   }
  ],
- "gaps": [],
+ "gaps": [
+  {
+   "gap": 6.62,
+   "atNt": 3.38,
+   "tail": true
+  },
+  {
+   "gap": 1.2,
+   "atNt": 0.74
+  },
+  {
+   "gap": 0.24,
+   "atNt": 2.92
+  },
+  {
+   "gap": 0.21,
+   "atNt": 0.32
+  },
+  {
+   "gap": 0.15,
+   "atNt": 0.16
+  },
+  {
+   "gap": 0.15,
+   "atNt": 3.22
+  },
+  {
+   "gap": 0.13,
+   "atNt": 1.95
+  },
+  {
+   "gap": 0.11,
+   "atNt": 0.03
+  }
+ ],
  "simMinutes": 10,
- "kindled": 2,
+ "kindled": 6,
  "endZone": "park",
- "waypointsReached": 2,
+ "waypointsReached": 22,
+ "routeLength": 22,
+ "stalls": [
+  {
+   "nt": 0.24,
+   "at": [
+    -9.93,
+    7.52
+   ],
+   "wp": 2
+  },
+  {
+   "nt": 0.26,
+   "at": [
+    -9.94,
+    7.46
+   ],
+   "wp": 2
+  },
+  {
+   "nt": 0.34,
+   "at": [
+    -12.23,
+    7.04
+   ],
+   "wp": 3
+  },
+  {
+   "nt": 0.35,
+   "at": [
+    -12.55,
+    6.68
+   ],
+   "wp": 3
+  },
+  {
+   "nt": 0.38,
+   "at": [
+    -10.53,
+    9.17
+   ],
+   "wp": 3
+  },
+  {
+   "nt": 0.4,
+   "at": [
+    -10.86,
+    8.8
+   ],
+   "wp": 3
+  },
+  {
+   "nt": 0.84,
+   "at": [
+    107.13,
+    12.92
+   ],
+   "wp": 8
+  },
+  {
+   "nt": 0.85,
+   "at": [
+    107.45,
+    9.81
+   ],
+   "wp": 8
+  },
+  {
+   "nt": 0.87,
+   "at": [
+    107.13,
+    12.87
+   ],
+   "wp": 8
+  },
+  {
+   "nt": 0.88,
+   "at": [
+    107.13,
+    10.56
+   ],
+   "wp": 8
+  },
+  {
+   "nt": 0.89,
+   "at": [
+    107.11,
+    15.55
+   ],
+   "wp": 8
+  },
+  {
+   "nt": 0.91,
+   "at": [
+    107.13,
+    11.65
+   ],
+   "wp": 8
+  }
+ ],
  "consoleIssues": []
 }
