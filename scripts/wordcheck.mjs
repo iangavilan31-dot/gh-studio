@@ -37,7 +37,7 @@ try {
   const out = execSync(`grep -rnoE ${JSON.stringify(pattern)} ${resolve(root, 'src/game')} --include=*.js || true`,
     { encoding: 'utf8' })
   staticProse = out.split('\n').filter(Boolean)
-    .filter((l) => /[A-Za-z]+[\s'\u2019,.!?-]+[A-Za-z]+/.test(l.slice(l.indexOf('(') + 1)))
+    .filter((l) => /[A-Za-z]+[\s\u2019',.!?]+[A-Za-z]+/.test(l.slice(l.indexOf('(') + 1)))
 } catch (e) { staticProse = [`SCAN FAILED: ${e.message}`] }
 
 const preview = spawn(resolve(root, 'node_modules/.bin/vite'),
@@ -189,7 +189,7 @@ const offenders = all.filter((t) => isWord(t.text))
 //   TOKEN  — a single-word identifier that is never rendered.
 //            `showPrompt("kindle")` writes a data attribute the rigs and the
 //            accessibility layer read; nothing reaches the screen.
-const isProse = (t) => /[A-Za-z]+[\s'’,.!?-]+[A-Za-z]+/.test(t)
+const isProse = (t) => /[A-Za-z]+[\s\u2019',.!?]+[A-Za-z]+/.test(t)
 const prose = spoken.filter((x) => isProse(x.text))
 const tokens = spoken.filter((x) => !isProse(x.text))
 for (const x of prose) offenders.push({ moment: 'hud-prose', text: `${x.method}("${x.text.slice(0, 70)}")`, tag: 'hud', cls: x.method })
