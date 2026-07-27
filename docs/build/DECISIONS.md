@@ -846,3 +846,26 @@ arrow or a flame icon, and a player who has never seen a rune learns what it
 means the first time the ring fills — which is how a wordless prompt is meant to
 teach. Any Latin letter fails. If the intent is literally no glyphs at all, the
 rule is one line in wordcheck.mjs and the rune goes with it.
+
+## FINAL RUN #27 — three zones only, and what that means for the gates
+
+FINAL_PASS Part 1 Rule 1 is locked: **three zones only** — the Gloaming Park,
+Emberwick Village, the Moonlit Isle. Every other zone is archived behind a flag,
+code kept, content out of scope.
+
+The world currently ships eight (park, village, rooftops, ruins, gloomspire,
+hall, mosswood, foglands). I have been gating all thirteen poses across all
+eight, which is *stricter* than the ship condition asks for ("all three zones
+pass composecheck on every pose") and so is not blocking — a wider net that
+happens to be green is not a problem to solve.
+
+Where it does matter is the judge. Reviewers handed frames of the Violet Ruins
+or the Candlelit Hall would spend their attention on content that is out of
+scope, and their findings would misdirect Stages 3, 5 and 6. So judge passes are
+given the three-zone frames only — park, lanternpool, player, village, rooftops,
+nib, isle, sea — plus the played opening frames.
+
+Not archiving the other zones yet, deliberately: it is a scope reduction with no
+effect on any ship criterion, and doing it now would churn the world file while
+the Part 7 zone work is still ahead. Recorded so it is a decision rather than an
+oversight.
