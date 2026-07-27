@@ -792,3 +792,25 @@ was wrong and revert it. Here every layer's fix was right and necessary. What
 distinguishes stacked layers from a wrong fix is whether the FAILURE CHANGED —
 "unreachable, needs <= 2m" becoming "closest 3.01m, needs <= 3.3m" says the
 first fix worked and something else is now binding.
+
+## FINAL RUN #25 — I measured my own route and called it the game
+
+Correcting a claim I made and reported: that the opening "needs roughly five
+times more authored route than it has".
+
+The capture's hand-listed route visited 22 waypoints, lit 8 lamps and filled
+2.07 sim minutes, and I read that as a content finding about the game's opening.
+It was a finding about the ROUTE. The opening footprint actually holds 44 points
+of interest — 17 lights, 5 brews, 4 signs, 5 crumbs, 3 benches, 1 memorial, 9
+sleepers — and the route was sampling under half the lights and none of
+everything else.
+
+The tell I ignored: a hand-listed route in a test script is an ASSUMPTION about
+the content, not a measurement of it. I treated the harness's coverage as
+ground truth about the world, which is the same error class as trusting a green
+gate that never ran (#15, #21, #24) — believing an instrument's output without
+checking what the instrument actually looked at.
+
+Fix: the route is generated from the world (every unkindled light and brew in
+the opening footprint, nearest-neighbour ordered). It cannot drift into
+sampling a fraction of the zone, and it tracks content as content changes.
