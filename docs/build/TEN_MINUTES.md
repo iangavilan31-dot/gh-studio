@@ -172,6 +172,11 @@ inside the opening footprint, ordered nearest-neighbour from the spawn. It stays
 honest as content moves, and it cannot silently drift back into sampling a
 fraction of the zone.
 
+**With that route the opening fills 8.95 of the ten minutes and lights 13
+lamps** (against 2.07 minutes and 8 lamps for the hand-listed one). The opening
+is not thin. The original claim was an artefact of what the harness happened to
+visit.
+
 ## Where it stands now
 
 `K1 CAPTURE PASS — route complete, worst stretch 13s <= 20s`, console clean.
@@ -263,6 +268,11 @@ The route is now GENERATED from the world — every unkindled light and every br
 inside the opening footprint, ordered nearest-neighbour from the spawn. It stays
 honest as content moves, and it cannot silently drift back into sampling a
 fraction of the zone.
+
+**With that route the opening fills 8.95 of the ten minutes and lights 13
+lamps** (against 2.07 minutes and 8 lamps for the hand-listed one). The opening
+is not thin. The original claim was an artefact of what the harness happened to
+visit.
 
 ## Where it stands now
 
