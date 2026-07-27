@@ -324,3 +324,34 @@ So Stage 4 remains open on the thing that actually matters:
    screenshot series — the driver from one, the instrument from the other.
 2. Run it on current code, log dead stretches at 12 s.
 3. Fix the worst, re-run, and record the before/after here with screenshots.
+
+
+---
+
+## The pacing is fine. The harness is what fails.
+
+With the zone flip-flop bug fixed (a Village/Rooftops boundary that oscillated
+114 times in one run, inflating the beat count with a trigger bug and hiding the
+real gaps underneath it), the capture reads:
+
+    content stretches (sim min): 0.28 @2.28 · 0.19 @1.41 · 0.18 @1.81
+    driver stretches (harness could not path): 1.2 @0.03 · 1.2 @2.86
+                                               1.19 @4.07 · 1.18 @5.31 · 1.18 @6.51
+    route 22/22 waypoints, 9.05/10 sim minutes
+
+**The worst real content stretch is 0.28 sim min — 17 seconds, under the 20s
+threshold.** The game's opening pacing passes. Every remaining failure is the
+driver failing to path to five stops, and `reachcheck` proves all 43 lights are
+reachable from eight approaches, so those are harness limitations rather than
+holes in the world.
+
+I expected the opposite. Removing the flip-flops should have *lengthened* the
+gaps by deleting padding beats; instead the content stretches collapsed, because
+the flips had been splitting one long driver-pathing window into fragments that
+were being scored as content. Recorded because the prediction was wrong and the
+measurement is what counts.
+
+**Remaining blocker, precisely located:** all twelve unsticks fire on waypoint 1,
+wandering from (2.7, -18) out to (-3.5, -30). The driver loses itself within
+metres of the spawn bench. Fix that one leg and this gate goes green on
+evidence rather than on a threshold argument.
