@@ -193,6 +193,7 @@ const CSM_VERT = /* glsl */ `
   uniform float uTime;
   uniform float uWindAmp;
   varying vec3 vWorldPos;
+  varying vec3 vNormalW;
   varying float vUpness;
   void main() {
     vec3 p = position;
@@ -202,6 +203,7 @@ const CSM_VERT = /* glsl */ `
     }
     csm_Position = p;
     vWorldPos = (modelMatrix * vec4(p, 1.0)).xyz;
+    vNormalW = normalize(mat3(modelMatrix) * normal);
     // how ground-like this surface is, in world space — the macro variation
     // below is a property of GROUND, not of walls
     vUpness = clamp(normalize(mat3(modelMatrix) * normal).y, 0.0, 1.0);
@@ -214,7 +216,9 @@ const CSM_FRAG = /* glsl */ `
   uniform float uAlbedoFloor;
   uniform float uVertexTint;
   uniform float uGroundMacro;
+  uniform float uGroundDarken;
   varying vec3 vWorldPos;
+  varying vec3 vNormalW;
   varying float vUpness;
 
   // Cheap value noise. Two octaves is enough — this is macro patchiness at the
