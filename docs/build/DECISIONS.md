@@ -705,3 +705,36 @@ PASS.
 Note also what this bought: the stall after waypoint 2 is a real finding about
 the opening, not just about the harness. If a scripted driver cannot get past
 the second waypoint, that stretch of the Park deserves looking at.
+
+## FINAL RUN #22 — a 0.68m gap against a 0.70m player, and two lessons about detectors
+
+The ten-minute capture's stall had a precise cause: two rock colliders (r 0.8)
+with centres 2.28 m apart leave a 0.68 m surface gap, and the character capsule
+is 0.70 m wide. The player wedged and stopped, while the controller reported
+full running speed — the swept solver behaving correctly against a level that
+contained a trap.
+
+`World.sealNarrowGaps()` now bridges collider pairs whose clearance is under a
+capsule-and-a-bit. The reasoning is worth keeping: **a gap the player cannot
+fit through is not a passage, but at that width it still reads as one.** Making
+the pair solid turns an invisible pinch into an obvious obstacle you walk
+around. Five existed in the Park alone; the threshold only catches marginal
+gaps, so real paths between props survive.
+
+Two lessons about the detectors, both learned the hard way in one sitting:
+
+1. **Measure progress, not motion.** The first unstick check asked "did the
+   position change?". With the gap sealed the player stopped squeezing and
+   began sliding along the sealed mass — real movement, zero progress — and the
+   check read it as healthy. The signal that means something is whether the
+   TARGET is getting closer.
+2. **A gate must fail when its subject never ran.** The capture could report
+   "worst stretch 0s" after reaching 2 of 19 waypoints, because a stuck player
+   generates no events and no events means no gaps. Route completion is now
+   checked BEFORE the gap number is believed. Any gate whose metric is computed
+   from activity needs a liveness check first, or absence of activity reads as
+   perfection.
+
+That second one is the same shape as #15 and #21. Three times now in this run a
+green light has meant "the instrument saw nothing" rather than "nothing is
+wrong". It is the default failure mode of this kind of harness, not bad luck.
