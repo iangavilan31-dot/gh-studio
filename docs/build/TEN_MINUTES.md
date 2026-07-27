@@ -115,6 +115,38 @@ the sealed mass, and a "did the position change?" test read that micro-jitter as
 healthy movement while the run went nowhere. What matters is whether the target
 is getting closer.
 
+## What the fixed capture then found
+
+With the stall fixed the route completes **22/22 waypoints**, 6 lamps, 33
+events — and the capture immediately earned its keep by surfacing two things
+that had been hidden behind the stall.
+
+**1. Three lights in the game cannot be lit at all.**
+
+| light | zone | closest a player can stand | interact range |
+|---|---|---|---|
+| `village-well-lantern` | village | 2.87 m | 2.0 m |
+| `ruins-moonwell` | ruins | 3.06 m | 2.0 m |
+| `isle-keep-brazier` | isle | 5.36 m | 2.0 m |
+
+Each sits inside its own structure — a well head inside a solid block, a
+moonwell, the keep parapet — so the reach is spent on the object rather than on
+the player's arm. Verified by walking in from eight directions with real input
+and trying; none light. Not a soft-lock (the night ends on moonset, not on
+lighting everything), but the game's whole verb is kindling the old lights and
+three were impossible.
+
+Fixed with a per-light `reach`, and `scripts/reachcheck.mjs` now walks up to
+every light and fails if any cannot be lit. **Reachability is not safely
+computed** — an earlier geometric pass also flagged
+`rooftops-telescope-brazier`, which a player can in fact light. It has to be
+walked.
+
+**2. The authored route only fills ~3.4 of the ten minutes.** The driver walks
+optimally and never explores, so a player is slower and the real gap is smaller
+than it looks — but the opening is thinner than ten minutes of authored beats.
+That is now its own reported line rather than a gap number.
+
 ## Next
 
 1. Fix the beat definition: a beat is an EVENT (kindle, zone change, reveal,
@@ -126,6 +158,38 @@ is getting closer.
 3. Re-point `tenminutes.mjs` at the authored waypoint route, keeping the
    frame-signature instrument, and run at Part 8's 12 s threshold.
 4. Record before/after with screenshots.
+
+## What the fixed capture then found
+
+With the stall fixed the route completes **22/22 waypoints**, 6 lamps, 33
+events — and the capture immediately earned its keep by surfacing two things
+that had been hidden behind the stall.
+
+**1. Three lights in the game cannot be lit at all.**
+
+| light | zone | closest a player can stand | interact range |
+|---|---|---|---|
+| `village-well-lantern` | village | 2.87 m | 2.0 m |
+| `ruins-moonwell` | ruins | 3.06 m | 2.0 m |
+| `isle-keep-brazier` | isle | 5.36 m | 2.0 m |
+
+Each sits inside its own structure — a well head inside a solid block, a
+moonwell, the keep parapet — so the reach is spent on the object rather than on
+the player's arm. Verified by walking in from eight directions with real input
+and trying; none light. Not a soft-lock (the night ends on moonset, not on
+lighting everything), but the game's whole verb is kindling the old lights and
+three were impossible.
+
+Fixed with a per-light `reach`, and `scripts/reachcheck.mjs` now walks up to
+every light and fails if any cannot be lit. **Reachability is not safely
+computed** — an earlier geometric pass also flagged
+`rooftops-telescope-brazier`, which a player can in fact light. It has to be
+walked.
+
+**2. The authored route only fills ~3.4 of the ten minutes.** The driver walks
+optimally and never explores, so a player is slower and the real gap is smaller
+than it looks — but the opening is thinner than ten minutes of authored beats.
+That is now its own reported line rather than a gap number.
 
 ## Next
 

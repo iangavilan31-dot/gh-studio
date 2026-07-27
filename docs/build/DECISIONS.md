@@ -738,3 +738,34 @@ Two lessons about the detectors, both learned the hard way in one sitting:
 That second one is the same shape as #15 and #21. Three times now in this run a
 green light has meant "the instrument saw nothing" rather than "nothing is
 wrong". It is the default failure mode of this kind of harness, not bad luck.
+
+## FINAL RUN #23 — reachability cannot be computed, it has to be walked
+
+Three lights in the shipped world could not be kindled by any approach:
+`village-well-lantern` (closest standable 2.87m), `ruins-moonwell` (3.06m) and
+`isle-keep-brazier` (5.36m), all against a 2.0m interact range. Each sits inside
+its own structure, so the reach was being spent on the object instead of on the
+player's arm.
+
+The methodological point is the one to keep. I first found these with a
+GEOMETRIC sweep — inflate every AABB and collider by the capsule radius, find
+the closest unblocked point. That sweep also flagged
+`rooftops-telescope-brazier`, and it was wrong: a player walks right up and
+lights it. One false positive in four is a bad enough rate that the geometric
+answer cannot be trusted on its own, and a fix applied on its say-so would have
+"corrected" a light that was already fine.
+
+So `scripts/reachcheck.mjs` drives the real controller with real input against
+real collision, from eight approach directions per light, and reports only
+whether the light actually lit. Slower, and correct.
+
+Fix shape also worth keeping: rather than move art or shrink collision, lights
+that sit inside something get a per-light `reach`. RANGE is how far the Keeper
+can extend the staff — a well head should not consume it. The selection loop
+compares candidates by how far INSIDE its own range each one is, so a
+generous-reach light can never outrank a normal light the player is standing on.
+
+Why nothing caught this earlier: no gate had ever tried to walk up to all of
+them. The kindle gates tested the kindle MECHANIC on reachable lights, and the
+traverse gates tested movement, and between those two the question "can you
+actually get to every objective?" fell straight through.
