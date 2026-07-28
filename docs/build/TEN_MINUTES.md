@@ -387,3 +387,30 @@ points in the same direction is enough evidence.
 fixed the worst real content stretch is 17 seconds against a 20 second
 threshold. The opening is fine; the rig that measures it is not, and the gate
 now says exactly that instead of blaming the game.
+
+
+## Final state of the capture this session
+
+Finer nav grid (0.9m cells, 0.38m padding): driver stretches 5 → 4, worst real
+content stretch 0.32 sim min (19s) against the 20s threshold.
+
+    content stretches: 0.32 @1.05 · 0.18 @0.57 · 0.17 @0.76 · 0.16 @0.39
+    driver stretches:  1.2 @1.65 · 1.2 @2.86 · 1.19 @4.21 · 1.19 @5.42
+
+**The game's opening pacing passes.** Every dead stretch attributable to the
+game is under the threshold. The gate fails because the harness cannot reach 4
+of 22 stops, and it says so rather than blaming the game — which is the whole
+point of separating the two.
+
+All twelve unsticks are on waypoint 13, oscillating across a 19m span of the
+Village street (x 102 → 121). The planner solved the spawn-bench failure that
+preceded it; this is a different, narrower one. The oscillation across a fixed
+span is the signature of a goal cell the grid marks unreachable, so the driver
+plans to the nearest reachable cell, arrives, replans, and swings back.
+
+**Next step, concretely:** log the A* result for waypoint 13 — whether a path
+was returned at all, and which cell it terminated on. That distinguishes "goal
+cell is blocked" (widen the goal to any cell within reach radius) from "path
+found but the follower overshoots" (a different bug entirely). Do not tune the
+grid again without that measurement; two grid changes have now moved the failure
+without removing it, which is the same lesson the four unstick heuristics taught.
