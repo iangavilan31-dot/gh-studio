@@ -134,8 +134,14 @@ const data = await page.evaluate(async () => {
     Math.min(GW - 1, Math.max(0, Math.floor((x - GX0) / CELL))),
     Math.min(GH - 1, Math.max(0, Math.floor((z - GZ0) / CELL))),
   ]
+  let planFail = null
   function planPath(sx, sz, tx, tz) {
+    planFail = null
     const [si, sj] = cellOf(sx, sz)
+    // three counters that separate the three remaining candidates
+    if (si < 0 || sj < 0 || si >= GW || sj >= GH) { planFail = 'start-outside-grid'; return null }
+    const [gi0, gj0] = cellOf(tx, tz)
+    if (gi0 < 0 || gj0 < 0 || gi0 >= GW || gj0 >= GH) { planFail = 'goal-outside-grid'; return null }
     let [ti, tj] = cellOf(tx, tz)
     // a target sitting inside its own structure (a well head, a plinth) has a
     // blocked cell; walk out to the nearest free one rather than failing
@@ -147,7 +153,7 @@ const data = await page.evaluate(async () => {
           const d = (i - ti) ** 2 + (j - tj) ** 2
           if (d < bd) { bd = d; best = [i, j] }
         }
-      if (!best) return null
+      if (!best) { planFail = 'goal-walkout-found-nothing'; return null }
       ;[ti, tj] = best
     }
     const N = GW * GH
@@ -239,6 +245,7 @@ const data = await page.evaluate(async () => {
           steps: path.length,
           endsAt: end ? [+end.x.toFixed(1), +end.z.toFixed(1)] : null,
           endGoalGap: end ? +Math.hypot(end.x - t.x, end.z - t.z).toFixed(2) : null,
+          why: path.length ? null : (planFail || 'astar-exhausted'),
         })
       }
       planFor = wp
