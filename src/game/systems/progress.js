@@ -83,7 +83,7 @@ export class Progress {
       if (t && !this.trinkets.includes(t.id)) {
         this.trinkets.push(t.id)
         this.logBeat('trinket', t.id)
-        this.hud.sayLater('keepsake-t-name', 4.5, 4)
+        this.hud.sayLater('keepsake-name', 4.5, 4)
         this.save()
       }
     }
@@ -104,7 +104,7 @@ export class Progress {
     if (this.onWink) this.onWink() // warm bloom + camera roll + giggle unlock (4.1)
     if (this.world.brewCount >= 12) {
       this.gildBeldam()
-      this.hud.say('twelve-empty-bottles-beldam', 5)
+      this.hud.say('twelve-empty-bottles', 5)
       this.logBeat('brews-complete', 12)
     }
     this.save()

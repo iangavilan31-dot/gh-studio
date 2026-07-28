@@ -2,13 +2,7 @@
  "samples": [
   {
    "moment": "night-start",
-   "text": [
-    {
-     "text": "ᚲ",
-     "tag": "text",
-     "cls": {}
-    }
-   ]
+   "text": []
   },
   {
    "moment": "prompt-showing",
@@ -22,23 +16,11 @@
   },
   {
    "moment": "drive-0-0",
-   "text": [
-    {
-     "text": "ᚲ",
-     "tag": "text",
-     "cls": {}
-    }
-   ]
+   "text": []
   },
   {
    "moment": "drive-0-1",
-   "text": [
-    {
-     "text": "ᚲ",
-     "tag": "text",
-     "cls": {}
-    }
-   ]
+   "text": []
   },
   {
    "moment": "drive-0-2",
@@ -98,13 +80,7 @@
   },
   {
    "moment": "drive-2-0",
-   "text": [
-    {
-     "text": "ᚲ",
-     "tag": "text",
-     "cls": {}
-    }
-   ]
+   "text": []
   },
   {
    "moment": "drive-2-1",
@@ -136,13 +112,7 @@
   },
   {
    "moment": "drive-3-0",
-   "text": [
-    {
-     "text": "ᚲ",
-     "tag": "text",
-     "cls": {}
-    }
-   ]
+   "text": []
   },
   {
    "moment": "drive-3-1",
@@ -174,23 +144,11 @@
   },
   {
    "moment": "drive-4-0",
-   "text": [
-    {
-     "text": "ᚲ",
-     "tag": "text",
-     "cls": {}
-    }
-   ]
+   "text": []
   },
   {
    "moment": "drive-4-1",
-   "text": [
-    {
-     "text": "ᚲ",
-     "tag": "text",
-     "cls": {}
-    }
-   ]
+   "text": []
   },
   {
    "moment": "drive-4-2",
@@ -218,23 +176,11 @@
   },
   {
    "moment": "drive-5-0",
-   "text": [
-    {
-     "text": "ᚲ",
-     "tag": "text",
-     "cls": {}
-    }
-   ]
+   "text": []
   },
   {
    "moment": "drive-5-1",
-   "text": [
-    {
-     "text": "ᚲ",
-     "tag": "text",
-     "cls": {}
-    }
-   ]
+   "text": []
   },
   {
    "moment": "drive-5-2",
@@ -264,61 +210,7 @@
  "offenders": [],
  "marks": [
   {
-   "moment": "night-start",
-   "text": "ᚲ",
-   "tag": "text",
-   "cls": {}
-  },
-  {
    "moment": "prompt-showing",
-   "text": "ᚲ",
-   "tag": "text",
-   "cls": {}
-  },
-  {
-   "moment": "drive-0-0",
-   "text": "ᚲ",
-   "tag": "text",
-   "cls": {}
-  },
-  {
-   "moment": "drive-0-1",
-   "text": "ᚲ",
-   "tag": "text",
-   "cls": {}
-  },
-  {
-   "moment": "drive-2-0",
-   "text": "ᚲ",
-   "tag": "text",
-   "cls": {}
-  },
-  {
-   "moment": "drive-3-0",
-   "text": "ᚲ",
-   "tag": "text",
-   "cls": {}
-  },
-  {
-   "moment": "drive-4-0",
-   "text": "ᚲ",
-   "tag": "text",
-   "cls": {}
-  },
-  {
-   "moment": "drive-4-1",
-   "text": "ᚲ",
-   "tag": "text",
-   "cls": {}
-  },
-  {
-   "moment": "drive-5-0",
-   "text": "ᚲ",
-   "tag": "text",
-   "cls": {}
-  },
-  {
-   "moment": "drive-5-1",
    "text": "ᚲ",
    "tag": "text",
    "cls": {}
@@ -402,8 +294,44 @@
    "text": "kindle"
   },
   {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
    "method": "say",
-   "text": "ah-the-lamplighter-s"
+   "text": "the-lamplighter"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
   },
   {
    "method": "showPrompt",
@@ -591,7 +519,19 @@
   },
   {
    "method": "sayLater",
-   "text": "keepsake-t-name"
+   "text": "keepsake-name"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
   },
   {
    "method": "showPrompt",
@@ -639,7 +579,7 @@
   },
   {
    "method": "say",
-   "text": "keepsake-t-name"
+   "text": "keepsake-name"
   },
   {
    "method": "showPrompt",
@@ -647,11 +587,11 @@
   },
   {
    "method": "showPrompt",
-   "text": "kindle"
+   "text": "take"
   },
   {
    "method": "showPrompt",
-   "text": "kindle"
+   "text": "take"
   },
   {
    "method": "showPrompt",
@@ -708,13 +648,9 @@
   {
    "method": "showPrompt",
    "text": "kindle"
-  },
-  {
-   "method": "showPrompt",
-   "text": "kindle"
   }
  ],
  "prose": [],
- "tokens": 97,
+ "tokens": 108,
  "staticProse": []
 }
