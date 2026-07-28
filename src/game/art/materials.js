@@ -49,7 +49,18 @@ export const globalUniforms = {
   // (reading 'needsUpdate')" that took down shoot.mjs and composecheck: a
   // material listed the uniform, globalUniforms did not define it, and three
   // was handed undefined.
-  uGroundDarken: { value: 0.72 },
+  // 0.58, measured across all six in-scope poses. Judge pass 1's top finding was
+  // ground-brighter-than-sky in every frame; this now reads sky-brighter on five
+  // of six (park 24.3/22.2, lanternpool 30.6/22.7, player 28.8/24.8, village
+  // 18.2/12.6, sea 35/17.5).
+  //
+  // The Isle is the exception and does NOT respond to this knob — 32.4 -> 30.9
+  // for a change that moved every other pose by 2-3 L*. Combined with the sea
+  // being ruled out separately (darkening the water moved it 31.5 -> 32.4), its
+  // bright mass is neither the water NOR an up-facing lit surface. Most likely
+  // the moonpath FX quad, which is an emitter and therefore exempt from both
+  // levers. Measure the frame before touching anything there.
+  uGroundDarken: { value: 0.58 },
 }
 
 const VERT = /* glsl */ `
