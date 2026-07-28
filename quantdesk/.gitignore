@@ -1,0 +1,22 @@
+# secrets
+config/.env
+
+# runtime state -- trade history, equity curve, paper-start timestamp
+state/
+
+# cached market data (large, regenerable via `python cli.py download`)
+data_cache/
+
+# generated analysis output
+results/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# node
+node_modules/
+dist/
