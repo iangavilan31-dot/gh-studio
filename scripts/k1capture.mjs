@@ -147,8 +147,16 @@ const data = await page.evaluate(async () => {
     // blocked cell; walk out to the nearest free one rather than failing
     if (blocked[tj * GW + ti]) {
       let best = null, bd = Infinity
-      for (let i = Math.max(0, ti - 4); i <= Math.min(GW - 1, ti + 4); i++)
-        for (let j = Math.max(0, tj - 4); j <= Math.min(GH - 1, tj + 4); j++) {
+      // Radius measured, not chosen. At +/-4 cells (3.6m) this search found no
+      // free cell 27 times on waypoint 13 and planPath returned null, which is
+      // the whole reason A* reported steps 0 and the driver fell back to greedy
+      // seek. reachcheck proves every light HAS a legal standing point, so the
+      // walk-out simply was not reaching it: isle-keep-brazier's nearest is
+      // 5.36m out, and lights inside wide structures are worse. 10 cells (9m)
+      // clears the widest case in the game with margin.
+      const R = 10
+      for (let i = Math.max(0, ti - R); i <= Math.min(GW - 1, ti + R); i++)
+        for (let j = Math.max(0, tj - R); j <= Math.min(GH - 1, tj + R); j++) {
           if (blocked[j * GW + i]) continue
           const d = (i - ti) ** 2 + (j - tj) ** 2
           if (d < bd) { bd = d; best = [i, j] }
