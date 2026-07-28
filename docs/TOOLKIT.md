@@ -7,6 +7,12 @@ against npm, GitHub, and three.js source. Baseline: **three.js r185**.
 Companion to `DIRECTION.md` (art law) and `FINAL_PASS.md` (build order).
 **Where this file and any other doc disagree on a technical detail, this wins.**
 
+> `GRAPHICS_BOOST.md` extends this file with the gaps found in a 2026-07-28 review
+> (tone-mapper choice, blue-noise dither, Purkinje night model, light probes for dynamic
+> objects, texture repetition, camera FOV, wet ground). Its additive sections can be
+> executed as written. Its three 🔶 items **contradict this file and `DIRECTION.md` and are
+> not approved** — they need the owner's sign-off before any agent acts on them.
+
 ---
 
 # 0. INSTALL THESE, IN THIS ORDER
