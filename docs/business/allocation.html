@@ -1,0 +1,686 @@
+<title>The Hours Are the Constraint</title>
+
+<style>
+  .doc {
+    --plane:      #f5f5f3;
+    --surface:    #fbfbfa;
+    --ink:        #0b0b0b;
+    --ink-2:      #52514e;
+    --ink-mute:   #898781;
+    --grid:       #e1e0d9;
+    --axis:       #c3c2b7;
+    --rule:       rgba(11,11,11,0.10);
+    --s1:         #2a78d6;
+    --s2:         #eb6834;
+    --s3:         #1baf7a;
+    --s4:         #eda100;
+    --crit:       #d03b3b;
+    --good:       #006300;
+
+    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, "Cascadia Mono", monospace;
+
+    color-scheme: light;
+    background: var(--plane);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .doc {
+      color-scheme: dark;
+      --plane:    #0d0d0d;
+      --surface:  #1a1a19;
+      --ink:      #ffffff;
+      --ink-2:    #c3c2b7;
+      --ink-mute: #898781;
+      --grid:     #2c2c2a;
+      --axis:     #383835;
+      --rule:     rgba(255,255,255,0.10);
+      --s1:       #3987e5;
+      --s2:       #d95926;
+      --s3:       #199e70;
+      --s4:       #c98500;
+      --crit:     #d03b3b;
+      --good:     #0ca30c;
+    }
+  }
+  :root[data-theme="dark"] .doc {
+    color-scheme: dark;
+    --plane:    #0d0d0d;
+    --surface:  #1a1a19;
+    --ink:      #ffffff;
+    --ink-2:    #c3c2b7;
+    --ink-mute: #898781;
+    --grid:     #2c2c2a;
+    --axis:     #383835;
+    --rule:     rgba(255,255,255,0.10);
+    --s1:       #3987e5;
+    --s2:       #d95926;
+    --s3:       #199e70;
+    --s4:       #c98500;
+    --crit:     #d03b3b;
+    --good:     #0ca30c;
+  }
+
+  .doc * { box-sizing: border-box; }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: clamp(28px, 5vw, 64px) clamp(18px, 4vw, 40px) 96px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-size: clamp(30px, 4.4vw, 46px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    font-weight: 600;
+    margin: 0 0 18px;
+    text-wrap: balance;
+  }
+
+  h2 {
+    font-size: clamp(19px, 2.3vw, 24px);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    font-weight: 600;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+
+  .lede { font-size: 17px; color: var(--ink-2); max-width: 62ch; margin: 0; }
+  p { margin: 0 0 14px; max-width: 68ch; color: var(--ink-2); }
+  p.tight { margin-bottom: 0; }
+  strong { color: var(--ink); font-weight: 600; }
+
+  section {
+    padding: clamp(30px, 4.5vw, 46px) 0;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  section:first-of-type { border-top: none; padding-top: 8px; }
+
+  .head { display: flex; flex-direction: column; gap: 0; }
+
+  /* ---- the overrun reckoning ---- */
+  .reckon {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: clamp(20px, 3vw, 30px);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .reckon-figs { display: flex; flex-wrap: wrap; gap: clamp(24px, 5vw, 56px); }
+  .fig { display: flex; flex-direction: column; gap: 3px; }
+  .fig-n {
+    font-family: var(--mono);
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .fig-l {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .fig.over .fig-n { color: var(--crit); }
+
+  /* ---- charts ---- */
+  figure { margin: 0; display: flex; flex-direction: column; gap: 12px; }
+  .chart-box {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 18px 14px 12px;
+    overflow-x: auto;
+  }
+  .chart-box svg { display: block; width: 100%; min-width: 560px; height: auto; }
+  figcaption { font-size: 14px; color: var(--ink-mute); max-width: 68ch; }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 18px; padding: 0 4px; }
+  .lg { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--ink-2); }
+  .lg i { width: 11px; height: 11px; border-radius: 2px; flex: none; }
+
+  /* ---- table ---- */
+  .tbl-scroll { overflow-x: auto; border: 1px solid var(--rule); border-radius: 4px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; }
+  th, td { padding: 9px 14px; text-align: right; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; white-space: normal; min-width: 190px; }
+  thead th {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    font-weight: 500;
+  }
+  tbody td { font-family: var(--mono); font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  tbody td:first-child { font-family: var(--sans); color: var(--ink); }
+  tbody tr:last-child td { border-bottom: none; }
+  .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 8px; vertical-align: baseline; }
+
+  /* ---- callout ---- */
+  .note {
+    border-left: 2px solid var(--s1);
+    padding: 2px 0 2px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .note.warn { border-left-color: var(--crit); }
+  .note p { margin: 0; }
+  .note-h {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+
+  ul { margin: 0; padding-left: 18px; color: var(--ink-2); max-width: 68ch; display: flex; flex-direction: column; gap: 7px; }
+
+  /* ---- tooltip ---- */
+  #tip {
+    position: fixed;
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity .1s;
+    background: var(--surface);
+    border: 1px solid var(--axis);
+    border-radius: 4px;
+    padding: 8px 11px;
+    font-size: 12.5px;
+    font-family: var(--mono);
+    color: var(--ink);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.16);
+    max-width: 260px;
+  }
+  #tip b { display: block; font-family: var(--sans); font-size: 13px; margin-bottom: 4px; font-weight: 600; }
+  #tip span { color: var(--ink-2); }
+
+  .hit { cursor: default; }
+  .hit:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: 22px;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--ink-mute);
+    max-width: 70ch;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .doc *, .doc *::before { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="doc">
+<div class="wrap">
+
+  <section>
+    <div class="head">
+      <p class="eyebrow">Monetization research · 10 streams · 25 methods</p>
+      <h1>You can't do all of them. The hours are the constraint, not the ideas.</h1>
+      <p class="lede">Running every recommended method at once takes about 55 hours a week. The budget is 15. So the real question isn't which methods work — it's which ones earn the most per hour you actually have.</p>
+    </div>
+
+    <div class="reckon">
+      <div class="reckon-figs">
+        <div class="fig"><span class="fig-n">15</span><span class="fig-l">Hours available / week</span></div>
+        <div class="fig over"><span class="fig-n">55</span><span class="fig-l">Hours all 9 methods need</span></div>
+        <div class="fig over"><span class="fig-n">3.7×</span><span class="fig-l">Overrun</span></div>
+        <div class="fig"><span class="fig-n">$20</span><span class="fig-l">Monthly cost of the plan</span></div>
+      </div>
+      <div id="c-overrun"></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <h2>Which hours are worth the most</h2>
+    </div>
+    <p>Every method plotted by what it demands and what it returns at steady state. <strong>The diagonal is what matters</strong> — anything up and to the left earns more per hour. Résumé packages and case studies sit far above the rest; DataAnnotation sits lowest, which is the case for treating it as a bridge rather than a destination.</p>
+    <figure>
+      <div class="legend" id="lg-scatter"></div>
+      <div class="chart-box"><div id="c-scatter"></div></div>
+      <figcaption>Steady-state figures, months 3–6. The newsletter sits at zero on purpose — it earns nothing for 9–18 months, then reaches roughly $31/hour, better than everything except the two top performers.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="head">
+      <h2>What fits, and what gets cut</h2>
+    </div>
+    <p>The same nine methods as a time demand, against the 15-hour line. Four of them individually consume half the budget or more. The recommended stack is the three marked below — one reliable floor, one rate escalator, one compounding asset — which lands at exactly 15 hours.</p>
+    <figure>
+      <div class="chart-box"><div id="c-hours"></div></div>
+      <figcaption>Hours per week at working volume. Supplements (Prolific, Respondent, UserTesting) run in dead time and aren't counted against the budget.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="head">
+      <h2>What the money actually does over a year</h2>
+    </div>
+    <p>The recommended 15-hour stack, month by month. The shape is the point: <strong>the floor arrives fast and flat, the escalator climbs, the asset does nothing for most of the year</strong> and then starts to matter. Nothing pays in month one.</p>
+    <figure>
+      <div class="legend" id="lg-ramp"></div>
+      <div class="chart-box"><div id="c-ramp"></div></div>
+      <figcaption>Net of tax, good case. The target band is shaded. Month-to-month variance is real — expect a $900 month followed by a $150 one, particularly while platform work is part of the mix.</figcaption>
+    </figure>
+
+    <div class="note warn">
+      <span class="note-h">Read this as a ceiling, not a forecast</span>
+      <p>This curve assumes the support role lands, editing clients convert, and nothing stalls. The research's blended expectation is lower and the variance is high. The negative findings in this study are far better evidenced than the positive ones.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="head">
+      <h2>What it costs — and what the rejected paths would have</h2>
+    </div>
+    <p>Year-one cash out the door. This is the clearest argument in the whole study: <strong>the recommended plan costs less than a tenth of the cheapest method that got rejected</strong>, and most of the rejected ones aren't reachable on a $300 budget at all.</p>
+    <figure>
+      <div class="chart-box"><div id="c-cost"></div></div>
+      <figcaption>Minimum viable year-one spend. A property netting $200/month sells at roughly 30–45× monthly profit, which is where the two acquisition figures come from — $300 buys about $6/month of profit.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="head">
+      <h2>About that auto email sender</h2>
+    </div>
+    <p>It's genuinely useful here, but for a narrower job than you'd think. The measured funnel is <strong>roughly one deal per 464 cold emails</strong>, and small-business owners answer the phone at 18–25% against a 3.4% email reply rate. Volume is the losing move.</p>
+    <ul>
+      <li><strong>Use it for:</strong> pitching editing and case-study clients — agencies, SMB marketing leads, indie authors, academics. Forty researched pitches beat four thousand blasts, and it's the one place the tool compounds.</li>
+      <li><strong>Don't use it for:</strong> the newsletter. beehiiv and Substack handle sending, list management, and unsubscribes natively, and their deliverability reputation is worth more than yours will be.</li>
+      <li><strong>Keep it legal:</strong> CAN-SPAM applies to every commercial send — accurate headers, honest subject lines, a real physical postal address, a working opt-out honored within 10 days. Penalties run per email, not per campaign.</li>
+      <li><strong>Warm the domain:</strong> 10 sends/day the first week, 20 the second, never past ~50/day on one domain. Ramping straight to volume gets you filtered permanently, and you don't get that reputation back.</li>
+    </ul>
+  </section>
+
+  <section>
+    <div class="head">
+      <h2>Every figure on this page</h2>
+    </div>
+    <div class="tbl-scroll">
+      <table>
+        <caption class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Time, cost and return by method</caption>
+        <thead>
+          <tr>
+            <th scope="col">Method</th>
+            <th scope="col">Hrs/wk</th>
+            <th scope="col">Net /mo</th>
+            <th scope="col">Range</th>
+            <th scope="col">$ / hour</th>
+            <th scope="col">To first $</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <p class="tight">Hourly figures are net monthly divided by monthly hours (weeks × 4.33). Ranges come from the source research; most are reasoned inference rather than measurement, because no platform publishes per-seller income distributions.</p>
+  </section>
+
+  <footer>
+    Compiled from ten parallel research streams, July 2026. Rates drawn from BLS occupational data, the EFA 2026 rate chart (n&nbsp;=&nbsp;1,100+), Etsy and Upwork financial filings, and platform documentation. Methods with documented non-payment — Outlier/Scale, Handshake AI, Alignerr, Remotasks — are excluded entirely and appear in no figure above.
+  </footer>
+
+</div>
+</div>
+
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var NS = "http://www.w3.org/2000/svg";
+  var css = function (n) {
+    return getComputedStyle(document.querySelector(".doc")).getPropertyValue(n).trim();
+  };
+
+  // ---------- data ----------
+  var TIERS = {
+    reliable: { label: "Reliable now", v: "--s1" },
+    escalate: { label: "Rate escalates", v: "--s2" },
+    compound: { label: "Compounds later", v: "--s3" }
+  };
+
+  // lp = label placement, hand-set to avoid collisions in the crowded 4–8h band
+  var M = [
+    { n: "Case studies",            hrs: 5,  net: 900, lo: 800, hi: 1200, t: "escalate", first: "4–10 wk", pick: false, lp: { ax: "start", dx:  15, dy:  -4 } },
+    { n: "Résumé / LinkedIn",       hrs: 4,  net: 700, lo: 400, hi: 1200, t: "escalate", first: "2–5 wk",  pick: true,  lp: { ax: "end",   dx: -15, dy:  -4 } },
+    { n: "AI-draft editing",        hrs: 6,  net: 700, lo: 300, hi: 1200, t: "escalate", first: "3–8 wk",  pick: true,  lp: { ax: "start", dx:  15, dy: -12 } },
+    { n: "Upwork copywriting",      hrs: 6,  net: 650, lo: 300, hi: 1100, t: "escalate", first: "2–8 wk",  pick: false, lp: { ax: "end",   dx: -15, dy:  20 } },
+    { n: "Tutoring (essay/SAT)",    hrs: 8,  net: 650, lo: 400, hi: 900,  t: "escalate", first: "4–8 wk",  pick: false, lp: { ax: "start", dx:  15, dy:  16 } },
+    { n: "Customer support",        hrs: 12, net: 780, lo: 600, hi: 850,  t: "reliable", first: "4–6 wk",  pick: true,  lp: { ax: "end",   dx: -15, dy:  -4 } },
+    { n: "DataAnnotation",          hrs: 8,  net: 375, lo: 250, hi: 500,  t: "reliable", first: "2–5 wk",  pick: false, lp: { ax: "start", dx:  15, dy:  -4 } },
+    { n: "Research panels",         hrs: 3,  net: 165, lo: 80,  hi: 250,  t: "reliable", first: "1–7 days",pick: false, lp: { ax: "start", dx:  15, dy:  -4 } },
+    { n: "Niche newsletter",        hrs: 3,  net: 0,   lo: 0,   hi: 800,  t: "compound", first: "9–18 mo", pick: true,  lp: { ax: "start", dx:  15, dy: -26 } }
+  ];
+  M.forEach(function (d) { d.rate = d.net / (d.hrs * 4.33); });
+
+  var RAMP = {
+    keys:  ["Floor (support)", "Escalator (writing)", "Supplements", "Asset (newsletter)"],
+    vars:  ["--s1", "--s2", "--s4", "--s3"],
+    rows: [
+      [0,0,0,0],[150,0,80,0],[520,90,120,0],[520,220,140,0],
+      [520,330,150,0],[520,400,150,0],[520,440,150,0],[520,470,150,0],
+      [520,490,150,30],[520,510,150,70],[520,530,150,120],[520,550,150,180]
+    ]
+  };
+
+  var COST = [
+    { n: "This plan (AI subscription)",       v: 240,  ok: true  },
+    { n: "…plus Upwork Connects, optional",   v: 640,  ok: true  },
+    { n: "GoHighLevel agency stack",          v: 2300, ok: false },
+    { n: "Amazon FBA private label",          v: 3000, ok: false },
+    { n: "Shopify dropshipping",              v: 5000, ok: false },
+    { n: "Buy a site netting $200/mo",        v: 6000, ok: false },
+    { n: "Buy an app netting $200/mo",        v: 9400, ok: false }
+  ];
+
+  // ---------- svg helpers ----------
+  function e(tag, a, txt) {
+    var n = document.createElementNS(NS, tag);
+    for (var k in a) if (a[k] !== null && a[k] !== undefined) n.setAttribute(k, a[k]);
+    if (txt !== undefined) n.textContent = txt;
+    return n;
+  }
+  function svg(host, w, h) {
+    var s = e("svg", { viewBox: "0 0 " + w + " " + h, role: "img" });
+    document.getElementById(host).appendChild(s);
+    return s;
+  }
+  function tickText(x, y, t, anchor) {
+    return e("text", {
+      x: x, y: y, "text-anchor": anchor || "middle",
+      fill: css("--ink-mute"), "font-size": 11,
+      "font-family": css("--mono"), "font-variant-numeric": "tabular-nums"
+    }, t);
+  }
+  function labelText(x, y, t, anchor, fill, weight) {
+    return e("text", {
+      x: x, y: y, "text-anchor": anchor || "start",
+      fill: fill || css("--ink"), "font-size": 12.5,
+      "font-family": css("--sans"), "font-weight": weight || 400
+    }, t);
+  }
+
+  // ---------- tooltip ----------
+  var tip = document.getElementById("tip");
+  function bind(node, html) {
+    node.classList.add("hit");
+    node.setAttribute("tabindex", "0");
+    function show(ev) {
+      tip.innerHTML = html;
+      tip.style.opacity = "1";
+      var r = node.getBoundingClientRect();
+      var x = (ev && ev.clientX !== undefined ? ev.clientX : r.left + r.width / 2) + 14;
+      var y = (ev && ev.clientY !== undefined ? ev.clientY : r.top) - 10;
+      var tw = tip.offsetWidth, th = tip.offsetHeight;
+      if (x + tw > window.innerWidth - 8) x = window.innerWidth - tw - 8;
+      if (y + th > window.innerHeight - 8) y = window.innerHeight - th - 8;
+      if (y < 8) y = 8;
+      tip.style.left = x + "px";
+      tip.style.top = y + "px";
+    }
+    function hide() { tip.style.opacity = "0"; }
+    node.addEventListener("mouseenter", show);
+    node.addEventListener("mousemove", show);
+    node.addEventListener("mouseleave", hide);
+    node.addEventListener("focus", show);
+    node.addEventListener("blur", hide);
+  }
+  var money = function (v) { return "$" + v.toLocaleString("en-US"); };
+
+  // ---------- 1. overrun ----------
+  function overrun() {
+    var W = 900, H = 108, L = 0, R = 24;
+    var s = svg("c-overrun", W, H);
+    s.setAttribute("aria-label", "All nine methods need 55 hours a week against a 15 hour budget.");
+    var max = 55, plot = W - L - R, x = function (v) { return L + (v / max) * plot; };
+    var y = 30, bh = 30;
+
+    var pat = e("pattern", { id: "hatch", width: 7, height: 7, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" });
+    pat.appendChild(e("rect", { width: 7, height: 7, fill: css("--crit"), "fill-opacity": 0.14 }));
+    pat.appendChild(e("line", { x1: 0, y1: 0, x2: 0, y2: 7, stroke: css("--crit"), "stroke-width": 2.5 }));
+    var defs = e("defs", {}); defs.appendChild(pat); s.appendChild(defs);
+
+    var inb = e("rect", { x: x(0), y: y, width: x(15) - x(0) - 1, height: bh, rx: 4, fill: css("--s1") });
+    bind(inb, "<b>Within budget</b><span>15 hrs/wk · the whole allowance</span>");
+    s.appendChild(inb);
+
+    var ovr = e("rect", { x: x(15) + 1, y: y, width: x(55) - x(15) - 1, height: bh, rx: 4, fill: "url(#hatch)", stroke: css("--crit"), "stroke-width": 1 });
+    bind(ovr, "<b>Overrun</b><span>40 hrs/wk with nowhere to come from</span>");
+    s.appendChild(ovr);
+
+    s.appendChild(e("line", { x1: x(15), y1: y - 12, x2: x(15), y2: y + bh + 12, stroke: css("--ink"), "stroke-width": 2 }));
+    s.appendChild(labelText(x(15) - 8, y - 18, "your 15 hours", "end", css("--ink"), 600));
+    s.appendChild(labelText(x(15) + 8, y - 18, "40 hours that don't exist", "start", css("--crit"), 600));
+
+    [0, 15, 30, 45, 55].forEach(function (v) {
+      s.appendChild(tickText(x(v), y + bh + 26, v + "h"));
+    });
+    s.appendChild(e("line", { x1: 0, y1: y + bh + 8, x2: x(55), y2: y + bh + 8, stroke: css("--axis"), "stroke-width": 1 }));
+  }
+
+  // ---------- 2. scatter ----------
+  function scatter() {
+    var W = 900, H = 470, L = 62, R = 26, T = 24, B = 54;
+    var s = svg("c-scatter", W, H);
+    s.setAttribute("aria-label", "Hours per week against net monthly income, by method.");
+    var pw = W - L - R, ph = H - T - B;
+    var xmax = 14, ymax = 1000;
+    var X = function (v) { return L + (v / xmax) * pw; };
+    var Y = function (v) { return T + ph - (v / ymax) * ph; };
+
+    [0, 250, 500, 750, 1000].forEach(function (v) {
+      s.appendChild(e("line", { x1: L, y1: Y(v), x2: L + pw, y2: Y(v), stroke: css("--grid"), "stroke-width": 1 }));
+      s.appendChild(tickText(L - 12, Y(v) + 4, v === 0 ? "$0" : "$" + v, "end"));
+    });
+    [2, 4, 6, 8, 10, 12, 14].forEach(function (v) {
+      s.appendChild(tickText(X(v), T + ph + 24, v + "h"));
+    });
+    s.appendChild(e("line", { x1: L, y1: T + ph, x2: L + pw, y2: T + ph, stroke: css("--axis"), "stroke-width": 1 }));
+
+    s.appendChild(tickText(L + pw / 2, H - 8, "HOURS PER WEEK"));
+    var yl = tickText(0, 0, "NET PER MONTH");
+    yl.setAttribute("transform", "translate(15," + (T + ph / 2) + ") rotate(-90)");
+    s.appendChild(yl);
+
+    M.forEach(function (d) {
+      var cx = X(d.hrs), cy = Y(d.net), col = css(TIERS[d.t].v);
+      var g = e("g", {});
+      g.appendChild(e("circle", { cx: cx, cy: cy, r: 9, fill: col, stroke: css("--surface"), "stroke-width": 2 }));
+      var lx = cx + d.lp.dx, ly = cy + d.lp.dy;
+      g.appendChild(labelText(lx, ly, d.n, d.lp.ax, css("--ink"), 600));
+      g.appendChild(e("text", {
+        x: lx, y: ly + 15, "text-anchor": d.lp.ax,
+        fill: css("--ink-mute"), "font-size": 11.5, "font-family": css("--mono"),
+        "font-variant-numeric": "tabular-nums"
+      }, d.net === 0 ? "$0 today" : "$" + Math.round(d.rate) + "/hr"));
+      bind(g, "<b>" + d.n + "</b><span>" + d.hrs + " hrs/wk · " + money(d.net) + "/mo<br>" +
+        money(d.lo) + "–" + money(d.hi) + " range<br>" +
+        (d.net === 0 ? "no income for 9–18 months" : "$" + Math.round(d.rate) + " per hour") + "</span>");
+      s.appendChild(g);
+    });
+
+    var lg = document.getElementById("lg-scatter");
+    Object.keys(TIERS).forEach(function (k) {
+      var d = document.createElement("span");
+      d.className = "lg";
+      d.innerHTML = '<i style="background:' + css(TIERS[k].v) + '"></i>' + TIERS[k].label;
+      lg.appendChild(d);
+    });
+  }
+
+  // ---------- 3. hours ----------
+  function hours() {
+    var rows = M.slice().sort(function (a, b) { return b.hrs - a.hrs; });
+    var W = 900, L = 200, R = 130, T = 34, rh = 34;
+    var H = T + rows.length * rh + 26;
+    var s = svg("c-hours", W, H);
+    s.setAttribute("aria-label", "Weekly hours required by each method against the 15 hour budget.");
+    var pw = W - L - R, max = 15;
+    var X = function (v) { return L + (v / max) * pw; };
+
+    s.appendChild(e("rect", { x: X(0), y: T - 8, width: pw, height: rows.length * rh + 4, fill: css("--s1"), "fill-opacity": 0.05 }));
+    s.appendChild(e("line", { x1: X(15), y1: T - 12, x2: X(15), y2: T + rows.length * rh, stroke: css("--ink"), "stroke-width": 2 }));
+    s.appendChild(labelText(X(15) - 6, T - 18, "15 hr budget", "end", css("--ink"), 600));
+
+    rows.forEach(function (d, i) {
+      var y = T + i * rh, col = css(TIERS[d.t].v);
+      var w = Math.min(X(d.hrs), X(max)) - X(0);
+      var g = e("g", {});
+      g.appendChild(labelText(L - 14, y + 15, d.n, "end", d.pick ? css("--ink") : css("--ink-2"), d.pick ? 600 : 400));
+      g.appendChild(e("rect", { x: X(0), y: y + 3, width: w, height: 17, rx: 4, fill: col, "fill-opacity": d.pick ? 1 : 0.38 }));
+      g.appendChild(e("text", {
+        x: X(d.hrs) + 10, y: y + 16, fill: css("--ink-mute"), "font-size": 11.5,
+        "font-family": css("--mono"), "font-variant-numeric": "tabular-nums"
+      }, d.hrs + " h" + (d.pick ? "  ·  in the stack" : "")));
+      bind(g, "<b>" + d.n + "</b><span>" + d.hrs + " hrs/wk — " +
+        Math.round(d.hrs / 15 * 100) + "% of the budget<br>" +
+        (d.pick ? "in the recommended stack" : "cut for now") + "</span>");
+      s.appendChild(g);
+    });
+  }
+
+  // ---------- 4. ramp ----------
+  function ramp() {
+    var W = 900, H = 420, L = 62, R = 118, T = 22, B = 50;
+    var s = svg("c-ramp", W, H);
+    s.setAttribute("aria-label", "Monthly net income by layer over twelve months.");
+    var pw = W - L - R, ph = H - T - B, n = RAMP.rows.length, ymax = 1500;
+    var X = function (i) { return L + (i / (n - 1)) * pw; };
+    var Y = function (v) { return T + ph - (v / ymax) * ph; };
+
+    s.appendChild(e("rect", { x: L, y: Y(1000), width: pw, height: Y(200) - Y(1000), fill: css("--s3"), "fill-opacity": 0.07 }));
+    s.appendChild(e("text", { x: L + pw + 10, y: Y(600), fill: css("--ink-mute"), "font-size": 11, "font-family": css("--mono") }, "target band"));
+
+    [0, 500, 1000, 1500].forEach(function (v) {
+      s.appendChild(e("line", { x1: L, y1: Y(v), x2: L + pw, y2: Y(v), stroke: css("--grid"), "stroke-width": 1 }));
+      s.appendChild(tickText(L - 12, Y(v) + 4, "$" + v, "end"));
+    });
+
+    var cum = RAMP.rows.map(function () { return 0; });
+    RAMP.keys.forEach(function (key, si) {
+      var lower = cum.slice();
+      cum = cum.map(function (v, i) { return v + RAMP.rows[i][si]; });
+      var d = "M " + X(0) + " " + Y(cum[0]);
+      for (var i = 1; i < n; i++) d += " L " + X(i) + " " + Y(cum[i]);
+      for (var j = n - 1; j >= 0; j--) d += " L " + X(j) + " " + Y(lower[j]);
+      s.appendChild(e("path", { d: d + " Z", fill: css(RAMP.vars[si]), "fill-opacity": 0.9 }));
+
+      var bd = "M " + X(0) + " " + Y(cum[0]);
+      for (var k = 1; k < n; k++) bd += " L " + X(k) + " " + Y(cum[k]);
+      s.appendChild(e("path", { d: bd, fill: "none", stroke: css("--surface"), "stroke-width": 2 }));
+
+      var last = cum[n - 1], prev = si === 0 ? 0 : last - RAMP.rows[n - 1][si];
+      if (RAMP.rows[n - 1][si] > 60) {
+        s.appendChild(e("text", {
+          x: L + pw + 10, y: (Y(last) + Y(prev)) / 2 + 4, fill: css("--ink-2"),
+          "font-size": 11, "font-family": css("--mono"), "font-variant-numeric": "tabular-nums"
+        }, "$" + RAMP.rows[n - 1][si]));
+      }
+    });
+
+    s.appendChild(e("line", { x1: L, y1: T + ph, x2: L + pw, y2: T + ph, stroke: css("--axis"), "stroke-width": 1 }));
+    RAMP.rows.forEach(function (r, i) {
+      if (i % 2 === 0 || i === n - 1) s.appendChild(tickText(X(i), T + ph + 22, "M" + (i + 1)));
+      var tot = r.reduce(function (a, b) { return a + b; }, 0);
+      var hit = e("rect", { x: X(i) - 14, y: T, width: 28, height: ph, fill: "transparent" });
+      bind(hit, "<b>Month " + (i + 1) + "</b><span>" +
+        RAMP.keys.map(function (k, si) { return k + ": " + money(r[si]); }).join("<br>") +
+        "<br>—<br>Total: " + money(tot) + "</span>");
+      s.appendChild(hit);
+    });
+
+    var lg = document.getElementById("lg-ramp");
+    RAMP.keys.forEach(function (k, i) {
+      var d = document.createElement("span");
+      d.className = "lg";
+      d.innerHTML = '<i style="background:' + css(RAMP.vars[i]) + '"></i>' + k;
+      lg.appendChild(d);
+    });
+  }
+
+  // ---------- 5. cost ----------
+  function cost() {
+    var W = 900, L = 250, R = 90, T = 16, rh = 38;
+    var H = T + COST.length * rh + 14;
+    var s = svg("c-cost", W, H);
+    s.setAttribute("aria-label", "Year one cash required, this plan against rejected methods.");
+    var pw = W - L - R, max = 9400;
+    var X = function (v) { return (v / max) * pw; };
+
+    COST.forEach(function (d, i) {
+      var y = T + i * rh, col = d.ok ? css("--s3") : css("--ink-mute");
+      var g = e("g", {});
+      g.appendChild(labelText(L - 14, y + 18, d.n, "end", d.ok ? css("--ink") : css("--ink-2"), d.ok ? 600 : 400));
+      g.appendChild(e("rect", { x: L, y: y + 6, width: Math.max(X(d.v), 3), height: 19, rx: 4, fill: col, "fill-opacity": d.ok ? 1 : 0.34 }));
+      g.appendChild(e("text", {
+        x: L + Math.max(X(d.v), 3) + 10, y: y + 20, fill: d.ok ? css("--good") : css("--ink-mute"),
+        "font-size": 12, "font-family": css("--mono"), "font-variant-numeric": "tabular-nums",
+        "font-weight": d.ok ? 600 : 400
+      }, money(d.v)));
+      bind(g, "<b>" + d.n + "</b><span>" + money(d.v) + " in year one<br>" +
+        (d.ok ? "inside budget" : Math.round(d.v / 300) + "× the $300 available") + "</span>");
+      s.appendChild(g);
+    });
+
+    s.appendChild(e("line", { x1: L + X(300), y1: T, x2: L + X(300), y2: T + COST.length * rh, stroke: css("--crit"), "stroke-width": 1.5, "stroke-dasharray": "4 3" }));
+    s.appendChild(e("text", { x: L + X(300) + 6, y: T + COST.length * rh + 10, fill: css("--crit"), "font-size": 11, "font-family": css("--mono") }, "$300 available"));
+  }
+
+  // ---------- table ----------
+  function table() {
+    var tb = document.getElementById("tbody");
+    M.slice().sort(function (a, b) { return b.rate - a.rate; }).forEach(function (d) {
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td><span class="swatch" style="background:' + css(TIERS[d.t].v) + '"></span>' + d.n + "</td>" +
+        "<td>" + d.hrs + "</td>" +
+        "<td>" + money(d.net) + "</td>" +
+        "<td>" + money(d.lo) + "–" + money(d.hi) + "</td>" +
+        "<td>" + (d.net === 0 ? "—" : "$" + Math.round(d.rate)) + "</td>" +
+        "<td>" + d.first + "</td>";
+      tb.appendChild(tr);
+    });
+  }
+
+  function draw() { overrun(); scatter(); hours(); ramp(); cost(); table(); }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", draw);
+  } else {
+    draw();
+  }
+})();
+</script>
