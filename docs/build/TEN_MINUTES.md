@@ -446,3 +446,42 @@ Seven attempts have now been made on this failure. Six were guesses and each
 moved it without removing it; the one measurement narrowed it from "the driver
 cannot navigate" to "A* returns nothing for one specific waypoint", which is a
 much smaller question. That ratio is the lesson.
+
+
+## Waypoint 13, fully diagnosed
+
+Eight attempts, and the counters finally show the whole chain:
+
+    {target: [114.6, -2.7], from: [102.5, 2.3], steps: 15,
+     endsAt: [115, 3.1], endGoalGap: 5.79}
+
+1. The goal cell is blocked, so planPath walks out to the nearest free cell.
+2. With the radius widened to 9m it finds one — but **5.79m from the light**.
+3. A* returns a good 15-step path there. The driver walks it and arrives.
+4. Arrival is tested against the light's reach (~2m). 5.79 > 2, so the waypoint
+   never registers as reached.
+5. Replan. Same answer. Walk 2 steps. Arrive. Repeat — which is exactly the
+   oscillation between (116.9, 15.3) and (126.7, 1.3) in the stall log.
+
+Each earlier fix was real and moved the failure one link down this chain, which
+is why six heuristics and two radii all "almost" worked.
+
+**The root cause is the grid, and reachcheck proves it.** All 43 lights are
+reachable by walking in from eight directions, so a standable point within 2m of
+this light exists. The nav grid marks it blocked. At 0.9m cells with 0.38m
+padding, a cell is rejected on its CENTRE, which over-approximates the obstacle
+by up to half a cell diagonal (~0.64m) — enough to wall off a legitimately
+standable pocket beside a village wall.
+
+**Two fixes, either sufficient, both small:**
+- sample a cell's free area rather than its centre (or shrink cells to ~0.5m),
+  so the grid stops inventing walls the player can walk through; or
+- let the driver accept the planner's endpoint when `endGoalGap` exceeds the
+  arrival radius — treat "the planner cannot get closer" as a skip rather than
+  looping. This is the honest fallback and it costs one comparison.
+
+The first fixes the map. The second stops the harness hanging on any future
+instance. They are independent and both worth doing.
+
+**Unchanged throughout:** the game's own pacing. Worst content stretch 0.30 sim
+min (18s) against a 20s threshold.
