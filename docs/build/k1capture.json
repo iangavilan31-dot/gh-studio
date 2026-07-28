@@ -65,12 +65,12 @@
    "id": "wayside-shrine-1"
   },
   {
-   "nt": 1.04,
+   "nt": 1.03,
    "ev": "zone",
    "to": "park"
   },
   {
-   "nt": 1.37,
+   "nt": 1.36,
    "ev": "zone",
    "to": "foglandVM"
   },
@@ -95,12 +95,12 @@
    "id": "village-post-1"
   },
   {
-   "nt": 1.64,
+   "nt": 1.63,
    "ev": "kindle",
    "id": "village-post-2"
   },
   {
-   "nt": 2.85,
+   "nt": 2.83,
    "ev": "skip",
    "at": [
     114.6,
@@ -108,7 +108,7 @@
    ]
   },
   {
-   "nt": 4.06,
+   "nt": 4.03,
    "ev": "skip",
    "at": [
     119.78,
@@ -116,12 +116,12 @@
    ]
   },
   {
-   "nt": 4.19,
+   "nt": 4.11,
    "ev": "kindle",
    "id": "village-bakery-window"
   },
   {
-   "nt": 5.4,
+   "nt": 5.32,
    "ev": "skip",
    "at": [
     127.28,
@@ -129,7 +129,42 @@
    ]
   },
   {
-   "nt": 6.61,
+   "nt": 5.37,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 5.38,
+   "ev": "reveal",
+   "zone": "rooftops"
+  },
+  {
+   "nt": 5.45,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 5.49,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 5.52,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 5.61,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 5.68,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 6.53,
    "ev": "skip",
    "at": [
     127.5,
@@ -137,132 +172,92 @@
    ]
   },
   {
-   "nt": 6.66,
+   "nt": 6.55,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 6.67,
-   "ev": "reveal",
-   "zone": "rooftops"
-  },
-  {
-   "nt": 6.73,
+   "nt": 6.64,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 6.75,
+   "nt": 6.84,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 6.79,
+   "nt": 6.88,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 6.81,
+   "nt": 6.94,
    "ev": "zone",
    "to": "rooftops"
-  },
-  {
-   "nt": 6.83,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 6.87,
-   "ev": "zone",
-   "to": "rooftops"
-  },
-  {
-   "nt": 6.9,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 6.91,
-   "ev": "zone",
-   "to": "rooftops"
-  },
-  {
-   "nt": 6.95,
-   "ev": "zone",
-   "to": "village"
   },
   {
    "nt": 7.01,
    "ev": "zone",
-   "to": "rooftops"
+   "to": "village"
   },
   {
-   "nt": 7.06,
+   "nt": 7.07,
    "ev": "zone",
-   "to": "village"
+   "to": "rooftops"
   },
   {
    "nt": 7.13,
    "ev": "zone",
-   "to": "rooftops"
+   "to": "village"
   },
   {
    "nt": 7.19,
    "ev": "zone",
-   "to": "village"
+   "to": "rooftops"
   },
   {
-   "nt": 7.26,
+   "nt": 7.25,
    "ev": "zone",
-   "to": "rooftops"
+   "to": "village"
   },
   {
    "nt": 7.31,
    "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 7.37,
+   "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 7.38,
+   "nt": 7.43,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 7.42,
+   "nt": 7.49,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 7.5,
+   "nt": 7.55,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 7.54,
+   "nt": 7.61,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 7.62,
+   "nt": 7.68,
    "ev": "zone",
    "to": "rooftops"
   },
   {
-   "nt": 7.66,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 7.75,
-   "ev": "zone",
-   "to": "rooftops"
-  },
-  {
-   "nt": 7.78,
-   "ev": "zone",
-   "to": "village"
-  },
-  {
-   "nt": 7.82,
+   "nt": 7.73,
    "ev": "skip",
    "at": [
     134.5,
@@ -270,59 +265,70 @@
    ]
   },
   {
-   "nt": 7.86,
-   "ev": "kindle",
-   "id": "village-post-4"
-  },
-  {
-   "nt": 7.87,
-   "ev": "zone",
-   "to": "rooftops"
-  },
-  {
-   "nt": 7.91,
+   "nt": 7.73,
    "ev": "zone",
    "to": "village"
   },
   {
-   "nt": 7.94,
+   "nt": 7.75,
+   "ev": "kindle",
+   "id": "village-post-4"
+  },
+  {
+   "nt": 7.77,
+   "ev": "zone",
+   "to": "rooftops"
+  },
+  {
+   "nt": 7.81,
+   "ev": "zone",
+   "to": "village"
+  },
+  {
+   "nt": 7.83,
    "ev": "kindle",
    "id": "village-post-3"
   },
   {
-   "nt": 7.99,
+   "nt": 7.89,
    "ev": "kindle",
    "id": "village-well-lantern"
   }
  ],
  "gaps": [
   {
-   "gap": 1.2,
-   "atNt": 1.65,
-   "endedBy": "skip",
-   "driver": true
-  },
-  {
-   "gap": 1.2,
-   "atNt": 2.86,
+   "gap": 1.19,
+   "atNt": 1.64,
    "endedBy": "skip",
    "driver": true
   },
   {
    "gap": 1.19,
-   "atNt": 4.21,
+   "atNt": 2.84,
    "endedBy": "skip",
    "driver": true
   },
   {
    "gap": 1.19,
-   "atNt": 5.42,
+   "atNt": 4.13,
+   "endedBy": "skip",
+   "driver": true
+  },
+  {
+   "gap": 0.84,
+   "atNt": 5.69,
    "endedBy": "skip",
    "driver": true
   },
   {
    "gap": 0.32,
-   "atNt": 1.05,
+   "atNt": 1.04,
+   "endedBy": "zone",
+   "driver": false
+  },
+  {
+   "gap": 0.19,
+   "atNt": 6.65,
    "endedBy": "zone",
    "driver": false
   },
@@ -337,15 +343,9 @@
    "atNt": 0.76,
    "endedBy": "zone",
    "driver": false
-  },
-  {
-   "gap": 0.16,
-   "atNt": 0.39,
-   "endedBy": "kindle",
-   "driver": false
   }
  ],
- "simMinutes": 7.99,
+ "simMinutes": 7.89,
  "kindled": 14,
  "endZone": "village",
  "waypointsReached": 22,
@@ -361,7 +361,7 @@
    "run": 1
   },
   {
-   "nt": 1.73,
+   "nt": 1.74,
    "at": [
     114.73,
     1.33
@@ -370,7 +370,7 @@
    "run": 2
   },
   {
-   "nt": 1.78,
+   "nt": 1.79,
    "at": [
     114.73,
     1.33
@@ -379,7 +379,7 @@
    "run": 3
   },
   {
-   "nt": 1.84,
+   "nt": 1.85,
    "at": [
     121.29,
     0.3
@@ -388,78 +388,679 @@
    "run": 4
   },
   {
-   "nt": 1.89,
+   "nt": 1.91,
    "at": [
-    105.58,
-    5.71
+    104.77,
+    5.73
    ],
    "wp": 13,
    "run": 5
   },
   {
-   "nt": 1.95,
+   "nt": 1.96,
    "at": [
-    121.03,
-    5.73
+    120.01,
+    6.5
    ],
    "wp": 13,
    "run": 6
   },
   {
-   "nt": 2,
+   "nt": 2.02,
    "at": [
-    104.73,
-    3.55
+    103.08,
+    2.8
    ],
    "wp": 13,
    "run": 7
   },
   {
-   "nt": 2.06,
+   "nt": 2.08,
    "at": [
-    120.47,
-    6.51
+    119.29,
+    8.47
    ],
    "wp": 13,
    "run": 8
   },
   {
-   "nt": 2.12,
+   "nt": 2.14,
    "at": [
-    102.57,
-    2.71
+    103.36,
+    1.32
    ],
    "wp": 13,
    "run": 9
   },
   {
-   "nt": 2.18,
+   "nt": 2.2,
    "at": [
-    117.78,
-    8.47
+    118.29,
+    8.99
    ],
    "wp": 13,
    "run": 10
   },
   {
-   "nt": 2.24,
+   "nt": 2.26,
    "at": [
-    102.71,
-    1.34
+    100.7,
+    1.32
    ],
    "wp": 13,
    "run": 11
   },
   {
-   "nt": 2.29,
+   "nt": 2.32,
    "at": [
-    115.66,
-    7.68
+    115.23,
+    10.03
    ],
    "wp": 13,
    "run": 12
   }
  ],
- "routeSimMinutes": 7.99,
+ "planLog": [
+  {
+   "wp": 0,
+   "target": [
+    4.2,
+    -19.2
+   ],
+   "from": [
+    4.9,
+    -17.2
+   ],
+   "steps": 4,
+   "endsAt": [
+    4.3,
+    -20.4
+   ],
+   "endGoalGap": 1.15
+  },
+  {
+   "wp": 1,
+   "target": [
+    1.2,
+    -21.6
+   ],
+   "from": [
+    5.1,
+    -18.3
+   ],
+   "steps": 10,
+   "endsAt": [
+    0.7,
+    -21.3
+   ],
+   "endGoalGap": 0.65
+  },
+  {
+   "wp": 2,
+   "target": [
+    -9,
+    -11
+   ],
+   "from": [
+    0.3,
+    -20.6
+   ],
+   "steps": 12,
+   "endsAt": [
+    -9.3,
+    -12.3
+   ],
+   "endGoalGap": 1.27
+  },
+  {
+   "wp": 3,
+   "target": [
+    -10.2,
+    -11.8
+   ],
+   "from": [
+    -8.3,
+    -12.5
+   ],
+   "steps": 3,
+   "endsAt": [
+    -10.1,
+    -12.3
+   ],
+   "endGoalGap": 0.45
+  },
+  {
+   "wp": 4,
+   "target": [
+    -17.7,
+    9
+   ],
+   "from": [
+    -8.8,
+    -12.4
+   ],
+   "steps": 25,
+   "endsAt": [
+    -18.3,
+    9.4
+   ],
+   "endGoalGap": 0.61
+  },
+  {
+   "wp": 5,
+   "target": [
+    17.7,
+    9
+   ],
+   "from": [
+    -17.9,
+    7.6
+   ],
+   "steps": 40,
+   "endsAt": [
+    16.9,
+    9.4
+   ],
+   "endGoalGap": 0.94
+  },
+  {
+   "wp": 6,
+   "target": [
+    24.5,
+    2.2
+   ],
+   "from": [
+    16.2,
+    9.3
+   ],
+   "steps": 11,
+   "endsAt": [
+    25,
+    2.1
+   ],
+   "endGoalGap": 0.45
+  },
+  {
+   "wp": 7,
+   "target": [
+    16,
+    -43.6
+   ],
+   "from": [
+    23.2,
+    3
+   ],
+   "steps": 53,
+   "endsAt": [
+    15,
+    -43.8
+   ],
+   "endGoalGap": 0.97
+  },
+  {
+   "wp": 8,
+   "target": [
+    -35.9,
+    -25.6
+   ],
+   "from": [
+    15.8,
+    -41.8
+   ],
+   "steps": 61,
+   "endsAt": [
+    -37.1,
+    -25.8
+   ],
+   "endGoalGap": 1.21
+  },
+  {
+   "wp": 9,
+   "target": [
+    -51.9,
+    42.4
+   ],
+   "from": [
+    -36.1,
+    -27.3
+   ],
+   "steps": 80,
+   "endsAt": [
+    -51.5,
+    43.5
+   ],
+   "endGoalGap": 1.24
+  },
+  {
+   "wp": 10,
+   "target": [
+    85.9,
+    24.4
+   ],
+   "from": [
+    -50.5,
+    41.2
+   ],
+   "steps": 152,
+   "endsAt": [
+    85.3,
+    24.7
+   ],
+   "endGoalGap": 0.73
+  },
+  {
+   "wp": 11,
+   "target": [
+    88,
+    6.7
+   ],
+   "from": [
+    84.1,
+    24.9
+   ],
+   "steps": 21,
+   "endsAt": [
+    87.1,
+    6.6
+   ],
+   "endGoalGap": 0.95
+  },
+  {
+   "wp": 12,
+   "target": [
+    104,
+    2.4
+   ],
+   "from": [
+    86.8,
+    7.6
+   ],
+   "steps": 19,
+   "endsAt": [
+    103.3,
+    2.1
+   ],
+   "endGoalGap": 0.79
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    102.1,
+    2.4
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    102.1,
+    2.4
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    102.5,
+    2.3
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    102.5,
+    2.3
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    102.9,
+    2
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    102.9,
+    2
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    102.9,
+    2
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    103.3,
+    1.9
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    103.3,
+    1.9
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    103.8,
+    1.7
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    103.8,
+    1.7
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    103.8,
+    1.7
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    104.2,
+    1.5
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    104.2,
+    1.5
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    104.5,
+    1.5
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    104.5,
+    1.5
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    104.5,
+    1.5
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    104.9,
+    1.4
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    104.9,
+    1.4
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    104.9,
+    1.4
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    105.3,
+    1.3
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    105.3,
+    1.3
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    105.3,
+    1.3
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    105.7,
+    1.3
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    105.7,
+    1.3
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    105.7,
+    1.3
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  },
+  {
+   "wp": 13,
+   "target": [
+    114.6,
+    -2.7
+   ],
+   "from": [
+    106.1,
+    1.3
+   ],
+   "steps": 0,
+   "endsAt": null,
+   "endGoalGap": null
+  }
+ ],
+ "routeSimMinutes": 7.89,
  "consoleIssues": []
 }
