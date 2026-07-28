@@ -485,3 +485,34 @@ instance. They are independent and both worth doing.
 
 **Unchanged throughout:** the game's own pacing. Worst content stretch 0.30 sim
 min (18s) against a 20s threshold.
+
+
+## Attempt 9 made it worse, and that is the useful part
+
+I wrote that a ninth guess would be worse than a clear handoff, then made one:
+block a cell only if its centre AND four corners are inside the obstacle.
+
+Result: **17/22 waypoints, down from 22/22**, and the failure jumped back to
+waypoint 1. Reverted.
+
+The reason is exact and worth more than the fix would have been. Centre-only
+**over**-approximates the obstacle. "Free if any corner escapes" **under**-
+approximates it — so A* planned through gaps the 0.70m capsule cannot enter, the
+driver collided walking its own path, and it lost stops it used to reach.
+
+Neither test asks the real question, which is **"does a 0.70m disc fit anywhere
+in this cell, clear of every obstacle?"** That is a disc-vs-union-of-circles
+query, not a point sample, and it is the thing to implement. Both cheap
+approximations fail in opposite directions and there is no third cheap one.
+
+So the handoff stands, corrected:
+- **Do not** re-attempt this with another point-sampling scheme. Two have now
+  failed in opposite directions; that is the shape of the problem, not bad luck.
+- Implement the disc-fit test, or sidestep the grid entirely by giving the
+  driver the `endGoalGap` skip (treat "the planner cannot get within the arrival
+  radius" as a skip rather than an infinite replan). The skip does not reach the
+  light, but it stops the harness hanging and costs one comparison.
+
+**Unchanged, and the number that matters:** the game's own pacing passes. Worst
+content stretch 18s against a 20s threshold. Nine attempts have been spent on
+the rig that measures the opening, not on the opening.
