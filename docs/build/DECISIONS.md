@@ -899,3 +899,23 @@ Anything no rig visits is unobserved, and "we have gates" is not the same as
 The packaged demo auto-starts past the title so the link is playable. That is
 recorded in the script itself, not just here, so nobody reads a working demo as
 evidence the title works. **The title bug is open.**
+
+## FINAL RUN #30 — a result I threw away rather than believe
+
+The capture verifying the widened goal walk-out came back failing, and I am not
+counting it. It ran in the background against `vite preview`, which serves
+`dist/` — and during that window I rebuilt `dist/` at least three times doing the
+artifact packaging (inlining the GLBs, repacking, re-verifying). The run raced
+several different builds. Its numbers describe no build that exists.
+
+Discarded and re-run on a stable tree.
+
+Worth writing down because the temptation was real: the result was *plausible*
+(waypoint 13 still failing is exactly what the previous six attempts looked
+like), it would have fitted the story, and accepting it would have cost nothing
+visible. A believable number from a compromised run is more dangerous than an
+obviously broken one, because nothing prompts you to check it.
+
+Operational rule this earns: **do not rebuild while a background rig is
+running.** Every gate here serves from `dist/`, so a rebuild silently swaps the
+subject mid-measurement. Either wait, or build to a separate directory.
