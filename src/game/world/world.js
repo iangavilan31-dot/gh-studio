@@ -574,20 +574,36 @@ export class World {
   // Part 7.1 asks for.
   buildAntleredSleeper() {
     const g = new THREE.Group()
-    const hide = retroMaterial({ map: TEX.stoneBlock({ name: 'sleeperhide', base: '#171d26' }) })
+    // noFog, and this is the whole trick. DIRECTION Part 3 wants a colossus read
+    // as NEGATIVE SPACE against the sky — a dark shape you resolve slowly. This
+    // fog lifts distant geometry toward the sky colour, so the first two
+    // attempts put a 70m creature at 40-70m and it desaturated into a pale lump
+    // indistinguishable from haze. Exempting it keeps it a dark silhouette at
+    // any distance, which is also true to how a thing that large would read:
+    // it is beyond the weather, not inside it.
+    const hide = retroMaterial({ map: TEX.stoneBlock({ name: 'sleeperhide', base: '#0d1119' }), noFog: true })
 
     // The body: a long reclining mass behind the treeline, read as a hill that
     // turns out to be breathing. Low and wide so it never competes with the
     // moon for the eye.
     const body = new THREE.Mesh(new THREE.SphereGeometry(19, 14, 10), hide)
     body.scale.set(1.9, 0.62, 1.0)
-    body.position.set(-6, 2.5, -74)
+    body.position.set(-14, 2.5, -72)
     g.add(body)
 
     const head = new THREE.Mesh(new THREE.SphereGeometry(7.5, 12, 9), hide)
-    head.scale.set(1.25, 0.8, 1.5)
-    head.position.set(20, 6.5, -58)
+    // A muzzle, so the mass reads as a HEAD and not as terrain. The first
+    // blockout failed exactly here — nothing distinguished the body from a hill.
+    head.scale.set(1.15, 0.85, 1.6)
+    head.position.set(-13, 7.5, -50)
     head.rotation.z = -0.22
+    const muzzle = new THREE.Mesh(new THREE.SphereGeometry(4.2, 10, 8), hide)
+    muzzle.scale.set(0.85, 0.7, 1.5)
+    muzzle.position.set(-12, 4.6, -40)
+    g.add(muzzle)
+    const brow = new THREE.Mesh(new THREE.SphereGeometry(2.2, 8, 6), hide)
+    brow.position.set(-16.5, 10.5, -47)
+    g.add(brow)
     g.add(head)
 
     // The antlers. Two racks, each a trunk with tines, sweeping UP and FORWARD
@@ -600,14 +616,18 @@ export class World {
       g.add(m)
       return m
     }
+    // Antlers NEARER and THICKER than the first blockout. They were lost
+    // against the canopy because they shared its value and its on-screen scale;
+    // pulled forward to z -44 they are foreground frame instead, and they cross
+    // the moon rather than the treetops, which is what makes the eye read them
+    // as a rack over the clearing rather than as more branches.
     for (const side of [-1, 1]) {
-      const bx = 20 + side * 5.5, by = 11, bz = -58
-      // main beam, arcing toward the clearing
-      tine(bx, by, bz, 34, -0.62 * side * 0.35 - 0.5, side * 0.5, 1.5, 0.7)
-      // the tines that frame the shot
-      tine(bx + side * 3, by + 12, bz + 12, 20, -0.95, side * 0.75, 0.8, 0.28)
-      tine(bx + side * 6, by + 18, bz + 21, 15, -1.15, side * 1.0, 0.6, 0.2)
-      tine(bx + side * 1, by + 8, bz + 6, 24, -0.72, side * 0.28, 1.0, 0.4)
+      const bx = -13 + side * 7, by = 12, bz = -44
+      tine(bx, by, bz, 40, -0.30, side * 0.62, 2.6, 1.2)
+      tine(bx + side * 5, by + 15, bz + 13, 26, -0.62, side * 0.95, 1.5, 0.55)
+      tine(bx + side * 9, by + 24, bz + 22, 19, -0.90, side * 1.20, 1.0, 0.32)
+      tine(bx + side * 2, by + 7, bz + 4, 30, -0.16, side * 0.34, 1.9, 0.8)
+      tine(bx + side * 12, by + 30, bz + 30, 13, -1.10, side * 1.45, 0.7, 0.22)
     }
 
     g.traverse((o) => { if (o.isMesh) o.userData.noCollide = true })
