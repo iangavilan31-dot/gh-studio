@@ -135,25 +135,7 @@ const data = await page.evaluate(async () => {
     Math.min(GH - 1, Math.max(0, Math.floor((z - GZ0) / CELL))),
   ]
   function planPath(sx, sz, tx, tz) {
-    let [si, sj] = cellOf(sx, sz)
-    // The GOAL had a walk-out for a blocked cell; the START did not, and that
-    // asymmetry was the whole bug. Padding every obstacle by the capsule radius
-    // marks the cells immediately beside a wall as blocked — which is exactly
-    // where a player walking a narrow street stands. A* then failed on its
-    // first expansion and returned nothing (measured: steps 0 on every wp13
-    // replan), so the driver fell through to greedy seek and oscillated. The
-    // player is demonstrably standing somewhere legal; the grid just does not
-    // agree, so start from the nearest cell that does.
-    if (blocked[sj * GW + si]) {
-      let best = null, bd = Infinity
-      for (let i = Math.max(0, si - 4); i <= Math.min(GW - 1, si + 4); i++)
-        for (let j = Math.max(0, sj - 4); j <= Math.min(GH - 1, sj + 4); j++) {
-          if (blocked[j * GW + i]) continue
-          const d = (i - si) ** 2 + (j - sj) ** 2
-          if (d < bd) { bd = d; best = [i, j] }
-        }
-      if (best) { si = best[0]; sj = best[1] }
-    }
+    const [si, sj] = cellOf(sx, sz)
     let [ti, tj] = cellOf(tx, tz)
     // a target sitting inside its own structure (a well head, a plinth) has a
     // blocked cell; walk out to the nearest free one rather than failing
