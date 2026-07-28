@@ -1,0 +1,206 @@
+# QuantDesk configuration.
+# Everything the engine does is driven from this file. Nothing here requires
+# editing Python. Values marked HARD CEILING are clamped by engine/risk/manager.py
+# even if you raise them -- that clamp is deliberate and is not a bug.
+
+exchange:
+  # Any ccxt exchange id: kraken, coinbase, binanceus, bybit, okx, ...
+  # Data downloads work on all of them without API keys.
+  id: kraken
+  # Quote currency your account is denominated in.
+  quote: USD
+  # Rate limit courtesy delay is handled by ccxt; leave enabled.
+  enable_rate_limit: true
+
+universe:
+  # Core traded set. Kept to deep-liquidity majors on purpose: on a $500
+  # account the bid/ask spread is a bigger enemy than being wrong about
+  # direction. Thin alt books quietly eat any edge you have.
+  core:
+    - BTC/USD
+    - ETH/USD
+    - SOL/USD
+    - XRP/USD
+    - DOGE/USD
+    - LTC/USD
+    - LINK/USD
+    - AVAX/USD
+  # The scanner ranks a wider set by realised volatility and volume surge and
+  # surfaces them on the dashboard. It never auto-trades them; it is a
+  # watchlist, not a signal.
+  scanner:
+    - ADA/USD
+    - DOT/USD
+    - POL/USD
+    - ATOM/USD
+    - NEAR/USD
+    - APT/USD
+    - ARB/USD
+    - OP/USD
+    - INJ/USD
+    - SUI/USD
+    - FIL/USD
+    - AAVE/USD
+
+timeframes:
+  # Strategies declare which of these they run on. Mixed by design so the
+  # backtest -- not a guess -- decides which clock actually clears its costs.
+  enabled: ["5m", "15m", "1h", "4h"]
+  primary: "15m"
+
+data:
+  # Years of history to download and cache locally as parquet.
+  history_years: 3
+  cache_dir: "./data_cache"
+  # ccxt paginates OHLCV; this is candles per request.
+  fetch_limit: 720
+
+  # IMPORTANT -- separate venue for HISTORICAL data.
+  #
+  # Kraken's public OHLCV endpoint ignores the `since` parameter and returns
+  # only the most recent ~720 candles, whatever you ask for. That is fine for
+  # live trading and useless for backtesting: 720 hourly bars is 30 days, which
+  # cannot support walk-forward validation.
+  #
+  # So: research on a venue that serves deep history, trade on the venue you
+  # actually hold funds at. Verified behaviour (July 2026):
+  #
+  #   kucoin      honours `since`, 1000 bars/page  <- best free deep history
+  #   coinbase    honours `since`, 300 bars/page
+  #   binanceus   partial history on some pairs
+  #   kraken      IGNORES `since`, ~720 bars total <- live only
+  #   binance     HTTP 451 from US IPs
+  #
+  # Prices across major venues track each other closely enough that strategy
+  # research transfers. Costs do not -- the fee model below must reflect the
+  # venue you actually TRADE on, not the one you downloaded from.
+  history_exchange: kucoin
+  # Quote currency on the history venue. Most non-US venues list USDT, not USD.
+  # Symbols are remapped automatically: BTC/USD -> BTC/USDT.
+  history_quote: USDT
+
+costs:
+  # THE MOST IMPORTANT SECTION IN THIS FILE.
+  # Backtests that understate costs are how retail traders convince themselves
+  # they have an edge. These default to pessimistic. Raise them, never lower
+  # them, unless you have fill data proving otherwise.
+  taker_fee_bps: 26.0        # Kraken taker at lowest volume tier = 0.26%
+  maker_fee_bps: 16.0        # 0.16%
+  # Half-spread paid on entry and exit, in basis points, per liquidity tier.
+  spread_bps:
+    BTC/USD: 1.0
+    ETH/USD: 1.5
+    default: 4.0
+  # Extra adverse fill beyond the spread, as a fraction of the bar's ATR.
+  # Market orders in a fast tape do not fill at the touch.
+  slippage_atr_frac: 0.05
+  # Assume every entry and exit is a taker fill. Optimistic maker assumptions
+  # are the single most common way a backtest lies to you.
+  assume_taker: true
+
+risk:
+  # ---- account ----
+  starting_equity: 500.0
+  # ---- per trade ----
+  # Fraction of equity risked between entry and stop.
+  # YOU SELECTED AGGRESSIVE. At 5% risk/trade an ordinary 8-loss streak takes
+  # $500 to roughly $335, and a 20-loss month can end the account. The engine
+  # will honour this. The dashboard shows you what it is doing to your curve.
+  risk_per_trade: 0.05        # HARD CEILING 0.05
+  # ---- per day ----
+  daily_loss_limit: 0.10      # halt all trading for the day at -10%  HARD CEILING 0.10
+  # ---- portfolio ----
+  max_concurrent_positions: 3
+  max_gross_exposure: 1.0     # 1.0 = no leverage.  HARD CEILING 1.0
+  max_position_pct: 0.40      # no single position above 40% of equity
+  # Kill switch: total drawdown from peak equity that stops the bot entirely
+  # until you manually reset it.
+  max_total_drawdown: 0.30
+  # Correlated majors move together. Cap combined exposure to positions whose
+  # 30d return correlation exceeds this.
+  correlation_threshold: 0.80
+  max_correlated_exposure: 0.60
+
+execution:
+  # ATR-based volatility-adjusted stops. Stop distance scales with each pair's
+  # own volatility, and size solves back from risk_per_trade, so you risk the
+  # same dollars whether BTC is calm or unhinged.
+  atr_period: 14
+  stop_atr_mult: 2.0
+  target_atr_mult: 3.0        # 1.5R -- edge has to come from win rate here
+  trailing_atr_mult: 2.5
+  use_trailing_stop: true
+  # Bars after which an unresolved position is closed regardless of P&L.
+  # Stops capital sitting in a dead trade.
+  max_holding_bars: 96
+  # Do not open a new position in a symbol within this many bars of the last
+  # exit in that symbol. Prevents revenge-entering the same chop.
+  cooldown_bars: 3
+
+backtest:
+  # Fraction of history reserved as final out-of-sample. NEVER tune on this.
+  holdout_frac: 0.20
+  walk_forward:
+    train_bars: 5000
+    test_bars: 1250
+    step_bars: 1250
+    min_trades_per_fold: 15
+  monte_carlo:
+    runs: 2000
+    # Resample trade order to estimate the distribution of outcomes you could
+    # have had. The single historical path is one sample, not the truth.
+    method: "bootstrap"
+
+gate:
+  # HARD GATE. Live trading is refused unless paper-trading results clear every
+  # one of these. This exists to protect you from your own impatience in week
+  # two, which is the exact moment small accounts die.
+  enabled: true
+  min_paper_days: 14
+  min_trades: 40
+  min_sharpe: 1.0
+  min_profit_factor: 1.2
+  min_expectancy_r: 0.10      # average trade must earn 0.10R after costs
+  max_drawdown: 0.20
+  # Paper results must not be wildly better than the backtest predicted --
+  # a big gap means the backtest is lying, not that you got lucky.
+  max_backtest_divergence: 0.50
+
+live:
+  mode: "paper"               # "paper" | "live"  -- "live" also requires the gate
+  poll_seconds: 15
+  # Paper fill simulation. Applies the same cost model as the backtest so the
+  # two are directly comparable.
+  paper:
+    fill_model: "next_bar_open"
+    partial_fill_prob: 0.15
+    reject_prob: 0.01
+  state_db: "./state/quantdesk.db"
+
+alerts:
+  email:
+    enabled: false
+    smtp_host: "smtp.gmail.com"
+    smtp_port: 587
+    # Credentials come from .env, never from this file.
+    from_addr: ""
+    to_addr: ""
+    # Which events page you.
+    on_fill: false
+    on_stop_out: true
+    on_daily_limit: true
+    on_kill_switch: true
+    on_crash: true
+    daily_summary: true
+
+api:
+  host: "127.0.0.1"
+  port: 8787
+
+strategies:
+  # Enable/disable and per-strategy parameter overrides. Every strategy in
+  # engine/strategies/ is registered automatically; listing it here with
+  # enabled: false keeps it out of live trading but still backtestable.
+  # Params omitted fall back to the strategy's declared defaults.
+  enabled_families: ["trend", "mean_reversion", "breakout", "volatility", "microstructure", "statarb"]
+  overrides: {}
