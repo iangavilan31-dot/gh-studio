@@ -192,6 +192,7 @@ const data = await page.evaluate(async () => {
   // traps sealed, a concave corner can still trap a dumb seek, so the driver
   // needs to notice and go around.
   let prevKindled = new Set()
+  const planLog = []
   let path = [], planFor = -1
   let bestD = Infinity, noProgress = 0, sidestep = 0, sidestepKey = 'KeyD'
   let stuckRuns = 0, reversing = 0
@@ -224,6 +225,22 @@ const data = await page.evaluate(async () => {
     // into it.
     if (wp !== planFor || (!path.length && d > 2.5)) {
       path = planPath(s.playerPos[0], s.playerPos[2], t.x, t.z) || []
+      // Instrument the plan itself. Two grid changes moved this failure without
+      // removing it, so the question is no longer "which grid?" but "did A*
+      // return a path to the GOAL, or only to the nearest cell it could reach?"
+      // Those are different bugs: a blocked goal cell wants the goal widened to
+      // any cell within reach radius; a good path that the follower overshoots
+      // wants a follower fix. Guessing between them is what has been failing.
+      if (planLog.length < 40) {
+        const end = path.length ? path[path.length - 1] : null
+        planLog.push({
+          wp, target: [+t.x.toFixed(1), +t.z.toFixed(1)],
+          from: [+s.playerPos[0].toFixed(1), +s.playerPos[2].toFixed(1)],
+          steps: path.length,
+          endsAt: end ? [+end.x.toFixed(1), +end.z.toFixed(1)] : null,
+          endGoalGap: end ? +Math.hypot(end.x - t.x, end.z - t.z).toFixed(2) : null,
+        })
+      }
       planFor = wp
       // drop nodes already behind us
       while (path.length > 1 && Math.hypot(path[0].x - s.playerPos[0], path[0].z - s.playerPos[2]) < CELL) path.shift()
@@ -349,7 +366,7 @@ const data = await page.evaluate(async () => {
   const tail = endNt - lastNotable
   if (tail > 0.1) gaps.push({ gap: +tail.toFixed(2), atNt: +lastNotable.toFixed(2), tail: true })
   gaps.sort((a, b) => b.gap - a.gap)
-  return { events, gaps: gaps.slice(0, 8), simMinutes: +endNt.toFixed(2), kindled: M.state.kindled.length, endZone: M.state.zone, waypointsReached: wp, routeLength: route.length, stalls: stalls.slice(0, 12), routeSimMinutes: routeDoneNt == null ? null : +routeDoneNt.toFixed(2) }
+  return { events, gaps: gaps.slice(0, 8), simMinutes: +endNt.toFixed(2), kindled: M.state.kindled.length, endZone: M.state.zone, waypointsReached: wp, routeLength: route.length, stalls: stalls.slice(0, 12), planLog, routeSimMinutes: routeDoneNt == null ? null : +routeDoneNt.toFixed(2) }
 })
 
 data.consoleIssues = issues.slice(0, 5)
