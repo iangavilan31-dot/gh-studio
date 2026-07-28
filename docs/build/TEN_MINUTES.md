@@ -414,3 +414,35 @@ cell is blocked" (widen the goal to any cell within reach radius) from "path
 found but the follower overshoots" (a different bug entirely). Do not tune the
 grid again without that measurement; two grid changes have now moved the failure
 without removing it, which is the same lesson the four unstick heuristics taught.
+
+
+## The waypoint-13 failure, measured and still open
+
+The instrumentation gave a clean answer: **A* returns `steps: 0` for every
+waypoint-13 replan** — no path at all, so the driver falls through to greedy
+seek and oscillates across the Village street. Not a truncated path, not a
+follower overshoot.
+
+    {wp: 13, target: [114.6, -2.7], from: [102.5, 2.3], steps: 0, endsAt: null}
+
+I guessed the cause was the START cell: obstacle padding marks the cells beside
+a wall blocked, which is where a player in a narrow street stands, and the goal
+had a walk-out while the start did not. **That guess was wrong.** With the same
+walk-out applied to the start, `steps` is still 0 and the driver stretches went
+4 → 6. Reverted.
+
+So the remaining candidates, none of them yet measured:
+- the goal walk-out searches only ±4 cells (±3.6m) and this light may sit deeper
+  inside its structure than that, in which case planPath returns null;
+- the A* node budget may be exhausting before it crosses ~13m of street;
+- the grid extent may not cover this part of the Village at all.
+
+**The next step is one more measurement, not a fix:** log which of those three
+happened — whether the goal walk-out found a cell, how many nodes A* expanded
+before giving up, and whether the goal cell is inside the grid bounds. Three
+cheap counters distinguish all three cases.
+
+Seven attempts have now been made on this failure. Six were guesses and each
+moved it without removing it; the one measurement narrowed it from "the driver
+cannot navigate" to "A* returns nothing for one specific waypoint", which is a
+much smaller question. That ratio is the lesson.
