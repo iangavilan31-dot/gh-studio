@@ -3,12 +3,170 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>G&amp;H Studio</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23141e1a'/><text y='72' x='18' font-size='70' fill='%23ffffff40'>◈</text></svg>" />
-    <meta name="description" content="Ian Gavilan &amp; Luka Hernandez — Digital work, done right." />
+    <title>MOONREST — a small night, kept</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230b1626'/><circle cx='50' cy='50' r='30' fill='%23e8e4ff'/><circle cx='40' cy='44' r='5' fill='%238f7fd4'/><circle cx='60' cy='58' r='7' fill='%238f7fd4'/><circle cx='58' cy='40' r='3' fill='%238f7fd4'/></svg>" />
+    <meta name="description" content="MOONREST — a cozy night-walk through a sleeping world. Kindle the old lights before the moon sets. Bring a friend; the night has room for four." />
+    <meta property="og:title" content="MOONREST — a small night, kept" />
+    <meta property="og:description" content="A cozy-dread N64-style night-walk. Kindle 37 old lights before the moon sets. Co-op for up to four lanterns." />
+    <meta property="og:type" content="website" />
+    <meta property="og:image" content="og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#0b1626" />
+    <style>
+      html, body { margin: 0; padding: 0; background: #000; overflow: hidden; height: 100%; }
+      #game { display: block; width: 100vw; height: 100vh; image-rendering: pixelated; }
+      /* FIN-1: with the post chain attached the canvas IS the 16:9 frame and
+         the page background is the letterbox, so it is centred rather than
+         stretched — and it is no longer a pixel-art target, so it must not be
+         nearest-upscaled. */
+      #game.composited { width: auto; height: auto; image-rendering: auto;
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); }
+      #ui { position: fixed; inset: 0; pointer-events: none; font-family: Georgia, 'Times New Roman', serif; }
+      #ui .prompt {
+        position: absolute; left: 50%; top: 62%; transform: translate(-50%, 0);
+        display: flex; flex-direction: column; align-items: center; gap: 2px;
+        opacity: 0; transition: opacity 0.35s ease; text-align: center;
+      }
+      #ui .prompt.on { opacity: 1; }
+      #ui .prompt .ring { width: 44px; height: 44px; }
+      #ui .prompt svg { width: 100%; height: 100%; }
+      #ui .ring-bg { fill: rgba(10, 18, 24, 0.55); stroke: rgba(232, 194, 106, 0.35); stroke-width: 2.5; }
+      #ui .ring-fill { fill: none; stroke: #e8c26a; stroke-width: 2.5; stroke-linecap: round; transform: rotate(-90deg); transform-origin: center; }
+      #ui .rune { fill: #e8c26a; font-size: 17px; font-family: Georgia, serif; }
+      /* Zero words (FINAL_PASS Part 4): the verb element carries its verb as a
+         data attribute for the rigs and the accessibility layer, and renders
+         nothing. The ring above it is the whole prompt. */
+      #ui .verb { display: none; }
+      /* zero words (FINAL_PASS Part 4) — see HUD.say() */
+      #ui .subtitle { display: none !important; }
+      #ui .subtitle-unused {
+        position: absolute; left: 50%; bottom: 9%; transform: translateX(-50%);
+        max-width: 60%; text-align: center; color: #d7d2e8; font-size: 19px; font-style: italic;
+        text-shadow: 0 1px 4px #000, 0 0 12px rgba(11, 22, 38, 0.8);
+        opacity: 0; transition: opacity 0.4s ease;
+      }
+      #ui .subtitle.on { opacity: 1; }
+      #ui .nightcard {
+        position: absolute; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: 26px; text-align: center;
+        background: radial-gradient(ellipse at center, rgba(11,22,38,0.55), rgba(4,8,16,0.92));
+        opacity: 0; pointer-events: none; transition: opacity 2s ease;
+      }
+      #ui .nightcard.on { opacity: 1; }
+      #ui .nightcard .nc-title { color: #d7d2e8; font-size: 30px; font-style: italic; letter-spacing: 0.06em; text-shadow: 0 2px 10px #000; }
+      #ui .nightcard .nc-stats { color: #8f9dbd; font-size: 17px; line-height: 1.9; letter-spacing: 0.12em; }
+      #ui .attractlogo {
+        position: absolute; right: 4%; bottom: 6%;
+        color: #e8e4ff; font-size: 34px; letter-spacing: 0.34em;
+        text-shadow: 0 0 18px rgba(143,127,212,0.65), 0 2px 6px #000;
+        opacity: 0; transition: opacity 1.2s ease;
+      }
+      #ui .attractlogo.on { opacity: 0.92; }
+      #ui .devoverlay {
+        position: absolute; left: 10px; top: 8px; display: none;
+        color: #9fe8a8; font: 13px monospace; text-shadow: 0 1px 2px #000;
+      }
+      #ui .devoverlay.on { display: block; }
+
+      /* ——— the shell (Part 10) ——— */
+      #ui .shell { position: absolute; inset: 0; display: none; pointer-events: auto; font-family: 'Alegreya', Georgia, serif; }
+      #ui .shell.on { display: flex; align-items: center; justify-content: center; }
+      /* H.1 opening: the menu holds its breath while the night introduces itself */
+      #ui .shell.introhold { opacity: 0; pointer-events: none; }
+      #ui .shell { transition: opacity 1.4s ease; opacity: 1; }
+      #ui .introblack { position: absolute; inset: 0; background: #000; opacity: 1; pointer-events: none; transition: opacity 2.6s ease; z-index: 40; }
+      #ui .introblack.lift { opacity: 0; }
+      #ui .introskip { position: absolute; right: 3.2%; bottom: 4%; color: rgba(214, 218, 234, 0.4); font-family: 'Alegreya', Georgia, serif; font-size: 15px; letter-spacing: 0.12em; pointer-events: none; opacity: 0; transition: opacity 1s ease; z-index: 41; }
+      #ui .introskip.on { opacity: 1; }
+      #ui .shell.dim { background: rgba(6, 10, 20, 0.55); backdrop-filter: saturate(0.55) brightness(0.85) blur(1.5px); }
+      #ui .fogfade {
+        position: absolute; inset: 0; background: #202b3f; opacity: 0; pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+      #ui .fogfade.on { opacity: 1; }
+      #ui .titlecard { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+      #ui .logo {
+        font-family: 'IM Fell English', Georgia, serif; font-size: 84px; color: #e8e4ff; letter-spacing: 0.3em;
+        text-shadow: 0 0 34px rgba(143,127,212,0.55), 0 3px 10px #000; margin-left: 0.3em;
+      }
+      #ui .tagline { color: #8f9dbd; font-style: italic; font-size: 19px; margin-top: -8px; letter-spacing: 0.1em; }
+      #ui .menu { display: flex; flex-direction: column; gap: 6px; margin-top: 26px; align-items: center; }
+      #ui .mi {
+        color: #b9b2d6; font-size: 21px; letter-spacing: 0.16em; padding: 5px 26px; cursor: pointer;
+        outline: none; border-radius: 3px; transition: color 0.15s ease, text-shadow 0.15s ease;
+      }
+      #ui .mi.sel, #ui .mi:hover { color: #ffe9b3; text-shadow: 0 0 14px rgba(232,194,106,0.6); }
+      #ui .foot { color: #57648a; font-size: 14px; letter-spacing: 0.1em; margin-top: 34px; }
+      #ui .h1 { font-family: 'IM Fell English', Georgia, serif; font-size: 34px; color: #d7d2e8; letter-spacing: 0.14em; }
+      #ui .h2 { color: #8f9dbd; font-size: 15px; letter-spacing: 0.24em; text-transform: uppercase; margin-top: 16px; }
+      #ui .hint { color: #57648a; font-size: 14px; font-style: italic; max-width: 480px; text-align: center; }
+      #ui .pausecard {
+        display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
+        background: rgba(9, 14, 26, 0.82); border: 1px solid rgba(143,127,212,0.25); border-radius: 8px;
+        padding: 30px 52px; max-height: 84vh; overflow-y: auto; min-width: 380px;
+        box-shadow: 0 8px 60px rgba(0,0,0,0.6);
+      }
+      #ui .counters { display: flex; flex-direction: column; gap: 3px; }
+      #ui .counter { color: #b9b2d6; font-size: 18px; letter-spacing: 0.1em; }
+      #ui .counter.code { color: #ffe9b3; }
+      #ui .shelf { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; max-width: 460px; }
+      #ui .trinket {
+        color: #d9c9a0; font-size: 14px; font-style: italic; padding: 4px 12px;
+        border: 1px solid rgba(232,194,106,0.3); border-radius: 20px; background: rgba(24, 20, 12, 0.5);
+      }
+      #ui .shelfempty { color: #57648a; font-size: 14px; font-style: italic; }
+      #ui .trophy {
+        display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 10px 4px;
+        border: 1px solid rgba(232,194,106,0.3); border-radius: 12px; background: rgba(24, 20, 12, 0.5);
+      }
+      #ui .trophy canvas { width: 52px; height: 36px; image-rendering: pixelated; }
+      #ui .trophy .tname { color: #d9c9a0; font-size: 12px; font-style: italic; max-width: 120px; text-align: center; }
+      #ui .srow { display: flex; justify-content: space-between; align-items: center; gap: 26px; width: 100%; max-width: 430px; }
+      #ui .slabel { color: #8f9dbd; font-size: 16px; letter-spacing: 0.08em; }
+      #ui .sval { font-size: 17px; padding: 3px 14px; }
+      #ui .srange { pointer-events: auto; accent-color: #e8c26a; width: 150px; cursor: pointer; }
+      #ui .credline { color: #b9b2d6; font-size: 16px; font-style: italic; line-height: 1.75; }
+      #ui input.code {
+        pointer-events: auto; background: rgba(9, 14, 26, 0.85); color: #ffe9b3; border: 1px solid rgba(232,194,106,0.4);
+        border-radius: 6px; font-family: 'Alegreya', Georgia, serif; font-size: 40px; letter-spacing: 0.5em; text-align: center;
+        width: 220px; padding: 8px 0 8px 0.5em; outline: none; text-transform: uppercase;
+      }
+      #ui .errorcard {
+        position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 14px; background: rgba(5, 8, 16, 0.93); pointer-events: auto; z-index: 10;
+      }
+      #ui .toast {
+        position: absolute; left: 50%; top: 7%; transform: translate(-50%, -12px);
+        color: #ffe9b3; font-size: 17px; font-style: italic; letter-spacing: 0.08em;
+        text-shadow: 0 2px 8px #000; opacity: 0; transition: all 0.5s ease; pointer-events: none;
+      }
+      #ui .toast.on { opacity: 1; transform: translate(-50%, 0); }
+      #ui .photohint {
+        position: absolute; left: 50%; bottom: 3.5%; transform: translateX(-50%);
+        color: #8f9dbd; font-size: 13px; letter-spacing: 0.12em; text-shadow: 0 1px 3px #000;
+      }
+      #ui .emotewheel {
+        position: absolute; left: 50%; top: 50%; width: 210px; height: 210px;
+        transform: translate(-50%, -50%) scale(0.9); opacity: 0; pointer-events: none;
+        transition: all 0.15s ease; border-radius: 50%;
+        background: radial-gradient(circle, rgba(9,14,26,0.0) 30%, rgba(9,14,26,0.72) 62%, rgba(9,14,26,0.0) 74%);
+      }
+      #ui .emotewheel.on { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      #ui .ew-item {
+        position: absolute; color: #b9b2d6; font-size: 17px; letter-spacing: 0.14em;
+        font-family: 'Alegreya', Georgia, serif; text-shadow: 0 1px 4px #000; transform: translate(-50%, -50%);
+      }
+      #ui .ew-item.sel { color: #ffe9b3; text-shadow: 0 0 12px rgba(232,194,106,0.7); }
+      #ui .ew-item.locked { opacity: 0.3; font-style: italic; }
+      #ui .ew-0 { left: 50%; top: 9%; }     /* up: wave */
+      #ui .ew-1 { left: 91%; top: 50%; }    /* right: point */
+      #ui .ew-2 { left: 50%; top: 91%; }    /* down: giggle */
+      #ui .ew-3 { left: 9%; top: 50%; }     /* left: sleep */
+    </style>
   </head>
   <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
+    <canvas id="game"></canvas>
+    <div id="ui"></div>
+    <script type="module" src="/src/game/main.js"></script>
   </body>
 </html>

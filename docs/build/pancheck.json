@@ -1,0 +1,22 @@
+{
+ "bellFromWest": {
+  "pan": 1,
+  "gain": 0.035,
+  "d": 77
+ },
+ "bellFromEast": {
+  "pan": -1,
+  "gain": 0.395,
+  "d": 13
+ },
+ "organAhead": {
+  "pan": -0.01,
+  "gain": 0.07,
+  "d": 46
+ },
+ "organTurned": {
+  "pan": -1,
+  "gain": 0.07,
+  "d": 46
+ }
+}

@@ -1,0 +1,68 @@
+{
+ "shots": [
+  {
+   "label": "spawn",
+   "file": "docs/build/shots/ten/00-spawn.png",
+   "kindled": 0,
+   "zone": "park",
+   "pos": [
+    2.7,
+    -0.1,
+    -18
+   ],
+   "nightT": 0
+  },
+  {
+   "label": "lit-1",
+   "file": "docs/build/shots/ten/01-lit-1.png",
+   "kindled": 1,
+   "zone": "park",
+   "pos": [
+    2.7,
+    -0.1,
+    -18
+   ],
+   "nightT": 0.03
+  },
+  {
+   "label": "lit-3",
+   "file": "docs/build/shots/ten/02-lit-3.png",
+   "kindled": 3,
+   "zone": "park",
+   "pos": [
+    -16.3,
+    -0.2,
+    9.8
+   ],
+   "nightT": 0.23
+  },
+  {
+   "label": "lit-6",
+   "file": "docs/build/shots/ten/03-lit-6.png",
+   "kindled": 6,
+   "zone": "park",
+   "pos": [
+    -36,
+    -0.3,
+    -27.1
+   ],
+   "nightT": 0.89
+  },
+  {
+   "label": "final",
+   "file": "docs/build/shots/ten/04-final.png",
+   "kindled": 8,
+   "zone": "village",
+   "pos": [
+    82.2,
+    0.2,
+    17
+   ],
+   "nightT": 1.91
+  }
+ ],
+ "forcedKindles": [
+  "wayside-shrine-4"
+ ],
+ "consoleIssues": []
+}

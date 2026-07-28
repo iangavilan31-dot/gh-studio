@@ -1,0 +1,656 @@
+{
+ "samples": [
+  {
+   "moment": "night-start",
+   "text": []
+  },
+  {
+   "moment": "prompt-showing",
+   "text": [
+    {
+     "text": "ᚲ",
+     "tag": "text",
+     "cls": {}
+    }
+   ]
+  },
+  {
+   "moment": "drive-0-0",
+   "text": []
+  },
+  {
+   "moment": "drive-0-1",
+   "text": []
+  },
+  {
+   "moment": "drive-0-2",
+   "text": []
+  },
+  {
+   "moment": "drive-0-3",
+   "text": []
+  },
+  {
+   "moment": "drive-0-4",
+   "text": []
+  },
+  {
+   "moment": "drive-0-5",
+   "text": []
+  },
+  {
+   "moment": "drive-0-6",
+   "text": []
+  },
+  {
+   "moment": "drive-0-7",
+   "text": []
+  },
+  {
+   "moment": "drive-1-0",
+   "text": []
+  },
+  {
+   "moment": "drive-1-1",
+   "text": []
+  },
+  {
+   "moment": "drive-1-2",
+   "text": []
+  },
+  {
+   "moment": "drive-1-3",
+   "text": []
+  },
+  {
+   "moment": "drive-1-4",
+   "text": []
+  },
+  {
+   "moment": "drive-1-5",
+   "text": []
+  },
+  {
+   "moment": "drive-1-6",
+   "text": []
+  },
+  {
+   "moment": "drive-1-7",
+   "text": []
+  },
+  {
+   "moment": "drive-2-0",
+   "text": []
+  },
+  {
+   "moment": "drive-2-1",
+   "text": []
+  },
+  {
+   "moment": "drive-2-2",
+   "text": []
+  },
+  {
+   "moment": "drive-2-3",
+   "text": []
+  },
+  {
+   "moment": "drive-2-4",
+   "text": []
+  },
+  {
+   "moment": "drive-2-5",
+   "text": []
+  },
+  {
+   "moment": "drive-2-6",
+   "text": []
+  },
+  {
+   "moment": "drive-2-7",
+   "text": []
+  },
+  {
+   "moment": "drive-3-0",
+   "text": []
+  },
+  {
+   "moment": "drive-3-1",
+   "text": []
+  },
+  {
+   "moment": "drive-3-2",
+   "text": []
+  },
+  {
+   "moment": "drive-3-3",
+   "text": []
+  },
+  {
+   "moment": "drive-3-4",
+   "text": []
+  },
+  {
+   "moment": "drive-3-5",
+   "text": []
+  },
+  {
+   "moment": "drive-3-6",
+   "text": []
+  },
+  {
+   "moment": "drive-3-7",
+   "text": []
+  },
+  {
+   "moment": "drive-4-0",
+   "text": []
+  },
+  {
+   "moment": "drive-4-1",
+   "text": []
+  },
+  {
+   "moment": "drive-4-2",
+   "text": []
+  },
+  {
+   "moment": "drive-4-3",
+   "text": []
+  },
+  {
+   "moment": "drive-4-4",
+   "text": []
+  },
+  {
+   "moment": "drive-4-5",
+   "text": []
+  },
+  {
+   "moment": "drive-4-6",
+   "text": []
+  },
+  {
+   "moment": "drive-4-7",
+   "text": []
+  },
+  {
+   "moment": "drive-5-0",
+   "text": []
+  },
+  {
+   "moment": "drive-5-1",
+   "text": []
+  },
+  {
+   "moment": "drive-5-2",
+   "text": []
+  },
+  {
+   "moment": "drive-5-3",
+   "text": []
+  },
+  {
+   "moment": "drive-5-4",
+   "text": []
+  },
+  {
+   "moment": "drive-5-5",
+   "text": []
+  },
+  {
+   "moment": "drive-5-6",
+   "text": []
+  },
+  {
+   "moment": "drive-5-7",
+   "text": []
+  }
+ ],
+ "offenders": [],
+ "marks": [
+  {
+   "moment": "prompt-showing",
+   "text": "ᚲ",
+   "tag": "text",
+   "cls": {}
+  }
+ ],
+ "spoken": [
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "say",
+   "text": "the-lamplighter"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "sayLater",
+   "text": "keepsake-name"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "say",
+   "text": "keepsake-name"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "take"
+  },
+  {
+   "method": "showPrompt",
+   "text": "take"
+  },
+  {
+   "method": "showPrompt",
+   "text": "take"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  },
+  {
+   "method": "showPrompt",
+   "text": "kindle"
+  }
+ ],
+ "prose": [],
+ "tokens": 108,
+ "staticProse": []
+}

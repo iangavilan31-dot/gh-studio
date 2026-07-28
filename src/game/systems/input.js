@@ -1,0 +1,139 @@
+// Input (MASTER_PROMPT 4.2): keyboard + mouse orbit (pointer lock optional)
+// + basic gamepad (left stick move, right stick look, buttons mapped to the
+// three verbs). Part 10 settings feed remap/sensitivity/invert through here.
+// Timestamps every press so the controller can log input→movement latency.
+
+export class Input {
+  constructor(canvas) {
+    this.keys = new Set()
+    this.pressTimes = new Map() // code → performance.now() of keydown
+    this.lookDX = 0
+    this.lookDY = 0
+    this.pointerLocked = false
+    this.justPressed = new Set()
+    // settings (Part 10): remap maps a REQUESTED code → the physical code that
+    // now serves it (callers keep asking for the defaults)
+    this.remap = {}
+    this.sensitivity = 1
+    this.invertY = false
+    this.padDeadzone = 0.22
+    this._padPrev = new Set()
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Tab') e.preventDefault() // Tab is the emote wheel, not focus
+      if (e.repeat) {
+        // a held key cleared by the focus guard re-registers here — held only,
+        // never a fresh press (a repeat must not fire hop/interact again)
+        this.keys.add(e.code)
+        return
+      }
+      this.keys.add(e.code)
+      this.justPressed.add(e.code)
+      this.pressTimes.set(e.code, performance.now())
+    })
+    window.addEventListener('keyup', (e) => this.keys.delete(e.code))
+    // stuck-key guard on alt-tab — but only when focus is REALLY gone: some
+    // browser activity (compositor screenshots, devtools) fires a momentary
+    // blur with focus back instantly, and dropping a held channel key for
+    // that reads as an input glitch
+    window.addEventListener('blur', () => {
+      setTimeout(() => { if (!document.hasFocus()) this.keys.clear() }, 150)
+    })
+    // ...and refocus clears too: a keyup lost inside a sub-150ms blur must
+    // not leave a key latched (held keys re-register via OS key repeat)
+    window.addEventListener('focus', () => this.keys.clear())
+
+    canvas.addEventListener('click', () => {
+      if (!this.pointerLocked) {
+        // Chromium rejects during the ~1.3s cooldown after an Esc release —
+        // benign, must not surface as an unhandled rejection
+        try { canvas.requestPointerLock?.()?.catch?.(() => {}) } catch (e) { /* unsupported */ }
+      }
+    })
+    document.addEventListener('pointerlockchange', () => {
+      this.pointerLocked = document.pointerLockElement === canvas
+    })
+    window.addEventListener('mousemove', (e) => {
+      if (this.pointerLocked) {
+        this.lookDX += e.movementX
+        this.lookDY += e.movementY
+      } else if (this._dragging) {
+        // sandboxed embeds (artifact iframes) can deny pointer lock outright —
+        // click-drag look keeps the camera usable everywhere
+        this.lookDX += e.movementX
+        this.lookDY += e.movementY
+      }
+    })
+    canvas.addEventListener('mousedown', () => { this._dragging = true })
+    window.addEventListener('mouseup', () => { this._dragging = false })
+  }
+
+  _c(code) { return this.remap[code] ?? code }
+  down(...codes) { return codes.some((c) => this.keys.has(this._c(c))) }
+  pressed(...codes) { return codes.some((c) => this.justPressed.has(this._c(c))) }
+
+  // one connected gamepad, polled per frame (buttons synthesize key codes so
+  // every existing consumer — channel hold included — just works)
+  pollGamepad() {
+    if (this._padBlocked) return
+    let pads
+    try { pads = navigator.getGamepads?.() ?? [] } catch (e) {
+      // permissions policy in sandboxed embeds throws here — once is enough
+      this._padBlocked = true
+      return
+    }
+    const gp = [...pads].find((p) => p && p.connected)
+    this.pad = gp ?? null
+    if (!gp) return
+    const held = new Set()
+    const b = (i) => gp.buttons[i]?.pressed
+    // Part 4.2 table: E/A interact · Space/B hop · C/D-pad-down sit · Tab/Y emote.
+    // Buttons synthesize the REMAPPED physical codes so a rebound keyboard
+    // never silently disables the pad.
+    if (b(0)) held.add(this._c('KeyE'))   // A: kindle (hold)
+    if (b(1)) held.add(this._c('Space'))  // B: hop
+    if (b(13)) held.add(this._c('KeyC'))  // D-pad down: sit/lie
+    if (b(3)) held.add('Tab')             // Y: emote wheel
+    if (b(9)) held.add('Escape')     // start: menu
+    if (b(4) || b(6) || b(5) || b(7)) held.add('ShiftLeft') // shoulders: jog
+    for (const code of held) {
+      if (!this._padPrev.has(code)) { this.justPressed.add(code); this.pressTimes.set(code, performance.now()) }
+      this.keys.add(code)
+    }
+    for (const code of this._padPrev) if (!held.has(code)) this.keys.delete(code)
+    this._padPrev = held
+    // right stick → look
+    const rx = gp.axes[2] ?? 0, ry = gp.axes[3] ?? 0
+    if (Math.abs(rx) > this.padDeadzone) this.lookDX += rx * 14
+    if (Math.abs(ry) > this.padDeadzone) this.lookDY += ry * 10
+  }
+
+  // camera-relative move axis: [x strafe, z forward], normalized
+  moveAxis() {
+    let x = 0, z = 0
+    if (this.down('KeyW', 'ArrowUp')) z -= 1
+    if (this.down('KeyS', 'ArrowDown')) z += 1
+    if (this.down('KeyA', 'ArrowLeft')) x -= 1
+    if (this.down('KeyD', 'ArrowRight')) x += 1
+    if (this.pad) {
+      const lx = this.pad.axes[0] ?? 0, lz = this.pad.axes[1] ?? 0
+      if (Math.abs(lx) > this.padDeadzone) x += lx
+      if (Math.abs(lz) > this.padDeadzone) z += lz
+    }
+    const l = Math.hypot(x, z)
+    return l > 0 ? [x / l, z / l] : [0, 0]
+  }
+
+  consumeLook() {
+    const d = [this.lookDX * this.sensitivity, this.lookDY * this.sensitivity * (this.invertY ? -1 : 1)]
+    this.lookDX = 0; this.lookDY = 0
+    return d
+  }
+
+  // controller rumble ping (Part 4.2) — quietly does nothing without a pad
+  rumble(strong = 0.3, weak = 0.6, ms = 130) {
+    try { this.pad?.vibrationActuator?.playEffect('dual-rumble', { duration: ms, strongMagnitude: strong, weakMagnitude: weak }) } catch (e) { /* no actuator */ }
+  }
+
+  endFrame() { this.justPressed.clear() }
+}
