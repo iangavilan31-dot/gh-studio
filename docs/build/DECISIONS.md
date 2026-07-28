@@ -869,3 +869,33 @@ Not archiving the other zones yet, deliberately: it is a scope reduction with no
 effect on any ship criterion, and doing it now would churn the world file while
 the Part 7 zone work is still ahead. Recorded so it is a decision rather than an
 oversight.
+
+## FINAL RUN #29 — packaging found two things playing never would have
+
+Packaging the build as a single self-contained file for a playable link surfaced
+two defects that no gate and no screenshot had ever been in a position to catch,
+because every rig runs against a dev server where both work.
+
+**1. The hero trees were silently absent under CSP.** They load as `.glb` by URL
+from `public/`. A published artifact blocks that request, and the loader
+correctly treats a missing model as "use the procedural trunks" — so the world
+lost its hero assets with no error anywhere. Right behaviour for a missing
+asset, wrong for a blocked one, and indistinguishable from inside.
+`scripts/inlineglb.mjs` now emits them as data URIs; `scripts/pack.mjs` inlines
+everything else. No 404s, no page errors.
+
+**2. The title screen renders black.** Not a packaging artifact: the DOM mounts
+(9 UI children), the canvas is `display:block`, opacity 1, sized 1280x720 — the
+3D pass simply draws nothing while `mode === 'title'`. In-play rendering is
+fine, which is why every pose shot, every capture and every composition run
+missed it. They all call `startNight()` first.
+
+That is the pattern one more time, and from a new direction: the evidence
+pipeline only ever photographed states the rigs put the game into. The verb
+prompt hid behind cinematic poses; the title screen hides behind `startNight()`.
+Anything no rig visits is unobserved, and "we have gates" is not the same as
+"we have looked".
+
+The packaged demo auto-starts past the title so the link is playable. That is
+recorded in the script itself, not just here, so nobody reads a working demo as
+evidence the title works. **The title bug is open.**
