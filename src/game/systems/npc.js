@@ -632,7 +632,7 @@ export class NPCSystem {
     if (light.id === 'park-bench-lamp' && !this.stirred.has('beldam')) {
       this.stirred.add('beldam')
       this.beldam.stirT = 7
-      this.hud.say('ah-the-lamplighter-s', 6.5)
+      this.hud.say('the-lamplighter', 6.5)
     }
   }
 
@@ -648,7 +648,7 @@ export class NPCSystem {
       const lamp = this.world.lights.find((l) => l.id === 'park-bench-lamp')
       if (lamp && !lamp.kindled) {
         this.beldam.stirT = 6
-        this.hud.say('mm-lamp-went-cold', 6)
+        this.hud.say('lamp-went-cold', 6)
       }
     }
   }
@@ -662,7 +662,7 @@ export class NPCSystem {
     if (zone === 'park' && !this.stirred.has('beldam')) {
       this.stirred.add('beldam')
       this.beldam.stirT = 7
-      this.hud.say('ah-the-lamplighter-s', 6.5)
+      this.hud.say('the-lamplighter', 6.5)
     } else if (zone === 'village') {
       // the chickens approve, briefly and impeccably
       for (const ch of this.chickens) { ch.cluckT = this.rng.range(0.1, 1.2) }
@@ -670,9 +670,9 @@ export class NPCSystem {
       this.nibTalk = 3
       this.nibTalkT = 0
       if (this.stars) this.stars.showConstellations(false)
-      this.hud.say('nib-asleep-the-ladle', 7)
+      this.hud.say('nib-asleep-the', 7)
     } else if (zone === 'ruins') {
-      this.hud.say('the-curator-inclines-her', 4)
+      this.hud.say('the-curator-inclines', 4)
     } else if (zone === 'gloomspire') {
       this.gargoyle.bold = true // it pretends a little less carefully now
     } else if (zone === 'hall') {
@@ -680,7 +680,7 @@ export class NPCSystem {
       this.wakeGhostCat(false)
     } else if (zone === 'mosswood') {
       this.moteStir = 8
-      this.hud.say('mote-through-the-gate', 7.5)
+      this.hud.say('mote-through-the', 7.5)
     } else if (zone === 'isle') {
       // seabirds shuffle their feathers; the keep brazier owns the finale
       for (const b of this.seabirds) b.group.rotation.y += this.rng.range(-0.4, 0.4)
@@ -733,7 +733,7 @@ export class NPCSystem {
         c.bowT = 2
         if (!c.saidLine) {
           c.saidLine = true
-          this.hud.say('the-party-ended-ten', 5.5)
+          this.hud.say('the-party-ended', 5.5)
         }
         return
       }
@@ -788,7 +788,7 @@ export class NPCSystem {
     this.scene.add(this.ghostCat.rig.group)
     if (!quiet) {
       catPurr(2.2)
-      this.hud.say('the-ghost-cat-stretches', 5)
+      this.hud.say('the-ghost-cat', 5)
     }
   }
 

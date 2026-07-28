@@ -45,20 +45,20 @@ export class Moments {
       this.c.warmPulse(0.55)
       ambience.rainSoften(45)
       for (const p of this.lobby()) this.nods.push({ rig: p.rig, t: 0 })
-      hud.say('shared-rest-the-rain', 4)
+      hud.say('shared-rest-the', 4)
     } else if (ev.id === 'constellation') {
       stars.showConstellations(true)
-      hud.say('the-sky-leans-closer', 4)
+      hud.say('the-sky-leans', 4)
     } else if (ev.id === 'wellbeam') {
       this.beamT = 0.0001
       kindleChime('ruins')
-      hud.say('the-well-remembers-the', 4)
+      hud.say('the-well-remembers', 4)
     } else if (ev.id === 'gargoyle') {
       npcs.gargoyle.waveT = 2.0
-      hud.say('did-it-just', 3)
+      hud.say('did-just', 3)
     } else if (ev.id === 'lullaby') {
       musicBox()
-      hud.say('somewhere-close-a-music', 4)
+      hud.say('somewhere-close-music', 4)
     } else if (ev.id === 'arch') {
       bellToll(true)
       progress.grantTrinket('archstone', 'the Gatewalkers’ arch-stone')
