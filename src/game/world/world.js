@@ -547,6 +547,11 @@ export class World {
     // the northern sea
     const seaTex = TEX.water()
     seaTex.repeat.set(70, 42)
+    // NOTE: the Isle is the last pose reading ground-brighter-than-sky (L*22.0
+    // sky against L*32.4 ground). It is NOT the water — darkening the sea with
+    // opacity moved it 31.5 -> 32.4, i.e. not at all, so the bright mass is the
+    // causeway stone and the island terrain. Measure which before changing
+    // anything; the sea was a plausible guess and a wrong one.
     const seaMat = retroMaterial({ map: seaTex, ripple: true })
     // big enough that its far edge sits beyond the 220m far plane from any
     // shore camera — the horizon is fog, never a visible plane edge (Rule 3)
