@@ -120,8 +120,19 @@ const data = await page.evaluate(async () => {
       const i0 = Math.max(0, Math.floor((c.x - r - GX0) / CELL)), i1 = Math.min(GW - 1, Math.ceil((c.x + r - GX0) / CELL))
       const j0 = Math.max(0, Math.floor((c.z - r - GZ0) / CELL)), j1 = Math.min(GH - 1, Math.ceil((c.z + r - GZ0) / CELL))
       for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+        // Block a cell only if the WHOLE cell is inside the obstacle, not just
+        // its centre. A centre test over-approximates by up to half a cell
+        // diagonal (~0.64m at 0.9m cells), which is enough to wall off a pocket
+        // the 0.70m player genuinely fits in — measured: the planner could get
+        // no closer than 5.79m to a light that reachcheck walks right up to, so
+        // the driver looped forever on a wall the grid had invented.
         const x = GX0 + (i + 0.5) * CELL, z = GZ0 + (j + 0.5) * CELL
-        if (Math.hypot(x - c.x, z - c.z) < r) blocked[j * GW + i] = 1
+        const h = CELL * 0.5
+        let free = false
+        for (const [ox, oz] of [[0, 0], [-h, -h], [h, -h], [-h, h], [h, h]]) {
+          if (Math.hypot(x + ox - c.x, z + oz - c.z) >= r) { free = true; break }
+        }
+        if (!free) blocked[j * GW + i] = 1
       }
     }
     for (const a of (w.aabbs || [])) {
