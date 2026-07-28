@@ -668,7 +668,20 @@ window.addEventListener('keydown', bootAudio, { once: false })
 window.addEventListener('mousedown', bootAudio, { once: false })
 
 // ——— Shoot-rig camera poses (Part 3 per-zone, defined by the world) ———
-const POSES = world.poses
+// FINAL_PASS Part 1 Rule 1 is locked: THREE ZONES ONLY — the Gloaming Park,
+// Emberwick Village, the Moonlit Isle. Every other zone is archived: the code
+// stays, the content is out of scope.
+//
+// The pose registry had not been told. Six of thirteen gated poses were
+// archived zones, so judge attention, capture time and gate budget were being
+// spent certifying content the run is not shipping — and a reviewer spent part
+// of pass 1 writing up defects in the Violet Ruins and the Candlelit Hall.
+//
+// ?poses=all restores the full set for anyone working on an archived zone.
+const IN_SCOPE = new Set(['park', 'lanternpool', 'player', 'village', 'isle', 'sea'])
+const POSES = new URLSearchParams(location.search).get('poses') === 'all'
+  ? world.poses
+  : Object.fromEntries(Object.entries(world.poses).filter(([k]) => IN_SCOPE.has(k)))
 
 let cinematic = false
 function teleport(poseName) {
