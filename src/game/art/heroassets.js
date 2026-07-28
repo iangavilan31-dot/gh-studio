@@ -19,6 +19,8 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
 const TREE_COUNT = 4
+import { GLB } from './glbdata.js'
+
 const BASE = 'assets/models/trees'
 
 function load(url) {
@@ -92,8 +94,14 @@ let _trees = null
  */
 export async function loadHeroTrees() {
   if (_trees) return _trees
-  const urls = Array.from({ length: TREE_COUNT }, (_, i) =>
-    `${BASE}/tree_${String(i).padStart(2, '0')}.glb`)
+  // Prefer the inlined data URI. Fetching by path works in dev and in a normal
+  // deploy, but a published artifact's CSP blocks it, and the failure is silent:
+  // the loader returns null, the filter drops it, and the world quietly uses
+  // procedural trunks. Inlining removes the failure mode rather than handling it.
+  const urls = Array.from({ length: TREE_COUNT }, (_, i) => {
+    const name = `tree_${String(i).padStart(2, '0')}.glb`
+    return GLB[name] ?? `${BASE}/${name}`
+  })
   const loaded = await Promise.all(urls.map(load))
   _trees = loaded.filter(Boolean).map(flatten).filter(Boolean)
   if (_trees.length) {
