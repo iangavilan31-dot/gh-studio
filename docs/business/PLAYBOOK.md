@@ -1,5 +1,24 @@
 # MISSED-CALL / REVIEW ENGINE — 90-DAY PLAYBOOK
 
+> ⚠️ **SUPERSEDED FOR THE CURRENT TARGET. See `PLAN.md`.**
+>
+> This playbook was written for a **~$2,000–3,000/mo** goal. Against the
+> revised target of **$200–1,000/mo at 10–15 hrs/week**, later research
+> (`RESEARCH.md`) found two of its assumptions no longer hold:
+>
+> - **GoHighLevel is disqualifying at the lower target.** $97–297/mo plus
+>   separately-billed SMS, phone, email and AI usage means ~$500/mo of
+>   clients just to break even on software. Note also that GHL pays ~40%
+>   recurring affiliate commissions, which is why every "start an AI agency"
+>   video recommends it.
+> - **Phone beats cold email roughly 2:1.** Measured funnel is ~1 deal per
+>   464 cold emails; SMB owners answer phones at 18–25%, 25–35 dials per
+>   booked meeting. Lead with the phone, not §1's email sequence.
+>
+> Kept because the offer, pricing, and compliance material remain sound if
+> the target is ever raised. `COMPLIANCE.md` is unaffected and still
+> authoritative.
+
 Productized service for **home-service businesses**. Sold on the phone,
 delivered no-code. Written 2026-07-28 against current FTC, Google, CAN-SPAM
 and A2P 10DLC rules — all of which changed recently enough that older
