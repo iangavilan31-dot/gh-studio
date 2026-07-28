@@ -981,3 +981,58 @@ two the ship bar requires.
 
 **This build does not ship.** Judge pass 1 scored 1-5 across twelve categories
 against an 8.5-9.0 bar, and the gap is content, not polish.
+
+---
+
+## FIN-3/4/7/8 — judged, and the first colossus
+
+**Judge pass 1 ran and FAILED** (`docs/build/FINAL_JUDGE.md`). Two fresh-context
+reviewers, given deliberately different briefs and told not to duplicate each
+other, converged on the same three defects: the zero-words rule broken in live
+code, every frame value-inverted (ground brighter than sky), and none of the
+three mandated colossi existing. Scores 1–5 against an 8.5–9.0 bar.
+
+**Fixed since:**
+- Zero words. 20 prose subtitle sites became beat keys; nothing renders and
+  nothing remains in source. `wordcheck` rebuilt to HOOK the HUD and drive the
+  game, plus an exhaustive static scan — the old version sampled two DOM
+  moments and could not see a timed bark.
+- Three lights that **no player could ever light** (`village-well-lantern`,
+  `ruins-moonwell`, `isle-keep-brazier`). Three layers: per-light reach, a test
+  surface that did not expose it, and an LOS test where a light's own structure
+  occluded it. `reachcheck` 43/43 now guards it.
+- A wedge trap: two rocks 2.28m apart against a 0.70m player.
+- Pose registry scoped to the three zones (Part 1 Rule 1). COMPOSECHECK 6/6.
+- **The Antlered Sleeper** — the Park's colossus, first of three.
+
+**The Sleeper took three attempts and the lesson generalises.** Two geometry
+changes failed; the answer was `noFog`. This fog lifts distant objects toward
+the sky colour, so a 70m creature desaturated into a pale lump and moving it
+closer only pushed it deeper into the fog band. DIRECTION Part 3 wants a
+colossus read as NEGATIVE SPACE against the sky, which is impossible while it is
+fogged. **The Long Sleeper and the Drowned Choir will hit exactly this.**
+
+## NEXT — in priority order
+
+1. **The value inversion.** Both reviewers' top fix. Ground reads brighter than
+   sky; `uGroundDarken` exists and mostly resolved it, but `isle` is still
+   inverted (22.0 sky / 31.5 ground). Materials change, no new assets.
+2. **Two more colossi** — Long Sleeper (Village horizon), Drowned Choir ribcage
+   (Isle causeway). Use `noFog`.
+3. **Re-frame the Park pose around the Sleeper** — it is cropped by frame right
+   and its antlers do not separate from the canopy.
+4. **The title screen renders black** (packaged build; DOM mounts, canvas
+   visible, 3D pass draws nothing while `mode === 'title'`). Every rig calls
+   `startNight()` first, which is why nothing caught it.
+5. **Five missing composition metrics** — edge mass, foreground framing, focal
+   point, depth planes, sky fraction. Reviewer measured 7/13 poses failing
+   edge-mass alone.
+6. **Audio and performance evidence** — judge categories 9 and 10 have none, and
+   cannot be scored without it.
+7. **The capture's nav rig** — see TEN_MINUTES.md. Needs a disc-fit cell test or
+   the `endGoalGap` skip. Do NOT try a third point-sampling scheme; two have
+   failed in opposite directions.
+
+Gates: build exit 0 · COMPOSECHECK 6/6 in-scope · WORDCHECK · REACHCHECK 43/43 ·
+COLLISIONCHECK 8/8 · CROSSINGCHECK 4/4. K1 CAPTURE fails on harness pathing;
+the game's own pacing passes at 18s against 20s.
