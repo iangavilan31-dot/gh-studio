@@ -1,0 +1,287 @@
+/* QUANTDESK terminal styling.
+ *
+ * Deliberately not a "modern SaaS dashboard": no rounded cards, no drop
+ * shadows, no gradient fills, no pill buttons. Trading terminals look the way
+ * they do because operators read them for eight hours -- information density
+ * per pixel wins, decoration loses. Hairline rules instead of card elevation,
+ * tabular figures so digits line up across rows, and a type scale that tops out
+ * at 12px for chrome so the numbers are the only thing that shouts.
+ *
+ * Series colors are the validated dark-mode categorical palette; profit/loss
+ * use reserved status colors that are never assigned to a data series.
+ */
+
+:root {
+  color-scheme: dark;
+
+  /* surfaces */
+  --bg:            #0d0f13;
+  --panel:         #12151a;
+  --panel-alt:     #161a20;
+  --rule:          #232830;
+  --rule-bright:   #313843;
+
+  /* ink */
+  --ink:           #e6e9ef;
+  --ink-dim:       #97a0af;
+  --ink-faint:     #5d6675;
+
+  /* status -- reserved, never used for a data series */
+  --up:            #16a34a;
+  --up-bright:     #22c55e;
+  --down:          #dc2626;
+  --down-bright:   #ef4444;
+  --warn:          #c98500;
+  --accent:        #d97706;
+
+  /* categorical series -- validated dark palette (see docs) */
+  --s1: #3987e5;
+  --s2: #d95926;
+  --s3: #199e70;
+  --s4: #c98500;
+  --s5: #d55181;
+  --s6: #9085e9;
+
+  --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root { height: 100%; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- layout */
+
+.app { display: flex; flex-direction: column; height: 100%; }
+
+.topbar {
+  display: flex; align-items: center; gap: 20px;
+  height: 38px; flex-shrink: 0;
+  padding: 0 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--rule-bright);
+}
+
+.brand {
+  font-family: var(--mono);
+  font-size: 13px; font-weight: 700; letter-spacing: 0.14em;
+  color: var(--ink);
+}
+.brand span { color: var(--accent); }
+
+.tabs { display: flex; gap: 0; margin-left: 8px; }
+.tab {
+  font-family: var(--mono);
+  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+  padding: 0 12px; height: 37px; line-height: 37px;
+  background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--ink-faint); cursor: pointer;
+}
+.tab:hover { color: var(--ink-dim); }
+.tab.on { color: var(--ink); border-bottom-color: var(--accent); }
+
+.topbar-right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+
+.conn {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+  text-transform: uppercase; display: flex; align-items: center; gap: 6px;
+  color: var(--ink-faint);
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-faint); }
+.dot.live { background: var(--up-bright); box-shadow: 0 0 6px var(--up-bright); }
+.dot.stale { background: var(--warn); }
+.dot.off { background: var(--down); }
+
+.body { flex: 1; overflow: auto; padding: 8px; }
+
+.grid { display: grid; gap: 8px; }
+.g-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.g-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.g-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.g-main { grid-template-columns: minmax(0, 2.1fr) minmax(0, 1fr); }
+.g-side { grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); }
+
+@media (max-width: 1100px) {
+  .g-main, .g-side, .g-3, .g-4 { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------------------------------------------------------------- panel */
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  display: flex; flex-direction: column;
+  min-width: 0;
+}
+
+.panel-head {
+  display: flex; align-items: center; gap: 8px;
+  height: 26px; flex-shrink: 0;
+  padding: 0 9px;
+  background: var(--panel-alt);
+  border-bottom: 1px solid var(--rule);
+}
+
+.panel-title {
+  font-family: var(--mono);
+  font-size: 10px; letter-spacing: 0.11em; text-transform: uppercase;
+  color: var(--ink-dim);
+}
+
+.panel-note {
+  margin-left: auto;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--ink-faint);
+}
+
+.panel-body { padding: 9px; min-width: 0; overflow: auto; }
+.panel-body.flush { padding: 0; }
+
+/* ---------------------------------------------------------------- tiles */
+
+.tiles { display: grid; gap: 1px; background: var(--rule); border: 1px solid var(--rule); }
+.tiles.c4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.tiles.c5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.tiles.c6 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+@media (max-width: 900px) {
+  .tiles.c4, .tiles.c5, .tiles.c6 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+.tile { background: var(--panel); padding: 8px 10px; min-width: 0; }
+.tile-label {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-faint);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tile-value {
+  font-family: var(--mono); font-size: 19px; font-weight: 600;
+  margin-top: 3px; letter-spacing: -0.01em;
+}
+.tile-sub {
+  font-family: var(--mono); font-size: 10px; color: var(--ink-faint); margin-top: 2px;
+}
+
+.up { color: var(--up-bright); }
+.down { color: var(--down-bright); }
+.neutral { color: var(--ink); }
+.dim { color: var(--ink-dim); }
+.faint { color: var(--ink-faint); }
+.warn { color: var(--warn); }
+
+/* ---------------------------------------------------------------- tables */
+
+table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 11px; }
+
+thead th {
+  position: sticky; top: 0; z-index: 1;
+  background: var(--panel-alt);
+  font-size: 9px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-faint);
+  text-align: right; padding: 5px 8px;
+  border-bottom: 1px solid var(--rule);
+  white-space: nowrap;
+}
+thead th:first-child, tbody td:first-child { text-align: left; }
+
+tbody td {
+  padding: 4px 8px; text-align: right;
+  border-bottom: 1px solid rgba(35, 40, 48, 0.55);
+  white-space: nowrap;
+}
+tbody tr:hover { background: rgba(255, 255, 255, 0.028); }
+tbody tr.sel { background: rgba(217, 119, 6, 0.09); }
+
+.sym { color: var(--ink); font-weight: 600; }
+.tag {
+  font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 1px 5px; border: 1px solid var(--rule-bright); color: var(--ink-dim);
+}
+.tag.long { color: var(--up-bright); border-color: rgba(34,197,94,0.4); }
+.tag.short { color: var(--down-bright); border-color: rgba(239,68,68,0.4); }
+.tag.ok { color: var(--up-bright); border-color: rgba(34,197,94,0.4); }
+.tag.bad { color: var(--down-bright); border-color: rgba(239,68,68,0.4); }
+.tag.mid { color: var(--warn); border-color: rgba(201,133,0,0.4); }
+
+/* ---------------------------------------------------------------- charts */
+
+.chart { width: 100%; display: block; }
+.chart text { font-family: var(--mono); font-size: 9px; fill: var(--ink-faint); }
+.grid-line { stroke: var(--rule); stroke-width: 1; }
+.axis-line { stroke: var(--rule-bright); stroke-width: 1; }
+.crosshair { stroke: var(--ink-faint); stroke-width: 1; stroke-dasharray: 2 3; }
+
+.tooltip {
+  position: fixed; z-index: 50; pointer-events: none;
+  background: #05070a; border: 1px solid var(--rule-bright);
+  padding: 6px 8px; font-family: var(--mono); font-size: 10px;
+  color: var(--ink); white-space: nowrap;
+}
+.tooltip .tt-row { display: flex; gap: 10px; justify-content: space-between; }
+.tooltip .tt-key { color: var(--ink-faint); }
+.swatch { display: inline-block; width: 8px; height: 8px; margin-right: 5px; vertical-align: middle; }
+
+.legend {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  font-family: var(--mono); font-size: 10px; color: var(--ink-dim);
+  padding: 6px 9px 0;
+}
+.legend-item { display: flex; align-items: center; gap: 5px; }
+
+/* ---------------------------------------------------------------- controls */
+
+.btn {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--panel-alt); color: var(--ink-dim);
+  border: 1px solid var(--rule-bright); padding: 4px 10px; cursor: pointer;
+}
+.btn:hover { color: var(--ink); border-color: var(--ink-faint); }
+.btn.danger { color: var(--down-bright); border-color: rgba(239,68,68,0.45); }
+.btn.danger:hover { background: rgba(220,38,38,0.14); }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.bar-track { height: 4px; background: var(--rule); position: relative; overflow: hidden; }
+.bar-fill { height: 100%; }
+
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 3px 14px;
+      font-family: var(--mono); font-size: 11px; }
+.kv dt { color: var(--ink-faint); }
+.kv dd { text-align: right; }
+
+/* When several definition lists sit side by side, a hairline keeps a
+ * right-aligned value from reading as though it belongs to the next column's
+ * label. */
+.kv-group { display: grid; gap: 0; }
+.kv-group > .kv { padding: 0 16px; border-left: 1px solid var(--rule); }
+.kv-group > .kv:first-child { padding-left: 0; border-left: none; }
+
+.empty {
+  font-family: var(--mono); font-size: 11px; color: var(--ink-faint);
+  padding: 20px 10px; text-align: center; line-height: 1.7;
+}
+
+.note {
+  font-size: 11px; line-height: 1.6; color: var(--ink-dim);
+  border-left: 2px solid var(--rule-bright); padding: 6px 0 6px 10px; margin: 8px 0;
+}
+.note strong { color: var(--ink); font-weight: 600; }
+.note.alarm { border-left-color: var(--down); }
+.note.caution { border-left-color: var(--warn); }
+
+.scroll-y { max-height: 340px; overflow-y: auto; }
+.scroll-y.tall { max-height: 520px; }
+
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--rule-bright); }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }

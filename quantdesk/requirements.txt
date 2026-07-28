@@ -1,0 +1,12 @@
+ccxt>=4.4.0
+pandas>=2.2.0
+numpy>=1.26.0
+scipy>=1.13.0
+statsmodels>=0.14.0
+pyyaml>=6.0
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0
+pydantic>=2.9.0
+python-dotenv>=1.0.0
+pyarrow>=17.0.0
+rich>=13.9.0
